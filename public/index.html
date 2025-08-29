@@ -1,0 +1,1491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Price List Generator - IND Natural Hair</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            color: #434662;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 20px;
+            background: #f8f9fa;
+            border: 3px dashed #dee2e6;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: #434662;
+        }
+
+        h1 {
+            color: #434662;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .tagline {
+            color: #434662;
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+        }
+
+        .filters {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .filter-group {
+            margin-bottom: 25px;
+        }
+
+        .filter-group:last-child {
+            margin-bottom: 0;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #434662;
+            font-size: 1rem;
+        }
+
+        select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1rem;
+            background: white;
+            color: #434662;
+            transition: all 0.3s ease;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #8a8fa0;
+            box-shadow: 0 0 0 3px rgba(138, 143, 160, 0.1);
+        }
+
+        .filter-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            align-items: end;
+        }
+
+        .results-summary {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .results-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .results-count {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #434662;
+        }
+
+        .currency-selector {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .currency-selector label {
+            margin: 0;
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        .currency-selector select {
+            width: auto;
+            min-width: 100px;
+            padding: 8px 12px;
+            font-size: 0.9rem;
+        }
+
+        .selected-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .filter-tag {
+            background: #8a8fa0;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .clear-filters {
+            background: none;
+            border: 2px solid #8a8fa0;
+            color: #8a8fa0;
+            padding: 6px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .clear-filters:hover {
+            background: #8a8fa0;
+            color: white;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: #434662;
+            font-size: 1.1rem;
+            font-style: italic;
+        }
+
+        .selected-count {
+            background: #8a8fa0;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            margin-left: 8px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: #8a8fa0;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #9ca1b2;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(138, 143, 160, 0.3);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        /* Sharing Modal Styles */
+        .sharing-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+        }
+
+        .sharing-modal-content {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .sharing-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #f8f9fa;
+            padding-bottom: 15px;
+        }
+
+        .sharing-modal-header h3 {
+            margin: 0;
+            color: #434662;
+            font-size: 1.5rem;
+        }
+
+        .close-sharing-modal {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #434662;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-sharing-modal:hover {
+            color: #434662;
+        }
+
+        .sharing-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .sharing-option {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: #434662;
+        }
+
+        .sharing-option:hover {
+            border-color: #8a8fa0;
+            background: #f8f9fa;
+            transform: translateY(-2px);
+        }
+
+        .sharing-icon {
+            font-size: 2rem;
+            margin-bottom: 8px;
+        }
+
+        .sharing-option span:last-child {
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .results {
+            display: grid;
+            gap: 30px;
+        }
+
+        .product-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .product-header {
+            background: linear-gradient(135deg, #8a8fa0 0%, #9ca1b2 100%);
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+
+        .product-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .product-subtitle {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+
+        .product-image {
+            width: 120px;
+            height: 120px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .product-content {
+            padding: 30px;
+        }
+
+        .price-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 25px;
+        }
+
+        .price-table th {
+            background: #f8f9fa;
+            color: #434662;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid #e9ecef;
+            font-size: 1rem;
+        }
+
+        .price-table th:last-child {
+            text-align: right;
+        }
+
+        .price-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #f1f3f4;
+            color: #434662;
+            font-size: 1rem;
+        }
+
+        .price-table td:last-child {
+            text-align: right;
+            font-weight: 600;
+            color: #434662;
+            font-size: 1rem;
+            text-align: right;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            color: #434662;
+            font-size: 1.1rem;
+        }
+
+        .category-table-container {
+            margin-bottom: 40px;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .category-header {
+            background: #8a8fa0;
+            color: white;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            justify-content: space-between;
+        }
+
+        .category-share-button {
+            margin-left: auto;
+        }
+
+        .btn-share {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            padding: 8px 16px;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn-share:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .category-image {
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            flex-shrink: 0;
+        }
+
+        .category-info {
+            flex: 1;
+        }
+
+        .category-info h3 {
+            margin: 0 0 5px 0;
+            font-size: 1.4rem;
+            font-weight: 600;
+        }
+
+        .category-info p {
+            margin: 0;
+            opacity: 0.9;
+            font-size: 0.95rem;
+        }
+
+        .category-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .category-table th {
+            background: #f8f9fa;
+            color: #434662;
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid #e9ecef;
+            border-right: 1px solid #e9ecef;
+        }
+
+        .category-table th:last-child {
+            border-right: none;
+            text-align: right;
+        }
+
+        .category-table td {
+            padding: 10px 15px;
+            border-bottom: 1px solid #f1f3f4;
+            color: #434662;
+            border-right: 1px solid #e9ecef;
+        }
+
+        .category-table td:last-child {
+            border-right: none;
+            font-weight: 600;
+            text-align: right;
+        }
+
+        .category-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .category-table tr:hover {
+            background: #e9ecef;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .tagline {
+                font-size: 1rem;
+            }
+
+            .filter-row {
+                grid-template-columns: 1fr;
+            }
+
+            .results-summary {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .results-info {
+                justify-content: center;
+            }
+
+            .product-title {
+                font-size: 1.5rem;
+            }
+
+            .product-content {
+                padding: 20px;
+            }
+
+            .category-header {
+                flex-direction: column;
+                text-align: center;
+                gap: 15px;
+                padding: 15px;
+            }
+
+            .category-share-button {
+                margin-left: 0;
+                margin-top: 10px;
+            }
+
+            .btn-share {
+                padding: 6px 12px;
+                font-size: 0.8rem;
+            }
+
+            .category-image {
+                width: 60px;
+                height: 60px;
+                font-size: 0.7rem;
+            }
+
+            .category-info h3 {
+                font-size: 1.1rem;
+            }
+
+            th, td {
+                padding: 8px 12px;
+                font-size: 0.9rem;
+                border-right: 1px solid #e9ecef;
+            }
+            
+            th:last-child, td:last-child {
+                border-right: none;
+            }
+            
+            table {
+                min-width: 300px;
+            }
+        }
+
+        /* Category Share Modal Styles */
+        .category-share-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 10001;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .category-share-content {
+            background: white;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .share-price-list {
+            padding: 40px;
+            font-family: 'Arial', sans-serif;
+        }
+
+        .share-header {
+            display: flex;
+            align-items: center;
+            border-bottom: 3px solid #434662;
+            padding-bottom: 30px;
+            margin-bottom: 30px;
+            width: 100%;
+            box-sizing: border-box;
+            gap: 20px;
+        }
+
+        .share-company-logo {
+            width: 80px;
+            height: 80px;
+            background: #f8f9fa;
+            border: 2px dashed #dee2e6;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: #434662;
+            flex-shrink: 0;
+        }
+
+        .share-company-info {
+            flex: 1;
+            text-align: left;
+        }
+
+        .share-company-name {
+            font-size: 2.2rem;
+            font-weight: bold;
+            color: #434662;
+            margin: 0 0 10px 0;
+        }
+
+        .share-company-tagline {
+            font-size: 1.1rem;
+            color: #434662;
+            margin: 0;
+        }
+
+        .share-category-section {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .share-category-image {
+            width: 100%;
+            max-width: 400px;
+            height: 300px;
+            margin: 0 auto 20px;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .share-category-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 15px;
+        }
+
+        .share-category-title {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #434662;
+            margin: 0 0 10px 0;
+        }
+
+        .share-category-details {
+            font-size: 1.2rem;
+            color: #434662;
+            margin: 0;
+        }
+
+        .share-products-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 30px 0;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .share-products-table th {
+            background: #434662;
+            color: white;
+            padding: 15px;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .share-products-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e9ecef;
+            color: #434662;
+        }
+
+        .share-products-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .share-footer {
+            border-top: 3px solid #434662;
+            padding-top: 30px;
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        .share-contact-info {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .share-contact-item {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            text-align: center;
+        }
+
+        .share-contact-item h4 {
+            color: #434662;
+            margin: 0 0 10px 0;
+            font-size: 1.1rem;
+        }
+
+        .share-contact-item p {
+            color: #434662;
+            margin: 5px 0;
+            font-size: 0.95rem;
+        }
+
+        .share-modal-actions {
+            position: sticky;
+            bottom: 0;
+            background: white;
+            padding: 20px;
+            border-top: 2px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+        }
+
+        .share-modal-actions button {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-close-share {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-close-share:hover {
+            background: #5a6268;
+        }
+
+
+
+        .btn-download-share {
+            background: #6f42c1;
+            color: white;
+        }
+
+        .btn-download-share:hover {
+            background: #5a32a3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">Company Logo</div>
+            <h1>IND Natural Hair</h1>
+            <p class="tagline">made with 100% NATURAL HAIR</p>
+        </div>
+
+        <div class="filters">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label for="category">Category:</label>
+                    <select id="category">
+                        <option value="">All Categories</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="product">Product:</label>
+                    <select id="product">
+                        <option value="">All Products</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="density">Density:</label>
+                    <select id="density">
+                        <option value="">All Densities</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="colors">Colors:</label>
+                    <select id="colors">
+                        <option value="">All Colors</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="results-summary">
+            <div class="results-info">
+                <div class="results-count">Loading products...</div>
+                <div class="selected-filters"></div>
+            </div>
+            <div class="currency-selector">
+                <label for="currency">Currency:</label>
+                <select id="currency">
+                    <option value="INR">INR (₹)</option>
+                    <option value="USD">USD ($)</option>
+                    <option value="EUR">EUR (€)</option>
+                    <option value="GBP">GBP (£)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <button class="btn btn-primary" onclick="generatePriceList()">📋 Generate Price List</button>
+            <button class="btn btn-secondary" onclick="clearAllFilters()">🔄 Clear All Filters</button>
+        </div>
+
+        <div class="results" id="results">
+            <div class="loading">Loading products...</div>
+        </div>
+    </div>
+
+    <!-- Category Share Modal -->
+    <div id="categoryShareModal" class="category-share-modal">
+        <div class="category-share-content">
+            <div id="sharePriceListContent" class="share-price-list">
+                <!-- Content will be dynamically generated -->
+            </div>
+            <div class="share-modal-actions">
+                <button class="btn-close-share" onclick="closeCategoryShareModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allProducts = [];
+        let filteredProducts = [];
+        let selectedCurrency = 'INR';
+        
+        // Currency conversion rates (base: INR)
+        const currencyRates = {
+            'INR': 1,
+            'USD': 0.012,
+            'EUR': 0.011,
+            'GBP': 0.0095
+        };
+        
+        const currencySymbols = {
+            'INR': '₹',
+            'USD': '$',
+            'EUR': '€',
+            'GBP': '£'
+        };
+
+        // Load products from JSON
+        async function loadProducts() {
+            try {
+                const response = await fetch('products.json');
+                const data = await response.json();
+                allProducts = data.products;
+                filteredProducts = [...allProducts];
+                
+                populateFilters();
+                displayResults();
+                updateResultsCount();
+            } catch (error) {
+                console.error('Error loading products:', error);
+                document.getElementById('results').innerHTML = '<div class="no-results">Error loading products. Please try again later.</div>';
+            }
+        }
+
+        // Populate filter dropdowns
+        function populateFilters() {
+            const categories = [...new Set(allProducts.map(p => p.category))];
+            const products = [...new Set(allProducts.map(p => p.product))];
+            const densities = [...new Set(allProducts.map(p => p.density))];
+            const colors = [...new Set(allProducts.map(p => p.colors))];
+
+            populateSelect('category', categories);
+            populateSelect('product', products);
+            populateSelect('density', densities);
+            populateSelect('colors', colors);
+        }
+
+        function populateSelect(id, options) {
+            const select = document.getElementById(id);
+            const currentValue = select.value;
+            
+            // Clear existing options except the first one
+            while (select.children.length > 1) {
+                select.removeChild(select.lastChild);
+            }
+            
+            options.sort().forEach(option => {
+                const optionElement = document.createElement('option');
+                optionElement.value = option;
+                optionElement.textContent = option;
+                select.appendChild(optionElement);
+            });
+            
+            // Restore the previous value if it still exists
+            if (options.includes(currentValue)) {
+                select.value = currentValue;
+            }
+        }
+
+        // Filter products based on selections
+        function filterProducts() {
+            const category = document.getElementById('category').value;
+            const product = document.getElementById('product').value;
+            const density = document.getElementById('density').value;
+            const colors = document.getElementById('colors').value;
+
+            filteredProducts = allProducts.filter(p => {
+                return (!category || p.category === category) &&
+                       (!product || p.product === product) &&
+                       (!density || p.density === density) &&
+                       (!colors || p.colors === colors);
+            });
+
+            displayResults();
+            updateResultsCount();
+            updateSelectedFilters();
+        }
+
+        // Convert price to selected currency
+        function convertPrice(priceINR) {
+            const rate = currencyRates[selectedCurrency];
+            const convertedPrice = priceINR * rate;
+            
+            if (selectedCurrency === 'INR') {
+                return Math.round(convertedPrice);
+            } else {
+                return Math.round(convertedPrice * 100) / 100;
+            }
+        }
+
+        // Format price with currency symbol
+        function formatPrice(price) {
+            const symbol = currencySymbols[selectedCurrency];
+            const convertedPrice = convertPrice(price);
+            
+            if (selectedCurrency === 'INR') {
+                return `${symbol} ${convertedPrice.toLocaleString('en-IN')}`;
+            } else {
+                return `${symbol} ${convertedPrice.toFixed(2)}`;
+            }
+        }
+
+        // Display filtered results
+        function displayResults() {
+            const resultsContainer = document.getElementById('results');
+            
+            if (filteredProducts.length === 0) {
+                resultsContainer.innerHTML = '<div class="no-results">No products found matching your criteria.</div>';
+                return;
+            }
+
+            // Group products by category
+            const groupedProducts = {};
+            filteredProducts.forEach(product => {
+                const key = `${product.category}_${product.product}_${product.density}_${product.colors}`;
+                if (!groupedProducts[key]) {
+                    groupedProducts[key] = {
+                        category: product.category,
+                        product: product.product,
+                        density: product.density,
+                        colors: product.colors,
+                        image: product.image,
+                        prices: []
+                    };
+                }
+                groupedProducts[key].prices.push({
+                    length: product.length,
+                    price: product.price
+                });
+            });
+
+            // Sort prices by length
+            Object.values(groupedProducts).forEach(group => {
+                group.prices.sort((a, b) => parseInt(a.length) - parseInt(b.length));
+            });
+
+            const html = Object.values(groupedProducts).map(group => {
+                const priceRows = group.prices.map(item => 
+                    `<tr>
+                        <td>${item.length}</td>
+                        <td>${formatPrice(item.price)} per piece</td>
+                    </tr>`
+                ).join('');
+
+                return `
+                    <div class="category-table-container">
+                        <div class="category-header">
+                            <div class="category-image">
+                                ${group.image ? 
+                                    `<img src="${group.image}" alt="${group.category}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 10px;" onerror="this.parentElement.innerHTML='Category Image';">` : 
+                                    'Category Image'
+                                }
+                            </div>
+                            <div class="category-info">
+                                <h3>${group.category.toUpperCase()} | ${group.product.toUpperCase()}</h3>
+                                <p>${group.density.toUpperCase()} | ${group.colors.toUpperCase()}</p>
+                            </div>
+                            <div class="category-share-button">
+                                <button class="btn btn-share" onclick="directShareImage('${group.category}', '${group.product}', '${group.density}', '${group.colors}', '${group.image || ''}')" title="Download price list image">📤 Share</button>
+                            </div>
+                        </div>
+                        <table class="category-table">
+                            <thead>
+                                <tr>
+                                    <th>Length</th>
+                                    <th>Price (${selectedCurrency})</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${priceRows}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            }).join('');
+
+            resultsContainer.innerHTML = html;
+        }
+
+        // Update results count
+        function updateResultsCount() {
+            const count = filteredProducts.length;
+            const countElement = document.querySelector('.results-count');
+            countElement.textContent = `${count} product${count !== 1 ? 's' : ''} found`;
+        }
+
+        // Update selected filters display
+        function updateSelectedFilters() {
+            const container = document.querySelector('.selected-filters');
+            const filters = [];
+            
+            const category = document.getElementById('category').value;
+            const product = document.getElementById('product').value;
+            const density = document.getElementById('density').value;
+            const colors = document.getElementById('colors').value;
+            
+            if (category) filters.push(`Category: ${category}`);
+            if (product) filters.push(`Product: ${product}`);
+            if (density) filters.push(`Density: ${density}`);
+            if (colors) filters.push(`Colors: ${colors}`);
+            
+            if (filters.length > 0) {
+                const filterTags = filters.map(filter => `<span class="filter-tag">${filter}</span>`).join('');
+                container.innerHTML = filterTags + '<button class="clear-filters" onclick="clearAllFilters()">Clear All</button>';
+            } else {
+                container.innerHTML = '';
+            }
+        }
+
+        // Clear all filters
+        function clearAllFilters() {
+            document.getElementById('category').value = '';
+            document.getElementById('product').value = '';
+            document.getElementById('density').value = '';
+            document.getElementById('colors').value = '';
+            
+            filterProducts();
+        }
+
+        // Currency change handler
+        function changeCurrency() {
+            selectedCurrency = document.getElementById('currency').value;
+            displayResults();
+        }
+
+        // Generate price list (placeholder)
+        function generatePriceList() {
+            if (filteredProducts.length === 0) {
+                alert('No products to generate price list. Please adjust your filters.');
+                return;
+            }
+            
+            // This would typically generate a PDF or printable version
+            alert(`Generating price list for ${filteredProducts.length} products...`);
+        }
+
+        // Share functionality
+        async function shareProducts() {
+            if (filteredProducts.length === 0) {
+                alert('No products to share. Please adjust your filters.');
+                return;
+            }
+
+            // Generate PNG files for each product group
+            const groupedProducts = {};
+            filteredProducts.forEach(product => {
+                const key = `${product.category}_${product.product}_${product.density}_${product.colors}`;
+                if (!groupedProducts[key]) {
+                    groupedProducts[key] = {
+                        category: product.category,
+                        product: product.product,
+                        density: product.density,
+                        colors: product.colors,
+                        prices: []
+                    };
+                }
+                groupedProducts[key].prices.push({
+                    length: product.length,
+                    price: product.price
+                });
+            });
+
+            const pngFiles = Object.values(groupedProducts).map(group => {
+                // This would generate actual PNG files
+                return {
+                    name: `${group.category}_${group.product}_${group.density}_${group.colors}.png`,
+                    data: 'base64_image_data_here'
+                };
+            });
+
+            // Check if Web Share API is supported
+            if (navigator.share && navigator.canShare) {
+                try {
+                    await navigator.share({
+                        title: 'IND Natural Hair - Price List',
+                        text: `Price list for ${filteredProducts.length} products`,
+                        files: pngFiles
+                    });
+                } catch (error) {
+                    console.log('Error sharing:', error);
+                    // Fallback: show sharing options modal
+                    showSharingModal(pngFiles);
+                }
+            } else {
+                // Fallback: show sharing options modal
+                showSharingModal(pngFiles);
+            }
+        }
+        
+        function showSharingModal(pngFiles) {
+            const modal = document.createElement('div');
+            modal.className = 'sharing-modal';
+            modal.innerHTML = `
+                <div class="sharing-modal-content">
+                    <div class="sharing-modal-header">
+                        <h3>Share Price Lists</h3>
+                        <button class="close-sharing-modal" onclick="closeSharingModal()">&times;</button>
+                    </div>
+                    <div class="sharing-options">
+                        <button class="sharing-option" onclick="downloadAllPNGs()">
+                            <span class="sharing-icon">📥</span>
+                            Download All
+                        </button>
+                        <button class="sharing-option" onclick="shareViaEmail()">
+                            <span class="sharing-icon">📧</span>
+                            Email
+                        </button>
+                        <button class="sharing-option" onclick="shareViaWhatsApp()">
+                            <span class="sharing-icon">📱</span>
+                            WhatsApp
+                        </button>
+                        <button class="sharing-option" onclick="copyShareableLink()">
+                            <span class="sharing-icon">🔗</span>
+                            Copy Link
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Close modal when clicking outside
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    closeSharingModal();
+                }
+            });
+        }
+        
+        function closeSharingModal() {
+            const modal = document.querySelector('.sharing-modal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        // Category share modal functions
+        function openCategoryShareModal(category, product, density, colors, imageUrl) {
+            const modal = document.getElementById('categoryShareModal');
+            const content = document.getElementById('sharePriceListContent');
+            
+            // Filter products for this specific category
+            const categoryProducts = allProducts.filter(p => 
+                p.category === category && 
+                p.product === product && 
+                p.density === density && 
+                p.colors === colors
+            );
+            
+            // Sort by length
+            categoryProducts.sort((a, b) => parseInt(a.length) - parseInt(b.length));
+            
+            // Generate table rows
+            const productsTableRows = categoryProducts.map(item => 
+                `<tr>
+                    <td>${item.length}</td>
+                    <td style="text-align: right;">${formatPrice(item.price)} per piece</td>
+                </tr>`
+            ).join('');
+            
+            content.innerHTML = `
+                <div class="share-header">
+                    <div class="share-company-logo">Company Logo</div>
+                    <div class="share-company-info">
+                        <h1 class="share-company-name">IND Natural Hair</h1>
+                        <p class="share-company-tagline">made with 100% NATURAL HAIR</p>
+                    </div>
+                </div>
+                
+                <div class="share-category-section">
+                    <div class="share-category-image">
+                        ${imageUrl ? 
+                            `<img src="${imageUrl}" alt="${category}" style="width: 100%; height: 100%; object-fit: contain;" onerror="this.parentElement.innerHTML='<div style=&quot;display: flex; align-items: center; justify-content: center; height: 100%; background: #f8f9fa; color: #434662; font-size: 16px;&quot;>Category Image</div>';">` : 
+                            `<div style="display: flex; align-items: center; justify-content: center; height: 100%; background: #f8f9fa; color: #434662; font-size: 16px;">Category Image</div>`
+                        }
+                    </div>
+                    <h2 class="share-category-title">${category.toUpperCase()} | ${product.toUpperCase()}</h2>
+                    <p class="share-category-details">${density.toUpperCase()} | ${colors.toUpperCase()}</p>
+                </div>
+                
+                <table class="share-products-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 40%;">Length</th>
+                            <th style="width: 60%; text-align: right;">Price (${selectedCurrency})</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${productsTableRows}
+                    </tbody>
+                </table>
+                
+                <div class="share-footer">
+                    <div class="share-contact-info">
+                        <div class="share-contact-item">
+                            <h4>📍 Address</h4>
+                            <p>WZ 81/1A Guru Nanak Nagar, New Delhi 110018, India</p>
+                        </div>
+                        <div class="share-contact-item">
+                            <h4>📞 Contact</h4>
+                            <p>+91 9871719781 | info@indiannaturalhair.com</p>
+                        </div>
+                        <div class="share-contact-item">
+                            <h4>🌐 Online</h4>
+                            <p>www.indiannaturalhair.com</p>
+                        </div>
+                    </div>
+                    <p style="margin: 20px 0 0 0; font-size: 0.9rem; color: #434662;">Generated on ${new Date().toLocaleDateString()} | All prices are subject to change without notice</p>
+                </div>
+            `;
+            
+            modal.style.display = 'flex';
+        }
+        
+        function closeCategoryShareModal() {
+            const modal = document.getElementById('categoryShareModal');
+            modal.style.display = 'none';
+        }
+        
+        async function downloadShareImage() {
+            const content = document.getElementById('sharePriceListContent');
+            
+            try {
+                const canvas = await html2canvas(content, {
+                    scale: 2,
+                    useCORS: true,
+                    allowTaint: true,
+                    backgroundColor: '#ffffff',
+                    width: content.scrollWidth,
+                    height: content.scrollHeight
+                });
+                
+                // Create download link
+                const link = document.createElement('a');
+                link.download = `price-list-${Date.now()}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+                
+            } catch (error) {
+                console.error('Error generating image:', error);
+                alert('Error generating image. Please try again.');
+            }
+        }
+        
+        // New function to directly share image without opening modal
+        async function directShareImage(category, product, density, colors, imageUrl) {
+            try {
+                // Temporarily open the modal to generate content
+                openCategoryShareModal(category, product, density, colors, imageUrl);
+                
+                // Wait a moment for the modal to render
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
+                const content = document.getElementById('sharePriceListContent');
+                
+                // Generate the image
+                const canvas = await html2canvas(content, {
+                    scale: 2,
+                    useCORS: true,
+                    allowTaint: true,
+                    backgroundColor: '#ffffff',
+                    width: content.scrollWidth,
+                    height: content.scrollHeight
+                });
+                
+                // Close the modal
+                closeCategoryShareModal();
+                
+                // Convert canvas to blob
+                canvas.toBlob(async (blob) => {
+                    const fileName = `${category}_${product}_${density}_${colors}_pricelist.png`;
+                    
+                    // Try to use Web Share API
+                    if (navigator.share && navigator.canShare) {
+                        try {
+                            const file = new File([blob], fileName, { type: 'image/png' });
+                            
+                            if (navigator.canShare({ files: [file] })) {
+                                await navigator.share({
+                                    title: `${category} ${product} - Price List`,
+                                    text: `Price list for ${category} ${product} (${density}, ${colors})`,
+                                    files: [file]
+                                });
+                                return;
+                            }
+                        } catch (error) {
+                            console.log('Web Share API failed:', error);
+                        }
+                    }
+                    
+                    // Fallback: download the image
+                    downloadImageFile(blob, fileName);
+                }, 'image/png', 0.95);
+                
+            } catch (error) {
+                console.error('Error generating share image:', error);
+                alert('Error generating image. Please try again.');
+                closeCategoryShareModal();
+            }
+        }
+        
+        function downloadImageFile(blob, fileName) {
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        // Event listeners
+        document.getElementById('category').addEventListener('change', filterProducts);
+        document.getElementById('product').addEventListener('change', filterProducts);
+        document.getElementById('density').addEventListener('change', filterProducts);
+        document.getElementById('colors').addEventListener('change', filterProducts);
+        document.getElementById('currency').addEventListener('change', changeCurrency);
+
+        // Social sharing functions (placeholders)
+        function shareViaWhatsApp() {
+            const text = encodeURIComponent('Check out our latest price list from IND Natural Hair!');
+            window.open(`https://wa.me/?text=${text}`, '_blank');
+            closeSharingModal();
+        }
+        
+        function shareViaEmail() {
+            const subject = encodeURIComponent('IND Natural Hair - Price List');
+            const body = encodeURIComponent('Please find attached our latest price list.');
+            window.open(`mailto:?subject=${subject}&body=${body}`, '_blank');
+            closeSharingModal();
+        }
+        
+        function shareViaFacebook(url) {
+            window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank');
+            closeSocialShareModal();
+        }
+        
+        function shareViaTwitter(url) {
+            const text = encodeURIComponent('Check out this price list from IND Natural Hair!');
+            window.open(`https://twitter.com/intent/tweet?url=${url}&text=${text}`, '_blank');
+            closeSocialShareModal();
+        }
+        
+        function shareViaLinkedIn(url) {
+            window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}`, '_blank');
+            closeSocialShareModal();
+        }
+        
+        function copyShareableLink(url) {
+            navigator.clipboard.writeText(url).then(() => {
+                alert('Link copied to clipboard!');
+                closeSocialShareModal();
+            }).catch(() => {
+                alert('Failed to copy link. Please copy manually: ' + url);
+                closeSocialShareModal();
+            });
+        }
+        
+        // Close category share modal when clicking outside
+        document.addEventListener('click', function(e) {
+            const modal = document.getElementById('categoryShareModal');
+            if (e.target === modal) {
+                closeCategoryShareModal();
+            }
+        });
+
+        // Initialize the application
+        loadProducts();
+    </script>
+</body>
+</html>
