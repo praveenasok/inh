@@ -399,8 +399,256 @@
             align-items: center;
             justify-content: center;
         }
-
-        .close-sharing-modal:hover {
+        
+        /* Multi-Platform Share Modal Styles */
+        .multi-share-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            backdrop-filter: blur(2px);
+        }
+        
+        .multi-share-modal-content {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            max-width: 480px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+        
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        
+        .multi-share-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #f8f9fa;
+        }
+        
+        .multi-share-header h3 {
+            margin: 0;
+            color: #2c3e50;
+            font-size: 1.4rem;
+            font-weight: 600;
+        }
+        
+        .close-multi-share {
+            background: #f8f9fa;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #6c757d;
+            padding: 8px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+        
+        .close-multi-share:hover {
+            background: #e9ecef;
+            color: #495057;
+            transform: scale(1.1);
+        }
+        
+        .multi-share-subtitle {
+            color: #6c757d;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 500;
+        }
+        
+        .multi-share-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+        }
+        
+        .share-option {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 16px 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            min-height: 100px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .share-option:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .share-option.whatsapp {
+            border-color: #25D366;
+        }
+        
+        .share-option.whatsapp:hover {
+            background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+            color: white;
+            border-color: #25D366;
+        }
+        
+        .share-option.telegram {
+            border-color: #0088cc;
+        }
+        
+        .share-option.telegram:hover {
+            background: linear-gradient(135deg, #0088cc 0%, #005580 100%);
+            color: white;
+            border-color: #0088cc;
+        }
+        
+        .share-option.email {
+            border-color: #dc3545;
+        }
+        
+        .share-option.email:hover {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+            border-color: #dc3545;
+        }
+        
+        .share-option.copy {
+            border-color: #6f42c1;
+        }
+        
+        .share-option.copy:hover {
+            background: linear-gradient(135deg, #6f42c1 0%, #5a2d91 100%);
+            color: white;
+            border-color: #6f42c1;
+        }
+        
+        .share-option.download {
+            border-color: #fd7e14;
+        }
+        
+        .share-option.download:hover {
+            background: linear-gradient(135deg, #fd7e14 0%, #e8650e 100%);
+            color: white;
+            border-color: #fd7e14;
+        }
+        
+        .share-option.web-share {
+            border-color: #20c997;
+        }
+        
+        .share-option.web-share:hover {
+            background: linear-gradient(135deg, #20c997 0%, #1aa179 100%);
+            color: white;
+            border-color: #20c997;
+        }
+        
+        .share-icon {
+            font-size: 2rem;
+            margin-bottom: 8px;
+            display: block;
+        }
+        
+        .share-label {
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 4px;
+            display: block;
+        }
+        
+        .share-desc {
+            font-size: 0.75rem;
+            opacity: 0.8;
+            display: block;
+            line-height: 1.2;
+        }
+        
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            .multi-share-modal-content {
+                margin: 20px;
+                padding: 20px;
+                max-width: none;
+                width: calc(100% - 40px);
+            }
+            
+            .multi-share-options {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+            
+            .share-option {
+                padding: 12px 8px;
+                min-height: 80px;
+            }
+            
+            .share-icon {
+                font-size: 1.5rem;
+                margin-bottom: 6px;
+            }
+            
+            .share-label {
+                font-size: 0.8rem;
+            }
+            
+            .share-desc {
+                font-size: 0.7rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .multi-share-options {
+                grid-template-columns: 1fr;
+            }
+            
+            .share-option {
+                flex-direction: row;
+                text-align: left;
+                min-height: 60px;
+                padding: 12px 16px;
+            }
+            
+            .share-icon {
+                font-size: 1.5rem;
+                margin-bottom: 0;
+                margin-right: 12px;
+            }
+            
+            .share-option > div {
+                display: flex;
+                flex-direction: column;
+            }
+        }
+ 
+         .close-sharing-modal:hover {
             color: #434662;
         }
 
@@ -1700,7 +1948,7 @@
                 <div class="header-left">
                     <h1>Smart Price List Generator</h1>
                     <!-- Test Share Button -->
-                    <button onclick="testShareFunction()" style="background: #25D366; color: white; padding: 8px 16px; border: none; border-radius: 5px; margin: 5px 0; cursor: pointer; font-size: 12px;">🧪 Test Share Function</button>
+                    <button onclick="testShareFunction()" style="background: #25D366; color: white; padding: 8px 16px; border: none; border-radius: 5px; margin: 5px 0; cursor: pointer; font-size: 12px;">🧪 Test Multi-Share</button>
                 </div>
                 <div class="header-currency">
                     <label for="currency">Currency Converter:</label>
@@ -2229,7 +2477,7 @@
                                 <p>${group.density.toUpperCase()} | ${group.colors.toUpperCase()}</p>
                             </div>
                             <div class="category-share-button">
-                                <button class="btn btn-share" onclick="shareViaWhatsAppOptimized('${category}', '${productName}', '${group.density}', '${group.colors}', '${JSON.stringify(products)}')" title="Share ${category} ${productName} price list">
+                                <button class="btn btn-share" onclick="showMultiPlatformShareModal('${category}', '${productName}', '${group.density}', '${group.colors}', '${JSON.stringify(products)}')" title="Share ${category} ${productName} price list">
                                     📤 Share
                                 </button>
                             </div>
@@ -3041,7 +3289,263 @@
                 { Length: "14", Rate: 180 },
                 { Length: "16", Rate: 210 }
             ];
-            shareViaWhatsAppOptimized('Wefts', 'Test Product', 'Medium', 'Natural Black', JSON.stringify(testProducts));
+            showMultiPlatformShareModal('Wefts', 'Test Product', 'Medium', 'Natural Black', JSON.stringify(testProducts));
+        }
+        
+        function showMultiPlatformShareModal(category, productName, density, colors, productsData) {
+            console.log('=== MULTI-PLATFORM SHARE MODAL OPENED ===');
+            console.log('Parameters:', { category, productName, density, colors });
+            
+            const modal = document.createElement('div');
+            modal.className = 'multi-share-modal';
+            modal.innerHTML = `
+                <div class="multi-share-modal-content">
+                    <div class="multi-share-header">
+                        <h3>Share ${category} - ${productName}</h3>
+                        <button class="close-multi-share" onclick="closeMultiShareModal()">&times;</button>
+                    </div>
+                    <div class="multi-share-subtitle">
+                        ${density} | ${colors}
+                    </div>
+                    <div class="multi-share-options">
+                        <button class="share-option whatsapp" onclick="shareToWhatsApp('${category}', '${productName}', '${density}', '${colors}', '${encodeURIComponent(productsData)}')">  
+                            <span class="share-icon">📱</span>
+                            <span class="share-label">WhatsApp</span>
+                            <span class="share-desc">Share with image</span>
+                        </button>
+                        <button class="share-option telegram" onclick="shareToTelegram('${category}', '${productName}', '${density}', '${colors}', '${encodeURIComponent(productsData)}')">  
+                            <span class="share-icon">✈️</span>
+                            <span class="share-label">Telegram</span>
+                            <span class="share-desc">Share with image</span>
+                        </button>
+                        <button class="share-option email" onclick="shareToEmail('${category}', '${productName}', '${density}', '${colors}', '${encodeURIComponent(productsData)}')">  
+                            <span class="share-icon">📧</span>
+                            <span class="share-label">Email</span>
+                            <span class="share-desc">Send price list</span>
+                        </button>
+                        <button class="share-option copy" onclick="copyProductData('${category}', '${productName}', '${density}', '${colors}', '${encodeURIComponent(productsData)}')">  
+                            <span class="share-icon">📋</span>
+                            <span class="share-label">Copy Text</span>
+                            <span class="share-desc">Copy to clipboard</span>
+                        </button>
+                        <button class="share-option download" onclick="downloadProductImage('${category}', '${productName}', '${density}', '${colors}', '${encodeURIComponent(productsData)}')">  
+                            <span class="share-icon">⬇️</span>
+                            <span class="share-label">Download</span>
+                            <span class="share-desc">Save as image</span>
+                        </button>
+                        <button class="share-option web-share" onclick="useWebShareAPI('${category}', '${productName}', '${density}', '${colors}', '${encodeURIComponent(productsData)}')">  
+                            <span class="share-icon">🔗</span>
+                            <span class="share-label">More Options</span>
+                            <span class="share-desc">Native share menu</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Close modal when clicking outside
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    closeMultiShareModal();
+                }
+            });
+        }
+        
+        function closeMultiShareModal() {
+            const modal = document.querySelector('.multi-share-modal');
+            if (modal) {
+                document.body.removeChild(modal);
+            }
+        }
+        
+        async function shareToWhatsApp(category, productName, density, colors, encodedProductsData) {
+            console.log('=== WHATSAPP SHARE INITIATED ===');
+            const productsData = decodeURIComponent(encodedProductsData);
+            closeMultiShareModal();
+            
+            // Use the existing optimized WhatsApp function
+            await shareViaWhatsAppOptimized(category, productName, density, colors, productsData);
+        }
+        
+        async function shareToTelegram(category, productName, density, colors, encodedProductsData) {
+            console.log('=== TELEGRAM SHARE INITIATED ===');
+            const productsData = decodeURIComponent(encodedProductsData);
+            closeMultiShareModal();
+            
+            try {
+                // Generate image first
+                const imageDataURL = await generateWhatsAppImage(category, productName, density, colors, JSON.parse(productsData));
+                
+                if (imageDataURL) {
+                    // Try Web Share API with image
+                    if (navigator.share && navigator.canShare) {
+                        const fileName = `${category}_${productName}_${density}.png`;
+                        const response = await fetch(imageDataURL);
+                        const blob = await response.blob();
+                        const file = new File([blob], fileName, { type: 'image/png' });
+                        
+                        const shareData = {
+                            title: `${category} - ${productName}`,
+                            text: `Check out our ${category} price list!\n\n${density} | ${colors}\n\nFor orders: +91 9871171978\nwww.indiannaturalhair.com`,
+                            files: [file]
+                        };
+                        
+                        if (navigator.canShare(shareData)) {
+                            await navigator.share(shareData);
+                            return;
+                        }
+                    }
+                }
+                
+                // Fallback to Telegram URL with text
+                const text = encodeURIComponent(`Check out our ${category} price list!\n\n${productName}\n${density} | ${colors}\n\nFor orders: +91 9871171978\nwww.indiannaturalhair.com`);
+                window.open(`https://t.me/share/url?text=${text}`, '_blank');
+                
+            } catch (error) {
+                console.error('Telegram share error:', error);
+                // Fallback to text-only share
+                const text = encodeURIComponent(`Check out our ${category} price list!\n\n${productName}\n${density} | ${colors}\n\nFor orders: +91 9871171978\nwww.indiannaturalhair.com`);
+                window.open(`https://t.me/share/url?text=${text}`, '_blank');
+            }
+        }
+        
+        function shareToEmail(category, productName, density, colors, encodedProductsData) {
+            console.log('=== EMAIL SHARE INITIATED ===');
+            const productsData = decodeURIComponent(encodedProductsData);
+            closeMultiShareModal();
+            
+            try {
+                const products = JSON.parse(productsData);
+                let productList = '';
+                products.forEach(product => {
+                    productList += `${product.Length}" - ₹${product.Rate}\n`;
+                });
+                
+                const subject = encodeURIComponent(`${category} Price List - ${productName}`);
+                const body = encodeURIComponent(`Dear Customer,\n\nPlease find below the price list for ${category}:\n\nProduct: ${productName}\nDensity: ${density}\nColors: ${colors}\n\nPrices:\n${productList}\nFor orders and inquiries:\n📞 +91 9871171978\n🌐 www.indiannaturalhair.com\n📧 info@indiannaturalhair.com\n\nThank you!\nIND Natural Hair Pvt Ltd`);
+                
+                window.open(`mailto:?subject=${subject}&body=${body}`, '_blank');
+            } catch (error) {
+                console.error('Email share error:', error);
+                alert('Error preparing email content');
+            }
+        }
+        
+        function copyProductData(category, productName, density, colors, encodedProductsData) {
+            console.log('=== COPY TO CLIPBOARD INITIATED ===');
+            const productsData = decodeURIComponent(encodedProductsData);
+            closeMultiShareModal();
+            
+            try {
+                const products = JSON.parse(productsData);
+                let productList = '';
+                products.forEach(product => {
+                    productList += `${product.Length}" - ₹${product.Rate}\n`;
+                });
+                
+                const textToCopy = `${category} Price List\n\nProduct: ${productName}\nDensity: ${density}\nColors: ${colors}\n\nPrices:\n${productList}\nFor orders: +91 9871171978\nwww.indiannaturalhair.com`;
+                
+                navigator.clipboard.writeText(textToCopy).then(() => {
+                    // Show success message
+                    const successMsg = document.createElement('div');
+                    successMsg.className = 'copy-success-message';
+                    successMsg.textContent = '✅ Copied to clipboard!';
+                    successMsg.style.cssText = `
+                        position: fixed;
+                        top: 20px;
+                        right: 20px;
+                        background: #4CAF50;
+                        color: white;
+                        padding: 12px 20px;
+                        border-radius: 8px;
+                        z-index: 10000;
+                        font-family: Arial, sans-serif;
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                    `;
+                    document.body.appendChild(successMsg);
+                    
+                    setTimeout(() => {
+                        if (document.body.contains(successMsg)) {
+                            document.body.removeChild(successMsg);
+                        }
+                    }, 3000);
+                }).catch(() => {
+                    alert('Failed to copy to clipboard. Please copy manually:\n\n' + textToCopy);
+                });
+            } catch (error) {
+                console.error('Copy error:', error);
+                alert('Error preparing content to copy');
+            }
+        }
+        
+        async function downloadProductImage(category, productName, density, colors, encodedProductsData) {
+            console.log('=== DOWNLOAD IMAGE INITIATED ===');
+            const productsData = decodeURIComponent(encodedProductsData);
+            closeMultiShareModal();
+            
+            try {
+                const imageDataURL = await generateWhatsAppImage(category, productName, density, colors, JSON.parse(productsData));
+                
+                if (imageDataURL) {
+                    const fileName = `${category}_${productName}_${density}.png`;
+                    downloadImageFile(imageDataURL, fileName);
+                } else {
+                    alert('Failed to generate image for download');
+                }
+            } catch (error) {
+                console.error('Download error:', error);
+                alert('Error generating image for download');
+            }
+        }
+        
+        async function useWebShareAPI(category, productName, density, colors, encodedProductsData) {
+            console.log('=== WEB SHARE API INITIATED ===');
+            const productsData = decodeURIComponent(encodedProductsData);
+            closeMultiShareModal();
+            
+            if (!navigator.share) {
+                alert('Web Share API is not supported on this device/browser');
+                return;
+            }
+            
+            try {
+                const imageDataURL = await generateWhatsAppImage(category, productName, density, colors, JSON.parse(productsData));
+                
+                if (imageDataURL) {
+                    const fileName = `${category}_${productName}_${density}.png`;
+                    const response = await fetch(imageDataURL);
+                    const blob = await response.blob();
+                    const file = new File([blob], fileName, { type: 'image/png' });
+                    
+                    const shareData = {
+                        title: `${category} - ${productName}`,
+                        text: `Check out our ${category} price list!\n\n${density} | ${colors}\n\nFor orders: +91 9871171978\nwww.indiannaturalhair.com`,
+                        files: [file]
+                    };
+                    
+                    if (navigator.canShare && navigator.canShare(shareData)) {
+                        await navigator.share(shareData);
+                    } else {
+                        // Fallback to text-only share
+                        await navigator.share({
+                            title: shareData.title,
+                            text: shareData.text
+                        });
+                    }
+                } else {
+                    // Text-only fallback
+                    await navigator.share({
+                        title: `${category} - ${productName}`,
+                        text: `Check out our ${category} price list!\n\n${density} | ${colors}\n\nFor orders: +91 9871171978\nwww.indiannaturalhair.com`
+                    });
+                }
+            } catch (error) {
+                console.error('Web Share API error:', error);
+                if (error.name !== 'AbortError') {
+                    alert('Error using native share menu');
+                }
+            }
         }
         
         async function shareViaWhatsAppOptimized(category, productName, density, colors, productsData) {
