@@ -139,6 +139,36 @@
             box-shadow: 0 0 0 2px rgba(255,255,255,0.3);
         }
 
+        .header-right {
+            display: flex;
+            align-items: center;
+        }
+
+        .admin-button {
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .admin-button:hover {
+            background: rgba(255,255,255,0.25);
+            border-color: rgba(255,255,255,0.5);
+            transform: translateY(-1px);
+        }
+
+        .admin-button:active {
+            transform: translateY(0);
+        }
+
         .exchange-status {
             margin-top: 8px;
             font-size: 0.8rem;
@@ -1929,6 +1959,206 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        /* Admin Modal Styles */
+        .admin-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 10002;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .admin-modal-content {
+            background: white;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .admin-modal-header {
+            background: linear-gradient(135deg, #434662, #5a6c7d);
+            color: white;
+            padding: 20px;
+            border-radius: 15px 15px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .admin-modal-header h2 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+
+        .admin-close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+            transition: background 0.3s ease;
+        }
+
+        .admin-close-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .admin-modal-body {
+            padding: 20px;
+        }
+
+        .admin-section {
+            margin-bottom: 30px;
+            border-bottom: 1px solid #e9ecef;
+            padding-bottom: 20px;
+        }
+
+        .admin-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .admin-section h3 {
+            color: #434662;
+            margin: 0 0 15px 0;
+            font-size: 1.2rem;
+        }
+
+        .admin-section h4 {
+            color: #434662;
+            margin: 15px 0 10px 0;
+            font-size: 1rem;
+        }
+
+        .upload-label {
+            display: inline-block;
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+        }
+
+        .upload-label:hover {
+            background: linear-gradient(135deg, #218838, #1ea085);
+            transform: translateY(-2px);
+        }
+
+        .upload-info {
+            margin-top: 8px;
+            color: #6c757d;
+        }
+
+        .price-list-manager {
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            background: #f8f9fa;
+            min-height: 100px;
+        }
+
+        .price-list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+
+        .price-list-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .price-list-name {
+            font-weight: 600;
+            color: #434662;
+        }
+
+        .price-list-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .admin-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-select {
+            background: #007bff;
+            color: white;
+        }
+
+        .btn-select:hover {
+            background: #0056b3;
+        }
+
+        .btn-remove {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-remove:hover {
+            background: #c82333;
+        }
+
+        .setting-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .setting-item label {
+            font-weight: 600;
+            color: #434662;
+            min-width: 150px;
+        }
+
+        .setting-item input {
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            width: 120px;
+        }
+
+        .apply-btn {
+            background: #6f42c1;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .apply-btn:hover {
+            background: #5a32a3;
+        }
     </style>
 </head>
 <body>
@@ -1947,8 +2177,11 @@
             <div class="header-content">
                 <div class="header-left">
                     <h1>Smart Price List Generator</h1>
-                    <!-- Test Share Button -->
-                    <button onclick="testShareFunction()" style="background: #25D366; color: white; padding: 8px 16px; border: none; border-radius: 5px; margin: 5px 0; cursor: pointer; font-size: 12px;">🧪 Test Multi-Share</button>
+                </div>
+                <div class="header-right">
+                    <button id="adminButton" class="admin-button" onclick="openAdminModal()" title="Admin Panel">
+                        ⚙️ Admin
+                    </button>
                 </div>
                 <div class="header-currency">
                     <label for="currency">Currency Converter:</label>
@@ -1967,6 +2200,12 @@
                             <input type="checkbox" id="generateKgPrices" style="margin: 0;">
                             <span>Generate Prices in KG</span>
                         </label>
+                    </div>
+                    <div style="margin-left: 20px; display: flex; align-items: center; gap: 8px;">
+                        <label for="priceMultiplier" style="font-weight: 600; color: #434662;">Price Adjustment:</label>
+                        <input type="number" id="priceMultiplier" placeholder="0" step="0.1" style="width: 80px; padding: 4px 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+                        <span style="color: #434662; font-weight: 500;">%</span>
+                        <small style="color: #666; margin-left: 5px;">(+/- percentage)</small>
                     </div>
                     <div id="exchangeRateStatus" class="exchange-status"></div>
                 </div>
@@ -2058,7 +2297,7 @@
                 <span class="price-list-close" onclick="closePriceListModal()">&times;</span>
                 <h2>Professional Price Lists</h2>
                 <p>Print-ready price lists for selected product combinations</p>
-                <button class="btn btn-primary" onclick="shareAllPNGs()">📤 Share All PNG</button>
+
                     <button class="btn btn-secondary" onclick="downloadIndividualPNGs()">📥 Download PNG</button>
             </div>
             <div class="price-list-content" id="priceListContent">
@@ -2078,10 +2317,53 @@
                 <button class="btn-close-share" onclick="closeCategoryShareModal()">✕ Close</button>
                 <button class="btn-download-share" onclick="downloadShareImage()">📥 Download Image</button>
                 <button class="btn-print-share" onclick="printCategoryShare()">🖨️ Print</button>
-                <button class="btn-social-share" onclick="showSocialShareOptions()">📤 Share</button>
+
             </div>
         </div>
     </div>
+
+    <!-- Admin Modal -->
+    <div id="adminModal" class="admin-modal" style="display: none;">
+        <div class="admin-modal-content">
+            <div class="admin-modal-header">
+                <h2>Admin Panel</h2>
+                <button class="admin-close-btn" onclick="closeAdminModal()">✕</button>
+            </div>
+            <div class="admin-modal-body">
+                <div class="admin-section">
+                    <h3>📁 Price List Management</h3>
+                    <div class="admin-upload-section">
+                        <label for="excelFileInput" class="upload-label">
+                            📤 Upload Excel File
+                        </label>
+                        <input type="file" id="excelFileInput" accept=".xlsx,.xls" onchange="handleExcelUpload(event)" style="display: none;">
+                        <div class="upload-info">
+                            <small>Supported formats: .xlsx, .xls</small>
+                        </div>
+                    </div>
+                    <div class="admin-list-section">
+                        <h4>Available Price Lists</h4>
+                        <div id="priceListManager" class="price-list-manager">
+                            <!-- Price lists will be dynamically populated -->
+                        </div>
+                    </div>
+                </div>
+                <div class="admin-section">
+                    <h3>⚙️ Settings</h3>
+                    <div class="admin-settings">
+                        <div class="setting-item">
+                            <label for="priceMultiplier">Price Multiplier (%):</label>
+                            <input type="number" id="priceMultiplier" value="0" step="0.1" placeholder="e.g., 10 for +10%, -5 for -5%">
+                            <button onclick="applyPriceMultiplier()" class="apply-btn">Apply</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SheetJS Library for Excel processing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
     <script>
         // Embedded complete product data
@@ -2147,11 +2429,12 @@
 
         let selectedCurrency = 'INR';
         let generateKgPrices = false;
+        let priceMultiplier = 0; // Percentage adjustment for prices
         let selectedFilters = {
-            category: new Set(),
-            density: new Set(),
-            product: new Set(),
-            color: new Set()
+            category: null,
+            density: null,
+            product: null,
+            color: null
         };
 
         // Initialize the application
@@ -2207,13 +2490,13 @@
             // Filter data based on current selections to show only available options
             let filteredData = productData.filter(item => {
                 // Handle "Genius Weft" as both category and product
-                const categoryMatch = selectedFilters.category.size === 0 || 
-                    selectedFilters.category.has(item.Catagory) ||
-                    (selectedFilters.category.has('Genius Weft') && item.Product === 'Genius Weft');
+                const categoryMatch = selectedFilters.category === null || 
+                    selectedFilters.category === item.Catagory ||
+                    (selectedFilters.category === 'Genius Weft' && item.Product === 'Genius Weft');
                 
-                const densityMatch = selectedFilters.density.size === 0 || selectedFilters.density.has(item.Density);
-                const productMatch = selectedFilters.product.size === 0 || selectedFilters.product.has(item.Product);
-                const colorMatch = selectedFilters.color.size === 0 || selectedFilters.color.has(item.Colors);
+                const densityMatch = selectedFilters.density === null || selectedFilters.density === item.Density;
+                const productMatch = selectedFilters.product === null || selectedFilters.product === item.Product;
+                const colorMatch = selectedFilters.color === null || selectedFilters.color === item.Colors;
                 
                 return categoryMatch && densityMatch && productMatch && colorMatch;
             });
@@ -2258,9 +2541,8 @@
         
         function updateKgCheckboxVisibility() {
             const kgSupportedCategories = ['Tips', 'Bulk', 'Wefts', 'Tapes'];
-            const hasKgSupportedCategory = Array.from(selectedFilters.category).some(category => 
-                kgSupportedCategories.includes(category)
-            );
+            const hasKgSupportedCategory = selectedFilters.category !== null && 
+                kgSupportedCategories.includes(selectedFilters.category);
             
             const kgCheckboxContainer = document.getElementById('kgCheckboxContainer');
             if (hasKgSupportedCategory) {
@@ -2279,14 +2561,27 @@
             // Clear existing options
             dropdown.innerHTML = '';
             
+            // Add "All" option
+            const allItem = document.createElement('div');
+            const isAllSelected = selectedFilters[filterType] === null;
+            allItem.className = 'dropdown-item';
+            allItem.innerHTML = `
+                <input type="radio" id="${filterType}_all" name="${filterType}" value="" data-filter="${filterType}" 
+                       ${isAllSelected ? 'checked' : ''}>
+                <label for="${filterType}_all">
+                    All ${filterType}s
+                </label>
+            `;
+            dropdown.appendChild(allItem);
+            
             // Add all options (all are always available)
             allOptions.forEach(option => {
                 const item = document.createElement('div');
-                const isSelected = selectedFilters[filterType].has(option);
+                const isSelected = selectedFilters[filterType] === option;
                 
                 item.className = 'dropdown-item';
                 item.innerHTML = `
-                    <input type="checkbox" id="${filterType}_${option}" value="${option}" data-filter="${filterType}" 
+                    <input type="radio" id="${filterType}_${option}" name="${filterType}" value="${option}" data-filter="${filterType}" 
                            ${isSelected ? 'checked' : ''}>
                     <label for="${filterType}_${option}">
                         ${option}
@@ -2306,6 +2601,12 @@
             // KG checkbox change
             document.getElementById('generateKgPrices').addEventListener('change', function() {
                 generateKgPrices = this.checked;
+                generateResults();
+            });
+            
+            // Price multiplier change
+            document.getElementById('priceMultiplier').addEventListener('input', function() {
+                priceMultiplier = parseFloat(this.value) || 0;
                 generateResults();
             });
 
@@ -2341,19 +2642,25 @@
 
             // Filter selections
             document.addEventListener('change', function(e) {
-                if (e.target.type === 'checkbox' && e.target.hasAttribute('data-filter')) {
+                if (e.target.type === 'radio' && e.target.hasAttribute('data-filter')) {
                     const filterType = e.target.getAttribute('data-filter');
                     const value = e.target.value;
                     
-                    if (e.target.checked) {
-                        selectedFilters[filterType].add(value);
-                    } else {
-                        selectedFilters[filterType].delete(value);
-                    }
+                    // Set the selected value (empty string means "All")
+                    selectedFilters[filterType] = value === '' ? null : value;
                     
                     updateDropdownText(filterType);
                     updateActiveFilters();
                     updateAllDropdowns(); // Update all dropdowns to show only available options
+                    
+                    // Auto-collapse dropdown after selection
+                    const dropdown = document.getElementById(filterType + 'Dropdown');
+                    const button = document.querySelector(`[data-filter="${filterType}"]`);
+                    const arrow = button.querySelector('.dropdown-arrow');
+                    
+                    dropdown.classList.remove('show');
+                    arrow.classList.remove('rotated');
+                    button.classList.remove('active');
                 }
             });
 
@@ -2370,23 +2677,18 @@
         function updateDropdownText(filterType) {
             const button = document.querySelector(`[data-filter="${filterType}"]`);
             const textElement = button.querySelector('.dropdown-text');
-            const selectedValues = Array.from(selectedFilters[filterType]);
-            const count = selectedValues.length;
+            const selectedValue = selectedFilters[filterType];
             
-            if (count === 0) {
+            if (selectedValue === null) {
                 textElement.innerHTML = `All ${filterType}s...`;
-            } else if (count === 1) {
-                textElement.innerHTML = selectedValues[0];
-            } else if (count <= 3) {
-                textElement.innerHTML = selectedValues.join(', ');
             } else {
-                textElement.innerHTML = `${selectedValues.slice(0, 2).join(', ')} +${count - 2} more`;
+                textElement.innerHTML = selectedValue;
             }
         }
 
         function updateActiveFilters() {
             const activeElement = document.getElementById('activeFilters');
-            const totalFilters = Object.values(selectedFilters).reduce((sum, set) => sum + set.size, 0);
+            const totalFilters = Object.values(selectedFilters).filter(value => value !== null).length;
             
             if (totalFilters === 0) {
                 activeElement.textContent = 'No filters applied';
@@ -2404,15 +2706,15 @@
             // Apply all filters
             let filteredData = productData.filter(item => {
                 // Handle "Genius Weft" as both category and product
-                const categoryMatch = selectedFilters.category.size === 0 || 
-                    selectedFilters.category.has(item.Catagory) ||
-                    (selectedFilters.category.has('Genius Weft') && item.Product === 'Genius Weft');
+                const categoryMatch = selectedFilters.category === null || 
+                    selectedFilters.category === item.Catagory ||
+                    (selectedFilters.category === 'Genius Weft' && item.Product === 'Genius Weft');
                 
                 return (
                     categoryMatch &&
-                    (selectedFilters.density.size === 0 || selectedFilters.density.has(item.Density)) &&
-                    (selectedFilters.product.size === 0 || selectedFilters.product.has(item.Product)) &&
-                    (selectedFilters.color.size === 0 || selectedFilters.color.has(item.Colors))
+                    (selectedFilters.density === null || selectedFilters.density === item.Density) &&
+                    (selectedFilters.product === null || selectedFilters.product === item.Product) &&
+                    (selectedFilters.color === null || selectedFilters.color === item.Colors)
                 );
             });
 
@@ -2431,7 +2733,7 @@
                 
                 // If "Genius Weft" is selected as a category and this product is "Genius Weft",
                 // group it under "Genius Weft" category instead of its original category
-                if (selectedFilters.category.has('Genius Weft') && product.Product === 'Genius Weft') {
+                if (selectedFilters.category === 'Genius Weft' && product.Product === 'Genius Weft') {
                     category = 'Genius Weft';
                 }
                 
@@ -2473,14 +2775,10 @@
                                 }
                             </div>
                             <div class="category-info">
-                                <h3>${category.toUpperCase()} | ${productName.toUpperCase()}</h3>
-                                <p>${group.density.toUpperCase()} | ${group.colors.toUpperCase()}</p>
+                                <h3>${(category || '').toUpperCase()} | ${(productName || '').toUpperCase()}</h3>
+                                <p>${(group.density || '').toUpperCase()} | ${(group.colors || '').toUpperCase()}</p>
                             </div>
-                            <div class="category-share-button">
-                                <button class="btn btn-share" onclick="showMultiPlatformShareModal('${category}', '${productName}', '${group.density}', '${group.colors}', '${JSON.stringify(products)}')" title="Share ${category} ${productName} price list">
-                                    📤 Share
-                                </button>
-                            </div>
+
                         </div>
                         <div class="table-container">
                             <table>
@@ -2530,7 +2828,15 @@
         }
 
         function convertCurrency(amount, targetCurrency) {
-            return amount * exchangeRates[targetCurrency];
+            // Validate amount is a valid number
+            const numericAmount = parseFloat(amount);
+            if (isNaN(numericAmount) || numericAmount < 0) {
+                return 0; // Return 0 for invalid amounts
+            }
+            
+            // Apply price multiplier first
+            const adjustedAmount = numericAmount * (1 + priceMultiplier / 100);
+            return adjustedAmount * exchangeRates[targetCurrency];
         }
         
         function getCategoryImageUrl(categoryName, products = []) {
@@ -2568,7 +2874,13 @@
                 'NGN': '₦'
             };
             
-            return `${symbols[currency] || currency} ${amount.toFixed(2)}`;
+            // Validate amount is a valid number
+            const numericAmount = parseFloat(amount);
+            if (isNaN(numericAmount)) {
+                return `${symbols[currency] || currency} 0.00`;
+            }
+            
+            return `${symbols[currency] || currency} ${numericAmount.toFixed(2)}`;
         }
 
         function selectAllAvailable() {
@@ -2581,9 +2893,10 @@
                 if (filterType === 'unit') optionsKey = 'units';
                 
                 const availableValues = allOptions.available[optionsKey] || [];
-                availableValues.forEach(value => {
-                    selectedFilters[filterType].add(value);
-                });
+                // For single selection, just select the first available value
+                if (availableValues.length > 0) {
+                    selectedFilters[filterType] = availableValues[0];
+                }
                 updateDropdownText(filterType);
             });
             
@@ -2593,7 +2906,7 @@
 
         function clearAllFilters() {
             Object.keys(selectedFilters).forEach(filterType => {
-                selectedFilters[filterType].clear();
+                selectedFilters[filterType] = null;
                 updateDropdownText(filterType);
             });
             updateActiveFilters();
@@ -2606,8 +2919,8 @@
             // Clear all filters first
             clearAllFilters();
             
-            // Add the selected category
-            selectedFilters.category.add(categoryName);
+            // Set the selected category
+            selectedFilters.category = categoryName;
             
             // Update UI
             updateDropdownText('category');
@@ -2627,15 +2940,15 @@
             // Get current filtered data
             let filteredData = productData.filter(item => {
                 // Handle "Genius Weft" as both category and product
-                const categoryMatch = selectedFilters.category.size === 0 || 
-                    selectedFilters.category.has(item.Catagory) ||
-                    (selectedFilters.category.has('Genius Weft') && item.Product === 'Genius Weft');
+                const categoryMatch = selectedFilters.category === null || 
+                    selectedFilters.category === item.Catagory ||
+                    (selectedFilters.category === 'Genius Weft' && item.Product === 'Genius Weft');
                 
                 return (
                     categoryMatch &&
-                    (selectedFilters.density.size === 0 || selectedFilters.density.has(item.Density)) &&
-                    (selectedFilters.product.size === 0 || selectedFilters.product.has(item.Product)) &&
-                    (selectedFilters.color.size === 0 || selectedFilters.color.has(item.Colors))
+                    (selectedFilters.density === null || selectedFilters.density === item.Density) &&
+                    (selectedFilters.product === null || selectedFilters.product === item.Product) &&
+                    (selectedFilters.color === null || selectedFilters.color === item.Colors)
                 );
             });
 
@@ -2736,8 +3049,8 @@
             let title, subtitle;
             
             if (group.type === 'combination') {
-                title = `${group.category.toUpperCase()} - ${group.product.toUpperCase()}`;
-                subtitle = `Length: ${group.length}" | Density: ${group.density} | Color: ${group.color.toUpperCase()}`;
+                title = `${(group.category || '').toUpperCase()} - ${(group.product || '').toUpperCase()}`;
+                subtitle = `Length: ${group.length}" | Density: ${group.density} | Color: ${(group.color || '').toUpperCase()}`;
             }
             
             // Get category image using local files
@@ -3047,8 +3360,8 @@
                             `<div style="display: flex; align-items: center; justify-content: center; height: 100%; background: #f8f9fa; color: #434662; font-size: 16px;">Category Image</div>`
                         }
                     </div>
-                    <h2 class="share-category-title">${category.toUpperCase()} | ${productName.toUpperCase()}</h2>
-                    <p class="share-category-details">${density.toUpperCase()} | ${colors.toUpperCase()}</p>
+                    <h2 class="share-category-title">${(category || '').toUpperCase()} | ${(productName || '').toUpperCase()}</h2>
+                        <p class="share-category-details">${(density || '').toUpperCase()} | ${(colors || '').toUpperCase()}</p>
                 </div>
                 
                 <table class="share-products-table">
@@ -3141,8 +3454,16 @@
         async function downloadShareImage() {
             const dataURL = await generateShareImage();
             if (dataURL) {
-                const categoryTitle = document.querySelector('.share-category-title').textContent;
-                const fileName = `price-list-${categoryTitle.replace(/[^a-zA-Z0-9]/g, '-')}.png`;
+                const shareData = window.currentShareData;
+                const selectedCurrency = document.getElementById('currency').value;
+                const priceListName = document.querySelector('[data-filter="priceList"] .dropdown-text')?.textContent || 'PriceList';
+                
+                // Safety check for shareData and provide fallbacks
+                const category = shareData?.category || 'Category';
+                const density = shareData?.density || 'Density';
+                const colors = shareData?.colors || 'Colors';
+                
+                const fileName = `${selectedCurrency}-${category}-${density}-${colors}`.replace(/[^a-zA-Z0-9-]/g, '-') + '.png';
                 
                 const link = document.createElement('a');
                 link.download = fileName;
@@ -3155,7 +3476,7 @@
         
         async function generateWhatsAppShareContent(category, productName, density, colors, productsData) {
             const products = typeof productsData === 'string' ? JSON.parse(productsData) : productsData;
-            const selectedCurrency = document.getElementById('currencySelect').value;
+            const selectedCurrency = document.getElementById('currency').value;
             const exchangeRate = parseFloat(document.getElementById('exchangeRate').value) || 1;
             
             // Create products table rows for WhatsApp format
@@ -3178,8 +3499,8 @@
                         <div class="whatsapp-logo">
                             <img src="${imageUrl}" alt="${category}" style="width: 100%; height: 100%; object-fit: contain; border-radius: 6px;" onerror="this.parentElement.innerHTML='${category.charAt(0)}'">
                         </div>
-                        <h2 class="whatsapp-title">${category.toUpperCase()}</h2>
-                        <p class="whatsapp-subtitle">${productName.toUpperCase()} | ${density.toUpperCase()} | ${colors.toUpperCase()}</p>
+                        <h2 class="whatsapp-title">${(category || '').toUpperCase()}</h2>
+                        <p class="whatsapp-subtitle">${(productName || '').toUpperCase()} | ${(density || '').toUpperCase()} | ${(colors || '').toUpperCase()}</p>
                     </div>
                     
                     <table class="whatsapp-table">
@@ -3282,15 +3603,7 @@
             }
         }
         
-        function testShareFunction() {
-            console.log('=== TEST SHARE FUNCTION CALLED ===');
-            const testProducts = [
-                { Length: "12", Rate: 150 },
-                { Length: "14", Rate: 180 },
-                { Length: "16", Rate: 210 }
-            ];
-            showMultiPlatformShareModal('Wefts', 'Test Product', 'Medium', 'Natural Black', JSON.stringify(testProducts));
-        }
+
         
         function showMultiPlatformShareModal(category, productName, density, colors, productsData) {
             console.log('=== MULTI-PLATFORM SHARE MODAL OPENED ===');
@@ -3380,7 +3693,15 @@
                 if (imageDataURL) {
                     // Try Web Share API with image
                     if (navigator.share && navigator.canShare) {
-                        const fileName = `${category}_${productName}_${density}.png`;
+                        const selectedCurrency = document.getElementById('currency').value;
+                        const priceListName = document.querySelector('[data-filter="priceList"] .dropdown-text')?.textContent || 'PriceList';
+                        
+                        // Safety check for parameters and provide fallbacks
+                        const safeCategory = category || 'Category';
+                        const safeDensity = density || 'Density';
+                        const safeColors = colors || 'Colors';
+                        
+                        const fileName = `${selectedCurrency}-${productName || safeCategory}-${safeDensity}-${safeColors}`.replace(/[^a-zA-Z0-9-]/g, '-') + '.png';
                         const response = await fetch(imageDataURL);
                         const blob = await response.blob();
                         const file = new File([blob], fileName, { type: 'image/png' });
@@ -3488,7 +3809,15 @@
                 const imageDataURL = await generateWhatsAppImage(category, productName, density, colors, JSON.parse(productsData));
                 
                 if (imageDataURL) {
-                    const fileName = `${category}_${productName}_${density}.png`;
+                    const selectedCurrency = document.getElementById('currency').value;
+                    const priceListName = document.querySelector('[data-filter="priceList"] .dropdown-text')?.textContent || 'PriceList';
+                    
+                    // Safety check for parameters and provide fallbacks
+                    const safeCategory = category || 'Category';
+                    const safeDensity = density || 'Density';
+                    const safeColors = colors || 'Colors';
+                    
+                    const fileName = `${selectedCurrency}-${productName || safeCategory}-${safeDensity}-${safeColors}`.replace(/[^a-zA-Z0-9-]/g, '-') + '.png';
                     downloadImageFile(imageDataURL, fileName);
                 } else {
                     alert('Failed to generate image for download');
@@ -3513,7 +3842,15 @@
                 const imageDataURL = await generateWhatsAppImage(category, productName, density, colors, JSON.parse(productsData));
                 
                 if (imageDataURL) {
-                    const fileName = `${category}_${productName}_${density}.png`;
+                    const selectedCurrency = document.getElementById('currency').value;
+                    const priceListName = document.querySelector('[data-filter="priceList"] .dropdown-text')?.textContent || 'PriceList';
+                    
+                    // Safety check for parameters and provide fallbacks
+                    const safeCategory = category || 'Category';
+                    const safeDensity = density || 'Density';
+                    const safeColors = colors || 'Colors';
+                    
+                    const fileName = `${selectedCurrency}-${productName || safeCategory}-${safeDensity}-${safeColors}`.replace(/[^a-zA-Z0-9-]/g, '-') + '.png';
                     const response = await fetch(imageDataURL);
                     const blob = await response.blob();
                     const file = new File([blob], fileName, { type: 'image/png' });
@@ -3617,7 +3954,15 @@
                     const blob = await response.blob();
                     
                     // Create download link as fallback
-                    const fileName = `${category}-${productName}-whatsapp.png`.replace(/[^a-zA-Z0-9-]/g, '-');
+                    const selectedCurrency = document.getElementById('currency').value;
+                     const priceListName = document.querySelector('[data-filter="priceList"] .dropdown-text')?.textContent || 'PriceList';
+                     
+                     // Safety check for parameters and provide fallbacks
+                     const safeCategory = category || 'Category';
+                     const safeDensity = density || 'Density';
+                     const safeColors = colors || 'Colors';
+                     
+                     const fileName = `${selectedCurrency}-${productName || safeCategory}-${safeDensity}-${safeColors}`.replace(/[^a-zA-Z0-9-]/g, '-') + '.png';
                     const link = document.createElement('a');
                     link.download = fileName;
                     link.href = dataURL;
@@ -3652,7 +3997,7 @@
                     console.log('Image download triggered');
                     
                     // Also open WhatsApp with text
-                    const whatsappText = encodeURIComponent(`Check out our ${category} price list! 💇‍♀️\n\n${productName.toUpperCase()} | ${density.toUpperCase()} | ${colors.toUpperCase()}\n\nFor orders and inquiries:\n📞 +91 9871171978\n🌐 www.indiannaturalhair.com\n📧 info@indiannaturalhair.com\n\n*Image downloaded to your device - please attach it to your WhatsApp message*`);
+                    const whatsappText = encodeURIComponent(`Check out our ${category} price list! 💇‍♀️\n\n${(productName || '').toUpperCase()} | ${(density || '').toUpperCase()} | ${(colors || '').toUpperCase()}\n\nFor orders and inquiries:\n📞 +91 9871171978\n🌐 www.indiannaturalhair.com\n📧 info@indiannaturalhair.com\n\n*Image downloaded to your device - please attach it to your WhatsApp message*`);
                     console.log('Opening WhatsApp with text:', whatsappText.substring(0, 100) + '...');
                     window.open(`https://wa.me/?text=${whatsappText}`, '_blank');
                     console.log('WhatsApp URL opened');
@@ -3668,7 +4013,7 @@
                 if (fallbackConfirm) {
                     // Create text-only WhatsApp share
                     const products = JSON.parse(productsData);
-                    const selectedCurrency = document.getElementById('currencySelect').value;
+                    const selectedCurrency = document.getElementById('currency').value;
                     const exchangeRate = parseFloat(document.getElementById('exchangeRate').value) || 1;
                     
                     let priceText = products.map(product => {
@@ -3677,8 +4022,8 @@
                     }).join('\n');
                     
                     const whatsappText = encodeURIComponent(
-                        `🌟 ${category.toUpperCase()} PRICE LIST 🌟\n\n` +
-                        `${productName.toUpperCase()} | ${density.toUpperCase()} | ${colors.toUpperCase()}\n\n` +
+                        `🌟 ${(category || '').toUpperCase()} PRICE LIST 🌟\n\n` +
+                `${(productName || '').toUpperCase()} | ${(density || '').toUpperCase()} | ${(colors || '').toUpperCase()}\n\n` +
                         `${priceText}\n\n` +
                         `📞 For orders: +91 9871171978\n` +
                         `🌐 www.indiannaturalhair.com\n` +
@@ -3844,6 +4189,120 @@
             const modal = document.getElementById('categoryShareModal');
             if (e.target === modal) {
                 closeCategoryShareModal();
+            }
+        });
+
+        // Admin functionality
+        let currentPriceMultiplier = 1;
+
+        function openAdminModal() {
+            document.getElementById('adminModal').style.display = 'block';
+            loadPriceListManager();
+        }
+
+        function closeAdminModal() {
+            document.getElementById('adminModal').style.display = 'none';
+        }
+
+        function handleExcelUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, {type: 'array'});
+                    const sheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[sheetName];
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet);
+                    
+                    // Process and save the data
+                    const fileName = file.name.replace('.xlsx', '').replace('.xls', '');
+                    
+                    // Save the processed data
+                    localStorage.setItem(`priceList_${fileName}`, JSON.stringify(jsonData));
+                    
+                    // Update available price lists
+                    let availablePriceLists = JSON.parse(localStorage.getItem('availablePriceLists')) || [];
+                    if (!availablePriceLists.includes(fileName)) {
+                        availablePriceLists.push(fileName);
+                        localStorage.setItem('availablePriceLists', JSON.stringify(availablePriceLists));
+                    }
+                    
+                    loadPriceListManager();
+                    alert('Excel file uploaded and converted successfully!');
+                } catch (error) {
+                    alert('Error processing Excel file: ' + error.message);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function loadPriceListManager() {
+            const container = document.getElementById('priceListManager');
+            container.innerHTML = '';
+            
+            const stored = localStorage.getItem('availablePriceLists');
+            const availablePriceLists = stored ? JSON.parse(stored) : [];
+            
+            availablePriceLists.forEach(fileName => {
+                const item = document.createElement('div');
+                item.className = 'price-list-item';
+                item.innerHTML = `
+                    <span>${fileName}</span>
+                    <div>
+                        <button onclick="selectPriceList('${fileName}')">Select</button>
+                        <button onclick="removePriceList('${fileName}')">Remove</button>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function selectPriceList(listName) {
+            try {
+                const data = localStorage.getItem(`priceList_${listName}`);
+                if (data) {
+                    productData = JSON.parse(data);
+                    generateResults();
+                    closeAdminModal();
+                    alert(`Price list "${listName}" has been loaded successfully!`);
+                } else {
+                    alert('Price list not found!');
+                }
+            } catch (error) {
+                alert('Error loading price list: ' + error.message);
+            }
+        }
+
+        function removePriceList(listName) {
+            if (confirm(`Are you sure you want to remove "${listName}"?`)) {
+                // Remove the price list data
+                localStorage.removeItem(`priceList_${listName}`);
+                
+                // Update available price lists
+                let availablePriceLists = JSON.parse(localStorage.getItem('availablePriceLists')) || [];
+                availablePriceLists = availablePriceLists.filter(name => name !== listName);
+                localStorage.setItem('availablePriceLists', JSON.stringify(availablePriceLists));
+                
+                loadPriceListManager();
+                alert(`Price list "${listName}" has been removed.`);
+            }
+        }
+
+        function applyPriceMultiplier() {
+            const multiplierInput = document.getElementById('priceMultiplier');
+            const multiplierValue = parseFloat(multiplierInput.value) || 0;
+            currentPriceMultiplier = 1 + (multiplierValue / 100);
+            alert(`Price multiplier set to ${multiplierValue}%`);
+        }
+
+        // Close admin modal when clicking outside
+        document.addEventListener('click', function(e) {
+            const modal = document.getElementById('adminModal');
+            if (e.target === modal) {
+                closeAdminModal();
             }
         });
     </script>
