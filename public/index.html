@@ -28,8 +28,7 @@
             
             script.onload = function() {
                 html2canvasLoaded = true;
-                console.log('html2canvas loaded successfully from:', cdnSources[index]);
-                console.log('html2canvas object:', typeof html2canvas);
+                // html2canvas loaded successfully
                 window.html2canvasLoadedSuccessfully = true;
             };
             
@@ -47,16 +46,13 @@
         // Check loading status after page load
         window.addEventListener('load', function() {
             setTimeout(function() {
-                console.log('Page loaded, checking html2canvas status...');
-                console.log('html2canvas type:', typeof html2canvas);
-                console.log('html2canvasLoaded flag:', html2canvasLoaded);
-                console.log('loadingAttempts:', loadingAttempts);
+                // Page loaded, checking html2canvas status
                 
                 if (typeof html2canvas === 'undefined') {
                     console.warn('html2canvas still not loaded, retrying...');
                     loadHtml2Canvas();
                 } else {
-                    console.log('html2canvas is available and ready!');
+                    // html2canvas is available and ready
                 }
             }, 1000);
         });
@@ -174,6 +170,205 @@
             font-size: 0.8rem;
             padding: 4px 8px;
             border-radius: 4px;
+        }
+
+        /* Price List Dropdown Styles */
+        .price-list-selected {
+            color: #1e7e34 !important;
+            font-weight: 600 !important;
+        }
+
+        .price-list-option {
+            padding: 8px 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background-color 0.2s ease;
+        }
+
+        .price-list-option:hover {
+            background-color: #f8f9fa;
+        }
+
+        .price-list-option input[type="checkbox"] {
+            margin: 0;
+        }
+
+        .price-list-option label {
+            margin: 0;
+            cursor: pointer;
+            flex: 1;
+            color: #434662;
+        }
+
+        .price-list-option.selected {
+            background-color: #d4edda;
+            border-left: 4px solid #1e7e34;
+        }
+
+        .price-list-option.selected label {
+            color: #1e7e34;
+            font-weight: 600;
+        }
+
+        .current-price-list-display {
+            padding: 12px;
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            border: 1px solid #e9ecef;
+            margin-top: 10px;
+        }
+
+        .current-price-list-display .loaded-list {
+            color: #1e7e34;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .current-price-list-display .loaded-list::before {
+            content: "✓";
+            color: #1e7e34;
+            font-weight: bold;
+        }
+
+        /* Multi-price list styling */
+        .active-lists-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .active-price-list {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            background-color: #e8f5e8;
+            border: 1px solid #28a745;
+            border-radius: 4px;
+            margin-bottom: 5px;
+        }
+        
+        .active-price-list .list-name {
+            font-weight: bold;
+            color: #155724;
+        }
+        
+        .active-price-list .list-count {
+            font-size: 0.9em;
+            color: #6c757d;
+            margin-left: 8px;
+        }
+        
+        .active-price-list .deactivate-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: auto;
+        }
+        
+        .active-price-list .deactivate-btn:hover {
+            background: #c82333;
+        }
+
+        /* Multi-select dropdown styling */
+        .multi-select-container {
+            margin-bottom: 15px;
+        }
+        
+        .multi-select-dropdown {
+            position: relative;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: white;
+        }
+        
+        .multi-select-header {
+            padding: 10px 12px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+        
+        .multi-select-header:hover {
+            background: #e9ecef;
+        }
+        
+        .dropdown-arrow {
+            transition: transform 0.2s;
+        }
+        
+        .multi-select-dropdown.open .dropdown-arrow {
+            transform: rotate(180deg);
+        }
+        
+        .multi-select-options {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-top: none;
+            border-radius: 0 0 4px 4px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+        }
+        
+        .multi-select-dropdown.open .multi-select-options {
+            display: block;
+        }
+        
+        .multi-select-option {
+            padding: 8px 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .multi-select-option:hover {
+            background: #f8f9fa;
+        }
+        
+        .multi-select-option.selected {
+            background: #e8f5e8;
+            color: #155724;
+        }
+        
+        .multi-select-option input[type="checkbox"] {
+            margin: 0;
+        }
+        
+        .multi-select-actions {
+            margin-top: 10px;
+            display: flex;
+            gap: 8px;
+        }
+        
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 0.875rem;
+        }
+
+        .dropdown-content.show {
+            display: block !important;
         }
 
         .controls-section {
@@ -2178,36 +2373,62 @@
                 <div class="header-left">
                     <h1>Smart Price List Generator</h1>
                 </div>
-                <div class="header-right">
-                    <button id="adminButton" class="admin-button" onclick="openAdminModal()" title="Admin Panel">
-                        ⚙️ Admin
-                    </button>
-                </div>
                 <div class="header-currency">
-                    <label for="currency">Currency Converter:</label>
-                    <select id="currency">
-                        <option value="INR">INR (₹)</option>
-                        <option value="USD">USD ($)</option>
-                        <option value="EUR">EUR (€)</option>
-                        <option value="GBP">GBP (£)</option>
-                        <option value="AUD">AUD (A$)</option>
-                        <option value="SAR">SAR (﷼)</option>
-                        <option value="AED">AED (د.إ)</option>
-                        <option value="NGN">NGN (₦)</option>
-                    </select>
-                    <div id="kgCheckboxContainer" style="margin-left: 20px; display: none;">
+                    <div style="margin-right: 20px; display: flex; flex-direction: column; gap: 4px;">
+                        <label for="currency" style="font-weight: 600; color: #434662; font-size: 12px;">Currency:</label>
+                        <select id="currency">
+                            <option value="INR">INR (₹)</option>
+                            <option value="USD">USD ($)</option>
+                            <option value="EUR">EUR (€)</option>
+                            <option value="GBP">GBP (£)</option>
+                            <option value="AUD">AUD (A$)</option>
+                            <option value="SAR">SAR (﷼)</option>
+                            <option value="AED">AED (د.إ)</option>
+                            <option value="NGN">NGN (₦)</option>
+                        </select>
+                    </div>
+                    <div id="kgCheckboxContainer" style="margin-right: 20px; display: none;">
                         <label for="generateKgPrices" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
                             <input type="checkbox" id="generateKgPrices" style="margin: 0;">
                             <span>Generate Prices in KG</span>
                         </label>
                     </div>
-                    <div style="margin-left: 20px; display: flex; align-items: center; gap: 8px;">
-                        <label for="priceMultiplier" style="font-weight: 600; color: #434662;">Price Adjustment:</label>
-                        <input type="number" id="priceMultiplier" placeholder="0" step="0.1" style="width: 80px; padding: 4px 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
-                        <span style="color: #434662; font-weight: 500;">%</span>
-                        <small style="color: #666; margin-left: 5px;">(+/- percentage)</small>
-                    </div>
                     <div id="exchangeRateStatus" class="exchange-status"></div>
+                    <button id="adminButton" class="admin-button" onclick="openAdminModal()" title="Admin Panel" style="margin-left: 20px;">
+                        ⚙️ Admin
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Standalone Price List Selector Component -->
+        <div class="price-list-selector-section" style="background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; padding: 20px; margin: 20px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
+                <h3 style="margin: 0; color: #495057; font-size: 18px; font-weight: 600;">📋 Price List Manager</h3>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span id="activePriceListCount" style="background: #28a745; color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: 600;">0 Active</span>
+                    <button onclick="togglePriceListSelector()" class="btn btn-primary" style="padding: 6px 12px; font-size: 14px;">Manage Lists</button>
+                </div>
+            </div>
+            
+            <div id="priceListSelectorContent" style="display: none;">
+                <div style="background: white; border-radius: 6px; padding: 15px; border: 1px solid #dee2e6;">
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; font-weight: 600; color: #495057; margin-bottom: 8px;">Available Price Lists:</label>
+                        <div id="priceListOptions" style="max-height: 200px; overflow-y: auto; border: 1px solid #ced4da; border-radius: 4px; padding: 10px;">
+                            <!-- Price list options will be populated here -->
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div id="currentSelectionInfo" style="color: #6c757d; font-size: 14px;">
+                            No price lists selected
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <button onclick="clearAllPriceLists()" class="btn btn-secondary" style="padding: 6px 12px; font-size: 14px;">Clear All</button>
+                            <button onclick="applyPriceListSelection()" class="btn btn-success" style="padding: 6px 12px; font-size: 14px;">Apply Selection</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -2229,7 +2450,7 @@
                 </div>
 
                 <div class="filter-group">
-                    <h4>Densities <span class="filter-count" id="densityCount">0</span></h4>
+                    <h4>Density <span class="filter-count" id="densityCount">0</span></h4>
                     <div class="dropdown-container">
                         <div class="dropdown-button" data-filter="density">
                             <span class="dropdown-text">All densities...</span>
@@ -2347,15 +2568,35 @@
                             <!-- Price lists will be dynamically populated -->
                         </div>
                     </div>
+                    <div class="admin-list-section">
+                        <h4>Multi-Select Price Lists</h4>
+                        <div class="multi-select-container">
+                            <div class="multi-select-dropdown" id="multiSelectDropdown">
+                                <div class="multi-select-header" onclick="toggleMultiSelectDropdown()">
+                                    <span id="multiSelectText">Select price lists...</span>
+                                    <span class="dropdown-arrow">▼</span>
+                                </div>
+                                <div class="multi-select-options" id="multiSelectOptions">
+                                    <!-- Options will be populated dynamically -->
+                                </div>
+                            </div>
+                            <div class="multi-select-actions">
+                                <button class="btn btn-primary btn-sm" onclick="loadSelectedPriceLists()">Load Selected</button>
+                                <button class="btn btn-secondary btn-sm" onclick="clearAllActivePriceLists()">Clear All</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="admin-list-section">
+                        <h4>Active Price Lists</h4>
+                        <div id="currentPriceListDisplay" class="current-price-list-display">
+                            <p style="color: #6c757d; font-style: italic;">No price list loaded</p>
+                        </div>
+                    </div>
                 </div>
                 <div class="admin-section">
                     <h3>⚙️ Settings</h3>
                     <div class="admin-settings">
-                        <div class="setting-item">
-                            <label for="priceMultiplier">Price Multiplier (%):</label>
-                            <input type="number" id="priceMultiplier" value="0" step="0.1" placeholder="e.g., 10 for +10%, -5 for -5%">
-                            <button onclick="applyPriceMultiplier()" class="apply-btn">Apply</button>
-                        </div>
+                        <!-- Price multiplier functionality removed -->
                     </div>
                 </div>
             </div>
@@ -2366,8 +2607,11 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
     <script>
-        // Embedded complete product data
-        let productData = []; // Will be loaded from JSON file
+        // Multi-price list data structures
+        let productData = []; // Combined data from all active price lists
+        let activePriceLists = new Map(); // Map of listName -> {data: [], isActive: boolean, metadata: {}}
+        let currentLoadedPriceList = null; // Track currently loaded price list (for backward compatibility)
+        let selectedActivePriceLists = []; // Array of currently active price list names
         
         // Embedded product data removed - now loaded from ProductDataJson280225.json
         // const productDataOld = [{"Length":4,"PriceList":"INR25","Currency":"INR","Catagory":"Buns","Density":"Double Drawn","Product":"Bun20","Colors":"All Colors","Standard Weight":20,"Rate":300,"Sold in KG":"n"},{"Length":4,"PriceList":"INR25","Currency":"INR","Catagory":"Buns","Density":"Double Drawn","Product":"Bun30","Colors":"All Colors","Standard Weight":30,"Rate":400,"Sold in KG":"n"},{"Length":6,"PriceList":"INR25","Currency":"INR","Catagory":"Bangs","Density":"Double Drawn","Product":"Bangs","Colors":"All Colors","Standard Weight":15,"Rate":400,"Sold in KG":"n"},{"Length":10,"PriceList":"INR25","Currency":"INR","Catagory":"Bangs","Density":"Double Drawn","Product":"Curtain Bangs","Colors":"All Colors","Standard Weight":20,"Rate":650,"Sold in KG":"n"},{"Length":8,"PriceList":"INR25","Currency":"INR","Catagory":"PonyTails","Density":"Double Drawn","Product":"FlatClip Ponytail","Colors":"All Colors","Standard Weight":40,"Rate":750,"Sold in KG":"n"},{"Length":10,"PriceList":"INR25","Currency":"INR","Catagory":"PonyTails","Density":"Double Drawn","Product":"FlatClip Ponytail","Colors":"All Colors","Standard Weight":40,"Rate":900,"Sold in KG":"n"},{"Length":12,"PriceList":"INR25","Currency":"INR","Catagory":"PonyTails","Density":"Double Drawn","Product":"FlatClip Ponytail","Colors":"All Colors","Standard Weight":40,"Rate":1150,"Sold in KG":"n"},{"Length":14,"PriceList":"INR25","Currency":"INR","Catagory":"PonyTails","Density":"Double Drawn","Product":"FlatClip Ponytail","Colors":"All Colors","Standard Weight":40,"Rate":1450,"Sold in KG":"n"},{"Length":16,"PriceList":"INR25","Currency":"INR","Catagory":"PonyTails","Density":"Double Drawn","Product":"FlatClip Ponytail","Colors":"All Colors","Standard Weight":40,"Rate":1750,"Sold in KG":"n"},{"Length":18,"PriceList":"INR25","Currency":"INR","Catagory":"PonyTails","Density":"Double Drawn","Product":"FlatClip Ponytail","Colors":"All Colors","Standard Weight":40,"Rate":2175,"Sold in KG":"n"},{"Length":20,"PriceList":"INR25","Currency":"INR","Catagory":"PonyTails","Density":"Double Drawn","Product":"FlatClip Ponytail","Colors":"All Colors","Standard Weight":40,"Rate":2500,"Sold in KG":"n"},{"Length":22,"PriceList":"INR25","Currency":"INR","Catagory":"PonyTails","Density":"Double Drawn","Product":"FlatClip Ponytail","Colors":"All Colors","Standard Weight":40,"Rate":3000,"Sold in KG":"n"},{"Length":24,"PriceList":"INR25","Currency":"INR","Catagory":"PonyTails","Density":"Double Drawn","Product":"FlatClip Ponytail","Colors":"All Colors","Standard Weight":40,"Rate":3750,"Sold in KG":"n"},{"Length":26,"PriceList":"INR25","Currency":"INR","Catagory":"PonyTails","Density":"Double Drawn","Product":"FlatClip Ponytail","Colors":"All Colors","Standard Weight":40,"Rate":4100,"Sold in KG":"n"},{"Length":12,"PriceList":"INR25","Currency":"INR","Catagory":"CoverPatches","Density":"Double Drawn","Product":"FrontLine-13x1","Colors":"All Colors","Standard Weight":25,"Rate":3750,"Sold in KG":"n"},{"Length":12,"PriceList":"INR25","Currency":"INR","Catagory":"CoverPatches","Density":"Double Drawn","Product":"FrontLine-5x1","Colors":"All Colors","Standard Weight":15,"Rate":1750,"Sold in KG":"n"},{"Length":12,"PriceList":"INR25","Currency":"INR","Catagory":"CoverPatches","Density":"Double Drawn","Product":"FrontLine-2x1","Colors":"All Colors","Standard Weight":10,"Rate":1250,"Sold in KG":"n"},{"Length":12,"PriceList":"INR25","Currency":"INR","Catagory":"ClipOn","Density":"Double Drawn","Product":"ClipOn Classic","Colors":"All Colors","Standard Weight":100,"Rate":2700,"Sold in KG":"n"},{"Length":14,"PriceList":"INR25","Currency":"INR","Catagory":"ClipOn","Density":"Double Drawn","Product":"ClipOn Classic","Colors":"All Colors","Standard Weight":100,"Rate":2900,"Sold in KG":"n"},{"Length":16,"PriceList":"INR25","Currency":"INR","Catagory":"ClipOn","Density":"Double Drawn","Product":"ClipOn Classic","Colors":"All Colors","Standard Weight":100,"Rate":3500,"Sold in KG":"n"},{"Length":18,"PriceList":"INR25","Currency":"INR","Catagory":"ClipOn","Density":"Double Drawn","Product":"ClipOn Classic","Colors":"All Colors","Standard Weight":100,"Rate":4200,"Sold in KG":"n"},{"Length":20,"PriceList":"INR25","Currency":"INR","Catagory":"ClipOn","Density":"Double Drawn","Product":"ClipOn Classic","Colors":"All Colors","Standard Weight":100,"Rate":4900,"Sold in KG":"n"},{"Length":22,"PriceList":"INR25","Currency":"INR","Catagory":"ClipOn","Density":"Double Drawn","Product":"ClipOn Classic","Colors":"All Colors","Standard Weight":100,"Rate":5900,"Sold in KG":"n"},{"Length":24,"PriceList":"INR25","Currency":"INR","Catagory":"ClipOn","Density":"Double Drawn","Product":"ClipOn Classic","Colors":"All Colors","Standard Weight":100,"Rate":6600,"Sold in KG":"n"},{"Length":26,"PriceList":"INR25","Currency":"INR","Catagory":"ClipOn","Density":"Double Drawn","Product":"ClipOn Classic","Colors":"All Colors","Standard Weight":100,"Rate":7700,"Sold in KG":"n"},{"Length":28,"PriceList":"INR25","Currency":"INR","Catagory":"ClipOn","Density":"Double Drawn","Product":"ClipOn Classic","Colors":"All Colors","Standard Weight":100,"Rate":9100,"Sold in KG":"n"},{"Length":30,"PriceList":"INR25","Currency":"INR","Catagory":"ClipOn","Density":"Double Drawn","Product":"ClipOn Classic","Colors":"All Colors","Standard Weight":100,"Rate":10500,"Sold in KG":"n"},{"Length":32,"PriceList":"INR25","Currency":"INR","Catagory":"ClipOn","Density":"Double Drawn","Product":"ClipOn Classic","Colors":"All Colors","Standard Weight":100,"Rate":11900,"Sold in KG":"n"},{"Length":12,"PriceList":"INR25","Currency":"INR","Catagory":"ClipOn","Density":"Double Drawn","Product":"ClipOn Seamless","Colors":"All Colors","Standard Weight":100,"Rate":5000,"Sold in KG":"n"},{"Length":14,"PriceList":"INR25","Currency":"INR","Catagory":"ClipOn","Density":"Double Drawn","Product":"ClipOn Seamless","Colors":"All Colors","Standard Weight":100,"Rate":5100,"Sold in KG":"n"},{"Length":16,"PriceList":"INR25","Currency":"INR","Catagory":"ClipOn","Density":"Double Drawn","Product":"ClipOn Seamless","Colors":"All Colors","Standard Weight":100,"Rate":5700,"Sold in KG":"n"},{"Length":18,"PriceList":"INR25","Currency":"INR","Catagory":"ClipOn","Density":"Double Drawn","Product":"ClipOn Seamless","Colors":"All Colors","Standard Weight":100,"Rate":6400,"Sold in KG":"n"},{"Length":20,"PriceList":"INR25","Currency":"INR","Catagory":"ClipOn","Density":"Double Drawn","Product":"ClipOn Seamless","Colors":"All Colors","Standard Weight":100,"Rate":7100,"Sold in KG":"n"},{"Length":22,"PriceList":"INR25","Currency":"INR","Catagory":"ClipOn","Density":"Double Drawn","Product":"ClipOn Seamless","Colors":"All Colors","Standard Weight":100,"Rate":8100,"Sold in KG":"n"},{"Length":24,"PriceList":"INR25","Currency":"INR","Catagory":"ClipOn","Density":"Double Drawn","Product":"ClipOn Seamless","Colors":"All Colors","Standard Weight":100,"Rate":8800,"Sold in KG":"n"},{"Length":26,"PriceList":"INR25","Currency":"INR","Catagory":"ClipOn","Density":"Double Drawn","Product":"ClipOn Seamless","Colors":"All Colors","Standard Weight":100,"Rate":9900,"Sold in KG":"n"},{"Length":28,"PriceList":"INR25","Currency":"INR","Catagory":"ClipOn","Density":"Double Drawn","Product":"ClipOn Seamless","Colors":"All Colors","Standard Weight":100,"Rate":11300,"Sold in KG":"n"},{"Length":30,"PriceList":"INR25","Currency":"INR","Catagory":"ClipOn","Density":"Double Drawn","Product":"ClipOn Seamless","Colors":"All Colors","Standard Weight":100,"Rate":12700,"Sold in KG":"n"},{"Length":32,"PriceList":"INR25","Currency":"INR","Catagory":"ClipOn","Density":"Double Drawn","Product":"ClipOn Seamless","Colors":"All Colors","Standard Weight":100,"Rate":14100,"Sold in KG":"n"},{"Length":12,"PriceList":"INR25","Currency":"INR","Catagory":"Tips","Density":"Double Drawn","Product":"Tips","Colors":"All Colors","Standard Weight":100,"Rate":3000,"Sold in KG":"y"},{"Length":14,"PriceList":"INR25","Currency":"INR","Catagory":"Tips","Density":"Double Drawn","Product":"Tips","Colors":"All Colors","Standard Weight":100,"Rate":3500,"Sold in KG":"y"},{"Length":16,"PriceList":"INR25","Currency":"INR","Catagory":"Tips","Density":"Double Drawn","Product":"Tips","Colors":"All Colors","Standard Weight":100,"Rate":4250,"Sold in KG":"y"},{"Length":18,"PriceList":"INR25","Currency":"INR","Catagory":"Tips","Density":"Double Drawn","Product":"Tips","Colors":"All Colors","Standard Weight":100,"Rate":4750,"Sold in KG":"y"},{"Length":20,"PriceList":"INR25","Currency":"INR","Catagory":"Tips","Density":"Double Drawn","Product":"Tips","Colors":"All Colors","Standard Weight":100,"Rate":5500,"Sold in KG":"y"},{"Length":22,"PriceList":"INR25","Currency":"INR","Catagory":"Tips","Density":"Double Drawn","Product":"Tips","Colors":"All Colors","Standard Weight":100,"Rate":6500,"Sold in KG":"y"},{"Length":24,"PriceList":"INR25","Currency":"INR","Catagory":"Tips","Density":"Double Drawn","Product":"Tips","Colors":"All Colors","Standard Weight":100,"Rate":6750,"Sold in KG":"y"},{"Length":26,"PriceList":"INR25","Currency":"INR","Catagory":"Tips","Density":"Double Drawn","Product":"Tips","Colors":"All Colors","Standard Weight":100,"Rate":7750,"Sold in KG":"y"},{"Length":28,"PriceList":"INR25","Currency":"INR","Catagory":"Tips","Density":"Double Drawn","Product":"Tips","Colors":"All Colors","Standard Weight":100,"Rate":8750,"Sold in KG":"y"},{"Length":30,"PriceList":"INR25","Currency":"INR","Catagory":"Tips","Density":"Double Drawn","Product":"Tips","Colors":"All Colors","Standard Weight":100,"Rate":10000,"Sold in KG":"y"},{"Length":32,"PriceList":"INR25","Currency":"INR","Catagory":"Tips","Density":"Double Drawn","Product":"Tips","Colors":"All Colors","Standard Weight":100,"Rate":11500,"Sold in KG":"y"},{"Length":12,"PriceList":"INR25","Currency":"INR","Catagory":"Tips","Density":"Double Drawn","Product":"TipsNano","Colors":"All Colors","Standard Weight":100,"Rate":3200,"Sold in KG":"y"},{"Length":14,"PriceList":"INR25","Currency":"INR","Catagory":"Tips","Density":"Double Drawn","Product":"TipsNano","Colors":"All Colors","Standard Weight":100,"Rate":3700,"Sold in KG":"y"},{"Length":16,"PriceList":"INR25","Currency":"INR","Catagory":"Tips","Density":"Double Drawn","Product":"TipsNano","Colors":"All Colors","Standard Weight":100,"Rate":4450,"Sold in KG":"y"},{"Length":18,"PriceList":"INR25","Currency":"INR","Catagory":"Tips","Density":"Double Drawn","Product":"TipsNano","Colors":"All Colors","Standard Weight":100,"Rate":4950,"Sold in KG":"y"},{"Length":20,"PriceList":"INR25","Currency":"INR","Catagory":"Tips","Density":"Double Drawn","Product":"TipsNano","Colors":"All Colors","Standard Weight":100,"Rate":5700,"Sold in KG":"y"},{"Length":22,"PriceList":"INR25","Currency":"INR","Catagory":"Tips","Density":"Double Drawn","Product":"TipsNano","Colors":"All Colors","Standard Weight":100,"Rate":6700,"Sold in KG":"y"},{"Length":24,"PriceList":"INR25","Currency":"INR","Catagory":"Tips","Density":"Double Drawn","Product":"TipsNano","Colors":"All Colors","Standard Weight":100,"Rate":6950,"Sold in KG":"y"},{"Length":26,"PriceList":"INR25","Currency":"INR","Catagory":"Tips","Density":"Double Drawn","Product":"TipsNano","Colors":"All Colors","Standard Weight":100,"Rate":7950,"Sold in KG":"y"},{"Length":28,"PriceList":"INR25","Currency":"INR","Catagory":"Tips","Density":"Double Drawn","Product":"TipsNano","Colors":"All Colors","Standard Weight":100,"Rate":8950,"Sold in KG":"y"},{"Length":30,"PriceList":"INR25","Currency":"INR","Catagory":"Tips","Density":"Double Drawn","Product":"TipsNano","Colors":"All Colors","Standard Weight":100,"Rate":10200,"Sold in KG":"y"},{"Length":32,"PriceList":"INR25","Currency":"INR","Catagory":"Tips","Density":"Double Drawn","Product":"TipsNano","Colors":"All Colors","Standard Weight":100,"Rate":11700,"Sold in KG":"y"},{"Length":12,"PriceList":"INR25","Currency":"INR","Catagory":"Tips","Density":"Double Drawn","Product":"TipsY","Colors":"All Colors","Standard Weight":100,"Rate":4250,"Sold in KG":"y"},{"Length":14,"PriceList":"INR25","Currency":"INR","Catagory":"Tips","Density":"Double Drawn","Product":"TipsY","Colors":"All Colors","Standard Weight":100,"Rate":4500,"Sold in KG":"y"},{"Length":16,"PriceList":"INR25","Currency":"INR","Catagory":"Tips","Density":"Double Drawn","Product":"TipsY","Colors":"All Colors","Standard Weight":100,"Rate":5000,"Sold in KG":"y"},{"Length":18,"PriceList":"INR25","Currency":"INR","Catagory":"Tips","Density":"Double Drawn","Product":"TipsY","Colors":"All Colors","Standard Weight":100,"Rate":6000,"Sold in KG":"y"},{"Length":20,"PriceList":"INR25","Currency":"INR","Catagory":"Tips","Density":"Double Drawn","Product":"TipsY","Colors":"All Colors","Standard Weight":100,"Rate":6500,"Sold in KG":"y"},{"Length":22,"PriceList":"INR25","Currency":"INR","Catagory":"Tips","Density":"Double Drawn","Product":"TipsY","Colors":"All Colors","Standard Weight":100,"Rate":7250,"Sold in KG":"y"},{"Length":24,"PriceList":"INR25","Currency":"INR","Catagory":"Tips","Density":"Double Drawn","Product":"TipsY","Colors":"All Colors","Standard Weight":100,"Rate":8000,"Sold in KG":"y"},{"Length":26,"PriceList":"INR25","Currency":"INR","Catagory":"Tips","Density":"Double Drawn","Product":"TipsY","Colors":"All Colors","Standard Weight":100,"Rate":8750,"Sold in KG":"y"},{"Length":28,"PriceList":"INR25","Currency":"INR","Catagory":"Tips","Density":"Double Drawn","Product":"TipsY","Colors":"All Colors","Standard Weight":100,"Rate":10000,"Sold in KG":"y"},{"Length":30,"PriceList":"INR25","Currency":"INR","Catagory":"Tips","Density":"Double Drawn","Product":"TipsY","Colors":"All Colors","Standard Weight":100,"Rate":11500,"Sold in KG":"y"},{"Length":32,"PriceList":"INR25","Currency":"INR","Catagory":"Tips","Density":"Double Drawn","Product":"TipsY","Colors":"All Colors","Standard Weight":100,"Rate":12500,"Sold in KG":"y"},{"Length":12,"PriceList":"INR25","Currency":"INR","Catagory":"Tapes","Density":"Double Drawn","Product":"Tape Extension","Colors":"All Colors","Standard Weight":100,"Rate":3500,"Sold in KG":"y"},{"Length":14,"PriceList":"INR25","Currency":"INR","Catagory":"Tapes","Density":"Double Drawn","Product":"Tape Extension","Colors":"All Colors","Standard Weight":100,"Rate":4000,"Sold in KG":"y"},{"Length":16,"PriceList":"INR25","Currency":"INR","Catagory":"Tapes","Density":"Double Drawn","Product":"Tape Extension","Colors":"All Colors","Standard Weight":100,"Rate":4500,"Sold in KG":"y"},{"Length":18,"PriceList":"INR25","Currency":"INR","Catagory":"Tapes","Density":"Double Drawn","Product":"Tape Extension","Colors":"All Colors","Standard Weight":100,"Rate":5500,"Sold in KG":"y"},{"Length":20,"PriceList":"INR25","Currency":"INR","Catagory":"Tapes","Density":"Double Drawn","Product":"Tape Extension","Colors":"All Colors","Standard Weight":100,"Rate":6000,"Sold in KG":"y"},{"Length":22,"PriceList":"INR25","Currency":"INR","Catagory":"Tapes","Density":"Double Drawn","Product":"Tape Extension","Colors":"All Colors","Standard Weight":100,"Rate":7000,"Sold in KG":"y"},{"Length":24,"PriceList":"INR25","Currency":"INR","Catagory":"Tapes","Density":"Double Drawn","Product":"Tape Extension","Colors":"All Colors","Standard Weight":100,"Rate":8500,"Sold in KG":"y"},{"Length":26,"PriceList":"INR25","Currency":"INR","Catagory":"Tapes","Density":"Double Drawn","Product":"Tape Extension","Colors":"All Colors","Standard Weight":100,"Rate":9500,"Sold in KG":"y"},{"Length":28,"PriceList":"INR25","Currency":"INR","Catagory":"Tapes","Density":"Double Drawn","Product":"Tape Extension","Colors":"All Colors","Standard Weight":100,"Rate":10500,"Sold in KG":"y"},{"Length":30,"PriceList":"INR25","Currency":"INR","Catagory":"Tapes","Density":"Double Drawn","Product":"Tape Extension","Colors":"All Colors","Standard Weight":100,"Rate":12000,"Sold in KG":"y"},{"Length":10,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Single Drawn","Product":"Wig-Closure5x5","Colors":"All Colors","Standard Weight":250,"Rate":7000,"Sold in KG":"N"},{"Length":12,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Single Drawn","Product":"Wig-Closure5x5","Colors":"All Colors","Standard Weight":250,"Rate":7250,"Sold in KG":"N"},{"Length":14,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Single Drawn","Product":"Wig-Closure5x5","Colors":"All Colors","Standard Weight":250,"Rate":7750,"Sold in KG":"N"},{"Length":16,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Single Drawn","Product":"Wig-Closure5x5","Colors":"All Colors","Standard Weight":250,"Rate":8000,"Sold in KG":"N"},{"Length":18,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Single Drawn","Product":"Wig-Closure5x5","Colors":"All Colors","Standard Weight":250,"Rate":8750,"Sold in KG":"N"},{"Length":20,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Single Drawn","Product":"Wig-Closure5x5","Colors":"All Colors","Standard Weight":250,"Rate":9500,"Sold in KG":"N"},{"Length":22,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Single Drawn","Product":"Wig-Closure5x5","Colors":"All Colors","Standard Weight":300,"Rate":11000,"Sold in KG":"N"},{"Length":24,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Single Drawn","Product":"Wig-Closure5x5","Colors":"All Colors","Standard Weight":300,"Rate":12750,"Sold in KG":"N"},{"Length":26,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Single Drawn","Product":"Wig-Closure5x5","Colors":"All Colors","Standard Weight":300,"Rate":15000,"Sold in KG":"N"},{"Length":28,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Single Drawn","Product":"Wig-Closure5x5","Colors":"All Colors","Standard Weight":300,"Rate":17500,"Sold in KG":"N"},{"Length":30,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Single Drawn","Product":"Wig-Closure5x5","Colors":"All Colors","Standard Weight":300,"Rate":20750,"Sold in KG":"N"},{"Length":10,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Single Drawn","Product":"Wig-Closure6x2","Colors":"All Colors","Standard Weight":250,"Rate":6350,"Sold in KG":"N"},{"Length":12,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Single Drawn","Product":"Wig-Closure6x2","Colors":"All Colors","Standard Weight":250,"Rate":6550,"Sold in KG":"N"},{"Length":14,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Single Drawn","Product":"Wig-Closure6x2","Colors":"All Colors","Standard Weight":250,"Rate":7000,"Sold in KG":"N"},{"Length":16,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Single Drawn","Product":"Wig-Closure6x2","Colors":"All Colors","Standard Weight":250,"Rate":7500,"Sold in KG":"N"},{"Length":18,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Single Drawn","Product":"Wig-Closure6x2","Colors":"All Colors","Standard Weight":250,"Rate":8250,"Sold in KG":"N"},{"Length":20,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Single Drawn","Product":"Wig-Closure6x2","Colors":"All Colors","Standard Weight":250,"Rate":8650,"Sold in KG":"N"},{"Length":22,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Single Drawn","Product":"Wig-Closure6x2","Colors":"All Colors","Standard Weight":300,"Rate":9550,"Sold in KG":"N"},{"Length":24,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Single Drawn","Product":"Wig-Closure6x2","Colors":"All Colors","Standard Weight":300,"Rate":11000,"Sold in KG":"N"},{"Length":26,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Single Drawn","Product":"Wig-Closure6x2","Colors":"All Colors","Standard Weight":300,"Rate":13000,"Sold in KG":"N"},{"Length":28,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Single Drawn","Product":"Wig-Closure6x2","Colors":"All Colors","Standard Weight":300,"Rate":16250,"Sold in KG":"N"},{"Length":30,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Single Drawn","Product":"Wig-Closure6x2","Colors":"All Colors","Standard Weight":300,"Rate":17550,"Sold in KG":"N"},{"Length":10,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Single Drawn","Product":"Wig-Frontal13x4","Colors":"All Colors","Standard Weight":250,"Rate":8500,"Sold in KG":"N"},{"Length":12,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Single Drawn","Product":"Wig-Frontal13x4","Colors":"All Colors","Standard Weight":250,"Rate":8750,"Sold in KG":"N"},{"Length":14,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Single Drawn","Product":"Wig-Frontal13x4","Colors":"All Colors","Standard Weight":250,"Rate":9250,"Sold in KG":"N"},{"Length":16,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Single Drawn","Product":"Wig-Frontal13x4","Colors":"All Colors","Standard Weight":250,"Rate":9600,"Sold in KG":"N"},{"Length":18,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Single Drawn","Product":"Wig-Frontal13x4","Colors":"All Colors","Standard Weight":250,"Rate":10500,"Sold in KG":"N"},{"Length":20,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Single Drawn","Product":"Wig-Frontal13x4","Colors":"All Colors","Standard Weight":250,"Rate":10750,"Sold in KG":"N"},{"Length":22,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Single Drawn","Product":"Wig-Frontal13x4","Colors":"All Colors","Standard Weight":300,"Rate":11800,"Sold in KG":"N"},{"Length":24,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Single Drawn","Product":"Wig-Frontal13x4","Colors":"All Colors","Standard Weight":300,"Rate":13000,"Sold in KG":"N"},{"Length":26,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Single Drawn","Product":"Wig-Frontal13x4","Colors":"All Colors","Standard Weight":300,"Rate":15000,"Sold in KG":"N"},{"Length":28,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Single Drawn","Product":"Wig-Frontal13x4","Colors":"All Colors","Standard Weight":300,"Rate":18500,"Sold in KG":"N"},{"Length":30,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Single Drawn","Product":"Wig-Frontal13x4","Colors":"All Colors","Standard Weight":300,"Rate":19750,"Sold in KG":"N"},{"Length":10,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Single Drawn","Product":"Wig-Frontal13x6","Colors":"All Colors","Standard Weight":250,"Rate":10000,"Sold in KG":"N"},{"Length":12,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Single Drawn","Product":"Wig-Frontal13x6","Colors":"All Colors","Standard Weight":250,"Rate":10750,"Sold in KG":"N"},{"Length":14,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Single Drawn","Product":"Wig-Frontal13x6","Colors":"All Colors","Standard Weight":250,"Rate":11500,"Sold in KG":"N"},{"Length":16,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Single Drawn","Product":"Wig-Frontal13x6","Colors":"All Colors","Standard Weight":250,"Rate":11750,"Sold in KG":"N"},{"Length":18,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Single Drawn","Product":"Wig-Frontal13x6","Colors":"All Colors","Standard Weight":250,"Rate":12750,"Sold in KG":"N"},{"Length":20,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Single Drawn","Product":"Wig-Frontal13x6","Colors":"All Colors","Standard Weight":250,"Rate":13500,"Sold in KG":"N"},{"Length":22,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Single Drawn","Product":"Wig-Frontal13x6","Colors":"All Colors","Standard Weight":300,"Rate":15750,"Sold in KG":"N"},{"Length":24,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Single Drawn","Product":"Wig-Frontal13x6","Colors":"All Colors","Standard Weight":300,"Rate":17500,"Sold in KG":"N"},{"Length":26,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Single Drawn","Product":"Wig-Frontal13x6","Colors":"All Colors","Standard Weight":300,"Rate":20000,"Sold in KG":"N"},{"Length":28,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Single Drawn","Product":"Wig-Frontal13x6","Colors":"All Colors","Standard Weight":300,"Rate":22500,"Sold in KG":"N"},{"Length":30,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Single Drawn","Product":"Wig-Frontal13x6","Colors":"All Colors","Standard Weight":300,"Rate":26000,"Sold in KG":"N"},{"Length":10,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Double Drawn","Product":"Wig-DD-Closure6x2","Colors":"All Colors","Standard Weight":250,"Rate":8250,"Sold in KG":"N"},{"Length":12,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Double Drawn","Product":"Wig-DD-Closure6x2","Colors":"All Colors","Standard Weight":250,"Rate":8500,"Sold in KG":"N"},{"Length":14,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Double Drawn","Product":"Wig-DD-Closure6x2","Colors":"All Colors","Standard Weight":250,"Rate":9000,"Sold in KG":"N"},{"Length":16,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Double Drawn","Product":"Wig-DD-Closure6x2","Colors":"All Colors","Standard Weight":250,"Rate":10250,"Sold in KG":"N"},{"Length":18,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Double Drawn","Product":"Wig-DD-Closure6x2","Colors":"All Colors","Standard Weight":250,"Rate":11000,"Sold in KG":"N"},{"Length":20,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Double Drawn","Product":"Wig-DD-Closure6x2","Colors":"All Colors","Standard Weight":250,"Rate":11750,"Sold in KG":"N"},{"Length":22,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Double Drawn","Product":"Wig-DD-Closure6x2","Colors":"All Colors","Standard Weight":300,"Rate":13250,"Sold in KG":"N"},{"Length":24,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Double Drawn","Product":"Wig-DD-Closure6x2","Colors":"All Colors","Standard Weight":300,"Rate":14750,"Sold in KG":"N"},{"Length":26,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Double Drawn","Product":"Wig-DD-Closure6x2","Colors":"All Colors","Standard Weight":300,"Rate":17750,"Sold in KG":"N"},{"Length":28,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Double Drawn","Product":"Wig-DD-Closure6x2","Colors":"All Colors","Standard Weight":300,"Rate":20250,"Sold in KG":"N"},{"Length":30,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Double Drawn","Product":"Wig-DD-Closure6x2","Colors":"All Colors","Standard Weight":300,"Rate":23250,"Sold in KG":"N"},{"Length":10,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Double Drawn","Product":"Wig-DD-Closure5x5","Colors":"All Colors","Standard Weight":250,"Rate":9000,"Sold in KG":"N"},{"Length":12,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Double Drawn","Product":"Wig-DD-Closure5x5","Colors":"All Colors","Standard Weight":250,"Rate":9250,"Sold in KG":"N"},{"Length":14,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Double Drawn","Product":"Wig-DD-Closure5x5","Colors":"All Colors","Standard Weight":250,"Rate":6750,"Sold in KG":"N"},{"Length":16,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Double Drawn","Product":"Wig-DD-Closure5x5","Colors":"All Colors","Standard Weight":250,"Rate":11000,"Sold in KG":"N"},{"Length":18,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Double Drawn","Product":"Wig-DD-Closure5x5","Colors":"All Colors","Standard Weight":250,"Rate":11750,"Sold in KG":"N"},{"Length":20,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Double Drawn","Product":"Wig-DD-Closure5x5","Colors":"All Colors","Standard Weight":250,"Rate":12500,"Sold in KG":"N"},{"Length":22,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Double Drawn","Product":"Wig-DD-Closure5x5","Colors":"All Colors","Standard Weight":300,"Rate":14000,"Sold in KG":"N"},{"Length":24,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Double Drawn","Product":"Wig-DD-Closure5x5","Colors":"All Colors","Standard Weight":300,"Rate":15750,"Sold in KG":"N"},{"Length":26,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Double Drawn","Product":"Wig-DD-Closure5x5","Colors":"All Colors","Standard Weight":300,"Rate":19000,"Sold in KG":"N"},{"Length":28,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Double Drawn","Product":"Wig-DD-Closure5x5","Colors":"All Colors","Standard Weight":300,"Rate":21500,"Sold in KG":"N"},{"Length":30,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Double Drawn","Product":"Wig-DD-Closure5x5","Colors":"All Colors","Standard Weight":300,"Rate":24750,"Sold in KG":"N"},{"Length":10,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Double Drawn","Product":"Wig-DD-Frontal13x4","Colors":"All Colors","Standard Weight":250,"Rate":10750,"Sold in KG":"N"},{"Length":12,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Double Drawn","Product":"Wig-DD-Frontal13x4","Colors":"All Colors","Standard Weight":250,"Rate":11250,"Sold in KG":"N"},{"Length":14,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Double Drawn","Product":"Wig-DD-Frontal13x4","Colors":"All Colors","Standard Weight":250,"Rate":13000,"Sold in KG":"N"},{"Length":16,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Double Drawn","Product":"Wig-DD-Frontal13x4","Colors":"All Colors","Standard Weight":250,"Rate":13750,"Sold in KG":"N"},{"Length":18,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Double Drawn","Product":"Wig-DD-Frontal13x4","Colors":"All Colors","Standard Weight":250,"Rate":15750,"Sold in KG":"N"},{"Length":20,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Double Drawn","Product":"Wig-DD-Frontal13x4","Colors":"All Colors","Standard Weight":250,"Rate":16000,"Sold in KG":"N"},{"Length":22,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Double Drawn","Product":"Wig-DD-Frontal13x4","Colors":"All Colors","Standard Weight":300,"Rate":18000,"Sold in KG":"N"},{"Length":24,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Double Drawn","Product":"Wig-DD-Frontal13x4","Colors":"All Colors","Standard Weight":300,"Rate":20000,"Sold in KG":"N"},{"Length":26,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Double Drawn","Product":"Wig-DD-Frontal13x4","Colors":"All Colors","Standard Weight":300,"Rate":23250,"Sold in KG":"N"},{"Length":28,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Double Drawn","Product":"Wig-DD-Frontal13x4","Colors":"All Colors","Standard Weight":300,"Rate":25750,"Sold in KG":"N"},{"Length":30,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Double Drawn","Product":"Wig-DD-Frontal13x4","Colors":"All Colors","Standard Weight":300,"Rate":29250,"Sold in KG":"N"},{"Length":10,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Double Drawn","Product":"Wig-DD-Frontal13x6","Colors":"All Colors","Standard Weight":250,"Rate":12000,"Sold in KG":"N"},{"Length":12,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Double Drawn","Product":"Wig-DD-Frontal13x6","Colors":"All Colors","Standard Weight":250,"Rate":12750,"Sold in KG":"N"},{"Length":14,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Double Drawn","Product":"Wig-DD-Frontal13x6","Colors":"All Colors","Standard Weight":250,"Rate":14500,"Sold in KG":"N"},{"Length":16,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Double Drawn","Product":"Wig-DD-Frontal13x6","Colors":"All Colors","Standard Weight":250,"Rate":15250,"Sold in KG":"N"},{"Length":18,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Double Drawn","Product":"Wig-DD-Frontal13x6","Colors":"All Colors","Standard Weight":250,"Rate":16250,"Sold in KG":"N"},{"Length":20,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Double Drawn","Product":"Wig-DD-Frontal13x6","Colors":"All Colors","Standard Weight":250,"Rate":17500,"Sold in KG":"N"},{"Length":22,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Double Drawn","Product":"Wig-DD-Frontal13x6","Colors":"All Colors","Standard Weight":300,"Rate":19750,"Sold in KG":"N"},{"Length":24,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Double Drawn","Product":"Wig-DD-Frontal13x6","Colors":"All Colors","Standard Weight":300,"Rate":21500,"Sold in KG":"N"},{"Length":26,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Double Drawn","Product":"Wig-DD-Frontal13x6","Colors":"All Colors","Standard Weight":300,"Rate":25000,"Sold in KG":"N"},{"Length":28,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Double Drawn","Product":"Wig-DD-Frontal13x6","Colors":"All Colors","Standard Weight":300,"Rate":27500,"Sold in KG":"N"},{"Length":30,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Double Drawn","Product":"Wig-DD-Frontal13x6","Colors":"All Colors","Standard Weight":300,"Rate":31000,"Sold in KG":"N"},{"Length":12,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Double Drawn","Product":"Wig-SilkTopper","Colors":"All Colors","Standard Weight":125,"Rate":11000,"Sold in KG":"N"},{"Length":14,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Double Drawn","Product":"Wig-SilkTopper","Colors":"All Colors","Standard Weight":125,"Rate":12000,"Sold in KG":"N"},{"Length":16,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Double Drawn","Product":"Wig-SilkTopper","Colors":"All Colors","Standard Weight":130,"Rate":13750,"Sold in KG":"N"},{"Length":18,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Double Drawn","Product":"Wig-SilkTopper","Colors":"All Colors","Standard Weight":130,"Rate":14750,"Sold in KG":"N"},{"Length":20,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Double Drawn","Product":"Wig-SilkTopper","Colors":"All Colors","Standard Weight":140,"Rate":15750,"Sold in KG":"N"},{"Length":22,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Double Drawn","Product":"Wig-SilkTopper","Colors":"All Colors","Standard Weight":140,"Rate":16750,"Sold in KG":"N"},{"Length":24,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Double Drawn","Product":"Wig-SilkTopper","Colors":"All Colors","Standard Weight":150,"Rate":18750,"Sold in KG":"N"},{"Length":26,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Double Drawn","Product":"Wig-SilkTopper","Colors":"All Colors","Standard Weight":150,"Rate":19750,"Sold in KG":"N"},{"Length":28,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Double Drawn","Product":"Wig-SilkTopper","Colors":"All Colors","Standard Weight":160,"Rate":20000,"Sold in KG":"N"},{"Length":30,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Double Drawn","Product":"Wig-SilkTopper","Colors":"All Colors","Standard Weight":160,"Rate":21750,"Sold in KG":"N"},{"Length":32,"PriceList":"INR25","Currency":"INR","Catagory":"Wigs","Density":"Double Drawn","Product":"Wig-SilkTopper","Colors":"All Colors","Standard Weight":175,"Rate":22750,"Sold in KG":"N"},{"Length":14,"PriceList":"INR25","Currency":"INR","Catagory":"Toppers","Density":"Double Drawn","Product":"SilkTopper-3x2","Colors":"All Colors","Standard Weight":40,"Rate":4400,"Sold in KG":"N"},{"Length":18,"PriceList":"INR25","Currency":"INR","Catagory":"Toppers","Density":"Double Drawn","Product":"SilkTopper-3x2","Colors":"All Colors","Standard Weight":40,"Rate":5600,"Sold in KG":"N"},{"Length":22,"PriceList":"INR25","Currency":"INR","Catagory":"Toppers","Density":"Double Drawn","Product":"SilkTopper-3x2","Colors":"All Colors","Standard Weight":40,"Rate":7800,"Sold in KG":"N"},{"Length":14,"PriceList":"INR25","Currency":"INR","Catagory":"Toppers","Density":"Double Drawn","Product":"SilkTopper-4x2","Colors":"All Colors","Standard Weight":40,"Rate":4800,"Sold in KG":"N"},{"Length":18,"PriceList":"INR25","Currency":"INR","Catagory":"Toppers","Density":"Double Drawn","Product":"SilkTopper-4x2","Colors":"All Colors","Standard Weight":40,"Rate":6400,"Sold in KG":"N"},{"Length":22,"PriceList":"INR25","Currency":"INR","Catagory":"Toppers","Density":"Double Drawn","Product":"SilkTopper-4x2","Colors":"All Colors","Standard Weight":40,"Rate":8800,"Sold in KG":"N"},{"Length":14,"PriceList":"INR25","Currency":"INR","Catagory":"Toppers","Density":"Double Drawn","Product":"SilkTopper-5x2","Colors":"All Colors","Standard Weight":40,"Rate":5200,"Sold in KG":"N"},{"Length":18,"PriceList":"INR25","Currency":"INR","Catagory":"Toppers","Density":"Double Drawn","Product":"SilkTopper-5x2","Colors":"All Colors","Standard Weight":40,"Rate":7000,"Sold in KG":"N"},{"Length":22,"PriceList":"INR25","Currency":"INR","Catagory":"Toppers","Density":"Double Drawn","Product":"SilkTopper-5x2","Colors":"All Colors","Standard Weight":40,"Rate":10400,"Sold in KG":"N"},{"Length":14,"PriceList":"INR25","Currency":"INR","Catagory":"Toppers","Density":"Double Drawn","Product":"SilkTopper-5x3","Colors":"All Colors","Standard Weight":40,"Rate":5600,"Sold in KG":"N"},{"Length":18,"PriceList":"INR25","Currency":"INR","Catagory":"Toppers","Density":"Double Drawn","Product":"SilkTopper-5x3","Colors":"All Colors","Standard Weight":40,"Rate":7500,"Sold in KG":"N"},{"Length":22,"PriceList":"INR25","Currency":"INR","Catagory":"Toppers","Density":"Double Drawn","Product":"SilkTopper-5x3","Colors":"All Colors","Standard Weight":40,"Rate":1100,"Sold in KG":"N"},{"Length":14,"PriceList":"INR25","Currency":"INR","Catagory":"Toppers","Density":"Double Drawn","Product":"SilkTopper-4x4","Colors":"All Colors","Standard Weight":40,"Rate":5700,"Sold in KG":"N"},{"Length":18,"PriceList":"INR25","Currency":"INR","Catagory":"Toppers","Density":"Double Drawn","Product":"SilkTopper-4x4","Colors":"All Colors","Standard Weight":40,"Rate":7600,"Sold in KG":"N"},{"Length":22,"PriceList":"INR25","Currency":"INR","Catagory":"Toppers","Density":"Double Drawn","Product":"SilkTopper-4x4","Colors":"All Colors","Standard Weight":40,"Rate":11200,"Sold in KG":"N"},{"Length":14,"PriceList":"INR25","Currency":"INR","Catagory":"Toppers","Density":"Double Drawn","Product":"SilkTopper-5x5","Colors":"All Colors","Standard Weight":40,"Rate":7400,"Sold in KG":"N"},{"Length":18,"PriceList":"INR25","Currency":"INR","Catagory":"Toppers","Density":"Double Drawn","Product":"SilkTopper-5x5","Colors":"All Colors","Standard Weight":40,"Rate":9600,"Sold in KG":"N"},{"Length":22,"PriceList":"INR25","Currency":"INR","Catagory":"Toppers","Density":"Double Drawn","Product":"SilkTopper-5x5","Colors":"All Colors","Standard Weight":40,"Rate":14000,"Sold in KG":"N"},{"Length":14,"PriceList":"INR25","Currency":"INR","Catagory":"Toppers","Density":"Double Drawn","Product":"SilkTopper-6x4","Colors":"All Colors","Standard Weight":40,"Rate":7600,"Sold in KG":"N"},{"Length":18,"PriceList":"INR25","Currency":"INR","Catagory":"Toppers","Density":"Double Drawn","Product":"SilkTopper-6x4","Colors":"All Colors","Standard Weight":40,"Rate":10000,"Sold in KG":"N"},{"Length":22,"PriceList":"INR25","Currency":"INR","Catagory":"Toppers","Density":"Double Drawn","Product":"SilkTopper-6x4","Colors":"All Colors","Standard Weight":40,"Rate":14500,"Sold in KG":"N"},{"Length":10,"PriceList":"INR25","Currency":"INR","Catagory":"Closures","Density":"Single Drawn","Product":"Closure-5x3","Colors":"All Colors","Standard Weight":40,"Rate":1100,"Sold in KG":"N"},{"Length":12,"PriceList":"INR25","Currency":"INR","Catagory":"Closures","Density":"Single Drawn","Product":"Closure-5x3","Colors":"All Colors","Standard Weight":40,"Rate":1200,"Sold in KG":"N"},{"Length":14,"PriceList":"INR25","Currency":"INR","Catagory":"Closures","Density":"Single Drawn","Product":"Closure-5x3","Colors":"All Colors","Standard Weight":40,"Rate":1400,"Sold in KG":"N"},{"Length":16,"PriceList":"INR25","Currency":"INR","Catagory":"Closures","Density":"Single Drawn","Product":"Closure-5x3","Colors":"All Colors","Standard Weight":40,"Rate":1700,"Sold in KG":"N"},{"Length":18,"PriceList":"INR25","Currency":"INR","Catagory":"Closures","Density":"Single Drawn","Product":"Closure-5x3","Colors":"All Colors","Standard Weight":40,"Rate":2100,"Sold in KG":"N"},{"Length":20,"PriceList":"INR25","Currency":"INR","Catagory":"Closures","Density":"Single Drawn","Product":"Closure-5x3","Colors":"All Colors","Standard Weight":40,"Rate":2400,"Sold in KG":"N"},{"Length":22,"PriceList":"INR25","Currency":"INR","Catagory":"Closures","Density":"Single Drawn","Product":"Closure-5x3","Colors":"All Colors","Standard Weight":40,"Rate":3000,"Sold in KG":"N"},{"Length":24,"PriceList":"INR25","Currency":"INR","Catagory":"Closures","Density":"Single Drawn","Product":"Closure-5x3","Colors":"All Colors","Standard Weight":40,"Rate":3500,"Sold in KG":"N"},{"Length":26,"PriceList":"INR25","Currency":"INR","Catagory":"Closures","Density":"Single Drawn","Product":"Closure-5x3","Colors":"All Colors","Standard Weight":40,"Rate":3800,"Sold in KG":"N"},{"Length":28,"PriceList":"INR25","Currency":"INR","Catagory":"Closures","Density":"Single Drawn","Product":"Closure-5x3","Colors":"All Colors","Standard Weight":40,"Rate":4300,"Sold in KG":"N"},{"Length":30,"PriceList":"INR25","Currency":"INR","Catagory":"Closures","Density":"Single Drawn","Product":"Closure-5x3","Colors":"All Colors","Standard Weight":40,"Rate":4800,"Sold in KG":"N"},{"Length":10,"PriceList":"INR25","Currency":"INR","Catagory":"Closures","Density":"Single Drawn","Product":"Closure-4x4","Colors":"All Colors","Standard Weight":40,"Rate":1250,"Sold in KG":"N"},{"Length":12,"PriceList":"INR25","Currency":"INR","Catagory":"Closures","Density":"Single Drawn","Product":"Closure-4x4","Colors":"All Colors","Standard Weight":40,"Rate":1400,"Sold in KG":"N"},{"Length":14,"PriceList":"INR25","Currency":"INR","Catagory":"Closures","Density":"Single Drawn","Product":"Closure-4x4","Colors":"All Colors","Standard Weight":40,"Rate":1500,"Sold in KG":"N"},{"Length":16,"PriceList":"INR25","Currency":"INR","Catagory":"Closures","Density":"Single Drawn","Product":"Closure-4x4","Colors":"All Colors","Standard Weight":40,"Rate":1900,"Sold in KG":"N"},{"Length":18,"PriceList":"INR25","Currency":"INR","Catagory":"Closures","Density":"Single Drawn","Product":"Closure-4x4","Colors":"All Colors","Standard Weight":40,"Rate":2300,"Sold in KG":"N"},{"Length":20,"PriceList":"INR25","Currency":"INR","Catagory":"Closures","Density":"Single Drawn","Product":"Closure-4x4","Colors":"All Colors","Standard Weight":40,"Rate":2700,"Sold in KG":"N"},{"Length":22,"PriceList":"INR25","Currency":"INR","Catagory":"Closures","Density":"Single Drawn","Product":"Closure-4x4","Colors":"All Colors","Standard Weight":40,"Rate":3400,"Sold in KG":"N"},{"Length":24,"PriceList":"INR25","Currency":"INR","Catagory":"Closures","Density":"Single Drawn","Product":"Closure-4x4","Colors":"All Colors","Standard Weight":40,"Rate":3850,"Sold in KG":"N"},{"Length":26,"PriceList":"INR25","Currency":"INR","Catagory":"Closures","Density":"Single Drawn","Product":"Closure-4x4","Colors":"All Colors","Standard Weight":40,"Rate":4300,"Sold in KG":"N"},{"Length":28,"PriceList":"INR25","Currency":"INR","Catagory":"Closures","Density":"Single Drawn","Product":"Closure-4x4","Colors":"All Colors","Standard Weight":40,"Rate":4800,"Sold in KG":"N"},{"Length":30,"PriceList":"INR25","Currency":"INR","Catagory":"Closures","Density":"Single Drawn","Product":"Closure-4x4","Colors":"All Colors","Standard Weight":40,"Rate":5350,"Sold in KG":"N"},{"Length":10,"PriceList":"INR25","Currency":"INR","Catagory":"Closures","Density":"Single Drawn","Product":"Closure-5x5","Colors":"All Colors","Standard Weight":40,"Rate":1700,"Sold in KG":"N"},{"Length":12,"PriceList":"INR25","Currency":"INR","Catagory":"Closures","Density":"Single Drawn","Product":"Closure-5x5","Colors":"All Colors","Standard Weight":40,"Rate":1850,"Sold in KG":"N"},{"Length":14,"PriceList":"INR25","Currency":"INR","Catagory":"Closures","Density":"Single Drawn","Product":"Closure-5x5","Colors":"All Colors","Standard Weight":40,"Rate":2000,"Sold in KG":"N"},{"Length":16,"PriceList":"INR25","Currency":"INR","Catagory":"Closures","Density":"Single Drawn","Product":"Closure-5x5","Colors":"All Colors","Standard Weight":40,"Rate":2350,"Sold in KG":"N"},{"Length":18,"PriceList":"INR25","Currency":"INR","Catagory":"Closures","Density":"Single Drawn","Product":"Closure-5x5","Colors":"All Colors","Standard Weight":40,"Rate":2750,"Sold in KG":"N"},{"Length":20,"PriceList":"INR25","Currency":"INR","Catagory":"Closures","Density":"Single Drawn","Product":"Closure-5x5","Colors":"All Colors","Standard Weight":40,"Rate":3150,"Sold in KG":"N"},{"Length":22,"PriceList":"INR25","Currency":"INR","Catagory":"Closures","Density":"Single Drawn","Product":"Closure-5x5","Colors":"All Colors","Standard Weight":40,"Rate":4100,"Sold in KG":"N"},{"Length":24,"PriceList":"INR25","Currency":"INR","Catagory":"Closures","Density":"Single Drawn","Product":"Closure-5x5","Colors":"All Colors","Standard Weight":40,"Rate":5650,"Sold in KG":"N"},{"Length":26,"PriceList":"INR25","Currency":"INR","Catagory":"Closures","Density":"Single Drawn","Product":"Closure-5x5","Colors":"All Colors","Standard Weight":40,"Rate":5100,"Sold in KG":"N"},{"Length":28,"PriceList":"INR25","Currency":"INR","Catagory":"Closures","Density":"Single Drawn","Product":"Closure-5x5","Colors":"All Colors","Standard Weight":40,"Rate":5700,"Sold in KG":"N"},{"Length":30,"PriceList":"INR25","Currency":"INR","Catagory":"Closures","Density":"Single Drawn","Product":"Closure-5x5","Colors":"All Colors","Standard Weight":40,"Rate":5300,"Sold in KG":"N"},{"Length":10,"PriceList":"INR25","Currency":"INR","Catagory":"Closures","Density":"Single Drawn","Product":"Closure-6x6","Colors":"All Colors","Standard Weight":50,"Rate":2150,"Sold in KG":"N"},{"Length":12,"PriceList":"INR25","Currency":"INR","Catagory":"Closures","Density":"Single Drawn","Product":"Closure-6x6","Colors":"All Colors","Standard Weight":50,"Rate":2250,"Sold in KG":"N"},{"Length":14,"PriceList":"INR25","Currency":"INR","Catagory":"Closures","Density":"Single Drawn","Product":"Closure-6x6","Colors":"All Colors","Standard Weight":50,"Rate":2400,"Sold in KG":"N"},{"Length":16,"PriceList":"INR25","Currency":"INR","Catagory":"Closures","Density":"Single Drawn","Product":"Closure-6x6","Colors":"All Colors","Standard Weight":50,"Rate":2750,"Sold in KG":"N"},{"Length":18,"PriceList":"INR25","Currency":"INR","Catagory":"Closures","Density":"Single Drawn","Product":"Closure-6x6","Colors":"All Colors","Standard Weight":50,"Rate":3100,"Sold in KG":"N"},{"Length":20,"PriceList":"INR25","Currency":"INR","Catagory":"Closures","Density":"Single Drawn","Product":"Closure-6x6","Colors":"All Colors","Standard Weight":50,"Rate":3450,"Sold in KG":"N"},{"Length":22,"PriceList":"INR25","Currency":"INR","Catagory":"Closures","Density":"Single Drawn","Product":"Closure-6x6","Colors":"All Colors","Standard Weight":50,"Rate":4050,"Sold in KG":"N"},{"Length":24,"PriceList":"INR25","Currency":"INR","Catagory":"Closures","Density":"Single Drawn","Product":"Closure-6x6","Colors":"All Colors","Standard Weight":50,"Rate":4500,"Sold in KG":"N"},{"Length":26,"PriceList":"INR25","Currency":"INR","Catagory":"Closures","Density":"Single Drawn","Product":"Closure-6x6","Colors":"All Colors","Standard Weight":50,"Rate":4850,"Sold in KG":"N"},{"Length":28,"PriceList":"INR25","Currency":"INR","Catagory":"Closures","Density":"Single Drawn","Product":"Closure-6x6","Colors":"All Colors","Standard Weight":50,"Rate":5350,"Sold in KG":"N"},{"Length":30,"PriceList":"INR25","Currency":"INR","Catagory":"Closures","Density":"Single Drawn","Product":"Closure-6x2","Colors":"All Colors","Standard Weight":50,"Rate":5800,"Sold in KG":"N"},{"Length":10,"PriceList":"INR25","Currency":"INR","Catagory":"Closures","Density":"Single Drawn","Product":"Closure-6x2","Colors":"All Colors","Standard Weight":50,"Rate":1000,"Sold in KG":"N"},{"Length":12,"PriceList":"INR25","Currency":"INR","Catagory":"Closures","Density":"Single Drawn","Product":"Closure-6x2","Colors":"All Colors","Standard Weight":50,"Rate":1100,"Sold in KG":"N"},{"Length":14,"PriceList":"INR25","Currency":"INR","Catagory":"Closures","Density":"Single Drawn","Product":"Closure-6x2","Colors":"All Colors","Standard Weight":50,"Rate":1200,"Sold in KG":"N"},{"Length":16,"PriceList":"INR25","Currency":"INR","Catagory":"Closures","Density":"Single Drawn","Product":"Closure-6x2","Colors":"All Colors","Standard Weight":50,"Rate":1600,"Sold in KG":"N"},{"Length":18,"PriceList":"INR25","Currency":"INR","Catagory":"Closures","Density":"Single Drawn","Product":"Closure-6x2","Colors":"All Colors","Standard Weight":50,"Rate":1900,"Sold in KG":"N"},{"Length":20,"PriceList":"INR25","Currency":"INR","Catagory":"Closures","Density":"Single Drawn","Product":"Closure-6x2","Colors":"All Colors","Standard Weight":50,"Rate":2300,"Sold in KG":"N"},{"Length":22,"PriceList":"INR25","Currency":"INR","Catagory":"Closures","Density":"Single Drawn","Product":"Closure-6x2","Colors":"All Colors","Standard Weight":50,"Rate":2900,"Sold in KG":"N"},{"Length":24,"PriceList":"INR25","Currency":"INR","Catagory":"Closures","Density":"Single Drawn","Product":"Closure-6x2","Colors":"All Colors","Standard Weight":50,"Rate":3300,"Sold in KG":"N"},{"Length":26,"PriceList":"INR25","Currency":"INR","Catagory":"Closures","Density":"Single Drawn","Product":"Closure-6x2","Colors":"All Colors","Standard Weight":50,"Rate":3700,"Sold in KG":"N"},{"Length":28,"PriceList":"INR25","Currency":"INR","Catagory":"Closures","Density":"Single Drawn","Product":"Closure-6x2","Colors":"All Colors","Standard Weight":50,"Rate":4100,"Sold in KG":"N"},{"Length":30,"PriceList":"INR25","Currency":"INR","Catagory":"Closures","Density":"Single Drawn","Product":"Closure-6x2","Colors":"All Colors","Standard Weight":50,"Rate":4600,"Sold in KG":"N"},{"Length":10,"PriceList":"INR25","Currency":"INR","Catagory":"Frontals","Density":"Single Drawn","Product":"Frontal-13x4","Colors":"All Colors","Standard Weight":70,"Rate":3000,"Sold in KG":"N"},{"Length":12,"PriceList":"INR25","Currency":"INR","Catagory":"Frontals","Density":"Single Drawn","Product":"Frontal-13x4","Colors":"All Colors","Standard Weight":70,"Rate":3250,"Sold in KG":"N"},{"Length":14,"PriceList":"INR25","Currency":"INR","Catagory":"Frontals","Density":"Single Drawn","Product":"Frontal-13x4","Colors":"All Colors","Standard Weight":70,"Rate":3750,"Sold in KG":"N"},{"Length":16,"PriceList":"INR25","Currency":"INR","Catagory":"Frontals","Density":"Single Drawn","Product":"Frontal-13x4","Colors":"All Colors","Standard Weight":70,"Rate":4000,"Sold in KG":"N"},{"Length":18,"PriceList":"INR25","Currency":"INR","Catagory":"Frontals","Density":"Single Drawn","Product":"Frontal-13x4","Colors":"All Colors","Standard Weight":70,"Rate":4750,"Sold in KG":"N"},{"Length":20,"PriceList":"INR25","Currency":"INR","Catagory":"Frontals","Density":"Single Drawn","Product":"Frontal-13x4","Colors":"All Colors","Standard Weight":70,"Rate":5250,"Sold in KG":"N"},{"Length":22,"PriceList":"INR25","Currency":"INR","Catagory":"Frontals","Density":"Single Drawn","Product":"Frontal-13x4","Colors":"All Colors","Standard Weight":70,"Rate":6250,"Sold in KG":"N"},{"Length":24,"PriceList":"INR25","Currency":"INR","Catagory":"Frontals","Density":"Single Drawn","Product":"Frontal-13x4","Colors":"All Colors","Standard Weight":70,"Rate":7250,"Sold in KG":"N"},{"Length":26,"PriceList":"INR25","Currency":"INR","Catagory":"Frontals","Density":"Single Drawn","Product":"Frontal-13x4","Colors":"All Colors","Standard Weight":70,"Rate":8000,"Sold in KG":"N"},{"Length":28,"PriceList":"INR25","Currency":"INR","Catagory":"Frontals","Density":"Single Drawn","Product":"Frontal-13x4","Colors":"All Colors","Standard Weight":70,"Rate":8750,"Sold in KG":"N"},{"Length":30,"PriceList":"INR25","Currency":"INR","Catagory":"Frontals","Density":"Single Drawn","Product":"Frontal-13x4","Colors":"All Colors","Standard Weight":70,"Rate":10000,"Sold in KG":"N"},{"Length":10,"PriceList":"INR25","Currency":"INR","Catagory":"Frontals","Density":"Single Drawn","Product":"Frontal-13x6","Colors":"All Colors","Standard Weight":90,"Rate":4500,"Sold in KG":"N"},{"Length":12,"PriceList":"INR25","Currency":"INR","Catagory":"Frontals","Density":"Single Drawn","Product":"Frontal-13x6","Colors":"All Colors","Standard Weight":90,"Rate":4750,"Sold in KG":"N"},{"Length":14,"PriceList":"INR25","Currency":"INR","Catagory":"Frontals","Density":"Single Drawn","Product":"Frontal-13x6","Colors":"All Colors","Standard Weight":90,"Rate":5000,"Sold in KG":"N"},{"Length":16,"PriceList":"INR25","Currency":"INR","Catagory":"Frontals","Density":"Single Drawn","Product":"Frontal-13x6","Colors":"All Colors","Standard Weight":90,"Rate":5500,"Sold in KG":"N"},{"Length":18,"PriceList":"INR25","Currency":"INR","Catagory":"Frontals","Density":"Single Drawn","Product":"Frontal-13x6","Colors":"All Colors","Standard Weight":90,"Rate":6280,"Sold in KG":"N"},{"Length":20,"PriceList":"INR25","Currency":"INR","Catagory":"Frontals","Density":"Single Drawn","Product":"Frontal-13x6","Colors":"All Colors","Standard Weight":90,"Rate":6750,"Sold in KG":"N"},{"Length":22,"PriceList":"INR25","Currency":"INR","Catagory":"Frontals","Density":"Single Drawn","Product":"Frontal-13x6","Colors":"All Colors","Standard Weight":90,"Rate":8000,"Sold in KG":"N"},{"Length":24,"PriceList":"INR25","Currency":"INR","Catagory":"Frontals","Density":"Single Drawn","Product":"Frontal-13x6","Colors":"All Colors","Standard Weight":90,"Rate":8750,"Sold in KG":"N"},{"Length":26,"PriceList":"INR25","Currency":"INR","Catagory":"Frontals","Density":"Single Drawn","Product":"Frontal-13x6","Colors":"All Colors","Standard Weight":90,"Rate":9750,"Sold in KG":"N"},{"Length":28,"PriceList":"INR25","Currency":"INR","Catagory":"Frontals","Density":"Single Drawn","Product":"Frontal-13x6","Colors":"All Colors","Standard Weight":90,"Rate":10500,"Sold in KG":"N"},{"Length":30,"PriceList":"INR25","Currency":"INR","Catagory":"Frontals","Density":"Single Drawn","Product":"Frontal-13x6","Colors":"All Colors","Standard Weight":90,"Rate":12250,"Sold in KG":"N"},{"Length":12,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Double Drawn","Product":"Genius Weft","Colors":"All Colors","Standard Weight":100,"Rate":6000,"Sold in KG":"Y"},{"Length":14,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Double Drawn","Product":"Genius Weft","Colors":"All Colors","Standard Weight":100,"Rate":6500,"Sold in KG":"Y"},{"Length":16,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Double Drawn","Product":"Genius Weft","Colors":"All Colors","Standard Weight":100,"Rate":7000,"Sold in KG":"Y"},{"Length":18,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Double Drawn","Product":"Genius Weft","Colors":"All Colors","Standard Weight":100,"Rate":8000,"Sold in KG":"Y"},{"Length":20,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Double Drawn","Product":"Genius Weft","Colors":"All Colors","Standard Weight":100,"Rate":8500,"Sold in KG":"Y"},{"Length":22,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Double Drawn","Product":"Genius Weft","Colors":"All Colors","Standard Weight":100,"Rate":9500,"Sold in KG":"Y"},{"Length":24,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Double Drawn","Product":"Genius Weft","Colors":"All Colors","Standard Weight":100,"Rate":11000,"Sold in KG":"Y"},{"Length":26,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Double Drawn","Product":"Genius Weft","Colors":"All Colors","Standard Weight":100,"Rate":12000,"Sold in KG":"Y"},{"Length":28,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Double Drawn","Product":"Genius Weft","Colors":"All Colors","Standard Weight":100,"Rate":13000,"Sold in KG":"Y"},{"Length":30,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Double Drawn","Product":"Genius Weft","Colors":"All Colors","Standard Weight":100,"Rate":14000,"Sold in KG":"Y"},{"Length":12,"PriceList":"INR25","Currency":"INR","Catagory":"Toppers","Density":"Double Drawn","Product":"LaceTopper-5x3","Colors":"All Colors","Standard Weight":40,"Rate":1750,"Sold in KG":"N"},{"Length":14,"PriceList":"INR25","Currency":"INR","Catagory":"Toppers","Density":"Double Drawn","Product":"LaceTopper-5x3","Colors":"All Colors","Standard Weight":40,"Rate":2000,"Sold in KG":"N"},{"Length":16,"PriceList":"INR25","Currency":"INR","Catagory":"Toppers","Density":"Double Drawn","Product":"LaceTopper-5x3","Colors":"All Colors","Standard Weight":40,"Rate":2500,"Sold in KG":"N"},{"Length":18,"PriceList":"INR25","Currency":"INR","Catagory":"Toppers","Density":"Double Drawn","Product":"LaceTopper-5x3","Colors":"All Colors","Standard Weight":40,"Rate":2750,"Sold in KG":"N"},{"Length":20,"PriceList":"INR25","Currency":"INR","Catagory":"Toppers","Density":"Double Drawn","Product":"LaceTopper-5x3","Colors":"All Colors","Standard Weight":40,"Rate":3500,"Sold in KG":"N"},{"Length":22,"PriceList":"INR25","Currency":"INR","Catagory":"Toppers","Density":"Double Drawn","Product":"LaceTopper-5x3","Colors":"All Colors","Standard Weight":40,"Rate":3900,"Sold in KG":"N"},{"Length":24,"PriceList":"INR25","Currency":"INR","Catagory":"Toppers","Density":"Double Drawn","Product":"LaceTopper-5x3","Colors":"All Colors","Standard Weight":40,"Rate":4750,"Sold in KG":"N"},{"Length":26,"PriceList":"INR25","Currency":"INR","Catagory":"Toppers","Density":"Double Drawn","Product":"LaceTopper-5x3","Colors":"All Colors","Standard Weight":40,"Rate":5250,"Sold in KG":"N"},{"Length":12,"PriceList":"INR25","Currency":"INR","Catagory":"Toppers","Density":"Double Drawn","Product":"LaceTopper-4x4","Colors":"All Colors","Standard Weight":40,"Rate":2000,"Sold in KG":"N"},{"Length":14,"PriceList":"INR25","Currency":"INR","Catagory":"Toppers","Density":"Double Drawn","Product":"LaceTopper-4x4","Colors":"All Colors","Standard Weight":40,"Rate":2500,"Sold in KG":"N"},{"Length":16,"PriceList":"INR25","Currency":"INR","Catagory":"Toppers","Density":"Double Drawn","Product":"LaceTopper-4x4","Colors":"All Colors","Standard Weight":40,"Rate":2900,"Sold in KG":"N"},{"Length":18,"PriceList":"INR25","Currency":"INR","Catagory":"Toppers","Density":"Double Drawn","Product":"LaceTopper-4x4","Colors":"All Colors","Standard Weight":40,"Rate":3500,"Sold in KG":"N"},{"Length":20,"PriceList":"INR25","Currency":"INR","Catagory":"Toppers","Density":"Double Drawn","Product":"LaceTopper-4x4","Colors":"All Colors","Standard Weight":40,"Rate":3900,"Sold in KG":"N"},{"Length":22,"PriceList":"INR25","Currency":"INR","Catagory":"Toppers","Density":"Double Drawn","Product":"LaceTopper-4x4","Colors":"All Colors","Standard Weight":40,"Rate":4750,"Sold in KG":"N"},{"Length":24,"PriceList":"INR25","Currency":"INR","Catagory":"Toppers","Density":"Double Drawn","Product":"LaceTopper-4x4","Colors":"All Colors","Standard Weight":40,"Rate":5250,"Sold in KG":"N"},{"Length":26,"PriceList":"INR25","Currency":"INR","Catagory":"Toppers","Density":"Double Drawn","Product":"LaceTopper-4x4","Colors":"All Colors","Standard Weight":40,"Rate":5900,"Sold in KG":"N"},{"Length":8,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Single Drawn","Product":"Bulk","Colors":"Dark Colors","Standard Weight":100,"Rate":800,"Sold in KG":"Y"},{"Length":10,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Single Drawn","Product":"Bulk","Colors":"Dark Colors","Standard Weight":100,"Rate":1050,"Sold in KG":"Y"},{"Length":12,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Single Drawn","Product":"Bulk","Colors":"Dark Colors","Standard Weight":100,"Rate":1150,"Sold in KG":"Y"},{"Length":14,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Single Drawn","Product":"Bulk","Colors":"Dark Colors","Standard Weight":100,"Rate":1350,"Sold in KG":"Y"},{"Length":16,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Single Drawn","Product":"Bulk","Colors":"Dark Colors","Standard Weight":100,"Rate":1650,"Sold in KG":"Y"},{"Length":18,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Single Drawn","Product":"Bulk","Colors":"Dark Colors","Standard Weight":100,"Rate":2200,"Sold in KG":"Y"},{"Length":20,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Single Drawn","Product":"Bulk","Colors":"Dark Colors","Standard Weight":100,"Rate":2450,"Sold in KG":"Y"},{"Length":22,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Single Drawn","Product":"Bulk","Colors":"Dark Colors","Standard Weight":100,"Rate":3000,"Sold in KG":"Y"},{"Length":24,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Single Drawn","Product":"Bulk","Colors":"Dark Colors","Standard Weight":100,"Rate":3750,"Sold in KG":"Y"},{"Length":26,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Single Drawn","Product":"Bulk","Colors":"Dark Colors","Standard Weight":100,"Rate":4600,"Sold in KG":"Y"},{"Length":28,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Single Drawn","Product":"Bulk","Colors":"Dark Colors","Standard Weight":100,"Rate":5100,"Sold in KG":"Y"},{"Length":30,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Single Drawn","Product":"Bulk","Colors":"Dark Colors","Standard Weight":100,"Rate":6000,"Sold in KG":"Y"},{"Length":32,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Single Drawn","Product":"Bulk","Colors":"Dark Colors","Standard Weight":100,"Rate":7050,"Sold in KG":"Y"},{"Length":8,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Double Drawn","Product":"Bulk","Colors":"Dark Colors","Standard Weight":100,"Rate":900,"Sold in KG":"Y"},{"Length":10,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Double Drawn","Product":"Bulk","Colors":"Dark Colors","Standard Weight":100,"Rate":1350,"Sold in KG":"Y"},{"Length":12,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Double Drawn","Product":"Bulk","Colors":"Dark Colors","Standard Weight":100,"Rate":1650,"Sold in KG":"Y"},{"Length":14,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Double Drawn","Product":"Bulk","Colors":"Dark Colors","Standard Weight":100,"Rate":2100,"Sold in KG":"Y"},{"Length":16,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Double Drawn","Product":"Bulk","Colors":"Dark Colors","Standard Weight":100,"Rate":2800,"Sold in KG":"Y"},{"Length":18,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Double Drawn","Product":"Bulk","Colors":"Dark Colors","Standard Weight":100,"Rate":3550,"Sold in KG":"Y"},{"Length":20,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Double Drawn","Product":"Bulk","Colors":"Dark Colors","Standard Weight":100,"Rate":4250,"Sold in KG":"Y"},{"Length":22,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Double Drawn","Product":"Bulk","Colors":"Dark Colors","Standard Weight":100,"Rate":5350,"Sold in KG":"Y"},{"Length":24,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Double Drawn","Product":"Bulk","Colors":"Dark Colors","Standard Weight":100,"Rate":6500,"Sold in KG":"Y"},{"Length":26,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Double Drawn","Product":"Bulk","Colors":"Dark Colors","Standard Weight":100,"Rate":7650,"Sold in KG":"Y"},{"Length":28,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Double Drawn","Product":"Bulk","Colors":"Dark Colors","Standard Weight":100,"Rate":8700,"Sold in KG":"Y"},{"Length":30,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Double Drawn","Product":"Bulk","Colors":"Dark Colors","Standard Weight":100,"Rate":10050,"Sold in KG":"Y"},{"Length":32,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Double Drawn","Product":"Bulk","Colors":"Dark Colors","Standard Weight":100,"Rate":11400,"Sold in KG":"Y"},{"Length":8,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Super Double Drawn","Product":"Bulk","Colors":"Dark Colors","Standard Weight":100,"Rate":1300,"Sold in KG":"Y"},{"Length":10,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Super Double Drawn","Product":"Bulk","Colors":"Dark Colors","Standard Weight":100,"Rate":2050,"Sold in KG":"Y"},{"Length":12,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Super Double Drawn","Product":"Bulk","Colors":"Dark Colors","Standard Weight":100,"Rate":2650,"Sold in KG":"Y"},{"Length":14,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Super Double Drawn","Product":"Bulk","Colors":"Dark Colors","Standard Weight":100,"Rate":3200,"Sold in KG":"Y"},{"Length":16,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Super Double Drawn","Product":"Bulk","Colors":"Dark Colors","Standard Weight":100,"Rate":3800,"Sold in KG":"Y"},{"Length":18,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Super Double Drawn","Product":"Bulk","Colors":"Dark Colors","Standard Weight":100,"Rate":4900,"Sold in KG":"Y"},{"Length":20,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Super Double Drawn","Product":"Bulk","Colors":"Dark Colors","Standard Weight":100,"Rate":5750,"Sold in KG":"Y"},{"Length":22,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Super Double Drawn","Product":"Bulk","Colors":"Dark Colors","Standard Weight":100,"Rate":7450,"Sold in KG":"Y"},{"Length":24,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Super Double Drawn","Product":"Bulk","Colors":"Dark Colors","Standard Weight":100,"Rate":8700,"Sold in KG":"Y"},{"Length":26,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Super Double Drawn","Product":"Bulk","Colors":"Dark Colors","Standard Weight":100,"Rate":10150,"Sold in KG":"Y"},{"Length":28,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Super Double Drawn","Product":"Bulk","Colors":"Dark Colors","Standard Weight":100,"Rate":11250,"Sold in KG":"Y"},{"Length":8,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Single Drawn","Product":"Bulk","Colors":"Light Colors","Standard Weight":100,"Rate":1050,"Sold in KG":"Y"},{"Length":10,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Single Drawn","Product":"Bulk","Colors":"Light Colors","Standard Weight":100,"Rate":1350,"Sold in KG":"Y"},{"Length":12,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Single Drawn","Product":"Bulk","Colors":"Light Colors","Standard Weight":100,"Rate":1450,"Sold in KG":"Y"},{"Length":14,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Single Drawn","Product":"Bulk","Colors":"Light Colors","Standard Weight":100,"Rate":1600,"Sold in KG":"Y"},{"Length":16,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Single Drawn","Product":"Bulk","Colors":"Light Colors","Standard Weight":100,"Rate":1950,"Sold in KG":"Y"},{"Length":18,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Single Drawn","Product":"Bulk","Colors":"Light Colors","Standard Weight":100,"Rate":2500,"Sold in KG":"Y"},{"Length":20,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Single Drawn","Product":"Bulk","Colors":"Light Colors","Standard Weight":100,"Rate":2700,"Sold in KG":"Y"},{"Length":22,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Single Drawn","Product":"Bulk","Colors":"Light Colors","Standard Weight":100,"Rate":3250,"Sold in KG":"Y"},{"Length":24,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Single Drawn","Product":"Bulk","Colors":"Light Colors","Standard Weight":100,"Rate":4050,"Sold in KG":"Y"},{"Length":26,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Single Drawn","Product":"Bulk","Colors":"Light Colors","Standard Weight":100,"Rate":4850,"Sold in KG":"Y"},{"Length":28,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Single Drawn","Product":"Bulk","Colors":"Light Colors","Standard Weight":100,"Rate":5350,"Sold in KG":"Y"},{"Length":30,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Single Drawn","Product":"Bulk","Colors":"Light Colors","Standard Weight":100,"Rate":6300,"Sold in KG":"Y"},{"Length":32,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Single Drawn","Product":"Bulk","Colors":"Light Colors","Standard Weight":100,"Rate":7350,"Sold in KG":"Y"},{"Length":8,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Double Drawn","Product":"Bulk","Colors":"Light Colors","Standard Weight":100,"Rate":1150,"Sold in KG":"Y"},{"Length":10,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Double Drawn","Product":"Bulk","Colors":"Light Colors","Standard Weight":100,"Rate":1600,"Sold in KG":"Y"},{"Length":12,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Double Drawn","Product":"Bulk","Colors":"Light Colors","Standard Weight":100,"Rate":1950,"Sold in KG":"Y"},{"Length":14,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Double Drawn","Product":"Bulk","Colors":"Light Colors","Standard Weight":100,"Rate":2400,"Sold in KG":"Y"},{"Length":16,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Double Drawn","Product":"Bulk","Colors":"Light Colors","Standard Weight":100,"Rate":3100,"Sold in KG":"Y"},{"Length":18,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Double Drawn","Product":"Bulk","Colors":"Light Colors","Standard Weight":100,"Rate":3800,"Sold in KG":"Y"},{"Length":20,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Double Drawn","Product":"Bulk","Colors":"Light Colors","Standard Weight":100,"Rate":4550,"Sold in KG":"Y"},{"Length":22,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Double Drawn","Product":"Bulk","Colors":"Light Colors","Standard Weight":100,"Rate":5650,"Sold in KG":"Y"},{"Length":24,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Double Drawn","Product":"Bulk","Colors":"Light Colors","Standard Weight":100,"Rate":6800,"Sold in KG":"Y"},{"Length":26,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Double Drawn","Product":"Bulk","Colors":"Light Colors","Standard Weight":100,"Rate":7950,"Sold in KG":"Y"},{"Length":28,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Double Drawn","Product":"Bulk","Colors":"Light Colors","Standard Weight":100,"Rate":9000,"Sold in KG":"Y"},{"Length":30,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Double Drawn","Product":"Bulk","Colors":"Light Colors","Standard Weight":100,"Rate":10300,"Sold in KG":"Y"},{"Length":32,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Double Drawn","Product":"Bulk","Colors":"Light Colors","Standard Weight":100,"Rate":11700,"Sold in KG":"Y"},{"Length":8,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Super Double Drawn","Product":"Bulk","Colors":"Light Colors","Standard Weight":100,"Rate":1550,"Sold in KG":"Y"},{"Length":10,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Super Double Drawn","Product":"Bulk","Colors":"Light Colors","Standard Weight":100,"Rate":2350,"Sold in KG":"Y"},{"Length":12,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Super Double Drawn","Product":"Bulk","Colors":"Light Colors","Standard Weight":100,"Rate":2950,"Sold in KG":"Y"},{"Length":14,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Super Double Drawn","Product":"Bulk","Colors":"Light Colors","Standard Weight":100,"Rate":3500,"Sold in KG":"Y"},{"Length":16,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Super Double Drawn","Product":"Bulk","Colors":"Light Colors","Standard Weight":100,"Rate":4100,"Sold in KG":"Y"},{"Length":18,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Super Double Drawn","Product":"Bulk","Colors":"Light Colors","Standard Weight":100,"Rate":4900,"Sold in KG":"Y"},{"Length":20,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Super Double Drawn","Product":"Bulk","Colors":"Light Colors","Standard Weight":100,"Rate":6000,"Sold in KG":"Y"},{"Length":22,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Super Double Drawn","Product":"Bulk","Colors":"Light Colors","Standard Weight":100,"Rate":7700,"Sold in KG":"Y"},{"Length":24,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Super Double Drawn","Product":"Bulk","Colors":"Light Colors","Standard Weight":100,"Rate":9000,"Sold in KG":"Y"},{"Length":26,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Super Double Drawn","Product":"Bulk","Colors":"Light Colors","Standard Weight":100,"Rate":10400,"Sold in KG":"Y"},{"Length":28,"PriceList":"INR25","Currency":"INR","Catagory":"Bulk","Density":"Super Double Drawn","Product":"Bulk","Colors":"Light Colors","Standard Weight":100,"Rate":11500,"Sold in KG":"Y"},{"Length":8,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Single Drawn","Product":"Weft","Colors":"Dark Colors","Standard Weight":100,"Rate":950,"Sold in KG":"Y"},{"Length":10,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Single Drawn","Product":"Weft","Colors":"Dark Colors","Standard Weight":100,"Rate":1200,"Sold in KG":"Y"},{"Length":12,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Single Drawn","Product":"Weft","Colors":"Dark Colors","Standard Weight":100,"Rate":1300,"Sold in KG":"Y"},{"Length":14,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Single Drawn","Product":"Weft","Colors":"Dark Colors","Standard Weight":100,"Rate":1500,"Sold in KG":"Y"},{"Length":16,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Single Drawn","Product":"Weft","Colors":"Dark Colors","Standard Weight":100,"Rate":1800,"Sold in KG":"Y"},{"Length":18,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Single Drawn","Product":"Weft","Colors":"Dark Colors","Standard Weight":100,"Rate":2350,"Sold in KG":"Y"},{"Length":20,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Single Drawn","Product":"Weft","Colors":"Dark Colors","Standard Weight":100,"Rate":2600,"Sold in KG":"Y"},{"Length":22,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Single Drawn","Product":"Weft","Colors":"Dark Colors","Standard Weight":100,"Rate":3150,"Sold in KG":"Y"},{"Length":24,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Single Drawn","Product":"Weft","Colors":"Dark Colors","Standard Weight":100,"Rate":3900,"Sold in KG":"Y"},{"Length":26,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Single Drawn","Product":"Weft","Colors":"Dark Colors","Standard Weight":100,"Rate":4750,"Sold in KG":"Y"},{"Length":28,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Single Drawn","Product":"Weft","Colors":"Dark Colors","Standard Weight":100,"Rate":5250,"Sold in KG":"Y"},{"Length":30,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Single Drawn","Product":"Weft","Colors":"Dark Colors","Standard Weight":100,"Rate":6150,"Sold in KG":"Y"},{"Length":32,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Single Drawn","Product":"Weft","Colors":"Dark Colors","Standard Weight":100,"Rate":7200,"Sold in KG":"Y"},{"Length":8,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Single Drawn","Product":"Weft","Colors":"Light Colors","Standard Weight":100,"Rate":1200,"Sold in KG":"Y"},{"Length":10,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Single Drawn","Product":"Weft","Colors":"Light Colors","Standard Weight":100,"Rate":1500,"Sold in KG":"Y"},{"Length":12,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Single Drawn","Product":"Weft","Colors":"Light Colors","Standard Weight":100,"Rate":1600,"Sold in KG":"Y"},{"Length":14,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Single Drawn","Product":"Weft","Colors":"Light Colors","Standard Weight":100,"Rate":1750,"Sold in KG":"Y"},{"Length":16,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Single Drawn","Product":"Weft","Colors":"Light Colors","Standard Weight":100,"Rate":2100,"Sold in KG":"Y"},{"Length":18,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Single Drawn","Product":"Weft","Colors":"Light Colors","Standard Weight":100,"Rate":2650,"Sold in KG":"Y"},{"Length":20,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Single Drawn","Product":"Weft","Colors":"Light Colors","Standard Weight":100,"Rate":2850,"Sold in KG":"Y"},{"Length":22,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Single Drawn","Product":"Weft","Colors":"Light Colors","Standard Weight":100,"Rate":3400,"Sold in KG":"Y"},{"Length":24,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Single Drawn","Product":"Weft","Colors":"Light Colors","Standard Weight":100,"Rate":4200,"Sold in KG":"Y"},{"Length":26,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Single Drawn","Product":"Weft","Colors":"Light Colors","Standard Weight":100,"Rate":5000,"Sold in KG":"Y"},{"Length":28,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Single Drawn","Product":"Weft","Colors":"Light Colors","Standard Weight":100,"Rate":5500,"Sold in KG":"Y"},{"Length":30,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Single Drawn","Product":"Weft","Colors":"Light Colors","Standard Weight":100,"Rate":6450,"Sold in KG":"Y"},{"Length":32,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Single Drawn","Product":"Weft","Colors":"Light Colors","Standard Weight":100,"Rate":7500,"Sold in KG":"Y"},{"Length":8,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Double Drawn","Product":"Weft","Colors":"Light Colors","Standard Weight":100,"Rate":1300,"Sold in KG":"Y"},{"Length":10,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Double Drawn","Product":"Weft","Colors":"Light Colors","Standard Weight":100,"Rate":1750,"Sold in KG":"Y"},{"Length":12,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Double Drawn","Product":"Weft","Colors":"Light Colors","Standard Weight":100,"Rate":2100,"Sold in KG":"Y"},{"Length":14,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Double Drawn","Product":"Weft","Colors":"Light Colors","Standard Weight":100,"Rate":2550,"Sold in KG":"Y"},{"Length":16,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Double Drawn","Product":"Weft","Colors":"Light Colors","Standard Weight":100,"Rate":3250,"Sold in KG":"Y"},{"Length":18,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Double Drawn","Product":"Weft","Colors":"Light Colors","Standard Weight":100,"Rate":3950,"Sold in KG":"Y"},{"Length":20,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Double Drawn","Product":"Weft","Colors":"Light Colors","Standard Weight":100,"Rate":4700,"Sold in KG":"Y"},{"Length":22,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Double Drawn","Product":"Weft","Colors":"Light Colors","Standard Weight":100,"Rate":5800,"Sold in KG":"Y"},{"Length":24,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Double Drawn","Product":"Weft","Colors":"Light Colors","Standard Weight":100,"Rate":6950,"Sold in KG":"Y"},{"Length":26,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Double Drawn","Product":"Weft","Colors":"Light Colors","Standard Weight":100,"Rate":8100,"Sold in KG":"Y"},{"Length":28,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Double Drawn","Product":"Weft","Colors":"Light Colors","Standard Weight":100,"Rate":9150,"Sold in KG":"Y"},{"Length":30,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Double Drawn","Product":"Weft","Colors":"Light Colors","Standard Weight":100,"Rate":10450,"Sold in KG":"Y"},{"Length":32,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Double Drawn","Product":"Weft","Colors":"Light Colors","Standard Weight":100,"Rate":11850,"Sold in KG":"Y"},{"Length":8,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Double Drawn","Product":"Weft","Colors":"Dark Colors","Standard Weight":100,"Rate":1050,"Sold in KG":"Y"},{"Length":10,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Double Drawn","Product":"Weft","Colors":"Dark Colors","Standard Weight":100,"Rate":1500,"Sold in KG":"Y"},{"Length":12,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Double Drawn","Product":"Weft","Colors":"Dark Colors","Standard Weight":100,"Rate":1800,"Sold in KG":"Y"},{"Length":14,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Double Drawn","Product":"Weft","Colors":"Dark Colors","Standard Weight":100,"Rate":2250,"Sold in KG":"Y"},{"Length":16,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Double Drawn","Product":"Weft","Colors":"Dark Colors","Standard Weight":100,"Rate":2950,"Sold in KG":"Y"},{"Length":18,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Double Drawn","Product":"Weft","Colors":"Dark Colors","Standard Weight":100,"Rate":3700,"Sold in KG":"Y"},{"Length":20,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Double Drawn","Product":"Weft","Colors":"Dark Colors","Standard Weight":100,"Rate":4400,"Sold in KG":"Y"},{"Length":22,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Double Drawn","Product":"Weft","Colors":"Dark Colors","Standard Weight":100,"Rate":5500,"Sold in KG":"Y"},{"Length":24,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Double Drawn","Product":"Weft","Colors":"Dark Colors","Standard Weight":100,"Rate":6650,"Sold in KG":"Y"},{"Length":26,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Double Drawn","Product":"Weft","Colors":"Dark Colors","Standard Weight":100,"Rate":7800,"Sold in KG":"Y"},{"Length":28,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Double Drawn","Product":"Weft","Colors":"Dark Colors","Standard Weight":100,"Rate":8850,"Sold in KG":"Y"},{"Length":30,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Double Drawn","Product":"Weft","Colors":"Dark Colors","Standard Weight":100,"Rate":10200,"Sold in KG":"Y"},{"Length":32,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Double Drawn","Product":"Weft","Colors":"Dark Colors","Standard Weight":100,"Rate":11550,"Sold in KG":"Y"},{"Length":8,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Super Double Drawn","Product":"Weft","Colors":"Dark Colors","Standard Weight":100,"Rate":1450,"Sold in KG":"Y"},{"Length":10,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Super Double Drawn","Product":"Weft","Colors":"Dark Colors","Standard Weight":100,"Rate":2200,"Sold in KG":"Y"},{"Length":12,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Super Double Drawn","Product":"Weft","Colors":"Dark Colors","Standard Weight":100,"Rate":2800,"Sold in KG":"Y"},{"Length":14,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Super Double Drawn","Product":"Weft","Colors":"Dark Colors","Standard Weight":100,"Rate":3350,"Sold in KG":"Y"},{"Length":16,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Super Double Drawn","Product":"Weft","Colors":"Dark Colors","Standard Weight":100,"Rate":3950,"Sold in KG":"Y"},{"Length":18,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Super Double Drawn","Product":"Weft","Colors":"Dark Colors","Standard Weight":100,"Rate":5050,"Sold in KG":"Y"},{"Length":20,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Super Double Drawn","Product":"Weft","Colors":"Dark Colors","Standard Weight":100,"Rate":5900,"Sold in KG":"Y"},{"Length":22,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Super Double Drawn","Product":"Weft","Colors":"Dark Colors","Standard Weight":100,"Rate":7600,"Sold in KG":"Y"},{"Length":24,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Super Double Drawn","Product":"Weft","Colors":"Dark Colors","Standard Weight":100,"Rate":8850,"Sold in KG":"Y"},{"Length":26,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Super Double Drawn","Product":"Weft","Colors":"Dark Colors","Standard Weight":100,"Rate":10300,"Sold in KG":"Y"},{"Length":28,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Super Double Drawn","Product":"Weft","Colors":"Dark Colors","Standard Weight":100,"Rate":11400,"Sold in KG":"Y"},{"Length":8,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Super Double Drawn","Product":"Weft","Colors":"Light Colors","Standard Weight":100,"Rate":1700,"Sold in KG":"Y"},{"Length":10,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Super Double Drawn","Product":"Weft","Colors":"Light Colors","Standard Weight":100,"Rate":2500,"Sold in KG":"Y"},{"Length":12,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Super Double Drawn","Product":"Weft","Colors":"Light Colors","Standard Weight":100,"Rate":3100,"Sold in KG":"Y"},{"Length":14,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Super Double Drawn","Product":"Weft","Colors":"Light Colors","Standard Weight":100,"Rate":3650,"Sold in KG":"Y"},{"Length":16,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Super Double Drawn","Product":"Weft","Colors":"Light Colors","Standard Weight":100,"Rate":4250,"Sold in KG":"Y"},{"Length":18,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Super Double Drawn","Product":"Weft","Colors":"Light Colors","Standard Weight":100,"Rate":5050,"Sold in KG":"Y"},{"Length":20,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Super Double Drawn","Product":"Weft","Colors":"Light Colors","Standard Weight":100,"Rate":6150,"Sold in KG":"Y"},{"Length":22,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Super Double Drawn","Product":"Weft","Colors":"Light Colors","Standard Weight":100,"Rate":7850,"Sold in KG":"Y"},{"Length":24,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Super Double Drawn","Product":"Weft","Colors":"Light Colors","Standard Weight":100,"Rate":9150,"Sold in KG":"Y"},{"Length":26,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Super Double Drawn","Product":"Weft","Colors":"Light Colors","Standard Weight":100,"Rate":10550,"Sold in KG":"Y"},{"Length":28,"PriceList":"INR25","Currency":"INR","Catagory":"Wefts","Density":"Super Double Drawn","Product":"Weft","Colors":"Light Colors","Standard Weight":100,"Rate":11650,"Sold in KG":"Y"},{"Length":12,"PriceList":"INR25","Currency":"INR","Catagory":"PonyTails","Density":"Double Drawn","Product":"Wrap Around Ponytail","Colors":"All Colors","Standard Weight":100,"Rate":2700,"Sold in KG":"N"},{"Length":14,"PriceList":"INR25","Currency":"INR","Catagory":"PonyTails","Density":"Double Drawn","Product":"Wrap Around Ponytail","Colors":"All Colors","Standard Weight":100,"Rate":2900,"Sold in KG":"N"},{"Length":16,"PriceList":"INR25","Currency":"INR","Catagory":"PonyTails","Density":"Double Drawn","Product":"Wrap Around Ponytail","Colors":"All Colors","Standard Weight":100,"Rate":3500,"Sold in KG":"N"},{"Length":18,"PriceList":"INR25","Currency":"INR","Catagory":"PonyTails","Density":"Double Drawn","Product":"Wrap Around Ponytail","Colors":"All Colors","Standard Weight":100,"Rate":4200,"Sold in KG":"N"},{"Length":20,"PriceList":"INR25","Currency":"INR","Catagory":"PonyTails","Density":"Double Drawn","Product":"Wrap Around Ponytail","Colors":"All Colors","Standard Weight":100,"Rate":4900,"Sold in KG":"N"},{"Length":22,"PriceList":"INR25","Currency":"INR","Catagory":"PonyTails","Density":"Double Drawn","Product":"Wrap Around Ponytail","Colors":"All Colors","Standard Weight":100,"Rate":5900,"Sold in KG":"N"},{"Length":24,"PriceList":"INR25","Currency":"INR","Catagory":"PonyTails","Density":"Double Drawn","Product":"Wrap Around Ponytail","Colors":"All Colors","Standard Weight":100,"Rate":6600,"Sold in KG":"N"},{"Length":26,"PriceList":"INR25","Currency":"INR","Catagory":"PonyTails","Density":"Double Drawn","Product":"Wrap Around Ponytail","Colors":"All Colors","Standard Weight":100,"Rate":7700,"Sold in KG":"N"},{"Length":28,"PriceList":"INR25","Currency":"INR","Catagory":"PonyTails","Density":"Double Drawn","Product":"Wrap Around Ponytail","Colors":"All Colors","Standard Weight":100,"Rate":9100,"Sold in KG":"N"},{"Length":30,"PriceList":"INR25","Currency":"INR","Catagory":"PonyTails","Density":"Double Drawn","Product":"Wrap Around Ponytail","Colors":"All Colors","Standard Weight":100,"Rate":10500,"Sold in KG":"N"},{"Length":32,"PriceList":"INR25","Currency":"INR","Catagory":"PonyTails","Density":"Double Drawn","Product":"Wrap Around Ponytail","Colors":"All Colors","Standard Weight":100,"Rate":11900,"Sold in KG":"N"},{"Length":12,"PriceList":"INR25","Currency":"INR","Catagory":"PonyTails","Density":"Double Drawn","Product":"Clutch Ponytail","Colors":"All Colors","Standard Weight":100,"Rate":2750,"Sold in KG":"N"},{"Length":14,"PriceList":"INR25","Currency":"INR","Catagory":"PonyTails","Density":"Double Drawn","Product":"Clutch Ponytail","Colors":"All Colors","Standard Weight":100,"Rate":2950,"Sold in KG":"N"},{"Length":16,"PriceList":"INR25","Currency":"INR","Catagory":"PonyTails","Density":"Double Drawn","Product":"Clutch Ponytail","Colors":"All Colors","Standard Weight":100,"Rate":3550,"Sold in KG":"N"},{"Length":18,"PriceList":"INR25","Currency":"INR","Catagory":"PonyTails","Density":"Double Drawn","Product":"Clutch Ponytail","Colors":"All Colors","Standard Weight":100,"Rate":4250,"Sold in KG":"N"},{"Length":20,"PriceList":"INR25","Currency":"INR","Catagory":"PonyTails","Density":"Double Drawn","Product":"Clutch Ponytail","Colors":"All Colors","Standard Weight":100,"Rate":4950,"Sold in KG":"N"},{"Length":22,"PriceList":"INR25","Currency":"INR","Catagory":"PonyTails","Density":"Double Drawn","Product":"Clutch Ponytail","Colors":"All Colors","Standard Weight":100,"Rate":5950,"Sold in KG":"N"},{"Length":24,"PriceList":"INR25","Currency":"INR","Catagory":"PonyTails","Density":"Double Drawn","Product":"Clutch Ponytail","Colors":"All Colors","Standard Weight":100,"Rate":6650,"Sold in KG":"N"},{"Length":26,"PriceList":"INR25","Currency":"INR","Catagory":"PonyTails","Density":"Double Drawn","Product":"Clutch Ponytail","Colors":"All Colors","Standard Weight":100,"Rate":7750,"Sold in KG":"N"},{"Length":28,"PriceList":"INR25","Currency":"INR","Catagory":"PonyTails","Density":"Double Drawn","Product":"Clutch Ponytail","Colors":"All Colors","Standard Weight":100,"Rate":9150,"Sold in KG":"N"},{"Length":30,"PriceList":"INR25","Currency":"INR","Catagory":"PonyTails","Density":"Double Drawn","Product":"Clutch Ponytail","Colors":"All Colors","Standard Weight":100,"Rate":10550,"Sold in KG":"N"},{"Length":32,"PriceList":"INR25","Currency":"INR","Catagory":"PonyTails","Density":"Double Drawn","Product":"Clutch Ponytail","Colors":"All Colors","Standard Weight":100,"Rate":11950,"Sold in KG":"N"},{"Length":12,"PriceList":"INR25","Currency":"INR","Catagory":"ClipOn","Density":"Single Drawn","Product":"Highlights","Colors":"All Colors","Standard Weight":10,"Rate":275,"Sold in KG":"N"},{"Length":14,"PriceList":"INR25","Currency":"INR","Catagory":"ClipOn","Density":"Single Drawn","Product":"Highlights","Colors":"All Colors","Standard Weight":10,"Rate":300,"Sold in KG":"N"},{"Length":16,"PriceList":"INR25","Currency":"INR","Catagory":"ClipOn","Density":"Single Drawn","Product":"Highlights","Colors":"All Colors","Standard Weight":10,"Rate":325,"Sold in KG":"N"},{"Length":18,"PriceList":"INR25","Currency":"INR","Catagory":"ClipOn","Density":"Single Drawn","Product":"Highlights","Colors":"All Colors","Standard Weight":10,"Rate":350,"Sold in KG":"N"},{"Length":20,"PriceList":"INR25","Currency":"INR","Catagory":"ClipOn","Density":"Single Drawn","Product":"Highlights","Colors":"All Colors","Standard Weight":10,"Rate":375,"Sold in KG":"N"},{"Length":22,"PriceList":"INR25","Currency":"INR","Catagory":"ClipOn","Density":"Single Drawn","Product":"Highlights","Colors":"All Colors","Standard Weight":10,"Rate":400,"Sold in KG":"N"},{"Length":24,"PriceList":"INR25","Currency":"INR","Catagory":"ClipOn","Density":"Single Drawn","Product":"Highlights","Colors":"All Colors","Standard Weight":10,"Rate":425,"Sold in KG":"N"},{"Length":26,"PriceList":"INR25","Currency":"INR","Catagory":"ClipOn","Density":"Single Drawn","Product":"Highlights","Colors":"All Colors","Standard Weight":10,"Rate":450,"Sold in KG":"N"},{"Length":12,"PriceList":"INR25","Currency":"INR","Catagory":"ClipOn","Density":"Double Drawn","Product":"Highlights","Colors":"All Colors","Standard Weight":10,"Rate":325,"Sold in KG":"N"},{"Length":14,"PriceList":"INR25","Currency":"INR","Catagory":"ClipOn","Density":"Double Drawn","Product":"Highlights","Colors":"All Colors","Standard Weight":10,"Rate":375,"Sold in KG":"N"},{"Length":16,"PriceList":"INR25","Currency":"INR","Catagory":"ClipOn","Density":"Double Drawn","Product":"Highlights","Colors":"All Colors","Standard Weight":10,"Rate":425,"Sold in KG":"N"},{"Length":18,"PriceList":"INR25","Currency":"INR","Catagory":"ClipOn","Density":"Double Drawn","Product":"Highlights","Colors":"All Colors","Standard Weight":10,"Rate":475,"Sold in KG":"N"},{"Length":20,"PriceList":"INR25","Currency":"INR","Catagory":"ClipOn","Density":"Double Drawn","Product":"Highlights","Colors":"All Colors","Standard Weight":10,"Rate":525,"Sold in KG":"N"},{"Length":22,"PriceList":"INR25","Currency":"INR","Catagory":"ClipOn","Density":"Double Drawn","Product":"Highlights","Colors":"All Colors","Standard Weight":10,"Rate":575,"Sold in KG":"N"},{"Length":24,"PriceList":"INR25","Currency":"INR","Catagory":"ClipOn","Density":"Double Drawn","Product":"Highlights","Colors":"All Colors","Standard Weight":10,"Rate":625,"Sold in KG":"N"},{"Length":26,"PriceList":"INR25","Currency":"INR","Catagory":"ClipOn","Density":"Double Drawn","Product":"Highlights","Colors":"All Colors","Standard Weight":10,"Rate":675,"Sold in KG":"N"},{"Length":12,"PriceList":"INR25","Currency":"INR","Catagory":"Buns","Density":"Double Drawn","Product":"Curly Faux Buns","Colors":"All Colors","Standard Weight":30,"Rate":1100,"Sold in KG":"N"},{"Length":14,"PriceList":"INR25","Currency":"INR","Catagory":"Buns","Density":"Double Drawn","Product":"Curly Faux Buns","Colors":"All Colors","Standard Weight":30,"Rate":1450,"Sold in KG":"N"},{"Length":12,"PriceList":"INR25","Currency":"INR","Catagory":"ClipOn","Density":"Double Drawn","Product":"Halo Extensions","Colors":"All Colors","Standard Weight":100,"Rate":2700,"Sold in KG":"N"},{"Length":14,"PriceList":"INR25","Currency":"INR","Catagory":"ClipOn","Density":"Double Drawn","Product":"Halo Extensions","Colors":"All Colors","Standard Weight":100,"Rate":2900,"Sold in KG":"N"},{"Length":16,"PriceList":"INR25","Currency":"INR","Catagory":"ClipOn","Density":"Double Drawn","Product":"Halo Extensions","Colors":"All Colors","Standard Weight":100,"Rate":3500,"Sold in KG":"N"},{"Length":18,"PriceList":"INR25","Currency":"INR","Catagory":"ClipOn","Density":"Double Drawn","Product":"Halo Extensions","Colors":"All Colors","Standard Weight":100,"Rate":4200,"Sold in KG":"N"},{"Length":20,"PriceList":"INR25","Currency":"INR","Catagory":"ClipOn","Density":"Double Drawn","Product":"Halo Extensions","Colors":"All Colors","Standard Weight":100,"Rate":4900,"Sold in KG":"N"},{"Length":22,"PriceList":"INR25","Currency":"INR","Catagory":"ClipOn","Density":"Double Drawn","Product":"Halo Extensions","Colors":"All Colors","Standard Weight":100,"Rate":5900,"Sold in KG":"N"},{"Length":24,"PriceList":"INR25","Currency":"INR","Catagory":"ClipOn","Density":"Double Drawn","Product":"Halo Extensions","Colors":"All Colors","Standard Weight":100,"Rate":6600,"Sold in KG":"N"},{"Length":26,"PriceList":"INR25","Currency":"INR","Catagory":"ClipOn","Density":"Double Drawn","Product":"Halo Extensions","Colors":"All Colors","Standard Weight":100,"Rate":7700,"Sold in KG":"N"},{"Length":28,"PriceList":"INR25","Currency":"INR","Catagory":"ClipOn","Density":"Double Drawn","Product":"Halo Extensions","Colors":"All Colors","Standard Weight":100,"Rate":9100,"Sold in KG":"N"},{"Length":30,"PriceList":"INR25","Currency":"INR","Catagory":"ClipOn","Density":"Double Drawn","Product":"Halo Extensions","Colors":"All Colors","Standard Weight":100,"Rate":10500,"Sold in KG":"N"},{"Length":32,"PriceList":"INR25","Currency":"INR","Catagory":"ClipOn","Density":"Double Drawn","Product":"Halo Extensions","Colors":"All Colors","Standard Weight":100,"Rate":11900,"Sold in KG":"N"},{"Length":10,"PriceList":"INR25","Currency":"INR","Catagory":"CoverPatches","Density":"Double Drawn","Product":"Single Clip Cover Patch","Colors":"All Colors","Standard Weight":10,"Rate":500,"Sold in KG":"N"},{"Length":12,"PriceList":"INR25","Currency":"INR","Catagory":"CoverPatches","Density":"Double Drawn","Product":"Single Clip Cover Patch","Colors":"All Colors","Standard Weight":10,"Rate":575,"Sold in KG":"N"},{"Length":14,"PriceList":"INR25","Currency":"INR","Catagory":"CoverPatches","Density":"Double Drawn","Product":"Single Clip Cover Patch","Colors":"All Colors","Standard Weight":10,"Rate":600,"Sold in KG":"N"},{"Length":16,"PriceList":"INR25","Currency":"INR","Catagory":"CoverPatches","Density":"Double Drawn","Product":"Single Clip Cover Patch","Colors":"All Colors","Standard Weight":10,"Rate":675,"Sold in KG":"N"},{"Length":18,"PriceList":"INR25","Currency":"INR","Catagory":"CoverPatches","Density":"Double Drawn","Product":"Single Clip Cover Patch","Colors":"All Colors","Standard Weight":10,"Rate":700,"Sold in KG":"N"},{"Length":20,"PriceList":"INR25","Currency":"INR","Catagory":"CoverPatches","Density":"Double Drawn","Product":"Single Clip Cover Patch","Colors":"All Colors","Standard Weight":10,"Rate":775,"Sold in KG":"N"}];
@@ -2382,6 +2626,18 @@
                 const data = await response.json();
                 productData = data;
                 console.log('Product data loaded successfully:', productData.length, 'items');
+                
+                // Add default price list to available lists
+                const defaultListName = 'ProductDataJson280225';
+                localStorage.setItem(`priceList_${defaultListName}`, JSON.stringify(data));
+                
+                // Update available price lists
+                let storedLists = JSON.parse(localStorage.getItem('availablePriceLists')) || [];
+                if (!storedLists.includes(defaultListName)) {
+                    storedLists.push(defaultListName);
+                    localStorage.setItem('availablePriceLists', JSON.stringify(storedLists));
+                }
+                availablePriceLists = storedLists;
                 
                 // Initialize the application after data is loaded
                 initializeApp();
@@ -2436,10 +2692,14 @@
             product: null,
             color: null
         };
+        
+        let selectedPriceLists = [];
+        let availablePriceLists = [];
 
         // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
             loadProductData();
+            loadPriceListManager(); // Initialize price list dropdown
         });
 
         async function fetchExchangeRates() {
@@ -2604,11 +2864,7 @@
                 generateResults();
             });
             
-            // Price multiplier change
-            document.getElementById('priceMultiplier').addEventListener('input', function() {
-                priceMultiplier = parseFloat(this.value) || 0;
-                generateResults();
-            });
+            // Price multiplier functionality removed
 
             // Dropdown toggles
             document.querySelectorAll('.dropdown-button').forEach(button => {
@@ -2672,7 +2928,18 @@
                     document.querySelectorAll('.dropdown-button').forEach(b => b.classList.remove('active'));
                 }
             });
+            
+            // Price list dropdown functionality removed
+            
+            // Price list checkbox changes
+            document.addEventListener('change', function(e) {
+                if (e.target.type === 'checkbox' && e.target.classList.contains('price-list-checkbox')) {
+                    updateSelectedPriceLists();
+                }
+            });
         }
+        
+        // Price list dropdown functions removed
 
         function updateDropdownText(filterType) {
             const button = document.querySelector(`[data-filter="${filterType}"]`);
@@ -2884,21 +3151,38 @@
         }
 
         function selectAllAvailable() {
-            const allOptions = getAvailableOptions();
-            
+            // Only clear filters that are not currently selected
+            // Keep any existing selections and clear the rest to show all compatible options
             Object.keys(selectedFilters).forEach(filterType => {
-                let optionsKey = filterType === 'priceList' ? 'price_lists' : filterType + 's';
-                if (filterType === 'category') optionsKey = 'categories';
-                if (filterType === 'density') optionsKey = 'densities';
-                if (filterType === 'unit') optionsKey = 'units';
-                
-                const availableValues = allOptions.available[optionsKey] || [];
-                // For single selection, just select the first available value
-                if (availableValues.length > 0) {
-                    selectedFilters[filterType] = availableValues[0];
+                // Only clear filters that don't have a selection
+                if (selectedFilters[filterType] === null) {
+                    // Already null, no need to change
+                    return;
                 }
-                updateDropdownText(filterType);
+                // If this filter has a selection, keep it and clear others
+                // We'll handle this by clearing only the unselected filters
             });
+            
+            // Find which filter has a selection (if any)
+            const selectedFilterTypes = Object.keys(selectedFilters).filter(filterType => 
+                selectedFilters[filterType] !== null
+            );
+            
+            // If no filters are selected, clear all (original behavior)
+            if (selectedFilterTypes.length === 0) {
+                Object.keys(selectedFilters).forEach(filterType => {
+                    selectedFilters[filterType] = null;
+                    updateDropdownText(filterType);
+                });
+            } else {
+                // Keep the selected filters and clear the others
+                Object.keys(selectedFilters).forEach(filterType => {
+                    if (!selectedFilterTypes.includes(filterType)) {
+                        selectedFilters[filterType] = null;
+                        updateDropdownText(filterType);
+                    }
+                });
+            }
             
             updateActiveFilters();
             updateAllDropdowns();
@@ -4198,6 +4482,7 @@
         function openAdminModal() {
             document.getElementById('adminModal').style.display = 'block';
             loadPriceListManager();
+            populateMultiSelectOptions();
         }
 
         function closeAdminModal() {
@@ -4244,7 +4529,7 @@
             container.innerHTML = '';
             
             const stored = localStorage.getItem('availablePriceLists');
-            const availablePriceLists = stored ? JSON.parse(stored) : [];
+            availablePriceLists = stored ? JSON.parse(stored) : [];
             
             availablePriceLists.forEach(fileName => {
                 const item = document.createElement('div');
@@ -4258,16 +4543,255 @@
                 `;
                 container.appendChild(item);
             });
+            
+            // Update the new price list dropdown
+            // Price list dropdown population removed
+        }
+
+        // Multi-price list management functions
+        function addPriceListToActive(listName, data, metadata = {}) {
+            activePriceLists.set(listName, {
+                data: data,
+                isActive: true,
+                metadata: {
+                    loadedAt: new Date().toISOString(),
+                    ...metadata
+                }
+            });
+            
+            if (!selectedActivePriceLists.includes(listName)) {
+                selectedActivePriceLists.push(listName);
+            }
+            
+            combineActivePriceListData();
+            updateActivePriceListsDisplay();
+        }
+        
+        function removePriceListFromActive(listName) {
+            activePriceLists.delete(listName);
+            selectedActivePriceLists = selectedActivePriceLists.filter(name => name !== listName);
+            combineActivePriceListData();
+            updateActivePriceListsDisplay();
+        }
+        
+        function togglePriceListActive(listName) {
+            const priceList = activePriceLists.get(listName);
+            if (priceList) {
+                priceList.isActive = !priceList.isActive;
+                if (priceList.isActive && !selectedActivePriceLists.includes(listName)) {
+                    selectedActivePriceLists.push(listName);
+                } else if (!priceList.isActive) {
+                    selectedActivePriceLists = selectedActivePriceLists.filter(name => name !== listName);
+                }
+                combineActivePriceListData();
+                updateActivePriceListsDisplay();
+            }
+        }
+        
+        function combineActivePriceListData() {
+            productData = [];
+            
+            selectedActivePriceLists.forEach(listName => {
+                const priceList = activePriceLists.get(listName);
+                if (priceList && priceList.isActive) {
+                    // Add source identifier to each product
+                    const dataWithSource = priceList.data.map(product => ({
+                        ...product,
+                        _sourceList: listName
+                    }));
+                    productData.push(...dataWithSource);
+                }
+            });
+        }
+        
+        function updateActivePriceListsDisplay() {
+            const display = document.getElementById('currentPriceListDisplay');
+            
+            if (selectedActivePriceLists.length === 0) {
+                display.innerHTML = '<p style="color: #6c757d; font-style: italic;">No price lists active</p>';
+                return;
+            }
+            
+            let html = '<div class="active-lists-container">';
+            selectedActivePriceLists.forEach(listName => {
+                const priceList = activePriceLists.get(listName);
+                if (priceList && priceList.isActive) {
+                    html += `
+                        <div class="loaded-list active-price-list" data-list="${listName}">
+                            <span class="list-name">${listName}</span>
+                            <span class="list-count">(${priceList.data.length} items)</span>
+                            <button class="deactivate-btn" onclick="togglePriceListActive('${listName}')" title="Deactivate">×</button>
+                        </div>
+                    `;
+                }
+            });
+            html += '</div>';
+            
+            display.innerHTML = html;
+        }
+        
+        function updateCurrentPriceListDisplay(listName) {
+            // Backward compatibility function
+            if (listName) {
+                currentLoadedPriceList = listName;
+            } else {
+                currentLoadedPriceList = null;
+            }
+            updateActivePriceListsDisplay();
+        }
+        
+        // Multi-select dropdown functions
+        function toggleMultiSelectDropdown() {
+            const dropdown = document.getElementById('multiSelectDropdown');
+            dropdown.classList.toggle('open');
+        }
+        
+        function populateMultiSelectOptions() {
+            const optionsContainer = document.getElementById('multiSelectOptions');
+            const availableLists = JSON.parse(localStorage.getItem('availablePriceLists')) || [];
+            
+            optionsContainer.innerHTML = '';
+            
+            if (availableLists.length === 0) {
+                optionsContainer.innerHTML = '<div class="multi-select-option">No price lists available</div>';
+                return;
+            }
+            
+            availableLists.forEach(listName => {
+                const isActive = activePriceLists.has(listName);
+                const option = document.createElement('div');
+                option.className = `multi-select-option ${isActive ? 'selected' : ''}`;
+                option.innerHTML = `
+                    <input type="checkbox" id="multi_${listName}" ${isActive ? 'checked' : ''} onchange="togglePriceListSelection('${listName}')">
+                    <label for="multi_${listName}">${listName}</label>
+                `;
+                optionsContainer.appendChild(option);
+            });
+            
+            updateMultiSelectText();
+        }
+        
+        function togglePriceListSelection(listName) {
+            const checkbox = document.getElementById(`multi_${listName}`);
+            const option = checkbox.closest('.multi-select-option');
+            
+            if (checkbox.checked) {
+                option.classList.add('selected');
+            } else {
+                option.classList.remove('selected');
+            }
+            
+            updateMultiSelectText();
+        }
+        
+        function updateMultiSelectText() {
+            const textElement = document.getElementById('multiSelectText');
+            const checkboxes = document.querySelectorAll('#multiSelectOptions input[type="checkbox"]:checked');
+            
+            if (checkboxes.length === 0) {
+                textElement.textContent = 'Select price lists...';
+            } else if (checkboxes.length === 1) {
+                textElement.textContent = `1 price list selected`;
+            } else {
+                textElement.textContent = `${checkboxes.length} price lists selected`;
+            }
+        }
+        
+        function loadSelectedPriceLists() {
+            const checkboxes = document.querySelectorAll('#multiSelectOptions input[type="checkbox"]:checked');
+            const selectedLists = Array.from(checkboxes).map(cb => cb.id.replace('multi_', ''));
+            
+            if (selectedLists.length === 0) {
+                alert('Please select at least one price list to load.');
+                return;
+            }
+            
+            let loadedCount = 0;
+            let alreadyActiveCount = 0;
+            
+            selectedLists.forEach(listName => {
+                if (activePriceLists.has(listName)) {
+                    alreadyActiveCount++;
+                    return;
+                }
+                
+                const data = localStorage.getItem(`priceList_${listName}`);
+                if (data) {
+                    const priceListData = JSON.parse(data);
+                    addPriceListToActive(listName, priceListData, {
+                        source: 'localStorage',
+                        loadedBy: 'multiSelect'
+                    });
+                    loadedCount++;
+                }
+            });
+            
+            generateResults();
+            closeAdminModal();
+            
+            let message = '';
+            if (loadedCount > 0) {
+                message += `${loadedCount} price list(s) loaded successfully!`;
+            }
+            if (alreadyActiveCount > 0) {
+                if (message) message += ' ';
+                message += `${alreadyActiveCount} price list(s) were already active.`;
+            }
+            
+            alert(message || 'No new price lists were loaded.');
+        }
+        
+        function clearAllActivePriceLists() {
+            if (selectedActivePriceLists.length === 0) {
+                alert('No active price lists to clear.');
+                return;
+            }
+            
+            if (confirm(`Are you sure you want to clear all ${selectedActivePriceLists.length} active price lists?`)) {
+                activePriceLists.clear();
+                selectedActivePriceLists = [];
+                productData = [];
+                currentLoadedPriceList = null;
+                
+                updateActivePriceListsDisplay();
+                populateMultiSelectOptions();
+                generateResults();
+                
+                alert('All active price lists have been cleared.');
+            }
         }
 
         function selectPriceList(listName) {
             try {
                 const data = localStorage.getItem(`priceList_${listName}`);
                 if (data) {
-                    productData = JSON.parse(data);
+                    const priceListData = JSON.parse(data);
+                    
+                    // Check if already active
+                    if (activePriceLists.has(listName)) {
+                        alert(`Price list "${listName}" is already active!`);
+                        return;
+                    }
+                    
+                    // Add to active price lists
+                    addPriceListToActive(listName, priceListData, {
+                        source: 'localStorage',
+                        loadedBy: 'user'
+                    });
+                    
+                    // Update availablePriceLists to ensure dropdown is populated
+                    const stored = localStorage.getItem('availablePriceLists');
+                    availablePriceLists = stored ? JSON.parse(stored) : [];
+                    
+                    // Update the dropdown
+                    // Price list dropdown population removed
+                    
+                    // Update current price list display (backward compatibility)
+                    updateCurrentPriceListDisplay(listName);
+                    
                     generateResults();
                     closeAdminModal();
-                    alert(`Price list "${listName}" has been loaded successfully!`);
+                    alert(`Price list "${listName}" has been added to active lists!`);
                 } else {
                     alert('Price list not found!');
                 }
@@ -4278,7 +4802,12 @@
 
         function removePriceList(listName) {
             if (confirm(`Are you sure you want to remove "${listName}"?`)) {
-                // Remove the price list data
+                // Remove from active lists if present
+                if (activePriceLists.has(listName)) {
+                    removePriceListFromActive(listName);
+                }
+                
+                // Remove the price list data from storage
                 localStorage.removeItem(`priceList_${listName}`);
                 
                 // Update available price lists
@@ -4286,17 +4815,110 @@
                 availablePriceLists = availablePriceLists.filter(name => name !== listName);
                 localStorage.setItem('availablePriceLists', JSON.stringify(availablePriceLists));
                 
+                // Clear current loaded if it was this list
+                if (currentLoadedPriceList === listName) {
+                    updateCurrentPriceListDisplay(null);
+                }
+                
                 loadPriceListManager();
+                generateResults(); // Refresh results with updated data
                 alert(`Price list "${listName}" has been removed.`);
             }
         }
 
-        function applyPriceMultiplier() {
-            const multiplierInput = document.getElementById('priceMultiplier');
-            const multiplierValue = parseFloat(multiplierInput.value) || 0;
-            currentPriceMultiplier = 1 + (multiplierValue / 100);
-            alert(`Price multiplier set to ${multiplierValue}%`);
+        // Price multiplier functionality removed
+
+        // Standalone Price List Selector Functions
+        function togglePriceListSelector() {
+            const content = document.getElementById('priceListSelectorContent');
+            const isVisible = content.style.display !== 'none';
+            
+            if (isVisible) {
+                content.style.display = 'none';
+            } else {
+                content.style.display = 'block';
+                loadPriceListOptions();
+            }
         }
+
+        function loadPriceListOptions() {
+            const container = document.getElementById('priceListOptions');
+            const availablePriceLists = JSON.parse(localStorage.getItem('availablePriceLists')) || [];
+            
+            if (availablePriceLists.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: #6c757d; padding: 20px;">No price lists available. Upload price lists through the Admin panel.</div>';
+                return;
+            }
+            
+            container.innerHTML = availablePriceLists.map(listName => {
+                const isActive = activePriceLists.has(listName);
+                return `
+                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border-bottom: 1px solid #f1f3f4; background: ${isActive ? '#e8f5e8' : 'white'};">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; flex: 1;">
+                            <input type="checkbox" ${isActive ? 'checked' : ''} onchange="togglePriceList('${listName}', this.checked)" style="margin: 0;">
+                            <span style="font-weight: ${isActive ? '600' : '400'}; color: ${isActive ? '#28a745' : '#495057'};">${listName}</span>
+                        </label>
+                        <span style="font-size: 12px; color: #6c757d; background: ${isActive ? '#d4edda' : '#f8f9fa'}; padding: 2px 6px; border-radius: 10px;">
+                            ${isActive ? 'Active' : 'Inactive'}
+                        </span>
+                    </div>
+                `;
+            }).join('');
+            
+            updateSelectionInfo();
+        }
+
+        function togglePriceList(listName, isChecked) {
+            if (isChecked) {
+                addPriceListToActive(listName);
+            } else {
+                removePriceListFromActive(listName);
+            }
+            updateSelectionInfo();
+        }
+
+        function updateSelectionInfo() {
+            const activeCount = activePriceLists.size;
+            const countElement = document.getElementById('activePriceListCount');
+            const infoElement = document.getElementById('currentSelectionInfo');
+            
+            countElement.textContent = `${activeCount} Active`;
+            
+            if (activeCount === 0) {
+                infoElement.textContent = 'No price lists selected';
+            } else {
+                const activeNames = Array.from(activePriceLists.keys()).join(', ');
+                infoElement.textContent = `Selected: ${activeNames}`;
+            }
+        }
+
+        function clearAllPriceLists() {
+            if (confirm('Are you sure you want to deactivate all price lists?')) {
+                activePriceLists.clear();
+                productData = [];
+                updateAllDropdowns();
+                generateResults();
+                loadPriceListOptions();
+                updateSelectionInfo();
+            }
+        }
+
+        function applyPriceListSelection() {
+            productData = combineActivePriceListData();
+            updateAllDropdowns();
+            generateResults();
+            
+            const activeCount = activePriceLists.size;
+            alert(`Applied ${activeCount} price list(s) successfully!`);
+            
+            // Optionally close the selector
+            document.getElementById('priceListSelectorContent').style.display = 'none';
+        }
+
+        // Initialize the price list selector on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            updateSelectionInfo();
+        });
 
         // Close admin modal when clicking outside
         document.addEventListener('click', function(e) {
