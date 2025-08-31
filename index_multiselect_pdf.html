@@ -187,7 +187,7 @@
       <main class="flex-1 bg-white rounded-xl shadow-soft p-3 sm:p-5">
         <div class="mb-3 flex flex-wrap items-center gap-2 justify-end">
           <div class="flex gap-2">
-            <button id="downloadPDF" class="px-3 py-2 rounded-lg bg-slate-900 text-white text-sm">Download PDF</button>
+            <button id="downloadPDF" class="px-3 py-2 rounded-lg text-slate-800 text-sm" style="background-color: #e6eaeb;">Download PDF</button>
           </div>
         </div>
         <div class="w-full overflow-auto">
@@ -437,15 +437,24 @@
     function drawImage(src,x,y,w,h){ return new Promise((res,rej)=>{ const img=new Image(); img.crossOrigin='anonymous'; img.onload=()=>{ctx.drawImage(img,x,y,w,h);res();}; img.onerror=rej; img.src=src; }); }
 
     async function drawHeader(W, category){
-      ctx.fillStyle='#0f172a'; ctx.fillRect(0,0,W,160);
-      try{ await drawImage('/assets/logo.png',24,24,130,112);}catch(e){}
-      const stampPath = CATEGORY_STAMPS[category] || CATEGORY_STAMPS.__default;
-      try{ await drawImage(stampPath, W-180,16,160,128);}catch(e){}
-      ctx.fillStyle='#ffffff'; ctx.font='700 24px system-ui, -apple-system, Segoe UI, Roboto'; ctx.textAlign='center';
-      ctx.fillText('Price List', W/2, 92);
+      ctx.fillStyle='#e6eaeb'; ctx.fillRect(0,0,W,100);
       
-      ctx.font='500 14px system-ui, -apple-system, Segoe UI, Roboto';
-      ctx.fillText(`Currency: ${state.currency}`, W/2, 120);
+      // Company logo aligned to the left - maintaining aspect ratio
+      const logoHeight = 60;
+      const logoWidth = logoHeight * 1.5; // Assuming 3:2 aspect ratio for logo
+      try{ await drawImage('/inages/logo.png', 24, 20, logoWidth, logoHeight);}catch(e){console.warn('Logo not found');}
+      
+      // "Made with" badge centered in header - maintaining aspect ratio
+      const badgeHeight = 35;
+      const badgeWidth = badgeHeight * 2.5; // Assuming 5:2 aspect ratio for badge
+      const centerX = (W - badgeWidth) / 2;
+      try{ await drawImage('/inages/madewithbadge.png', centerX, 32.5, badgeWidth, badgeHeight);}catch(e){console.warn('Made with badge not found');}
+      
+      // Category stamp on the right - maintaining aspect ratio
+      const stampHeight = 60;
+      const stampWidth = stampHeight * 1.5; // Assuming 3:2 aspect ratio for stamps
+      const stampPath = CATEGORY_STAMPS[category] || CATEGORY_STAMPS.__default;
+      try{ await drawImage(stampPath, W-stampWidth-24, 20, stampWidth, stampHeight);}catch(e){console.warn('Category stamp not found');}
     }
     function drawFooter(W,H){
       ctx.fillStyle='#f1f5f9'; ctx.fillRect(0, H-64, W, 64);
@@ -453,8 +462,8 @@
       ctx.fillText(ADDRESS_LINES[0], W/2, H-40); ctx.fillText(ADDRESS_LINES[1], W/2, H-20);
     }
     function tableHead(W,y,xPad){
-      ctx.fillStyle='#0f172a'; roundRect(ctx, xPad, y, W-2*xPad, 36, 10, true);
-      ctx.fillStyle='#ffffff'; ctx.font='600 14px system-ui, -apple-system, Segoe UI, Roboto';
+      ctx.fillStyle='#e6eaeb'; roundRect(ctx, xPad, y, W-2*xPad, 36, 10, true);
+      ctx.fillStyle='#444662'; ctx.font='600 14px system-ui, -apple-system, Segoe UI, Roboto';
       ctx.textAlign='left';
       ctx.fillText('Length', xPad+16, y+23); 
       ctx.textAlign='right';
@@ -464,7 +473,7 @@
     function segmentBlockHeight(rows){ return 24 + 36 + rows.length*32 + 24; } // title + head + rows + gap with divider
     
     function calculateOptimalPageHeight(segments, W) {
-      const headerHeight = 160;
+      const headerHeight = 100;
       const footerHeight = 64;
       const minContentHeight = 200;
       let totalContentHeight = 0;
@@ -480,7 +489,7 @@
     async function renderPage(segments, W, H){
       const cat = segments.length? segments[0].category : '';
       await drawHeader(W, cat);
-      let y=170, xPad=20, consumed=0;
+      let y=110, xPad=20, consumed=0;
       for (let sIdx=0; sIdx<segments.length; sIdx++){
         const seg=segments[sIdx];
         const rows = rowsForSegment(seg);
@@ -488,7 +497,7 @@
         if (y + blkH > H - 80) break;
 
         // Title
-        ctx.fillStyle='#0f172a'; ctx.font='700 18px system-ui, -apple-system, Segoe UI, Roboto'; ctx.textAlign='left';
+        ctx.fillStyle='#444662'; ctx.font='700 18px system-ui, -apple-system, Segoe UI, Roboto'; ctx.textAlign='left';
         const unit = state.kg ? 'Per Kg' : 'Per Piece';
         ctx.fillText(`${seg.product} - ${seg.density} - ${seg.color} - ${state.currency} - ${unit}`, xPad, y+20); y += 24;
 
@@ -498,7 +507,7 @@
         rows.forEach((row, idx)=>{
           const rH=32;
           if (idx%2===0){ ctx.fillStyle='#f8fafc'; ctx.fillRect(xPad, y, W-2*xPad, rH); }
-          ctx.fillStyle='#0f172a';
+          ctx.fillStyle='#444662';
           ctx.textAlign='left'; 
           ctx.fillText(`${row.length}"`, xPad+16, y+21);
           const converted = state.currency==='INR' ? row.priceINR : convertINRto(state.currency, row.priceINR);
