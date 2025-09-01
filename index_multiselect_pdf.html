@@ -6,7 +6,7 @@
   <title>Price List Generator — Multi-Select + PDF</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- jsPDF for PDF export -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" integrity="sha512-/p8Y0W4j5g3lQ0b8kL8U9l7mUuK7Gx2t0UQ7H7h4e8t6u4hQ2o7wW3PZqU0kz8e8q6u9oGv1qk1U9pslZC3Yxw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     .shadow-soft { box-shadow: 0 10px 25px rgba(0,0,0,0.08); }
     @media (max-width: 640px) { .stack-mobile { flex-direction: column; } }
@@ -625,12 +625,28 @@
 
 
     async function downloadPDF(){
-      const { pages, size } = await renderAllPagesToImages();
-      const pdf = new window.jspdf.jsPDF({ orientation:'portrait', unit:'pt', format:[pages[0]?.width || 595, pages[0]?.height || 842] });
-      pages.forEach((page, idx) => {
-        if (idx>0) pdf.addPage([page.width, page.height], 'portrait');
-        pdf.addImage(page.data, 'JPEG', 0, 0, page.width, page.height);
-      });
+      console.log('downloadPDF called');
+      console.log('state.segments:', state.segments);
+      
+      if (state.segments.length === 0) {
+        alert('Please add some products to generate a PDF. Select a category, products, densities, and colors, then click "Add".');
+        return;
+      }
+      
+      try {
+        const { pages, size } = await renderAllPagesToImages();
+        console.log('pages generated:', pages.length);
+        
+        if (!window.jspdf) {
+          alert('PDF library not loaded. Please refresh the page and try again.');
+          return;
+        }
+        
+        const pdf = new window.jspdf.jsPDF({ orientation:'portrait', unit:'pt', format:[pages[0]?.width || 595, pages[0]?.height || 842] });
+        pages.forEach((page, idx) => {
+          if (idx>0) pdf.addPage([page.width, page.height], 'portrait');
+          pdf.addImage(page.data, 'JPEG', 0, 0, page.width, page.height);
+        });
       
       // Generate descriptive filename with Product-Density-Colors-Currency-Unit format
       let filename = 'PriceList';
@@ -646,8 +662,13 @@
         const timestamp = new Date().toISOString().slice(0, 10);
         filename = `PriceList-${state.currency}-${timestamp}.pdf`;
       }
-      
-      pdf.save(filename);
+        
+        pdf.save(filename);
+        console.log('PDF saved:', filename);
+      } catch (error) {
+        console.error('Error generating PDF:', error);
+        alert('Error generating PDF: ' + error.message);
+      }
     }
 
     /* Init */
