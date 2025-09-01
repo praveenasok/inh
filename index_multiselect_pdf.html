@@ -83,118 +83,149 @@
       <div class="text-xs sm:text-sm text-slate-500">Base: INR • Auto FX • Multi-Select → Segments • Multi-page PDF export</div>
     </header>
 
-    <div class="flex gap-4 stack-mobile">
-      <!-- Controls -->
-      <aside class="w-full sm:w-64 bg-white rounded-xl shadow-soft p-2 sm:p-3 sticky top-2 self-start">
-        <div class="space-y-2">
-          <!-- Currency & FX -->
-          <div>
-            <label class="block text-xs font-semibold">Currency</label>
-            <select id="currency" class="w-full border rounded-lg px-2 py-1 mt-0.5 text-sm">
-              <option value="INR">₹ INR</option>
-              <option value="USD">$ USD</option>
-              <option value="EUR">€ EUR</option>
-              <option value="GBP">£ GBP</option>
-              <option value="AUD">A$ AUD</option>
-              <option value="SAR">SAR</option>
-              <option value="NGN">₦ NAIRA</option>
-              <option value="AED">д.إ AED</option>
-            </select>
-          </div>
+    <!-- Controls Section -->
+    <div class="bg-white rounded-xl shadow-soft p-3 sm:p-4 mb-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Currency & FX -->
+        <div>
+          <label class="block text-xs font-semibold">Currency</label>
+          <select id="currency" class="w-full border rounded-lg px-2 py-1 mt-0.5 text-sm">
+            <option value="INR">₹ INR</option>
+            <option value="USD">$ USD</option>
+            <option value="EUR">€ EUR</option>
+            <option value="GBP">£ GBP</option>
+            <option value="AUD">A$ AUD</option>
+            <option value="SAR">SAR</option>
+            <option value="NGN">₦ NAIRA</option>
+            <option value="AED">د.إ AED</option>
+          </select>
+        </div>
 
-          <!-- Filters -->
-          <div class="space-y-1">
-            <label class="block text-xs font-semibold">Category</label>
-            <select id="category" class="w-full border rounded-lg px-2 py-1 text-sm">
-              <option value="">Select Category</option>
-            </select>
-            <div class="flex items-center justify-between">
-              <div id="kgWrap" class="hidden">
-                <label class="inline-flex items-center gap-1 text-xs">
-                  <input type="checkbox" id="kgMode" class="w-3 h-3">
-                  <span>List in KG</span>
-                </label>
-              </div>
-              <div id="selectAllWrap" class="hidden">
-                <label class="inline-flex items-center gap-1 text-xs">
-                  <input type="checkbox" id="selectAll" class="w-3 h-3">
-                  <span>Select All</span>
-                </label>
-              </div>
+        <!-- Category -->
+        <div>
+          <label class="block text-xs font-semibold">Category</label>
+          <select id="category" class="w-full border rounded-lg px-2 py-1 mt-0.5 text-sm">
+            <option value="">Select Category</option>
+          </select>
+          <div class="flex items-center justify-between mt-1">
+            <div id="kgWrap" class="hidden">
+              <label class="inline-flex items-center gap-1 text-xs">
+                <input type="checkbox" id="kgMode" class="w-3 h-3">
+                <span>List in KG</span>
+              </label>
+            </div>
+            <div id="selectAllWrap" class="hidden">
+              <label class="inline-flex items-center gap-1 text-xs">
+                <input type="checkbox" id="selectAll" class="w-3 h-3">
+                <span>Select All</span>
+              </label>
             </div>
           </div>
+        </div>
 
-          <div>
-            <div class="flex items-center justify-between mb-0.5">
-              <label class="block text-xs font-semibold">Products</label>
-              <button id="selectAllProducts" class="text-xs text-slate-600 underline">Select all</button>
-            </div>
-            <div class="custom-dropdown" id="productDropdown">
-              <button class="dropdown-btn w-full border rounded-lg px-2 py-1 text-left bg-white disabled:opacity-60 text-sm" disabled>
-                <span class="dropdown-text">Select products...</span>
-                <span class="dropdown-arrow">▼</span>
-              </button>
-              <div class="dropdown-list hidden absolute z-10 w-full bg-white border rounded-lg shadow-lg max-h-32 overflow-y-auto">
-                <!-- Options will be populated here -->
-              </div>
+        <!-- Products -->
+        <div>
+          <div class="flex items-center justify-between mb-0.5">
+            <label class="block text-xs font-semibold">Products</label>
+            <button id="selectAllProducts" class="text-xs text-slate-600 underline">Select all</button>
+          </div>
+          <div class="custom-dropdown" id="productDropdown">
+            <button class="dropdown-btn w-full border rounded-lg px-2 py-1 text-left bg-white disabled:opacity-60 text-sm" disabled>
+              <span class="dropdown-text">Select products...</span>
+              <span class="dropdown-arrow">▼</span>
+            </button>
+            <div class="dropdown-list hidden absolute z-10 w-full bg-white border rounded-lg shadow-lg max-h-32 overflow-y-auto">
+              <!-- Options will be populated here -->
             </div>
           </div>
+        </div>
 
-          <div>
-            <div class="flex items-center justify-between mb-0.5">
-              <label class="block text-xs font-semibold">Densities</label>
-              <button id="selectAllDensities" class="text-xs text-slate-600 underline">Select all</button>
-            </div>
-            <div class="custom-dropdown" id="densityDropdown">
-              <button class="dropdown-btn w-full border rounded-lg px-2 py-1 text-left bg-white disabled:opacity-60 text-sm" disabled>
-                <span class="dropdown-text">Select densities...</span>
-                <span class="dropdown-arrow">▼</span>
-              </button>
-              <div class="dropdown-list hidden absolute z-10 w-full bg-white border rounded-lg shadow-lg max-h-32 overflow-y-auto">
-                <!-- Options will be populated here -->
-              </div>
+        <!-- Densities -->
+        <div>
+          <div class="flex items-center justify-between mb-0.5">
+            <label class="block text-xs font-semibold">Densities</label>
+            <button id="selectAllDensities" class="text-xs text-slate-600 underline">Select all</button>
+          </div>
+          <div class="custom-dropdown" id="densityDropdown">
+            <button class="dropdown-btn w-full border rounded-lg px-2 py-1 text-left bg-white disabled:opacity-60 text-sm" disabled>
+              <span class="dropdown-text">Select densities...</span>
+              <span class="dropdown-arrow">▼</span>
+            </button>
+            <div class="dropdown-list hidden absolute z-10 w-full bg-white border rounded-lg shadow-lg max-h-32 overflow-y-auto">
+              <!-- Options will be populated here -->
             </div>
           </div>
+        </div>
+      </div>
 
-          <div>
-            <div class="flex items-center justify-between mb-0.5">
-              <label class="block text-xs font-semibold">Colors</label>
-              <button id="selectAllColors" class="text-xs text-slate-600 underline">Select all</button>
-            </div>
-            <div class="custom-dropdown" id="colorDropdown">
-              <button class="dropdown-btn w-full border rounded-lg px-2 py-1 text-left bg-white disabled:opacity-60 text-sm" disabled>
-                <span class="dropdown-text">Select colors...</span>
-                <span class="dropdown-arrow">▼</span>
-              </button>
-              <div class="dropdown-list hidden absolute z-10 w-full bg-white border rounded-lg shadow-lg max-h-32 overflow-y-auto">
-                <!-- Options will be populated here -->
-              </div>
+      <!-- Second Row -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+        <!-- Colors -->
+        <div>
+          <div class="flex items-center justify-between mb-0.5">
+            <label class="block text-xs font-semibold">Colors</label>
+            <button id="selectAllColors" class="text-xs text-slate-600 underline">Select all</button>
+          </div>
+          <div class="custom-dropdown" id="colorDropdown">
+            <button class="dropdown-btn w-full border rounded-lg px-2 py-1 text-left bg-white disabled:opacity-60 text-sm" disabled>
+              <span class="dropdown-text">Select colors...</span>
+              <span class="dropdown-arrow">▼</span>
+            </button>
+            <div class="dropdown-list hidden absolute z-10 w-full bg-white border rounded-lg shadow-lg max-h-32 overflow-y-auto">
+              <!-- Options will be populated here -->
             </div>
           </div>
+        </div>
 
+        <!-- Actions -->
+        <div>
+          <label class="block text-xs font-semibold mb-0.5">Actions</label>
           <div class="grid grid-cols-2 gap-1">
             <button id="addCombos" class="px-2 py-1 rounded-lg bg-emerald-600 text-white disabled:opacity-40 text-sm" disabled>Add</button>
             <button id="clearSegments" class="px-2 py-1 rounded-lg bg-slate-200 text-slate-700 text-sm">Clear</button>
           </div>
+        </div>
 
-          <div>
-            <div id="segmentsList" class="flex flex-wrap gap-2" style="display: none;"></div>
-          </div>
-        </div>
-      </aside>
+        <!-- Export -->
+         <div>
+           <label class="block text-xs font-semibold mb-0.5">Export</label>
+           <div class="grid grid-cols-2 gap-1">
+             <button id="generatePDF" class="px-2 py-1 rounded-lg text-slate-800 text-sm" style="background-color: #e6eaeb;">Generate</button>
+             <button id="shareBtn" class="px-2 py-1 rounded-lg bg-blue-600 text-white text-sm relative">Share</button>
+           </div>
+           
+           <!-- Share Popup -->
+           <div id="sharePopup" class="hidden absolute z-20 mt-1 w-48 bg-white border rounded-lg shadow-lg p-2">
+             <div class="space-y-1">
+               <button id="shareDownloadPDF" class="w-full text-left px-2 py-1 text-sm hover:bg-slate-100 rounded flex items-center gap-2">
+                 <span>📄</span> Download PDF
+               </button>
+               <button id="shareWhatsApp" class="w-full text-left px-2 py-1 text-sm hover:bg-slate-100 rounded flex items-center gap-2">
+                 <span>💬</span> Share on WhatsApp
+               </button>
+               <button id="shareEmail" class="w-full text-left px-2 py-1 text-sm hover:bg-slate-100 rounded flex items-center gap-2">
+                 <span>📧</span> Share via Email
+               </button>
+               <button id="shareCopyLink" class="w-full text-left px-2 py-1 text-sm hover:bg-slate-100 rounded flex items-center gap-2">
+                 <span>🔗</span> Copy Link
+               </button>
+             </div>
+           </div>
+         </div>
 
-      <!-- Preview -->
-      <main class="flex-1 bg-white rounded-xl shadow-soft p-3 sm:p-5">
-        <div class="mb-3 flex flex-wrap items-center gap-2 justify-end">
-          <div class="flex gap-2">
-            <button id="downloadPDF" class="px-3 py-2 rounded-lg text-slate-800 text-sm" style="background-color: #e6eaeb;">Download PDF</button>
-          </div>
+        <!-- Segments (Hidden) -->
+        <div>
+          <div id="segmentsList" class="flex flex-wrap gap-2" style="display: none;"></div>
         </div>
-        <div class="w-full overflow-auto">
-          <canvas id="preview" class="w-full max-w-[840px] mx-auto rounded-xl border" style="aspect-ratio: 3/4"></canvas>
-          <div id="pageInfo" class="text-center text-xs text-slate-500 mt-2"></div>
-        </div>
-      </main>
+      </div>
+    </div>
+
+    <!-- Preview Section -->
+    <div class="bg-white rounded-xl shadow-soft p-3 sm:p-5">
+      <div class="w-full overflow-auto">
+        <canvas id="preview" class="w-full max-w-[840px] mx-auto rounded-xl border" style="aspect-ratio: 3/4"></canvas>
+        <div id="pageInfo" class="text-center text-xs text-slate-500 mt-2"></div>
+      </div>
     </div>
 
     <footer class="text-center text-xs text-slate-500 mt-6">
@@ -683,15 +714,64 @@
 
       elAddCombos.addEventListener('click', explodeCombosToSegments);
       elClearSegments.addEventListener('click', ()=>{ state.segments=[]; renderSegmentsList(); renderAllPagesToImages(); });
-      elDownloadPDF.addEventListener('click', downloadPDF);
+      $('generatePDF').addEventListener('click', downloadPDF);
+      $('shareBtn').addEventListener('click', toggleSharePopup);
+      $('shareDownloadPDF').addEventListener('click', downloadPDF);
+      $('shareWhatsApp').addEventListener('click', shareViaWhatsApp);
+      $('shareEmail').addEventListener('click', shareViaEmail);
+      $('shareCopyLink').addEventListener('click', copyShareLink);
 
 
       // enable Add when category chosen
       const enableAdd = () => { elAddCombos.disabled = !state.category; };
       ['change'].forEach(evt => elCategory.addEventListener(evt, enableAdd));
 
+      // Close share popup when clicking outside
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('#shareBtn') && !e.target.closest('#sharePopup')) {
+          $('sharePopup').classList.add('hidden');
+        }
+      });
+
       renderAllPagesToImages();
     }
+
+    // Share functionality
+    function toggleSharePopup() {
+      const popup = $('sharePopup');
+      popup.classList.toggle('hidden');
+    }
+
+    function shareViaWhatsApp() {
+      const text = encodeURIComponent('Check out this price list from Indian Natural Hair!');
+      const url = encodeURIComponent(window.location.href);
+      window.open(`https://wa.me/?text=${text}%20${url}`, '_blank');
+      $('sharePopup').classList.add('hidden');
+    }
+
+    function shareViaEmail() {
+      const subject = encodeURIComponent('Price List from Indian Natural Hair');
+      const body = encodeURIComponent(`Hi,\n\nI wanted to share this price list with you: ${window.location.href}\n\nBest regards`);
+      window.open(`mailto:?subject=${subject}&body=${body}`, '_blank');
+      $('sharePopup').classList.add('hidden');
+    }
+
+    function copyShareLink() {
+      navigator.clipboard.writeText(window.location.href).then(() => {
+        alert('Link copied to clipboard!');
+      }).catch(() => {
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = window.location.href;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        alert('Link copied to clipboard!');
+      });
+      $('sharePopup').classList.add('hidden');
+    }
+
     init();
   </script>
 </body>
