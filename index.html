@@ -7,24 +7,36 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- jsPDF for PDF export -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <!-- html2canvas for HTML to canvas conversion -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
     .shadow-soft { box-shadow: 0 10px 25px rgba(0,0,0,0.08); }
     @media (max-width: 640px) { .stack-mobile { flex-direction: column; } }
     select, button, input[type="checkbox"], input[type="text"], input[type="number"] { min-height: 44px; }
+    button:focus { outline: 2px solid #3b82f6; outline-offset: 2px; }
+    button:disabled { cursor: not-allowed; }
+    .btn-primary { background: #059669; color: white; }
+    .btn-primary:hover:not(:disabled) { background: #047857; }
+    .btn-secondary { background: #e2e8f0; color: #475569; }
+    .btn-secondary:hover:not(:disabled) { background: #cbd5e1; }
+    .btn-info { background: #2563eb; color: white; }
+    .btn-info:hover:not(:disabled) { background: #1d4ed8; }
     .chip { display:inline-flex; align-items:center; gap:.5rem; padding:.25rem .5rem; border-radius:9999px; background:#f1f5f9; color:#334155; font-size:.75rem; }
     .grid-col { display:grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap:.5rem; }
     @media (min-width:640px) { .grid-col { grid-template-columns: repeat(3,minmax(0,1fr)); } }
-    .custom-dropdown { position: relative; }
+    .custom-dropdown { position: relative; width: 100%; }
       .dropdown-btn { 
         display: flex; 
         justify-content: space-between; 
         align-items: center;
         cursor: pointer;
-        padding: 8px 12px;
+        padding: 10px 12px;
         border: 1px solid #d1d5db;
-        border-radius: 4px;
+        border-radius: 6px;
         background: white;
-        min-height: 40px;
+        min-height: 44px;
+        width: 100%;
+        box-sizing: border-box;
       }
       .dropdown-btn:disabled { 
         cursor: not-allowed;
@@ -43,23 +55,27 @@
         right: 0;
         background: white;
         border: 1px solid #d1d5db;
-        border-radius: 4px;
+        border-radius: 6px;
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         max-height: 200px;
         overflow-y: auto;
         z-index: 1000;
+        margin-top: 2px;
+        width: 100%;
+        box-sizing: border-box;
       }
       .dropdown-list.hidden {
         display: none;
       }
       .dropdown-option {
-        padding: 4px 8px;
+        padding: 8px 12px;
         cursor: pointer;
         display: flex;
         align-items: center;
-        gap: 4px;
+        gap: 8px;
         border-bottom: 1px solid #f3f4f6;
-        font-size: 12px;
+        font-size: 13px;
+        min-height: 36px;
       }
       .dropdown-option:last-child {
         border-bottom: none;
@@ -79,15 +95,21 @@
 <body class="bg-slate-100 min-h-screen text-slate-800">
   <div class="max-w-6xl mx-auto p-3 sm:p-6">
     <header class="mb-4 flex items-center justify-between gap-3">
-      <h1 class="text-lg sm:text-2xl font-bold">Price List Generator</h1>
+      <div class="flex items-center gap-4">
+        <h1 class="text-lg sm:text-2xl font-bold">Price List Generator</h1>
+        <div class="flex items-center gap-2">
+          <label for="priceMultiplier" class="text-sm font-semibold text-slate-700">Price Multiplier:</label>
+          <input type="number" id="priceMultiplier" value="100" min="1" max="1000" step="1" 
+                 class="w-20 border rounded-lg px-2 py-1 text-sm text-center" 
+                 title="Adjust all prices by percentage (100% = no change)" 
+                 aria-label="Price multiplier percentage">
+          <span class="text-sm text-slate-600">%</span>
+        </div>
+      </div>
       <div class="text-xs sm:text-sm text-slate-500">Base: INR • Auto FX • Multi-Select → Segments • Multi-page PDF export</div>
     </header>
 
-    <!-- Category Header -->
-    <div id="categoryHeader" class="hidden bg-white rounded-xl shadow-soft p-4 mb-4 text-center">
-      <img id="categoryImage" src="" alt="Category" class="mx-auto h-16 sm:h-20 object-contain">
-      <h2 id="categoryTitle" class="text-lg sm:text-xl font-semibold mt-2 text-slate-700"></h2>
-    </div>
+
 
     <!-- Controls Section -->
     <div class="bg-white rounded-xl shadow-soft p-3 sm:p-4 mb-4">
@@ -183,25 +205,34 @@
         <!-- Actions -->
         <div>
           <label class="block text-xs font-semibold mb-0.5">Actions</label>
-          <div class="grid grid-cols-3 gap-1">
-            <button id="generatePDF" class="px-2 py-1 rounded-lg bg-emerald-600 text-white disabled:opacity-40 text-sm" disabled>Generate</button>
-            <button id="clearSegments" class="px-2 py-1 rounded-lg bg-slate-200 text-slate-700 text-sm">Clear</button>
-            <button id="shareBtn" class="px-2 py-1 rounded-lg bg-blue-600 text-white text-sm relative">Share</button>
+          <div class="grid grid-cols-2 gap-1">
+            <button id="clearSegments" class="px-2 py-1 rounded-lg bg-slate-200 text-slate-700 text-sm hover:bg-slate-300 transition-colors duration-200 flex items-center justify-center gap-1" aria-label="Clear all selections" title="Clear all selections">
+              <span class="text-xs" aria-hidden="true">🗑️</span>
+              <span>Clear</span>
+            </button>
+            <button id="shareBtn" class="px-2 py-1 rounded-lg bg-blue-600 text-white text-sm relative hover:bg-blue-700 transition-colors duration-200 flex items-center justify-center gap-1" aria-label="Share options" title="Share options" aria-expanded="false" aria-haspopup="true">
+              <span class="text-xs" aria-hidden="true">📤</span>
+              <span>Share</span>
+            </button>
           </div>
            
            <!-- Share Popup -->
            <div id="sharePopup" class="hidden absolute z-20 mt-1 w-48 bg-white border rounded-lg shadow-lg p-2">
              <div class="space-y-1">
-               <button id="shareDownloadPDF" class="w-full text-left px-2 py-1 text-sm hover:bg-slate-100 rounded flex items-center gap-2">
-                 <span>📄</span> Download PDF
+               <button id="generatePreview" class="w-full text-left px-2 py-1 text-sm hover:bg-emerald-100 rounded flex items-center gap-2 transition-colors duration-200 bg-emerald-50 border border-emerald-200">
+                 <span>👁️</span> Generate Preview
                </button>
-               <button id="shareWhatsApp" class="w-full text-left px-2 py-1 text-sm hover:bg-slate-100 rounded flex items-center gap-2">
+               <div class="border-t border-slate-200 my-1"></div>
+               <button id="shareDownloadPDF" class="w-full text-left px-2 py-1 text-sm hover:bg-slate-100 rounded flex items-center gap-2 transition-colors duration-200">
+                 <span>📄</span> Save as PDF
+               </button>
+               <button id="shareWhatsApp" class="w-full text-left px-2 py-1 text-sm hover:bg-slate-100 rounded flex items-center gap-2 transition-colors duration-200">
                  <span>💬</span> Share on WhatsApp
                </button>
-               <button id="shareEmail" class="w-full text-left px-2 py-1 text-sm hover:bg-slate-100 rounded flex items-center gap-2">
+               <button id="shareEmail" class="w-full text-left px-2 py-1 text-sm hover:bg-slate-100 rounded flex items-center gap-2 transition-colors duration-200">
                  <span>📧</span> Share via Email
                </button>
-               <button id="shareCopyLink" class="w-full text-left px-2 py-1 text-sm hover:bg-slate-100 rounded flex items-center gap-2">
+               <button id="shareCopyLink" class="w-full text-left px-2 py-1 text-sm hover:bg-slate-100 rounded flex items-center gap-2 transition-colors duration-200">
                  <span>🔗</span> Copy Link
                </button>
              </div>
@@ -217,9 +248,14 @@
 
     <!-- Preview Section -->
     <div class="bg-white rounded-xl shadow-soft p-3 sm:p-5">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-sm font-semibold">Preview</h3>
+        <div id="pageInfo" class="text-center text-xs text-slate-500 min-w-[120px]" role="status" aria-live="polite"></div>
+      </div>
       <div class="w-full overflow-auto">
-        <canvas id="preview" class="w-full max-w-[840px] mx-auto rounded-xl border" style="aspect-ratio: 3/4"></canvas>
-        <div id="pageInfo" class="text-center text-xs text-slate-500 mt-2"></div>
+        <div id="htmlPreview" class="w-full max-w-[840px] mx-auto bg-white">
+          <!-- HTML preview content will be generated here -->
+        </div>
       </div>
     </div>
 
@@ -236,13 +272,13 @@
       'info@indiannaturalhair.com'
     ];
     const CATEGORY_STAMPS = {
-      'genius weaves': '/images/geniusstamps.png',
-      'wigs, closures, and toppers': '/images/lacestamps.png',
-      'tapes': '/images/tapesstamps.png',
-      'tips': '/images/tipsstamps.png',
-      '__default': '/images/generalstamps.png'
+      'genius weaves': 'images/geniusstamps.png',
+      'wigs, closures, and toppers': 'images/lacestamps.png',
+      'tapes': 'images/tapesstamps.png',
+      'tips': 'images/tipsstamps.png',
+      '__default': 'images/generalstamps.png'
     };
-    const LOGO_PATH = '/images/logo.png';
+    const LOGO_PATH = 'images/logo.png';
 
     const FX_APIS = [
       (base) => `https://api.exchangerate-api.com/v4/latest/${base}`,
@@ -271,9 +307,7 @@
     const elProductDropdown = $('productDropdown'); const elDensityDropdown = $('densityDropdown'); const elColorDropdown = $('colorDropdown');
     const elKgWrap = $('kgWrap'); const elKg = $('kgMode'); const elSelectAllWrap = $('selectAllWrap'); const elSelectAll = $('selectAll');
     const elClearSegments = $('clearSegments'); const elSegmentsList = $('segmentsList');
-    const elPreview = $('preview'); const ctx = elPreview.getContext('2d'); const elDownloadPDF = $('downloadPDF'); const elPageInfo = $('pageInfo');
-
-    let currentPageIndex = 0; let allPages = [];
+    const elDownloadPDF = $('downloadPDF'); const elPageInfo = $('pageInfo');
 
     /* Basics */
     function uniqSorted(arr) { return [...new Set(arr)].sort(); }
@@ -331,43 +365,35 @@
       const categories = uniqSorted(productData.map(i => i.Catagory));
       elCategory.innerHTML = '<option value="">Select Category</option>' + categories.map(c => `<option value="${escapeHTML(c)}">${escapeHTML(c)}</option>`).join('');
       lockDropdown(elProductDropdown,true); lockDropdown(elDensityDropdown,true); lockDropdown(elColorDropdown,true);
-      $('generatePDF').disabled = true;
+  
     }
 
     /* Category to image mapping */
     function getCategoryImage(category) {
       const categoryImageMap = {
-        'Tips': '/images/tipsstamps.png',
-        'Tapes': '/images/tapesstamps.png',
-        'Genius Weaves': '/images/geniusstamps.png',
-        'Closures': '/images/lacestamps.png',
-        'Wigs': '/images/generalstamps.png',
-        'Weaves': '/images/generalstamps.png',
-        'Bulk': '/images/generalstamps.png',
-        'ClipOn': '/images/generalstamps.png',
-        'DIY': '/images/generalstamps.png',
-        'Toppers': '/images/generalstamps.png'
+        'Tips': 'images/tipsstamps.png',
+        'Tapes': 'images/tapesstamps.png',
+        'Genius Weaves': 'images/geniusstamps.png',
+        'Closures': 'images/lacestamps.png',
+        'Wigs': 'images/generalstamps.png',
+        'Weaves': 'images/generalstamps.png',
+        'Bulk': 'images/generalstamps.png',
+        'ClipOn': 'images/generalstamps.png',
+        'DIY': 'images/generalstamps.png',
+        'Toppers': 'images/generalstamps.png'
       };
-      return categoryImageMap[category] || '/images/generalstamps.png';
+      return categoryImageMap[category] || 'images/generalstamps.png';
     }
 
-    /* Update category header */
-    function updateCategoryHeader(category) {
-      const categoryHeader = $('categoryHeader');
-      const categoryImage = $('categoryImage');
-      const categoryTitle = $('categoryTitle');
-      
-      if (category) {
-        categoryImage.src = getCategoryImage(category);
-        categoryTitle.textContent = category;
-        categoryHeader.classList.remove('hidden');
-      } else {
-        categoryHeader.classList.add('hidden');
-      }
-    }
+
 
     /* Flow */
     function onCategoryChange(){
+      // Auto-clear previous selections when category changes
+      if (state.category !== elCategory.value && state.category !== '') {
+        clearAllSelections();
+      }
+      
       state.category = elCategory.value;
       state.selProducts=[]; state.selDensities=[]; state.selColors=[];
       const hasKg = productData.some(i => i.Catagory===state.category && /y/i.test(i['Can Be Sold in KG?']||''));
@@ -379,12 +405,11 @@
       fillDropdown(elDensityDropdown, [], 'Select Densities');
       fillDropdown(elColorDropdown, [], 'Select Colors');
       lockDropdown(elProductDropdown, !state.category); lockDropdown(elDensityDropdown, true); lockDropdown(elColorDropdown, true);
-      $('generatePDF').disabled = !state.category;
+  
       
-      // Update category header
-      updateCategoryHeader(state.category);
       
-      drawPreview();
+      
+      // Initial render removed - HTML preview generates on demand
     }
     function onProductChange(){
       const selP = getDropdownValues(elProductDropdown);
@@ -395,7 +420,7 @@
       const colorPool = uniqSorted(productData.filter(i => i.Catagory===state.category && (selP.length===0 || selP.includes(i.Product)) && (selD.length===0 || selD.includes(i.Density))).map(i => i.Colors));
       fillDropdown(elColorDropdown, colorPool, 'Select Colors'); lockDropdown(elColorDropdown,false);
       state.selColors = getDropdownValues(elColorDropdown);
-      drawPreview();
+      renderAllPagesToHTML();
     }
     function onDensityChange(){
       const selD = getDropdownValues(elDensityDropdown);
@@ -404,16 +429,16 @@
       const colorPool = uniqSorted(productData.filter(i => i.Catagory===state.category && (selP.length===0 || selP.includes(i.Product)) && (selD.length===0 || selD.includes(i.Density))).map(i => i.Colors));
       fillDropdown(elColorDropdown, colorPool, 'Select Colors'); lockDropdown(elColorDropdown,false);
       state.selColors = getDropdownValues(elColorDropdown);
-      drawPreview();
+      renderAllPagesToHTML();
     }
     function onColorChange(){
       state.selColors = getDropdownValues(elColorDropdown);
-      drawPreview();
+      renderAllPagesToHTML();
     }
     function onSelectAllToggle(){
       state.selectAll = elSelectAll.checked;
       [elProductDropdown, elDensityDropdown, elColorDropdown].forEach(dropdown => { lockDropdown(dropdown, state.selectAll); });
-      drawPreview();
+      renderAllPagesToHTML();
     }
 
     /* Segments (explode combinations) */
@@ -436,10 +461,10 @@
       // append
       state.segments.push(...next);
       renderSegmentsList();
-      drawPreview();
+      renderAllPagesToHTML();
     }
 
-    function removeSegment(idx){ state.segments.splice(idx,1); renderSegmentsList(); drawPreview(); }
+    function removeSegment(idx){ state.segments.splice(idx,1); renderSegmentsList(); renderAllPagesToHTML(); }
     function renderSegmentsList(){
       elSegmentsList.innerHTML = state.segments.map((s,idx)=>`
         <span class="chip"><span class="font-semibold">${escapeHTML(s.title)}</span>
@@ -481,51 +506,255 @@
           }
         } catch(e) { console.warn('FX API failed:', e); }
       }
-      renderAllPagesToImages();
+      renderAllPagesToHTML();
     }
 
     function convertINRto(curr, amt){ const r = (state.rates.rates && state.rates.rates[curr]) || 0; return amt * (r||0); }
 
-    /* Canvas layout */
-    function setupCanvas(){
-      const w=840, h=1120, dpr=window.devicePixelRatio||1;
-      elPreview.width=w*dpr; elPreview.height=h*dpr; elPreview.style.width=w+'px'; elPreview.style.height=h+'px';
-      ctx.setTransform(dpr,0,0,dpr,0,0);
+    /* HTML Preview Functions */
+    function getProductImagePath(category, product, density) {
+      const categoryLower = (category || '').toLowerCase();
+      const productLower = (product || '').toLowerCase();
+      const densityLower = (density || '').toLowerCase();
+      
+      // Product image mapping based on your specifications
+      const imageMap = {
+        // Weaves category
+        'weaves': {
+          'weaves': {
+            'single drawn': 'images/Products/Weaves-SD.png',
+            'double drawn': 'images/Products/Weaves-DD.png',
+            'super double drawn': 'images/Products/Weaves-SDD.png'
+          }
+        },
+        // Genius Weaves
+        'genius weaves': {
+          'genius weaves': 'images/Products/Genius.png'
+        },
+        // DIY category
+        'diy': {
+          'bangs': 'images/Products/Bangs.png',
+          'curtain bangs': 'images/Products/Bangs.png',
+          'curly faux buns': 'images/Products/CurlyBun.png',
+          'bun20': 'images/Products/BUN.png',
+          'bun30': 'images/Products/BUN.png',
+          'flatclip ponytail': 'images/Products/FLATCLIPPONYTAIL.png',
+          'highlights': 'images/Products/Highlights.png',
+          'frontline-13x1': 'images/Products/Frontline.png',
+          'frontline-2x1': 'images/Products/Frontline.png',
+          'frontline-5x1': 'images/Products/Frontline.png',
+          'single clip cover patch': 'images/Products/CoverPatch.png',
+          'clutch bun': 'images/Products/ClutchBun.png'
+        },
+        // Closures
+        'closures': {
+          'closure': 'images/Products/Closure.png',
+          'frontal': 'images/Products/Frontal.png',
+          'frontal-13x4': 'images/Products/Frontal.png',
+          'frontal-13x6': 'images/Products/Frontal.png',
+          'closure-5x3': 'images/Products/Closure.png',
+          'closure-4x4': 'images/Products/Closure.png',
+          'closure-5x5': 'images/Products/Closure.png',
+          'closure-6x6': 'images/Products/Closure.png',
+          'closure-6x2': 'images/Products/Closure.png'
+        },
+        // Wigs
+        'wigs': {
+          'wig-closure5x5': 'images/Products/WIGCLOSURE.png',
+          'wig-closure6x2': 'images/Products/WIGCLOSURE.png',
+          'wig-dd-closure6x2': 'images/Products/WIGCLOSURE.png',
+          'wig-dd-closure5x5': 'images/Products/WIGCLOSURE.png',
+          'wig-silktopper': 'images/Products/SILKTOPPER.png',
+          'wig-dd-frontal13x4': 'images/Products/WIGFRONTAL.png',
+          'wig-dd-frontal13x6': 'images/Products/WIGFRONTAL.png',
+          'wig-frontal13x6': 'images/Products/WIGFRONTAL.png',
+          'wig-frontal13x4': 'images/Products/WIGFRONTAL.png'
+        },
+        // Bulk
+        'bulk': {
+          'bulk': 'images/Products/Bulk.png'
+        },
+        // Tapes
+        'tapes': {
+          'tape extension': 'images/Products/Tapes.png'
+        },
+        // Tips
+        'tips': {
+          'tips': 'images/Products/ITIPS.png',
+          'tipsnano': 'images/Products/Nano.png',
+          'tipsy': 'images/Products/YTIPS.png',
+          'flat tips': 'images/Products/FlatTips.png',
+          'u tips': 'images/Products/UTIPS.png'
+        },
+        // ClipOn
+        'clipon': {
+          'clipon classic': 'images/Products/ClipOn.png',
+          'clipon seamless': 'images/Products/ClipOn.png',
+          'clutch ponytail': 'images/Products/PonyTail.png',
+          'halo extensions': 'images/Products/Halo.png',
+          'wrap around ponytail': 'images/Products/PonyTail.png'
+        },
+        // Toppers
+        'toppers': {
+          'topper': 'images/Products/SILKTOPPER.png'
+        }
+      };
+      
+      // First try to find by category and product
+      if (imageMap[categoryLower] && imageMap[categoryLower][productLower]) {
+        const productMapping = imageMap[categoryLower][productLower];
+        // If it's an object (like Weaves with density), check for density
+        if (typeof productMapping === 'object') {
+          return productMapping[densityLower] || Object.values(productMapping)[0] || '';
+        }
+        // If it's a direct string path
+        return productMapping;
+      }
+      
+      // Fallback: try to find by density for Weaves category
+      if (categoryLower === 'weaves' && densityLower) {
+        if (densityLower.includes('single drawn')) return 'images/Products/Weaves-SD.png';
+        if (densityLower.includes('double drawn')) return 'images/Products/Weaves-DD.png';
+        if (densityLower.includes('super double drawn')) return 'images/Products/Weaves-SDD.png';
+      }
+      
+      return ''; // No image found
     }
-    function roundRect(ctx,x,y,w,h,r,fill){ const rr=Math.min(r,h/2,w/2);
-      ctx.beginPath(); ctx.moveTo(x+rr,y); ctx.arcTo(x+w,y,x+w,y+h,rr); ctx.arcTo(x+w,y+h,x,y+h,rr);
-      ctx.arcTo(x,y+h,x,y,rr); ctx.arcTo(x,y,x+w,y,rr); ctx.closePath(); if (fill) ctx.fill();
+
+    function createPageHTML(segment, pageIndex) {
+      const rows = rowsForSegment(segment);
+      const multiplier = parseFloat(document.getElementById('priceMultiplier').value || 100) / 100;
+      const unit = state.kg ? 'Per Kg' : 'Per Piece';
+      const titleText = `${segment.product.toUpperCase()} | ${segment.density.toUpperCase()} | ${segment.color.toUpperCase()} | ${state.currency} | ${unit.toUpperCase()}`;
+      
+      return `
+        <div class="page-container bg-white border rounded-lg shadow-lg mb-8" style="width: 595px; min-height: 500px;">
+          <!-- Header Section -->
+          <div class="header-section p-6 border-b bg-gray-50">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-4">
+                <img src="images/logo.png" alt="Company Logo" class="h-16 w-16 object-contain" onerror="this.style.display='none'">
+                <div>
+                  <h1 class="text-xl font-bold text-gray-800">Indian Natural Hair</h1>
+                  <p class="text-gray-600 text-sm">Premium Quality Hair Products</p>
+                  ${segment.category ? `<div class="mt-2 inline-flex items-center gap-2 bg-blue-100 px-3 py-1 rounded">
+                    <img src="${getCategoryImage(segment.category)}" alt="${segment.category}" class="h-4 w-4 object-contain" onerror="this.style.display='none'">
+                    <span class="text-blue-700 font-medium text-xs uppercase">${segment.category}</span>
+                  </div>` : ''}
+                </div>
+              </div>
+              <div>
+                <img src="images/madewithbadge.png" alt="Made with Badge" class="h-12 object-contain" onerror="this.style.display='none'">
+              </div>
+            </div>
+          </div>
+          
+          <!-- Product Title -->
+          <div class="text-center mb-6 px-4">
+            <h3 class="font-bold text-gray-800 whitespace-nowrap overflow-hidden" 
+                style="font-size: clamp(1rem, 4vw, 1.5rem); line-height: 1.2;">${titleText}</h3>
+          </div>
+          
+          <!-- Product Table -->
+          <div class="product-table bg-white border rounded-lg overflow-hidden">
+            <div class="table-header bg-gray-50 p-4 border-b">
+              <div class="grid grid-cols-3 gap-4 items-center">
+                <div class="text-left font-semibold text-gray-700">Length</div>
+                <div class="text-center font-semibold text-gray-700">Product</div>
+                <div class="text-right font-semibold text-gray-700">Price (${SYMBOL[state.currency] || ''})</div>
+              </div>
+            </div>
+            <div class="table-content">
+              <div class="grid grid-cols-[1.2fr_1.6fr_1.2fr] gap-4 items-start p-6">
+                <div class="lengths-column space-y-1">
+                  <div class="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-3">Length</div>
+                  ${rows.map(row => `<div class="text-center text-gray-900 font-medium py-2 px-2 bg-gray-50 rounded border min-h-[40px] flex items-center justify-center">${row.length}"</div>`).join('')}
+                </div>
+                <div class="product-image-column flex justify-center items-center row-span-${rows.length} h-48 bg-white border rounded-lg shadow-sm">
+                  <img src="${getProductImagePath(segment.category, segment.product, segment.density)}" alt="${segment.product}" 
+                       class="w-full h-full object-contain p-2" 
+                       onerror="this.style.display='none'">
+                </div>
+                <div class="prices-column space-y-1">
+                  <div class="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-3 text-center">Price</div>
+                  ${rows.map(row => {
+                    const converted = state.currency === 'INR' ? row.priceINR : convertINRto(state.currency, row.priceINR);
+                    const adjustedPrice = (converted || 0) * multiplier;
+                    return `<div class="text-center text-gray-900 font-semibold py-2 px-2 bg-green-50 rounded border min-h-[40px] flex items-center justify-center">${(SYMBOL[state.currency] || '')}${adjustedPrice.toFixed(2)}</div>`;
+                  }).join('')}
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Footer -->
+          <div class="footer-section mt-12 pt-6 border-t-2 border-gray-300 mx-8">
+            <div class="text-center text-sm text-gray-700 space-y-2">
+              <div class="font-medium text-gray-800">WZ 81/1A, Guru Nanak Nagar, New Delhi 110018, India</div>
+              <div class="text-blue-600 font-medium">info@indiannaturalhair.com</div>
+            </div>
+            <div class="mt-4 mb-6"></div>
+          </div>
+        </div>
+      `;
     }
-    function drawImage(src,x,y,w,h){ return new Promise((res,rej)=>{ const img=new Image(); img.crossOrigin='anonymous'; img.onload=()=>{ctx.drawImage(img,x,y,w,h);res();}; img.onerror=rej; img.src=src; }); }
 
     async function drawHeader(W, category){
+      // Ensure context is properly set before drawing
+      if (!ctx) {
+        console.error('Canvas context not available for header drawing');
+        return;
+      }
+      
+      // Draw main header background
       ctx.fillStyle='#e6eaeb'; 
       roundRect(ctx, 10, 10, W-20, 80, 15, true, false);
       
-      // Company logo right-aligned - 90x90 pixels
-      const logoSize = 90;
-      try{ await drawImage('/images/logo.png', W-logoSize-10, 5, logoSize, logoSize);}catch(e){console.warn('Logo not found');}
+      // Company logo right-aligned - 80x80 pixels, properly positioned within header
+      const logoSize = 80;
+      const logoX = W - logoSize - 15; // 15px margin from right edge
+      const logoY = 15; // 15px margin from top, within the header rectangle
+      try{ 
+        await drawImage('images/logo.png', logoX, logoY, logoSize, logoSize);
+      }catch(e){
+        console.warn('Logo not found:', e);
+        // Draw placeholder rectangle for logo
+        ctx.fillStyle='#cccccc';
+        ctx.fillRect(logoX, logoY, logoSize, logoSize);
+      }
       
-      // "Made with" badge left-aligned - 190x58 pixels
-      const badgeWidth = 190;
-      const badgeHeight = 58;
-      try{ await drawImage('/images/madewithbadge.png', 20, 21, badgeWidth, badgeHeight);}catch(e){console.warn('Made with badge not found');}
-      
-      // Category stamp removed from top header
+      // "Made with" badge left-aligned - 180x55 pixels, properly positioned
+      const badgeWidth = 180;
+      const badgeHeight = 55;
+      const badgeX = 25; // 25px margin from left edge
+      const badgeY = 22.5; // Centered vertically within 80px header (80-55)/2 + 10 = 22.5
+      try{ 
+        await drawImage('images/madewithbadge.png', badgeX, badgeY, badgeWidth, badgeHeight);
+      }catch(e){
+        console.warn('Made with badge not found:', e);
+        // Draw placeholder rectangle for badge
+        ctx.fillStyle='#cccccc';
+        ctx.fillRect(badgeX, badgeY, badgeWidth, badgeHeight);
+      }
       
       // Category header section below main header
       if (category) {
         ctx.fillStyle='#dddfe0'; 
         roundRect(ctx, 10, 110, W-20, 100, 15, true, false);
         
-        // Category image centered with exact dimensions 558 x 91 pixels
-        const categoryImageWidth = 558;
+        // Category image centered within the background rectangle
+        const categoryImageWidth = Math.min(558, W - 40); // Ensure it fits within margins
         const categoryImageHeight = 91;
         const categoryImageX = (W - categoryImageWidth) / 2;
         const categoryImagePath = getCategoryImage(category);
-        try{ await drawImage(categoryImagePath, categoryImageX, 110, categoryImageWidth, categoryImageHeight);}catch(e){console.warn('Category image not found');}
-        
-        // Category title removed as requested
+        try{ 
+          await drawImage(categoryImagePath, categoryImageX, 120, categoryImageWidth, categoryImageHeight);
+        }catch(e){
+          console.warn('Category image not found:', categoryImagePath, e);
+          // Draw placeholder rectangle for category image
+          ctx.fillStyle='#cccccc';
+          ctx.fillRect(categoryImageX, 120, categoryImageWidth, categoryImageHeight);
+        }
         
         // Add subtle border
         ctx.strokeStyle='#e5e7eb'; ctx.lineWidth=1;
@@ -533,10 +762,20 @@
       }
     }
     function drawFooter(W,H){
+      // Footer background with proper margins
       ctx.fillStyle='#f1f5f9'; 
       roundRect(ctx, 10, H-74, W-20, 64, 15, true, false);
-      ctx.fillStyle='#475569'; ctx.textAlign='center'; ctx.font='500 12px system-ui, -apple-system, Segoe UI, Roboto';
-      ctx.fillText(ADDRESS_LINES[0], W/2, H-40); ctx.fillText(ADDRESS_LINES[1], W/2, H-20);
+      
+      // Footer text styling and positioning
+      ctx.fillStyle='#475569'; 
+      ctx.textAlign='center'; 
+      ctx.font='500 12px system-ui, -apple-system, Segoe UI, Roboto';
+      
+      // Center text vertically within footer rectangle
+      // Footer rectangle: y = H-74, height = 64
+      // Text should be centered: H-74 + 32 = H-42 for first line, H-22 for second line
+      ctx.fillText(ADDRESS_LINES[0], W/2, H-42);
+      ctx.fillText(ADDRESS_LINES[1], W/2, H-22);
     }
     
     function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
@@ -565,24 +804,37 @@
       if (stroke) ctx.stroke();
     }
     function tableHead(W, y, xPad){
-      const imageWidth = 180;
+      const imageWidth = 280;
       const sideColWidth = (W - 2 * xPad - imageWidth) / 2;
       
       ctx.fillStyle='#e6eaeb'; roundRect(ctx, xPad, y, W-2*xPad, 36, 10, true);
       ctx.fillStyle='#444662'; ctx.font='600 14px system-ui, -apple-system, Segoe UI, Roboto';
+      
+      // Length header (left column) - left aligned
+      ctx.textAlign='left';
+      ctx.fillText('Length', xPad + 10, y+23);
+      
+      // Image header (center column) - center aligned
       ctx.textAlign='center';
-      
-      // Length header (left column)
-      ctx.fillText('Length', xPad + sideColWidth/2, y+23);
-      
-      // Image header (center column)
       ctx.fillText('Product', xPad + sideColWidth + imageWidth/2, y+23);
       
-      // Price header (right column)
-      ctx.fillText(`Price (${SYMBOL[state.currency]||''})`, xPad + sideColWidth + imageWidth + sideColWidth/2, y+23);
+      // Price header (right column) - right aligned
+      ctx.textAlign='right';
+      ctx.fillText(`Price (${SYMBOL[state.currency]||''})`, xPad + sideColWidth + imageWidth + sideColWidth - 10, y+23);
     }
 
-    function segmentBlockHeight(rows){ return 24 + 36 + 450 + 40; } // title + head + image height + gap with divider
+    function segmentBlockHeight(rows){ 
+      const titleHeight = 24;
+      const tableHeaderHeight = 36;
+      const minImageHeight = 200; // Minimum height for product image
+      const rowHeight = 40; // Height per data row
+      const bottomMargin = 40;
+      
+      // Calculate dynamic table height based on number of rows
+      const dynamicImageHeight = Math.max(minImageHeight, rows.length * rowHeight + 60); // 60px for padding
+      
+      return titleHeight + tableHeaderHeight + dynamicImageHeight + bottomMargin;
+    }
     
     function calculateOptimalPageHeight(segments, W) {
       if (segments.length === 0) return 600;
@@ -591,13 +843,18 @@
       const baseHeaderHeight = 100;
       const categoryHeaderHeight = seg.category ? 120 : 0;
       const headerHeight = baseHeaderHeight + categoryHeaderHeight;
-      const footerHeight = 64;
+      const footerHeight = 74; // Footer background height (64) + margin (10)
       const minContentHeight = 200;
+      const contentMargin = 60; // Proper spacing between content and footer
       
       const rows = rowsForSegment(seg);
       const contentHeight = segmentBlockHeight(rows);
       
-      return Math.max(headerHeight + contentHeight + footerHeight + 40, headerHeight + minContentHeight + footerHeight);
+      // Ensure adequate spacing: header + content + margin + footer
+      return Math.max(
+        headerHeight + contentHeight + contentMargin + footerHeight,
+        headerHeight + minContentHeight + contentMargin + footerHeight
+      );
     }
 
     async function renderPage(segments, W, H){
@@ -607,8 +864,15 @@
       const seg = segments[0];
       const cat = seg.category;
       
-      // Draw header for this segment
-      await drawHeader(W, cat);
+      // Always draw header for this segment - ensure it's rendered
+      try {
+        await drawHeader(W, cat);
+      } catch (e) {
+        console.error('Error drawing header:', e);
+        // Draw a basic header fallback
+        ctx.fillStyle='#e6eaeb'; 
+        roundRect(ctx, 10, 10, W-20, 80, 15, true, false);
+      }
       
       let y = cat ? 230 : 110; // Start lower if category header is present
       let xPad = 20;
@@ -621,13 +885,19 @@
       const titleText = `${seg.product.toUpperCase()} | ${seg.density.toUpperCase()} | ${seg.color.toUpperCase()} | ${state.currency} | ${unit.toUpperCase()}`;
       ctx.fillText(titleText, W/2, y+20); y += 24;
 
-      // Table with rounded corners and better margins
+      // Table with rounded corners and better margins - dynamic height based on data
        const tableMargin = 30;
        const tableWidth = W - 2 * tableMargin;
        
+       // Calculate dynamic table dimensions based on row count
+       const minImageHeight = 200;
+       const rowHeight = 40;
+       const dynamicImageHeight = Math.max(minImageHeight, rows.length * rowHeight + 60);
+       const tableContentHeight = 36 + dynamicImageHeight; // header + content
+       
        // Draw table background with rounded corners
        ctx.fillStyle='#ffffff';
-       roundRect(ctx, tableMargin, y, tableWidth, 36 + 450, 12, true);
+       roundRect(ctx, tableMargin, y, tableWidth, tableContentHeight, 12, true);
        
        // Add subtle shadow effect
        ctx.shadowColor = 'rgba(0, 0, 0, 0.1)';
@@ -641,110 +911,14 @@
        ctx.shadowOffsetY = 0;
        
        // Calculate layout for centered image with side columns
-       const imageWidth = 180;
-       const imageHeight = 450;
+       // Table width: 535px, minimum side column width: 120px each
+       // Maximum available image width: 535 - (120 * 2) = 295px
+       const imageWidth = 280;
+       const imageHeight = dynamicImageHeight;
        const sideColWidth = (tableWidth - imageWidth) / 2;
        
        // Draw product image in center
-        function getProductImagePath(category, product, density) {
-          const categoryLower = (category || '').toLowerCase();
-          const productLower = (product || '').toLowerCase();
-          const densityLower = (density || '').toLowerCase();
-          
-          // Product image mapping based on your specifications
-          const imageMap = {
-            // Weaves category
-            'weaves': {
-              'weaves': {
-                'single drawn': '/images/Products/Weaves-SD.png',
-                'double drawn': '/images/Products/Weaves-DD.png',
-                'super double drawn': '/images/Products/Weaves-SDD.png'
-              }
-            },
-            // Genius Weaves
-            'genius weaves': {
-              'genius weaves': '/images/Products/Genius.png'
-            },
-            // DIY category
-            'diy': {
-              'bangs': '/images/Products/Bangs.png',
-              'curtain bangs': '/images/Products/Bangs.png',
-              'curly faux buns': '/images/Products/CurlyBun.png',
-              'bun20': '/images/Products/BUN.png',
-              'bun30': '/images/Products/BUN.png',
-              'flatclip ponytail': '/images/Products/FLATCLIPPONYTAIL.png',
-              'highlights': '/images/Products/Highlights.png',
-              'frontline-13x1': '/images/Products/Frontline.png',
-              'frontline-2x1': '/images/Products/Frontline.png',
-              'frontline-5x1': '/images/Products/Frontline.png',
-              'single clip cover patch': '/images/Products/CoverPatch.png',
-              'clutch bun': '/images/Products/ClutchBun.png'
-            },
-            // Closures
-            'closures': {
-              'closure': '/images/Products/Closure.png',
-              'frontal': '/images/Products/Frontal.png'
-            },
-            // Wigs
-            'wigs': {
-              'wig-closure5x5': '/images/Products/WIGCLOSURE.png',
-              'wig-closure6x2': '/images/Products/WIGCLOSURE.png',
-              'wig-dd-closure6x2': '/images/Products/WIGCLOSURE.png',
-              'wig-dd-closure5x5': '/images/Products/WIGCLOSURE.png',
-              'wig-silktopper': '/images/Products/SILKTOPPER.png',
-              'wig-dd-frontal13x4': '/images/Products/WIGFRONTAL.png',
-              'wig-dd-frontal13x6': '/images/Products/WIGFRONTAL.png',
-              'wig-frontal13x6': '/images/Products/WIGFRONTAL.png',
-              'wig-frontal13x4': '/images/Products/WIGFRONTAL.png'
-            },
-            // Bulk
-            'bulk': {
-              'bulk': '/images/Products/Bulk.png'
-            },
-            // Tapes
-            'tapes': {
-              'tape extension': '/images/Products/Tapes.png'
-            },
-            // Tips
-            'tips': {
-              'tips': '/images/Products/ITIPS.png',
-              'tipsnano': '/images/Products/Nano.png',
-              'tipsy': '/images/Products/YTIPS.png'
-            },
-            // ClipOn
-            'clipon': {
-              'clipon classic': '/images/Products/ClipOn.png',
-              'clipon seamless': '/images/Products/ClipOn.png',
-              'clutch ponytail': '/images/Products/PonyTail.png',
-              'halo extensions': '/images/Products/Halo.png',
-              'wrap around ponytail': '/images/Products/PonyTail.png'
-            },
-            // Toppers
-            'toppers': {
-              'topper': '/images/Products/SILKTOPPER.png'
-            }
-          };
-          
-          // First try to find by category and product
-          if (imageMap[categoryLower] && imageMap[categoryLower][productLower]) {
-            const productMapping = imageMap[categoryLower][productLower];
-            // If it's an object (like Weaves with density), check for density
-            if (typeof productMapping === 'object') {
-              return productMapping[densityLower] || Object.values(productMapping)[0] || '';
-            }
-            // If it's a direct string path
-            return productMapping;
-          }
-          
-          // Fallback: try to find by density for Weaves category
-          if (categoryLower === 'weaves' && densityLower) {
-            if (densityLower.includes('single drawn')) return '/images/Products/Weaves-SD.png';
-            if (densityLower.includes('double drawn')) return '/images/Products/Weaves-DD.png';
-            if (densityLower.includes('super double drawn')) return '/images/Products/Weaves-SDD.png';
-          }
-          
-          return ''; // No image found
-        }
+
         
         let imagePath = getProductImagePath(seg.category, seg.product, seg.density);
        
@@ -764,25 +938,29 @@
          }
        }
        
-       // Draw length and price data in side columns
+       // Draw length and price data in side columns with proper spacing
        ctx.font='500 13px system-ui, -apple-system, Segoe UI, Roboto';
-       const dataRowHeight = Math.max(40, imageHeight / rows.length);
+       const dataRowHeight = 40; // Consistent row height
+       const startPadding = 30; // Top padding within table content area
        
        for (let idx = 0; idx < rows.length; idx++) {
          const row = rows[idx];
-         const dataY = y + (idx * dataRowHeight) + 25;
+         const dataY = y + startPadding + (idx * dataRowHeight);
          
-         // Length column (left side)
+         // Length column (left side) - left aligned
          ctx.fillStyle='#444662';
-         ctx.textAlign='center';
-         ctx.fillText(`${row.length}"`, tableMargin + sideColWidth/2, dataY);
+         ctx.textAlign='left';
+         ctx.fillText(`${row.length}"`, tableMargin + 10, dataY);
          
-         // Price column (right side)
+         // Price column (right side) - right aligned
+         ctx.textAlign='right';
          const converted = state.currency==='INR' ? row.priceINR : convertINRto(state.currency, row.priceINR);
-         ctx.fillText(`${(SYMBOL[state.currency]||'')}${(converted||0).toFixed(2)}`, tableMargin + sideColWidth + imageWidth + sideColWidth/2, dataY);
+         const multiplier = parseFloat(document.getElementById('priceMultiplier').value || 100) / 100;
+         const adjustedPrice = (converted || 0) * multiplier;
+         ctx.fillText(`${(SYMBOL[state.currency]||'')}${adjustedPrice.toFixed(2)}`, tableMargin + sideColWidth + imageWidth + sideColWidth - 10, dataY);
        }
        
-       y += imageHeight + 20;
+       y += dynamicImageHeight + 20;
       
       // Draw footer for this segment
       drawFooter(W,H);
@@ -790,109 +968,137 @@
       return 1; // Always consume exactly one segment
     }
 
-    async function renderAllPagesToImages(){
-      const W = 595; // A4 width in points
-      const pages=[]; let start=0;
+    function renderAllPagesToHTML(){
+      const htmlPreview = document.getElementById('htmlPreview');
       
-      while (start < state.segments.length){
-        const remainingSegments = state.segments.slice(start);
-        const H = calculateOptimalPageHeight(remainingSegments, W);
-        
-        // Setup canvas with dynamic height
-        elPreview.width = W * (window.devicePixelRatio || 1);
-        elPreview.height = H * (window.devicePixelRatio || 1);
-        elPreview.style.width = W + 'px';
-        elPreview.style.height = H + 'px';
-        ctx.scale(window.devicePixelRatio || 1, window.devicePixelRatio || 1);
-        
-        ctx.fillStyle='#ffffff'; ctx.fillRect(0,0,W,H);
-        const consumed = await renderPage(remainingSegments, W, H);
-        pages.push({data: elPreview.toDataURL('image/jpeg', 0.92), width: W, height: H});
-        start += Math.max(1, consumed);
-        if (consumed===0) break;
+      // Clear existing content
+      htmlPreview.innerHTML = '';
+      
+      if (state.segments.length === 0) {
+        htmlPreview.innerHTML = '<div class="text-center text-gray-500 p-8">No segments to display. Please select products and generate preview.</div>';
+        document.getElementById('pageInfo').textContent = 'No pages to display';
+        return;
       }
       
-      // Store pages globally and show first page
-      allPages = pages;
-      currentPageIndex = 0;
-      if (pages.length > 0) {
-        showPage(0);
-      }
+      // Generate HTML for each segment
+      const pagesHTML = state.segments.map((segment, index) => {
+        return createPageHTML(segment, index);
+      }).join('');
       
-      // Update navigation buttons
-
+      htmlPreview.innerHTML = pagesHTML;
       
-      elPageInfo.textContent = pages.length>1 ? `Previewing page 1 of ${pages.length}. PDF will include all pages.` : '';
-      return { pages, size: {W: pages[0]?.width || W, H: pages[0]?.height || 600} };
+      // Update page info
+      const pageCount = state.segments.length;
+      document.getElementById('pageInfo').textContent = pageCount > 1 ? `Showing all ${pageCount} pages` : 'Single page preview';
+      
+      return { pageCount };
     }
     
-    function showPage(pageIndex) {
-      if (pageIndex < 0 || pageIndex >= allPages.length) return;
-      
-      const page = allPages[pageIndex];
-      elPreview.width = page.width * (window.devicePixelRatio || 1);
-      elPreview.height = page.height * (window.devicePixelRatio || 1);
-      elPreview.style.width = page.width + 'px';
-      elPreview.style.height = page.height + 'px';
-      ctx.setTransform(window.devicePixelRatio || 1, 0, 0, window.devicePixelRatio || 1, 0, 0);
-      
-      const img = new Image();
-      img.onload = () => {
-        ctx.clearRect(0, 0, page.width, page.height);
-        ctx.drawImage(img, 0, 0, page.width, page.height);
-      };
-      img.src = page.data;
-      
-      currentPageIndex = pageIndex;
-
-      elPageInfo.textContent = allPages.length > 1 ? `Previewing page ${pageIndex + 1} of ${allPages.length}. PDF will include all pages.` : '';
-    }
+    // Canvas functions removed - now using HTML preview
     
 
 
     async function downloadPDF(){
       console.log('downloadPDF called');
-      console.log('state.segments:', state.segments);
       
       if (state.segments.length === 0) {
-        alert('Please add some products to generate a PDF. Select a category, products, densities, and colors, then click "Add".');
+        alert('Please generate a preview first. Select a category, products, densities, and colors, then click "Generate Preview".');
         return;
       }
       
+      // Show loading state
+      const downloadBtn = $('shareDownloadPDF');
+      const originalText = downloadBtn.innerHTML;
+      downloadBtn.innerHTML = '<span>⏳</span> Generating PDF...';
+      downloadBtn.disabled = true;
+      
       try {
-        const { pages, size } = await renderAllPagesToImages();
-        console.log('pages generated:', pages.length);
-        
-        if (!window.jspdf) {
-          alert('PDF library not loaded. Please refresh the page and try again.');
-          return;
+        // Get the preview container
+        const previewContainer = $('htmlPreview');
+        if (!previewContainer) {
+          throw new Error('Preview container not found');
         }
         
-        const pdf = new window.jspdf.jsPDF({ orientation:'portrait', unit:'pt', format:[pages[0]?.width || 595, pages[0]?.height || 842] });
-        pages.forEach((page, idx) => {
-          if (idx>0) pdf.addPage([page.width, page.height], 'portrait');
-          pdf.addImage(page.data, 'JPEG', 0, 0, page.width, page.height);
+        // Configure html2canvas options for optimized file size
+        const canvas = await html2canvas(previewContainer, {
+          scale: 1.5, // Reduced scale for smaller file size
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: '#ffffff',
+          width: previewContainer.scrollWidth,
+          height: previewContainer.scrollHeight,
+          logging: false, // Disable logging for performance
+          removeContainer: true // Clean up after rendering
         });
-      
-      // Generate descriptive filename with Product-Density-Colors-Currency-Unit format
-      let filename = 'PriceList';
-      if (state.segments.length > 0) {
-        const products = [...new Set(state.segments.map(s => s.product.replace(/\s+/g, '-')))];
-        const densities = [...new Set(state.segments.map(s => s.density.replace(/\s+/g, '-')))];
-        const colors = [...new Set(state.segments.map(s => s.color.replace(/\s+/g, '-')))];
-        const currency = state.currency;
-        const unit = state.kg ? 'Per-Kg' : 'Per-Piece';
         
-        filename = `${products.join('_')}-${densities.join('_')}-${colors.join('_')}-${currency}-${unit}.pdf`;
-      } else {
-        const timestamp = new Date().toISOString().slice(0, 10);
-        filename = `PriceList-${state.currency}-${timestamp}.pdf`;
-      }
+        // Create PDF with compression
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF({
+          orientation: 'portrait',
+          unit: 'mm',
+          format: 'a4',
+          compress: true
+        });
         
+        // Calculate dimensions to fit A4 with margins
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const imgWidth = pageWidth - 20; // 10mm margin on each side
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        
+        // Use JPEG compression for smaller file size
+        const imgData = canvas.toDataURL('image/jpeg', 0.85);
+        
+        // Handle multi-page layout if content is too tall
+        if (imgHeight > pageHeight - 20) {
+          // Split into multiple pages
+          let yPosition = 0;
+          const pageContentHeight = pageHeight - 20; // 10mm margin top/bottom
+          
+          while (yPosition < imgHeight) {
+            if (yPosition > 0) {
+              pdf.addPage();
+            }
+            
+            const sourceY = (yPosition / imgHeight) * canvas.height;
+            const sourceHeight = Math.min((pageContentHeight / imgHeight) * canvas.height, canvas.height - sourceY);
+            
+            // Create a temporary canvas for this page section
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = sourceHeight;
+            const tempCtx = tempCanvas.getContext('2d');
+            
+            tempCtx.drawImage(canvas, 0, sourceY, canvas.width, sourceHeight, 0, 0, canvas.width, sourceHeight);
+            const tempImgData = tempCanvas.toDataURL('image/jpeg', 0.85);
+            
+            pdf.addImage(tempImgData, 'JPEG', 10, 10, imgWidth, (sourceHeight * imgWidth) / canvas.width);
+            
+            yPosition += pageContentHeight;
+          }
+        } else {
+          // Single page - add with margins
+          pdf.addImage(imgData, 'JPEG', 10, 10, imgWidth, imgHeight);
+        }
+        
+        // Generate filename with timestamp
+        const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+        const filename = `price-list-${timestamp}.pdf`;
+        
+        // Save the PDF
         pdf.save(filename);
-        console.log('PDF saved:', filename);
+        
+        // Reset button state
+        downloadBtn.innerHTML = originalText;
+        downloadBtn.disabled = false;
+        
+        // Hide share popup
+        $('sharePopup').classList.add('hidden');
+        
       } catch (error) {
         console.error('Error generating PDF:', error);
+        downloadBtn.innerHTML = originalText;
+        downloadBtn.disabled = false;
         alert('Error generating PDF: ' + error.message);
       }
     }
@@ -916,7 +1122,7 @@
       }
 
       // events
-      elCurrency.addEventListener('change', ()=>{ state.currency=elCurrency.value; renderAllPagesToImages(); });
+      elCurrency.addEventListener('change', ()=>{ state.currency=elCurrency.value; renderAllPagesToHTML(); });
       $('selectAllProducts').addEventListener('click', (e)=>{ e.preventDefault(); setAllDropdownSelected(elProductDropdown); onProductChange(); });
       $('selectAllDensities').addEventListener('click', (e)=>{ e.preventDefault(); setAllDropdownSelected(elDensityDropdown); onDensityChange(); });
       $('selectAllColors').addEventListener('click', (e)=>{ e.preventDefault(); setAllDropdownSelected(elColorDropdown); onColorChange(); });
@@ -959,18 +1165,26 @@
       elSelectAll.addEventListener('change', onSelectAllToggle);
       elKg.addEventListener('change', ()=>{ /* kg flag stored per segment at creation */ });
 
-      $('generatePDF').addEventListener('click', generatePreview);
+  
       elClearSegments.addEventListener('click', clearAllOptions);
       $('shareBtn').addEventListener('click', toggleSharePopup);
+      $('generatePreview').addEventListener('click', generatePreview);
       $('shareDownloadPDF').addEventListener('click', downloadPDF);
       $('shareWhatsApp').addEventListener('click', shareViaWhatsApp);
       $('shareEmail').addEventListener('click', shareViaEmail);
       $('shareCopyLink').addEventListener('click', copyShareLink);
+      
+      // Page navigation event listeners removed - now using HTML preview
+      
+      // Price multiplier event listener
+      $('priceMultiplier').addEventListener('input', () => {
+        if (state.segments.length > 0) {
+          renderAllPagesToHTML();
+        }
+      });
 
 
-      // enable Generate when category chosen
-      const enableGenerate = () => { $('generatePDF').disabled = !state.category; };
-      ['change'].forEach(evt => elCategory.addEventListener(evt, enableGenerate));
+
 
       // Close share popup when clicking outside
       document.addEventListener('click', (e) => {
@@ -979,17 +1193,66 @@
         }
       });
 
-      renderAllPagesToImages();
+      renderAllPagesToHTML();
     }
 
-    // Generate Preview functionality (combines Add + Preview)
+    // Generate Preview functionality
     function generatePreview() {
-      // First, add the combinations to segments (old Add functionality)
-      explodeCombosToSegments();
+      // Validate that a category is selected
+      if (!state.category) {
+        alert('Please select a category first before generating a preview.');
+        return;
+      }
       
-      // Then generate the preview
-      renderAllPagesToImages();
+      // Show loading state
+      const previewBtn = $('generatePreview');
+      const originalText = previewBtn.innerHTML;
+      previewBtn.innerHTML = '<span>⏳</span> Generating...';
+      previewBtn.disabled = true;
+      
+      // Use setTimeout to allow UI to update
+      setTimeout(() => {
+        try {
+          // First, add the combinations to segments
+          explodeCombosToSegments();
+          
+          // Then generate the preview
+          renderAllPagesToHTML();
+          
+          // Reset button state
+          previewBtn.innerHTML = originalText;
+          previewBtn.disabled = false;
+          
+          // Close the share popup after generating preview
+          $('sharePopup').classList.add('hidden');
+          $('shareBtn').setAttribute('aria-expanded', 'false');
+        } catch (error) {
+          console.error('Error generating preview:', error);
+          previewBtn.innerHTML = originalText;
+          previewBtn.disabled = false;
+          alert('Error generating preview: ' + error.message + '. Please ensure you have selected a category and try again.');
+        }
+      }, 100);
     }
+    
+    // Clear selections but keep category
+    function clearAllSelections() {
+      state.selProducts = [];
+      state.selDensities = [];
+      state.selColors = [];
+      state.segments = [];
+      state.selectAll = false;
+      
+      // Reset form elements but keep category
+      elSelectAll.checked = false;
+      elKg.checked = false;
+      
+      // Clear segments list and preview
+      renderSegmentsList();
+      renderAllPagesToHTML();
+    }
+    
+    // Page navigation functions removed - now using HTML preview
 
     // Clear all options and reset to default state
     function clearAllOptions() {
@@ -1015,20 +1278,23 @@
       lockDropdown(elColorDropdown, true);
       
       // Disable Generate button
-      $('generatePDF').disabled = true;
+
       
-      // Hide category header
-      updateCategoryHeader('');
+      
       
       // Clear segments list and preview
       renderSegmentsList();
-      renderAllPagesToImages();
+      renderAllPagesToHTML();
     }
 
     // Share functionality
     function toggleSharePopup() {
       const popup = $('sharePopup');
+      const shareBtn = $('shareBtn');
+      const isHidden = popup.classList.contains('hidden');
+      
       popup.classList.toggle('hidden');
+      shareBtn.setAttribute('aria-expanded', isHidden ? 'true' : 'false');
     }
 
     function shareViaWhatsApp() {
