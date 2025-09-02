@@ -226,11 +226,8 @@
                <button id="shareDownloadPDF" class="w-full text-left px-2 py-1 text-sm hover:bg-slate-100 rounded flex items-center gap-2 transition-colors duration-200">
                  <span>📄</span> Save as PDF
                </button>
-               <button id="shareWhatsApp" class="w-full text-left px-2 py-1 text-sm hover:bg-slate-100 rounded flex items-center gap-2 transition-colors duration-200">
-                 <span>💬</span> Share on WhatsApp
-               </button>
-               <button id="shareEmail" class="w-full text-left px-2 py-1 text-sm hover:bg-slate-100 rounded flex items-center gap-2 transition-colors duration-200">
-                 <span>📧</span> Share via Email
+               <button id="downloadPNG" class="w-full text-left px-2 py-1 text-sm hover:bg-slate-100 rounded flex items-center gap-2 transition-colors duration-200">
+                 <span>🖼️</span> Download as PNG
                </button>
                <button id="shareCopyLink" class="w-full text-left px-2 py-1 text-sm hover:bg-slate-100 rounded flex items-center gap-2 transition-colors duration-200">
                  <span>🔗</span> Copy Link
@@ -624,23 +621,26 @@
     function createPageHTML(segment, pageIndex) {
       const rows = rowsForSegment(segment);
       const multiplier = parseFloat(document.getElementById('priceMultiplier').value || 100) / 100;
-      const unit = state.kg ? 'Per Kg' : 'Per Piece';
+      const unit = segment.kg ? 'Per Kg' : 'Per Piece';
       const titleText = `${segment.product.toUpperCase()} | ${segment.density.toUpperCase()} | ${segment.color.toUpperCase()} | ${state.currency} | ${unit.toUpperCase()}`;
       
+      // Calculate optimal height based on content including footer space
+      const baseHeight = 500; // Reduced base height for compactness
+      const rowHeight = 28; // Reduced row height to match smaller cells
+      const footerHeight = 120; // Minimized footer space for compact layout
+      const headerSpace = 180; // Reduced header space
+      const contentHeight = Math.max(baseHeight, headerSpace + 250 + (rows.length * rowHeight) + footerHeight);
+      
       return `
-        <div class="page-container bg-white border rounded-lg shadow-lg mb-8" style="width: 595px; min-height: 500px;">
+        <div class="page-container bg-white border rounded-lg shadow-lg" style="width: 595px; height: ${contentHeight}px; page-break-after: always;">
           <!-- Header Section -->
-          <div class="header-section p-6 border-b bg-gray-50">
+          <div class="header-section p-2 border-b" style="background-color: #e6eaeb;">
             <div class="flex items-center justify-between">
-              <div class="flex items-center gap-4">
+              <div class="flex items-center gap-3">
                 <img src="images/logo.png" alt="Company Logo" class="h-16 w-16 object-contain" onerror="this.style.display='none'">
                 <div>
-                  <h1 class="text-xl font-bold text-gray-800">Indian Natural Hair</h1>
-                  <p class="text-gray-600 text-sm">Premium Quality Hair Products</p>
-                  ${segment.category ? `<div class="mt-2 inline-flex items-center gap-2 bg-blue-100 px-3 py-1 rounded">
-                    <img src="${getCategoryImage(segment.category)}" alt="${segment.category}" class="h-4 w-4 object-contain" onerror="this.style.display='none'">
-                    <span class="text-blue-700 font-medium text-xs uppercase">${segment.category}</span>
-                  </div>` : ''}
+                  <h1 class="text-lg font-bold text-gray-800">Indian Natural Hair</h1>
+                  <p class="text-gray-600 text-xs">Premium Quality Hair Products</p>
                 </div>
               </div>
               <div>
@@ -649,51 +649,87 @@
             </div>
           </div>
           
-          <!-- Product Title -->
-          <div class="text-center mb-6 px-4">
-            <h3 class="font-bold text-gray-800 whitespace-nowrap overflow-hidden" 
-                style="font-size: clamp(1rem, 4vw, 1.5rem); line-height: 1.2;">${titleText}</h3>
+          <!-- Category Image Section Below Header -->
+          ${segment.category ? `<div class="category-section p-2 border-b bg-gray-100">
+            <div class="flex items-center justify-center">
+              <img src="${getCategoryImage(segment.category)}" alt="${segment.category}" class="h-12 w-auto object-contain" onerror="this.style.display='none'">
+            </div>
+          </div>` : ''}
+          
+          <!-- Product Title with Dynamic Sizing -->
+          <div class="text-center py-2 px-2">
+            <h3 class="font-bold text-gray-800" 
+                style="font-size: ${titleText.length > 60 ? '0.75rem' : titleText.length > 40 ? '0.875rem' : '1rem'}; line-height: 1.2; word-wrap: break-word;">${titleText}</h3>
           </div>
           
-          <!-- Product Table -->
-          <div class="product-table bg-white border rounded-lg overflow-hidden">
-            <div class="table-header bg-gray-50 p-4 border-b">
-              <div class="grid grid-cols-3 gap-4 items-center">
-                <div class="text-left font-semibold text-gray-700">Length</div>
-                <div class="text-center font-semibold text-gray-700">Product</div>
-                <div class="text-right font-semibold text-gray-700">Price (${SYMBOL[state.currency] || ''})</div>
+          <!-- Product Table with Optimized Layout -->
+          <div class="product-table mx-3 bg-white border rounded-lg overflow-hidden">
+            <!-- Single Header Row -->
+            <div class="table-header bg-gray-100 p-1 border-b">
+              <div class="grid grid-cols-3 gap-2 items-center">
+                <div class="text-left font-semibold text-gray-700 text-sm">Length</div>
+                <div class="text-center font-semibold text-gray-700 text-sm">Product</div>
+                <div class="text-right font-semibold text-gray-700 text-sm">Price (${state.currency})</div>
               </div>
             </div>
-            <div class="table-content">
-              <div class="grid grid-cols-[1.2fr_1.6fr_1.2fr] gap-4 items-start p-6">
+            
+            <!-- Table Content -->
+            <div class="table-content p-2">
+              <div class="grid grid-cols-[1fr_2fr_1fr] gap-2 items-start">
+                <!-- Length Column -->
                 <div class="lengths-column space-y-1">
-                  <div class="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-3">Length</div>
-                  ${rows.map(row => `<div class="text-center text-gray-900 font-medium py-2 px-2 bg-gray-50 rounded border min-h-[40px] flex items-center justify-center">${row.length}"</div>`).join('')}
+                  ${rows.map(row => `<div class="text-left text-gray-900 font-medium py-1 px-2 bg-gray-100 rounded border min-h-[24px] flex items-center">${row.length}"</div>`).join('')}
                 </div>
-                <div class="product-image-column flex justify-center items-center row-span-${rows.length} h-48 bg-white border rounded-lg shadow-sm">
+                
+                <!-- Product Image Column (Scaled to fill middle section) -->
+                <div class="product-image-column flex justify-center items-center bg-white border rounded-lg shadow-sm" style="height: ${Math.max(150, rows.length * 28)}px;">
                   <img src="${getProductImagePath(segment.category, segment.product, segment.density)}" alt="${segment.product}" 
-                       class="w-full h-full object-contain p-2" 
+                       class="max-w-full max-h-full object-contain" 
+                       style="width: auto; height: 90%;" 
                        onerror="this.style.display='none'">
                 </div>
+                
+                <!-- Price Column -->
                 <div class="prices-column space-y-1">
-                  <div class="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-3 text-center">Price</div>
                   ${rows.map(row => {
                     const converted = state.currency === 'INR' ? row.priceINR : convertINRto(state.currency, row.priceINR);
                     const adjustedPrice = (converted || 0) * multiplier;
-                    return `<div class="text-center text-gray-900 font-semibold py-2 px-2 bg-green-50 rounded border min-h-[40px] flex items-center justify-center">${(SYMBOL[state.currency] || '')}${adjustedPrice.toFixed(2)}</div>`;
+                    return `<div class="text-right text-gray-900 font-semibold py-1 px-2 bg-gray-100 rounded border min-h-[24px] flex items-center justify-end">${(SYMBOL[state.currency] || '')}${adjustedPrice.toFixed(2)}</div>`;
                   }).join('')}
                 </div>
               </div>
             </div>
           </div>
           
-          <!-- Footer -->
-          <div class="footer-section mt-12 pt-6 border-t-2 border-gray-300 mx-8">
-            <div class="text-center text-sm text-gray-700 space-y-2">
-              <div class="font-medium text-gray-800">WZ 81/1A, Guru Nanak Nagar, New Delhi 110018, India</div>
-              <div class="text-blue-600 font-medium">info@indiannaturalhair.com</div>
+          <!-- Footer integrated within main content -->
+          <div class="border-t-2 border-gray-300 rounded-lg" style="background-color: #e6eaeb;">
+            <div class="text-center px-3 py-2">
+              <!-- Contact Information Section -->
+              <div class="space-y-1 mb-2">
+                <div class="flex items-center justify-center gap-2 text-sm text-gray-700">
+                  <span class="text-gray-600">📍</span>
+                  <span class="font-medium">WZ 81/1A, Guru Nanak Nagar, New Delhi 110018, India</span>
+                </div>
+                <div class="flex items-center justify-center gap-2 text-sm">
+                  <span class="text-gray-600">📧</span>
+                  <a href="mailto:info@indiannaturalhair.com" class="text-gray-700 font-semibold hover:text-gray-900 transition-colors">info@indiannaturalhair.com</a>
+                </div>
+              </div>
+                
+              <!-- Shipping Partners Section -->
+              <div class="border-t border-gray-400 pt-1 pb-1">
+                <div class="flex items-center justify-center gap-6">
+                  <img src="images/dhl-logo-official.svg" alt="DHL" class="h-5 w-auto object-contain" onerror="this.style.display='none'">
+                  <img src="images/aramex-logo-official.svg" alt="Aramex" class="h-5 w-auto object-contain" onerror="this.style.display='none'">
+                  <img src="images/fedex-logo-official.svg" alt="FedEx" class="h-5 w-auto object-contain" onerror="this.style.display='none'">
+                </div>
+              </div>
+                
+              <!-- Brand Tagline Section -->
+              <div class="border-t border-gray-400 pt-1">
+                <p class="text-sm text-gray-700 italic font-semibold mb-0">Premium Quality Hair Products • Trusted Worldwide</p>
+              </div>
             </div>
-            <div class="mt-4 mb-6"></div>
           </div>
         </div>
       `;
@@ -706,14 +742,14 @@
         return;
       }
       
-      // Draw main header background
+      // Draw main header background - increased height for larger elements
       ctx.fillStyle='#e6eaeb'; 
-      roundRect(ctx, 10, 10, W-20, 80, 15, true, false);
+      roundRect(ctx, 10, 10, W-20, 140, 15, true, false);
       
-      // Company logo right-aligned - 80x80 pixels, properly positioned within header
-      const logoSize = 80;
+      // Company logo right-aligned - 120x120 pixels (increased from 80x80)
+      const logoSize = 120;
       const logoX = W - logoSize - 15; // 15px margin from right edge
-      const logoY = 15; // 15px margin from top, within the header rectangle
+      const logoY = 10; // Top aligned within header
       try{ 
         await drawImage('images/logo.png', logoX, logoY, logoSize, logoSize);
       }catch(e){
@@ -723,11 +759,11 @@
         ctx.fillRect(logoX, logoY, logoSize, logoSize);
       }
       
-      // "Made with" badge left-aligned - 180x55 pixels, properly positioned
-      const badgeWidth = 180;
-      const badgeHeight = 55;
+      // "Made with" badge left-aligned - 240x75 pixels (increased from 180x55)
+      const badgeWidth = 240;
+      const badgeHeight = 75;
       const badgeX = 25; // 25px margin from left edge
-      const badgeY = 22.5; // Centered vertically within 80px header (80-55)/2 + 10 = 22.5
+      const badgeY = 15; // Centered vertically within header
       try{ 
         await drawImage('images/madewithbadge.png', badgeX, badgeY, badgeWidth, badgeHeight);
       }catch(e){
@@ -737,10 +773,10 @@
         ctx.fillRect(badgeX, badgeY, badgeWidth, badgeHeight);
       }
       
-      // Category header section below main header
+      // Category image section below main header (no title)
       if (category) {
         ctx.fillStyle='#dddfe0'; 
-        roundRect(ctx, 10, 110, W-20, 100, 15, true, false);
+        roundRect(ctx, 10, 160, W-20, 100, 15, true, false);
         
         // Category image centered within the background rectangle
         const categoryImageWidth = Math.min(558, W - 40); // Ensure it fits within margins
@@ -748,34 +784,59 @@
         const categoryImageX = (W - categoryImageWidth) / 2;
         const categoryImagePath = getCategoryImage(category);
         try{ 
-          await drawImage(categoryImagePath, categoryImageX, 120, categoryImageWidth, categoryImageHeight);
+          await drawImage(categoryImagePath, categoryImageX, 170, categoryImageWidth, categoryImageHeight);
         }catch(e){
           console.warn('Category image not found:', categoryImagePath, e);
           // Draw placeholder rectangle for category image
           ctx.fillStyle='#cccccc';
-          ctx.fillRect(categoryImageX, 120, categoryImageWidth, categoryImageHeight);
+          ctx.fillRect(categoryImageX, 170, categoryImageWidth, categoryImageHeight);
         }
         
         // Add subtle border
         ctx.strokeStyle='#e5e7eb'; ctx.lineWidth=1;
-        ctx.beginPath(); ctx.moveTo(0, 220); ctx.lineTo(W, 220); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, 270); ctx.lineTo(W, 270); ctx.stroke();
       }
     }
-    function drawFooter(W,H){
-      // Footer background with proper margins
-      ctx.fillStyle='#f1f5f9'; 
-      roundRect(ctx, 10, H-74, W-20, 64, 15, true, false);
+    async function drawFooter(W,H){
+      // Footer background with proper margins - matching header color
+      ctx.fillStyle='#e6eaeb'; 
+      roundRect(ctx, 10, H-100, W-20, 90, 15, true, false);
       
       // Footer text styling and positioning
       ctx.fillStyle='#475569'; 
       ctx.textAlign='center'; 
-      ctx.font='500 12px system-ui, -apple-system, Segoe UI, Roboto';
+      ctx.font='500 11px system-ui, -apple-system, Segoe UI, Roboto';
       
-      // Center text vertically within footer rectangle
-      // Footer rectangle: y = H-74, height = 64
-      // Text should be centered: H-74 + 32 = H-42 for first line, H-22 for second line
-      ctx.fillText(ADDRESS_LINES[0], W/2, H-42);
-      ctx.fillText(ADDRESS_LINES[1], W/2, H-22);
+      // Address and email (top section) - increased spacing
+      ctx.fillText(ADDRESS_LINES[0], W/2, H-75);
+      ctx.fillText(ADDRESS_LINES[1], W/2, H-60);
+      
+      // Shipping partners label - increased spacing
+      ctx.fillStyle='#374151';
+      ctx.font='600 10px system-ui, -apple-system, Segoe UI, Roboto';
+      ctx.fillText('SHIPPING PARTNERS', W/2, H-45);
+      
+      // Draw shipping logos - increased size and better spacing
+      const logoWidth = 50;
+      const logoHeight = 16;
+      const logoY = H-35;
+      const totalLogosWidth = logoWidth * 3 + 30; // 3 logos + 2 gaps of 15px each
+      const startX = (W - totalLogosWidth) / 2;
+      
+      try {
+        // DHL logo - increased size
+        await drawImage('images/dhl-logo-official.svg', startX, logoY, logoWidth, logoHeight);
+        // Aramex logo - increased spacing
+        await drawImage('images/aramex-logo-official.svg', startX + logoWidth + 15, logoY, logoWidth, logoHeight);
+        // FedEx logo - increased spacing
+        await drawImage('images/fedex-logo-official.svg', startX + (logoWidth + 15) * 2, logoY, logoWidth, logoHeight);
+      } catch (e) {
+        console.warn('Shipping logos not found:', e);
+        // Fallback text if logos fail to load
+        ctx.fillStyle='#6b7280';
+        ctx.font='500 9px system-ui, -apple-system, Segoe UI, Roboto';
+        ctx.fillText('DHL • ARAMEX • FEDEX', W/2, logoY + 10);
+      }
     }
     
     function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
@@ -820,7 +881,7 @@
       
       // Price header (right column) - right aligned
       ctx.textAlign='right';
-      ctx.fillText(`Price (${SYMBOL[state.currency]||''})`, xPad + sideColWidth + imageWidth + sideColWidth - 10, y+23);
+      ctx.fillText(`Price (${SYMBOL[state.currency]||''}${state.currency})`, xPad + sideColWidth + imageWidth + sideColWidth - 10, y+23);
     }
 
     function segmentBlockHeight(rows){ 
@@ -843,9 +904,9 @@
       const baseHeaderHeight = 100;
       const categoryHeaderHeight = seg.category ? 120 : 0;
       const headerHeight = baseHeaderHeight + categoryHeaderHeight;
-      const footerHeight = 74; // Footer background height (64) + margin (10)
+      const footerHeight = 80; // Minimized footer background height for compact layout
       const minContentHeight = 200;
-      const contentMargin = 60; // Proper spacing between content and footer
+      const contentMargin = 80; // Increased spacing between content and footer
       
       const rows = rowsForSegment(seg);
       const contentHeight = segmentBlockHeight(rows);
@@ -874,7 +935,7 @@
         roundRect(ctx, 10, 10, W-20, 80, 15, true, false);
       }
       
-      let y = cat ? 230 : 110; // Start lower if category header is present
+      let y = cat ? 280 : 160; // Start lower if category header is present - adjusted for new header height
       let xPad = 20;
       
       const rows = rowsForSegment(seg);
@@ -963,7 +1024,7 @@
        y += dynamicImageHeight + 20;
       
       // Draw footer for this segment
-      drawFooter(W,H);
+      await drawFooter(W,H);
       
       return 1; // Always consume exactly one segment
     }
@@ -977,12 +1038,20 @@
       if (state.segments.length === 0) {
         htmlPreview.innerHTML = '<div class="text-center text-gray-500 p-8">No segments to display. Please select products and generate preview.</div>';
         document.getElementById('pageInfo').textContent = 'No pages to display';
+        
+        // Hide PNG download button when no segments
+        const pngButton = document.getElementById('downloadPNG');
+        if (pngButton) {
+          pngButton.style.display = 'none';
+          pngButton.disabled = true;
+        }
+        
         return;
       }
       
-      // Generate HTML for each segment
+      // Generate HTML for each segment with minimal spacing
       const pagesHTML = state.segments.map((segment, index) => {
-        return createPageHTML(segment, index);
+        return `<div class="page-wrapper mb-2 mx-auto">${createPageHTML(segment, index)}</div>`;
       }).join('');
       
       htmlPreview.innerHTML = pagesHTML;
@@ -990,6 +1059,18 @@
       // Update page info
       const pageCount = state.segments.length;
       document.getElementById('pageInfo').textContent = pageCount > 1 ? `Showing all ${pageCount} pages` : 'Single page preview';
+      
+      // Show/hide PNG download button based on page count
+      const pngButton = document.getElementById('downloadPNG');
+      if (pngButton) {
+        if (pageCount === 1) {
+          pngButton.style.display = 'flex';
+          pngButton.disabled = false;
+        } else {
+          pngButton.style.display = 'none';
+          pngButton.disabled = true;
+        }
+      }
       
       return { pageCount };
     }
@@ -1013,25 +1094,7 @@
       downloadBtn.disabled = true;
       
       try {
-        // Get the preview container
-        const previewContainer = $('htmlPreview');
-        if (!previewContainer) {
-          throw new Error('Preview container not found');
-        }
-        
-        // Configure html2canvas options for optimized file size
-        const canvas = await html2canvas(previewContainer, {
-          scale: 1.5, // Reduced scale for smaller file size
-          useCORS: true,
-          allowTaint: true,
-          backgroundColor: '#ffffff',
-          width: previewContainer.scrollWidth,
-          height: previewContainer.scrollHeight,
-          logging: false, // Disable logging for performance
-          removeContainer: true // Clean up after rendering
-        });
-        
-        // Create PDF with compression
+        // Create PDF with optimized settings
         const { jsPDF } = window.jspdf;
         const pdf = new jsPDF({
           orientation: 'portrait',
@@ -1040,53 +1103,86 @@
           compress: true
         });
         
-        // Calculate dimensions to fit A4 with margins
         const pageWidth = pdf.internal.pageSize.getWidth();
         const pageHeight = pdf.internal.pageSize.getHeight();
-        const imgWidth = pageWidth - 20; // 10mm margin on each side
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
         
-        // Use JPEG compression for smaller file size
-        const imgData = canvas.toDataURL('image/jpeg', 0.85);
-        
-        // Handle multi-page layout if content is too tall
-        if (imgHeight > pageHeight - 20) {
-          // Split into multiple pages
-          let yPosition = 0;
-          const pageContentHeight = pageHeight - 20; // 10mm margin top/bottom
+        // Process each segment as a separate page
+        for (let i = 0; i < state.segments.length; i++) {
+          const segment = state.segments[i];
           
-          while (yPosition < imgHeight) {
-            if (yPosition > 0) {
+          // Create a temporary container for this segment only
+          const tempContainer = document.createElement('div');
+          tempContainer.style.position = 'absolute';
+          tempContainer.style.left = '-9999px';
+          tempContainer.style.top = '0';
+          tempContainer.style.width = '595px';
+          tempContainer.style.backgroundColor = '#ffffff';
+          tempContainer.innerHTML = createPageHTML(segment, i);
+          
+          document.body.appendChild(tempContainer);
+          
+          try {
+            // Render this segment to canvas with optimized settings
+            const canvas = await html2canvas(tempContainer, {
+              scale: 2, // Higher quality for PDF
+              useCORS: true,
+              allowTaint: true,
+              backgroundColor: '#ffffff',
+              width: 595,
+              height: tempContainer.scrollHeight,
+              logging: false,
+              removeContainer: false
+            });
+            
+            // Add new page if not the first segment
+            if (i > 0) {
               pdf.addPage();
             }
             
-            const sourceY = (yPosition / imgHeight) * canvas.height;
-            const sourceHeight = Math.min((pageContentHeight / imgHeight) * canvas.height, canvas.height - sourceY);
+            // Calculate optimal scaling to fit A4 page
+            const imgWidth = pageWidth - 20; // 10mm margins
+            const imgHeight = (canvas.height * imgWidth) / canvas.width;
             
-            // Create a temporary canvas for this page section
-            const tempCanvas = document.createElement('canvas');
-            tempCanvas.width = canvas.width;
-            tempCanvas.height = sourceHeight;
-            const tempCtx = tempCanvas.getContext('2d');
+            // Ensure the content fits within a single page
+            if (imgHeight > pageHeight - 20) {
+              // Scale down to fit within page height
+              const scaledHeight = pageHeight - 20;
+              const scaledWidth = (canvas.width * scaledHeight) / canvas.height;
+              
+              // Center horizontally if scaled width is smaller
+              const xOffset = scaledWidth < imgWidth ? (pageWidth - scaledWidth) / 2 : 10;
+              
+              const imgData = canvas.toDataURL('image/jpeg', 0.9);
+              pdf.addImage(imgData, 'JPEG', xOffset, 10, scaledWidth, scaledHeight);
+            } else {
+              // Content fits normally
+              const imgData = canvas.toDataURL('image/jpeg', 0.9);
+              pdf.addImage(imgData, 'JPEG', 10, 10, imgWidth, imgHeight);
+            }
             
-            tempCtx.drawImage(canvas, 0, sourceY, canvas.width, sourceHeight, 0, 0, canvas.width, sourceHeight);
-            const tempImgData = tempCanvas.toDataURL('image/jpeg', 0.85);
-            
-            pdf.addImage(tempImgData, 'JPEG', 10, 10, imgWidth, (sourceHeight * imgWidth) / canvas.width);
-            
-            yPosition += pageContentHeight;
+          } finally {
+            // Clean up temporary container
+            document.body.removeChild(tempContainer);
           }
-        } else {
-          // Single page - add with margins
-          pdf.addImage(imgData, 'JPEG', 10, 10, imgWidth, imgHeight);
         }
         
-        // Generate filename with timestamp
-        const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
-        const filename = `price-list-${timestamp}.pdf`;
+        // Generate filename with format: ${Category} - ${Currency} - ${Unit}
+        const category = state.segments.length > 0 ? state.segments[0].category : 'General';
+        const currency = state.currency || 'INR';
+        const hasKgMode = state.segments.some(seg => seg.kg);
+        const unit = hasKgMode ? 'Per Kg' : 'Per Piece';
+        
+        // Format category name with proper capitalization
+        const formattedCategory = category.split(' ').map(word => 
+          word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+        ).join(' ');
+        
+        const filename = `${formattedCategory} - ${currency} - ${unit}.pdf`;
         
         // Save the PDF
         pdf.save(filename);
+        
+        console.log(`PDF generated successfully with ${state.segments.length} pages`);
         
         // Reset button state
         downloadBtn.innerHTML = originalText;
@@ -1163,15 +1259,20 @@
         });
       });
       elSelectAll.addEventListener('change', onSelectAllToggle);
-      elKg.addEventListener('change', ()=>{ /* kg flag stored per segment at creation */ });
+      elKg.addEventListener('change', ()=>{ 
+        state.kg = elKg.checked;
+        // Regenerate preview if segments exist
+        if (state.segments.length > 0) {
+          renderAllPagesToHTML();
+        }
+      });
 
   
       elClearSegments.addEventListener('click', clearAllOptions);
       $('shareBtn').addEventListener('click', toggleSharePopup);
       $('generatePreview').addEventListener('click', generatePreview);
       $('shareDownloadPDF').addEventListener('click', downloadPDF);
-      $('shareWhatsApp').addEventListener('click', shareViaWhatsApp);
-      $('shareEmail').addEventListener('click', shareViaEmail);
+      $('downloadPNG').addEventListener('click', downloadPNG);
       $('shareCopyLink').addEventListener('click', copyShareLink);
       
       // Page navigation event listeners removed - now using HTML preview
@@ -1203,6 +1304,11 @@
         alert('Please select a category first before generating a preview.');
         return;
       }
+      
+      // Clear existing preview content immediately to ensure fresh output
+      const htmlPreview = document.getElementById('htmlPreview');
+      htmlPreview.innerHTML = '<div class="text-center text-gray-500 p-8">Generating preview...</div>';
+      document.getElementById('pageInfo').textContent = 'Generating...';
       
       // Show loading state
       const previewBtn = $('generatePreview');
@@ -1297,18 +1403,66 @@
       shareBtn.setAttribute('aria-expanded', isHidden ? 'true' : 'false');
     }
 
-    function shareViaWhatsApp() {
-      const text = encodeURIComponent('Check out this price list from Indian Natural Hair!');
-      const url = encodeURIComponent(window.location.href);
-      window.open(`https://wa.me/?text=${text}%20${url}`, '_blank');
-      $('sharePopup').classList.add('hidden');
-    }
-
-    function shareViaEmail() {
-      const subject = encodeURIComponent('Price List from Indian Natural Hair');
-      const body = encodeURIComponent(`Hi,\n\nI wanted to share this price list with you: ${window.location.href}\n\nBest regards`);
-      window.open(`mailto:?subject=${subject}&body=${body}`, '_blank');
-      $('sharePopup').classList.add('hidden');
+    async function downloadPNG() {
+      // Validate that a preview exists
+      const htmlPreview = document.getElementById('htmlPreview');
+      if (!htmlPreview || !htmlPreview.innerHTML.trim() || htmlPreview.innerHTML.includes('No preview available')) {
+        alert('Please generate a preview first before downloading as PNG.');
+        return;
+      }
+      
+      try {
+        // Show loading state
+        const downloadBtn = $('downloadPNG');
+        const originalText = downloadBtn.innerHTML;
+        downloadBtn.innerHTML = '<span>⏳</span> Generating PNG...';
+        downloadBtn.disabled = true;
+        
+        // Use html2canvas to convert the preview to canvas
+        const canvas = await html2canvas(htmlPreview, {
+          scale: 2, // Higher quality
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: '#ffffff'
+        });
+        
+        // Convert canvas to blob and download
+        canvas.toBlob((blob) => {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          
+          // Generate filename using the same format as PDF
+          const category = state.segments.length > 0 ? 
+            state.segments[0].category.split(' ').map(word => 
+              word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+            ).join(' ') : 'General';
+          const currency = state.currency || 'INR';
+          const unit = state.kg ? 'Per Kg' : 'Per Piece';
+          
+          a.href = url;
+          a.download = `${category} - ${currency} - ${unit}.png`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          
+          // Reset button state
+          downloadBtn.innerHTML = originalText;
+          downloadBtn.disabled = false;
+          
+          // Close the share popup
+          $('sharePopup').classList.add('hidden');
+        }, 'image/png');
+        
+      } catch (error) {
+        console.error('Error generating PNG:', error);
+        alert('Error generating PNG: ' + error.message);
+        
+        // Reset button state
+        const downloadBtn = $('downloadPNG');
+        downloadBtn.innerHTML = '<span>🖼️</span> Download as PNG';
+        downloadBtn.disabled = false;
+      }
     }
 
     function copyShareLink() {
