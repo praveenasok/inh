@@ -486,7 +486,7 @@
               <span class="text-base" aria-hidden="true">👁️</span>
               <span>Preview</span>
             </button>
-            <button id="sharePdfBtn" class="btn-info px-4 py-3 rounded-lg text-sm font-medium hover:bg-blue-700 transition-all duration-200 flex items-center justify-center gap-2 mobile-full hidden" aria-label="Share PDF" title="Share PDF" aria-expanded="false" aria-haspopup="true">
+            <button id="sharePdfBtn" class="btn-info px-4 py-3 rounded-lg text-sm font-medium hover:bg-blue-700 transition-all duration-200 flex items-center justify-center gap-2 mobile-full hidden" aria-label="Share PDF" title="Share PDF using device's native sharing options">
               <span class="text-base" aria-hidden="true">📤</span>
               <span>Share PDF</span>
             </button>
@@ -1773,7 +1773,7 @@
   
       elClearSegments.addEventListener('click', clearAllOptions);
       $('previewBtn').addEventListener('click', generatePreview);
-      $('sharePdfBtn').addEventListener('click', toggleSharePopup);
+      $('sharePdfBtn').addEventListener('click', shareNatively);
       $('shareDownloadPDF').addEventListener('click', downloadPDF);
 
       $('downloadPNG').addEventListener('click', downloadPNG);
@@ -1943,7 +1943,6 @@
       // Close share popup if open
       const sharePopup = $('sharePopup');
       sharePopup.classList.add('hidden');
-      sharePdfBtn.setAttribute('aria-expanded', 'false');
       
       // Clear segments list and preview
       renderSegmentsList();
@@ -1951,6 +1950,44 @@
     }
 
     // Share functionality
+    async function shareNatively() {
+      // Check if we have a generated PDF to share
+      if (!state.lastGeneratedPDF || !state.lastGeneratedPDF.blob) {
+        // Generate PDF first if not available
+        await downloadPDF();
+        if (!state.lastGeneratedPDF || !state.lastGeneratedPDF.blob) {
+          return; // PDF generation failed
+        }
+      }
+      
+      // Check if Web Share API is supported and can share files
+      if (navigator.share && navigator.canShare) {
+        const file = new File([state.lastGeneratedPDF.blob], state.lastGeneratedPDF.filename, {
+          type: 'application/pdf'
+        });
+        
+        const shareData = {
+          title: 'Price List PDF',
+          text: 'Check out this price list',
+          files: [file]
+        };
+        
+        // Check if the device can share this data
+        if (navigator.canShare(shareData)) {
+          try {
+            await navigator.share(shareData);
+            return; // Successfully shared
+          } catch (error) {
+            console.log('Native sharing cancelled or failed:', error);
+            // Fall through to popup fallback
+          }
+        }
+      }
+      
+      // Fallback to popup if Web Share API is not supported or sharing failed
+      toggleSharePopup();
+    }
+    
     function toggleSharePopup() {
       const popup = $('sharePopup');
       const sharePdfBtn = $('sharePdfBtn');
