@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 120" width="240" height="120">
+  <rect width="240" height="120" rx="12" fill="#002970"/>
+  <g transform="translate(20, 25)">
+    <!-- PayTM logo elements -->
+    <g fill="white">
+      <!-- Main Paytm text -->
+      <text x="20" y="35" font-family="Arial, sans-serif" font-size="28" font-weight="bold">Paytm</text>
+      
+      <!-- Tagline -->
+      <text x="20" y="55" font-family="Arial, sans-serif" font-size="10" opacity="0.8">PAYMENTS BANK</text>
+      
+      <!-- Decorative element (simplified wallet icon) -->
+      <g transform="translate(150, 15)">
+        <rect x="0" y="0" width="40" height="25" rx="3" fill="none" stroke="white" stroke-width="2"/>
+        <rect x="5" y="5" width="30" height="3" fill="white"/>
+        <rect x="5" y="12" width="20" height="2" fill="white"/>
+        <rect x="5" y="17" width="25" height="2" fill="white"/>
+        <!-- Card symbol -->
+        <rect x="30" y="8" width="8" height="5" rx="1" fill="white"/>
+      </g>
+    </g>
+  </g>
+</svg>

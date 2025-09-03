@@ -42,16 +42,16 @@
     
     /* Button variants */
     .btn-primary { 
-      background: linear-gradient(135deg, #059669 0%, #047857 100%); 
+      background: #081249; 
       color: white; 
-      border: 2px solid #059669;
-      box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+      border: 2px solid #081249;
+      box-shadow: 0 4px 12px rgba(8, 18, 73, 0.3);
     }
     .btn-primary:hover:not(:disabled) { 
-      background: linear-gradient(135deg, #047857 0%, #065f46 100%); 
-      border-color: #047857;
+      background: #0a1555; 
+      border-color: #0a1555;
       transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(5, 150, 105, 0.4);
+      box-shadow: 0 6px 16px rgba(8, 18, 73, 0.4);
     }
     
     .btn-secondary { 
@@ -130,18 +130,21 @@
        font-size: clamp(1.5rem, 4vw, 2.5rem);
        line-height: 1.2;
        font-weight: 700;
+       color: #081249;
      }
      
      h2 {
        font-size: clamp(1.25rem, 3vw, 2rem);
        line-height: 1.3;
        font-weight: 600;
+       color: #081249;
      }
      
      h3 {
        font-size: clamp(1.125rem, 2.5vw, 1.5rem);
        line-height: 1.4;
        font-weight: 600;
+       color: #081249;
      }
      
      /* Responsive text sizes */
@@ -355,18 +358,24 @@
 <body class="bg-slate-100 min-h-screen text-slate-800">
   <div class="max-w-4xl mx-auto p-3 sm:p-6 container">
     <header class="mb-4 mobile-padding">
-      <!-- Single Row: Title, Price Multiplier, and Logo -->
+      <!-- Single Row: Title, Price Factor, and Logo -->
       <div class="flex items-center justify-between gap-3 mb-3">
-        <h1 class="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-800 flex-1 min-w-0">Price List Generator</h1>
+        <h1 class="text-xl sm:text-2xl lg:text-3xl font-bold flex-1 min-w-0" style="line-height: 0.7;">
+          <div class="text-left"><span style="color: #081249;">Insta</span><span style="color: #9b7952;">Q</span><span style="color: #081249;">uote</span></div>
+        </h1>
         
-        <!-- Price Multiplier in the center -->
-        <div class="flex items-center gap-2 flex-shrink-0">
-          <label for="priceMultiplier" class="text-sm font-semibold text-slate-700 whitespace-nowrap">Price Multiplier:</label>
-          <input type="number" id="priceMultiplier" value="100" min="0" max="1000" step="0.1" 
-                 class="w-20 sm:w-24 border-2 rounded-lg px-3 py-2 text-sm text-center focus:border-blue-500 focus:outline-none" 
-                 title="Price adjustment percentage: 100% = no change, 110% = 10% increase, 90% = 10% decrease" 
-                 aria-label="Price multiplier percentage">
-          <span class="text-sm text-slate-600">%</span>
+        <!-- Factor in the center with floating label -->
+        <div class="flex flex-col items-center gap-1 flex-shrink-0" style="margin: 0 20px;">
+          <div class="relative">
+            <input type="number" id="priceFactor" value="" min="0" max="1000" step="0.1" 
+                   class="w-24 sm:w-28 border-2 rounded-lg px-3 pt-6 pb-2 text-sm text-center focus:border-blue-500 focus:outline-none peer" 
+                   title="Price adjustment percentage: empty = no change, 10 = 10% increase, -10 = 10% decrease" 
+                   placeholder=" ">
+            <label for="priceFactor" 
+                   class="absolute left-3 top-2 text-xs text-gray-500 transition-all duration-200 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-sm peer-placeholder-shown:text-gray-400 peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-500">
+              Factor %
+            </label>
+          </div>
         </div>
         
         <!-- Logo on the right -->
@@ -379,13 +388,12 @@
 
 
     <!-- Controls Section -->
-    <div class="bg-white rounded-xl shadow-soft p-4 sm:p-6 mb-4 mobile-padding">
+    <div class="bg-white rounded-xl shadow-soft p-2 sm:p-3 mb-4 mobile-padding">
       <!-- First Row: Currency and Category -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
         <!-- Currency & FX -->
         <div>
-          <label class="block text-xs font-semibold">Currency</label>
-          <select id="currency" class="w-full border rounded-lg px-2 py-1 mt-0.5 text-sm">
+          <select id="currency" class="w-full border rounded-lg px-2 py-1 text-sm">
             <option value="INR">₹ INR</option>
             <option value="USD">$ USD</option>
             <option value="EUR">€ EUR</option>
@@ -399,35 +407,31 @@
 
         <!-- Category -->
         <div>
-          <label class="block text-xs font-semibold">Category</label>
-          <select id="category" class="w-full border rounded-lg px-2 py-1 mt-0.5 text-sm">
-            <option value="">Select Category</option>
-          </select>
-          <div class="flex items-center justify-between mt-1">
+          <div class="flex items-center gap-2">
+            <select id="category" class="flex-1 border rounded-lg px-2 py-1 text-sm">
+              <option value="">Select Category</option>
+            </select>
             <div id="kgWrap" class="hidden">
-              <label class="inline-flex items-center gap-1 text-xs">
+              <label class="inline-flex items-center gap-1 text-xs whitespace-nowrap">
                 <input type="checkbox" id="kgMode" class="w-3 h-3">
                 <span>List in KG</span>
               </label>
             </div>
             <div id="selectAllWrap" class="hidden">
-              <label class="inline-flex items-center gap-1 text-xs">
+              <label class="inline-flex items-center gap-1 text-xs whitespace-nowrap">
                 <input type="checkbox" id="selectAll" class="w-3 h-3">
                 <span>Select All</span>
               </label>
             </div>
           </div>
+
         </div>
       </div>
 
       <!-- Second Row: Products, Densities, and Colors -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 mt-3">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1 mt-1">
         <!-- Products -->
         <div>
-          <div class="flex items-center justify-between mb-0.5">
-            <label class="block text-xs font-semibold">Products</label>
-            <button id="selectAllProducts" class="text-xs text-slate-600 underline">Select all</button>
-          </div>
           <div class="custom-dropdown" id="productDropdown">
             <button class="dropdown-btn w-full border rounded-lg px-2 py-1 text-left bg-white disabled:opacity-60 text-sm" disabled>
               <span class="dropdown-text">Select products...</span>
@@ -440,10 +444,6 @@
 
         <!-- Densities -->
         <div>
-          <div class="flex items-center justify-between mb-0.5">
-            <label class="block text-xs font-semibold">Densities</label>
-            <button id="selectAllDensities" class="text-xs text-slate-600 underline">Select all</button>
-          </div>
           <div class="custom-dropdown" id="densityDropdown">
             <button class="dropdown-btn w-full border rounded-lg px-2 py-1 text-left bg-white disabled:opacity-60 text-sm" disabled>
               <span class="dropdown-text">Select densities...</span>
@@ -456,10 +456,6 @@
 
         <!-- Colors -->
         <div>
-          <div class="flex items-center justify-between mb-0.5">
-            <label class="block text-xs font-semibold">Colors</label>
-            <button id="selectAllColors" class="text-xs text-slate-600 underline">Select all</button>
-          </div>
           <div class="custom-dropdown" id="colorDropdown">
             <button class="dropdown-btn w-full border rounded-lg px-2 py-1 text-left bg-white disabled:opacity-60 text-sm" disabled>
               <span class="dropdown-text">Select colors...</span>
@@ -472,21 +468,20 @@
       </div>
 
       <!-- Second Row -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 mt-3">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1 mt-1">
 
         <!-- Actions -->
-        <div class="relative">
-          <label class="block text-sm font-semibold mb-2 text-slate-700">Actions</label>
-          <div class="flex flex-col sm:flex-row gap-4" id="actionButtonsContainer">
-            <button id="clearSegments" class="btn-secondary px-4 py-3 rounded-lg text-sm font-medium hover:bg-slate-300 transition-all duration-200 flex items-center justify-center gap-2 mobile-full" aria-label="Clear all selections" title="Clear all selections">
+        <div class="relative" style="margin-top: 20px;">
+          <div class="flex flex-col sm:flex-row gap-1" id="actionButtonsContainer">
+            <button id="clearSegments" class="btn-secondary px-2 py-1 rounded-lg text-sm font-medium hover:bg-slate-300 transition-all duration-200 flex items-center justify-center gap-1 mobile-full" aria-label="Clear all selections" title="Clear all selections">
               <span class="text-base" aria-hidden="true">🗑️</span>
               <span>Clear</span>
             </button>
-            <button id="previewBtn" class="btn-primary px-4 py-3 rounded-lg text-sm font-medium hover:bg-emerald-700 transition-all duration-200 flex items-center justify-center gap-2 mobile-full" aria-label="Generate preview" title="Generate preview">
+            <button id="previewBtn" class="btn-primary px-2 py-1 rounded-lg text-sm font-medium hover:bg-emerald-700 transition-all duration-200 flex items-center justify-center gap-1 mobile-full" aria-label="Generate preview" title="Generate preview">
               <span class="text-base" aria-hidden="true">👁️</span>
               <span>Preview</span>
             </button>
-            <button id="sharePdfBtn" class="btn-info px-4 py-3 rounded-lg text-sm font-medium hover:bg-blue-700 transition-all duration-200 flex items-center justify-center gap-2 mobile-full hidden" aria-label="Share PDF" title="Share PDF using device's native sharing options">
+            <button id="sharePdfBtn" class="btn-info px-2 py-1 rounded-lg text-sm font-medium hover:bg-blue-700 transition-all duration-200 flex items-center justify-center gap-1 mobile-full hidden" aria-label="Share PDF" title="Share PDF using device's native sharing options">
               <span class="text-base" aria-hidden="true">📤</span>
               <span>Share PDF</span>
             </button>
@@ -519,7 +514,7 @@
     <!-- Preview Section -->
     <div class="bg-white rounded-xl shadow-soft p-4 sm:p-6 mobile-padding">
       <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-2">
-        <h3 class="text-lg sm:text-xl font-semibold text-slate-800">Preview</h3>
+        <h3 class="text-lg sm:text-xl font-semibold">Preview</h3>
         <div id="pageInfo" class="text-center text-sm text-slate-500 min-w-[120px] bg-slate-50 px-3 py-1 rounded-full" role="status" aria-live="polite"></div>
       </div>
       <div class="w-full overflow-auto border-2 border-slate-200 rounded-lg">
@@ -602,7 +597,16 @@
       const list = dropdown.querySelector('.dropdown-list');
       const btn = dropdown.querySelector('.dropdown-btn');
       
-      list.innerHTML = arr.map(v => `
+      // Add "Select All" option at the top if there are items
+      const selectAllOption = arr.length > 0 ? `
+        <div class="dropdown-option border-b border-gray-200 pb-1 mb-1">
+          <button class="select-all-btn w-full text-left px-2 py-1 text-sm text-blue-600 hover:bg-blue-50 rounded" data-dropdown-id="${dropdown.id}">
+            ⚡ Select All
+          </button>
+        </div>
+      ` : '';
+      
+      list.innerHTML = selectAllOption + arr.map(v => `
         <div class="dropdown-option">
           <input type="checkbox" value="${escapeHTML(v)}" id="${dropdown.id}_${escapeHTML(v)}">
           <label for="${dropdown.id}_${escapeHTML(v)}">${escapeHTML(v)}</label>
@@ -610,6 +614,18 @@
       `).join('');
       
       btn.disabled = arr.length === 0;
+      
+      // Add event listener for "Select All" button
+      const selectAllBtn = list.querySelector('.select-all-btn');
+      if (selectAllBtn) {
+        selectAllBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          setAllDropdownSelected(dropdown);
+          if (dropdown === elProductDropdown) onProductChange();
+          else if (dropdown === elDensityDropdown) onDensityChange();
+          else if (dropdown === elColorDropdown) onColorChange();
+        });
+      }
       
       // Add event listeners for checkboxes
       list.querySelectorAll('input').forEach(input => {
@@ -635,7 +651,8 @@
     /* Data */
     function populateCategories() {
       const categories = uniqSorted(productData.map(i => i.Catagory));
-      elCategory.innerHTML = '<option value="">Select Category</option>' + categories.map(c => `<option value="${escapeHTML(c)}">${escapeHTML(c)}</option>`).join('');
+      elCategory.innerHTML = '<option value="">Select Category</option>' + 
+        categories.map(c => `<option value="${escapeHTML(c)}">${escapeHTML(c)}</option>`).join('');
       lockDropdown(elProductDropdown,true); lockDropdown(elDensityDropdown,true); lockDropdown(elColorDropdown,true);
   
     }
@@ -712,6 +729,7 @@
       [elProductDropdown, elDensityDropdown, elColorDropdown].forEach(dropdown => { lockDropdown(dropdown, state.selectAll); });
       renderAllPagesToHTML();
     }
+
 
     /* Segments (explode combinations) */
     function explodeCombosToSegments(){
@@ -894,38 +912,49 @@
     }
 
     /**
-     * Calculate price multiplier factor from percentage input
+     * Calculate price factor from percentage input
      * @param {number} percentage - Percentage value (e.g., 10 for 10% increase, -10 for 10% decrease)
-     * @returns {number} - Multiplier factor (e.g., 1.10 for 10% increase, 0.90 for 10% decrease)
+     * @returns {number} - Factor value (e.g., 1.10 for 10% increase, 0.90 for 10% decrease)
      */
-    function calculatePriceMultiplier(percentage) {
+    function calculatePriceFactor(percentage) {
       // Handle edge cases
       if (typeof percentage !== 'number' || isNaN(percentage)) {
         return 1.0; // No change for invalid input
       }
       
-      // Calculate multiplier: 1 + (percentage / 100)
-      // Examples: 10% -> 1.10, -10% -> 0.90, 0% -> 1.00
-      const multiplier = 1 + (percentage / 100);
+      // Calculate factor: 1 + (percentage / 100)
+      // Examples: 10 -> 1.10, -10 -> 0.90, 0 -> 1.00
+      const factor = 1 + (percentage / 100);
       
-      // Ensure precision and prevent negative multipliers
-      return Math.max(0, Number(multiplier.toFixed(6)));
+      // Ensure precision and prevent negative factors
+      return Math.max(0, Number(factor.toFixed(6)));
     }
     
     /**
-     * Get current price multiplier from UI input
-     * @returns {number} - Current multiplier factor
+     * Get current price factor from UI input
+     * @returns {number} - Current factor value
      */
-    function getCurrentPriceMultiplier() {
-      const inputValue = parseFloat(document.getElementById('priceMultiplier').value || 100);
-      // Convert from percentage display (100 = no change) to actual percentage for calculation
-      const percentage = inputValue - 100;
-      return calculatePriceMultiplier(percentage);
+    function getCurrentPriceFactor() {
+      const inputElement = document.getElementById('priceFactor');
+      const inputValue = inputElement.value.trim();
+      
+      // If empty, return 1.0 (no price adjustment)
+      if (inputValue === '' || inputValue === null || inputValue === undefined) {
+        return 1.0;
+      }
+      
+      // Parse the percentage value directly
+      const percentage = parseFloat(inputValue);
+      if (isNaN(percentage)) {
+        return 1.0; // Default to no change for invalid input
+      }
+      
+      return calculatePriceFactor(percentage);
     }
 
     function createPageHTML(segment, pageIndex) {
       const rows = rowsForSegment(segment);
-      const multiplier = getCurrentPriceMultiplier();
+      const factor = getCurrentPriceFactor();
       const unit = segment.kg ? 'Per Kg' : 'Per Piece';
       const titleText = `${segment.product.toUpperCase()} | ${segment.density.toUpperCase()} | ${segment.color.toUpperCase()} | ${state.currency} | ${unit.toUpperCase()}`;
       
@@ -934,7 +963,7 @@
       const rowHeight = 28; // Reduced row height to match smaller cells
       const footerHeight = 120; // Minimized footer space for compact layout
       const headerSpace = 180; // Reduced header space
-      const contentHeight = Math.max(baseHeight, headerSpace + 250 + (rows.length * rowHeight) + footerHeight);
+      const contentHeight = Math.max(baseHeight, headerSpace + 260 + (rows.length * rowHeight) + footerHeight);
       
       return `
         <div class="page-container bg-white border rounded-lg shadow-lg mx-auto" style="width: 595px; height: ${contentHeight}px; page-break-after: always; margin: 0 auto; transform-origin: center top; transform: scale(min(1, calc(100vw - 40px) / 595px));">
@@ -1001,7 +1030,7 @@
                 <div class="prices-column space-y-1">
                   ${rows.map(row => {
                     const converted = state.currency === 'INR' ? row.priceINR : convertINRto(state.currency, row.priceINR);
-                    const adjustedPrice = (converted || 0) * multiplier;
+                    const adjustedPrice = (converted || 0) * factor;
                     return `<div class="text-right text-gray-900 font-semibold py-1 px-2 bg-gray-100 rounded border min-h-[24px] flex items-center justify-end" style="font-size: clamp(0.75rem, 2.2vw, 0.875rem);">${(SYMBOL[state.currency] || '')}${adjustedPrice.toFixed(2)}</div>`;
                   }).join('')}
                 </div>
@@ -1026,12 +1055,27 @@
                 </div>
               </div>
                 
-              <!-- Shipping Partners Section -->
+              <!-- Shipping Partners & Payment Methods Section -->
               <div class="border-t border-gray-400 pt-1 pb-1">
-                <div class="flex items-center justify-center gap-6">
+                <div class="flex items-center justify-center gap-3 flex-wrap">
+                  <!-- Shipping Partners -->
                   <img src="images/dhl-logo-official.svg" alt="DHL" class="h-5 w-auto object-contain" onerror="this.style.display='none'">
                   <img src="images/aramex-logo-official.svg" alt="Aramex" class="h-5 w-auto object-contain" onerror="this.style.display='none'">
                   <img src="images/fedex-logo-official.svg" alt="FedEx" class="h-5 w-auto object-contain" onerror="this.style.display='none'">
+                  
+                  <!-- Separator -->
+                  <div class="h-4 w-px bg-gray-300 mx-2"></div>
+                  
+                  <!-- Payment Methods -->
+                  <img src="images/visa-logo.svg" alt="Visa" class="h-4 w-auto object-contain" onerror="this.style.display='none'">
+                  <img src="images/mastercard-logo.svg" alt="Mastercard" class="h-4 w-auto object-contain" onerror="this.style.display='none'">
+                  <img src="images/amex-logo.svg" alt="American Express" class="h-4 w-auto object-contain" onerror="this.style.display='none'">
+                  
+                  <!-- INR-specific payment methods -->
+                  ${state.currency === 'INR' ? `
+                    <img src="images/paytm-logo.svg" alt="PayTM" class="h-4 w-auto object-contain" onerror="this.style.display='none'">
+                    <img src="images/googlepay-logo.svg" alt="Google Pay" class="h-4 w-auto object-contain" onerror="this.style.display='none'">
+                  ` : ''}
                 </div>
               </div>
                 
@@ -1063,7 +1107,7 @@
               
               <!-- Brand Tagline Section -->
               <div class="border-t border-gray-400 pt-1">
-                <p class="text-gray-700 italic font-semibold mb-0" style="font-size: clamp(0.75rem, 2vw, 0.875rem);">Premium Quality Hair Products • Trusted Worldwide • ${getCurrentPriceMultiplier().toFixed(2)}x</p>
+                <p class="text-gray-700 italic font-semibold" style="font-size: clamp(0.75rem, 2vw, 0.875rem);">Premium Quality Hair Products • Trusted Worldwide • ${getCurrentPriceFactor().toFixed(2)}x</p>
               </div>
             </div>
           </div>
@@ -1136,7 +1180,7 @@
     async function drawFooter(W,H,segment){
       // Footer background with proper margins - matching header color - increased height for new content
       ctx.fillStyle='#e6eaeb'; 
-      roundRect(ctx, 10, H-130, W-20, 120, 15, true, false);
+      roundRect(ctx, 10, H-150, W-20, 140, 15, true, false);
       
       // Footer text styling and positioning
       ctx.fillStyle='#475569'; 
@@ -1148,12 +1192,14 @@
       
       // Email on top right
       ctx.textAlign='right';
-      ctx.fillText('info@indiannaturalhair.com', rightMargin, H-105);
+      ctx.fillText('info@indiannaturalhair.com', rightMargin, H-125);
       
-      // Address on left (two rows)
+      // Address on left (single line for first part, second line for city/country)
       ctx.textAlign='left';
-      ctx.fillText('WZ 81/1A, Guru Nanak Nagar', leftMargin, H-105);
-      ctx.fillText('New Delhi 110018, India', leftMargin, H-90);
+      ctx.font='500 9px system-ui, -apple-system, Segoe UI, Roboto'; // Slightly smaller font to fit
+      ctx.fillText('WZ 81/1A, Guru Nanak Nagar', leftMargin, H-125);
+      ctx.fillText('New Delhi 110018, India', leftMargin, H-110);
+      ctx.font='500 10px system-ui, -apple-system, Segoe UI, Roboto'; // Reset font size
       
       // Generated date and Valid until date in a single row (center)
       ctx.textAlign='center';
@@ -1161,7 +1207,7 @@
       ctx.font='600 10px system-ui, -apple-system, Segoe UI, Roboto';
       const currentDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
       const validUntilDate = new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-      ctx.fillText(`Generated: ${currentDate} | Valid until: ${validUntilDate}`, W/2, H-75);
+      ctx.fillText(`Generated: ${currentDate} | Valid until: ${validUntilDate}`, W/2, H-95);
       
       // Standard Weight section
       if (segment) {
@@ -1176,35 +1222,65 @@
           
           ctx.fillStyle='#475569';
           ctx.font='500 11px system-ui, -apple-system, Segoe UI, Roboto';
-          ctx.fillText(`Standard Weight: ${weightText}`, W/2, H-60);
+          ctx.fillText(`Standard Weight: ${weightText}`, W/2, H-80);
         }
       }
       
-      // Shipping partners label - adjusted spacing
+      // Combined shipping and payment partners label
       ctx.fillStyle='#374151';
       ctx.font='600 10px system-ui, -apple-system, Segoe UI, Roboto';
-      ctx.fillText('SHIPPING PARTNERS', W/2, H-45);
+      ctx.fillText('SHIPPING PARTNERS & PAYMENT METHODS', W/2, H-65);
       
-      // Draw shipping logos - increased size and better spacing
-      const logoWidth = 50;
-      const logoHeight = 16;
-      const logoY = H-35;
-      const totalLogosWidth = logoWidth * 3 + 30; // 3 logos + 2 gaps of 15px each
-      const startX = (W - totalLogosWidth) / 2;
+      // Combined logos row
+      const logoY = H-50;
+      const shippingLogoWidth = 45;
+      const shippingLogoHeight = 15;
+      const paymentLogoWidth = 30;
+      const paymentLogoHeight = 18;
+      
+      // Determine payment logos based on currency
+      const isINR = state.currency === 'INR';
+      const paymentLogos = [
+        'images/visa-logo.svg',
+        'images/mastercard-logo.svg', 
+        'images/amex-logo.svg'
+      ];
+      
+      if (isINR) {
+        paymentLogos.push('images/paytm-logo.svg', 'images/googlepay-logo.svg');
+      }
+      
+      // Calculate total width for centering
+      const shippingWidth = shippingLogoWidth * 3 + 20; // 3 shipping logos + gaps
+      const separatorWidth = 20; // Space for separator
+      const paymentWidth = paymentLogoWidth * paymentLogos.length + 8 * (paymentLogos.length - 1);
+      const totalWidth = shippingWidth + separatorWidth + paymentWidth;
+      const startX = (W - totalWidth) / 2;
       
       try {
-        // DHL logo - increased size
-        await drawImage('images/dhl-logo-official.svg', startX, logoY, logoWidth, logoHeight);
-        // Aramex logo - increased spacing
-        await drawImage('images/aramex-logo-official.svg', startX + logoWidth + 15, logoY, logoWidth, logoHeight);
-        // FedEx logo - increased spacing
-        await drawImage('images/fedex-logo-official.svg', startX + (logoWidth + 15) * 2, logoY, logoWidth, logoHeight);
+        // Draw shipping logos
+        await drawImage('images/dhl-logo-official.svg', startX, logoY, shippingLogoWidth, shippingLogoHeight);
+        await drawImage('images/aramex-logo-official.svg', startX + shippingLogoWidth + 10, logoY, shippingLogoWidth, shippingLogoHeight);
+        await drawImage('images/fedex-logo-official.svg', startX + (shippingLogoWidth + 10) * 2, logoY, shippingLogoWidth, shippingLogoHeight);
+        
+        // Draw separator line
+        const separatorX = startX + shippingWidth + 10;
+        ctx.fillStyle='#d1d5db';
+        ctx.fillRect(separatorX, logoY, 1, 15);
+        
+        // Draw payment logos
+        const paymentStartX = separatorX + 10;
+        for (let i = 0; i < paymentLogos.length; i++) {
+          const x = paymentStartX + i * (paymentLogoWidth + 8);
+          await drawImage(paymentLogos[i], x, logoY, paymentLogoWidth, paymentLogoHeight);
+        }
       } catch (e) {
-        console.warn('Shipping logos not found:', e);
+        console.warn('Logos not found:', e);
         // Fallback text if logos fail to load
         ctx.fillStyle='#6b7280';
-        ctx.font='500 9px system-ui, -apple-system, Segoe UI, Roboto';
-        ctx.fillText('DHL • ARAMEX • FEDEX', W/2, logoY + 10);
+        ctx.font='500 8px system-ui, -apple-system, Segoe UI, Roboto';
+        const fallbackText = isINR ? 'DHL • ARAMEX • FEDEX | VISA • MASTERCARD • AMEX • PAYTM • GOOGLE PAY' : 'DHL • ARAMEX • FEDEX | VISA • MASTERCARD • AMEX';
+        ctx.fillText(fallbackText, W/2, logoY + 10);
       }
     }
     
@@ -1240,7 +1316,7 @@
       const remainingWidth = W - 2 * xPad - lengthColWidth - imageWidth - priceColWidth;
       
       ctx.fillStyle='#e6eaeb'; roundRect(ctx, xPad, y, W-2*xPad, 36, 10, true);
-      ctx.fillStyle='#444662'; ctx.font='600 14px system-ui, -apple-system, Segoe UI, Roboto';
+      ctx.fillStyle='#081249'; ctx.font='600 14px system-ui, -apple-system, Segoe UI, Roboto';
       
       // Length header (first column) - left aligned
       ctx.textAlign='left';
@@ -1312,7 +1388,7 @@
       const rows = rowsForSegment(seg);
       
       // Title
-      ctx.fillStyle='#444662'; ctx.font='700 18px system-ui, -apple-system, Segoe UI, Roboto'; ctx.textAlign='center';
+      ctx.fillStyle='#081249'; ctx.font='700 18px system-ui, -apple-system, Segoe UI, Roboto'; ctx.textAlign='center';
       const unit = state.kg ? 'Per Kg' : 'Per Piece';
       const titleText = `${seg.product.toUpperCase()} | ${seg.density.toUpperCase()} | ${seg.color.toUpperCase()} | ${state.currency} | ${unit.toUpperCase()}`;
       ctx.fillText(titleText, W/2, y+20); y += 24;
@@ -1384,8 +1460,8 @@
          // Price column (third column) - right aligned
          ctx.textAlign='right';
          const converted = state.currency==='INR' ? row.priceINR : convertINRto(state.currency, row.priceINR);
-         const multiplier = getCurrentPriceMultiplier();
-         const adjustedPrice = (converted || 0) * multiplier;
+         const factor = getCurrentPriceFactor();
+        const adjustedPrice = (converted || 0) * factor;
          ctx.fillText(`${(SYMBOL[state.currency]||'')}${adjustedPrice.toFixed(2)}`, tableMargin + tableWidth - 10, dataY);
        }
        
@@ -1418,9 +1494,9 @@
         return;
       }
       
-      // Generate HTML for each segment with minimal spacing
+      // Generate HTML for each segment with 20px spacing
       const pagesHTML = state.segments.map((segment, index) => {
-        return `<div class="page-wrapper mb-4 mx-auto">${createPageHTML(segment, index)}</div>`;
+        return `<div class="page-wrapper mx-auto" style="margin-bottom: 20px;">${createPageHTML(segment, index)}</div>`;
       }).join('');
       
       previewContainer.innerHTML = pagesHTML;
@@ -1535,7 +1611,7 @@
             const scaledWidth = canvas.width * scale;
             const scaledHeight = canvas.height * scale;
             
-            // Center the content on the page
+            // Precise content centering for optimal alignment
             const xOffset = (pageWidth - scaledWidth) / 2;
             const yOffset = (pageHeight - scaledHeight) / 2;
             
@@ -1722,9 +1798,7 @@
 
       // events
       elCurrency.addEventListener('change', ()=>{ state.currency=elCurrency.value; renderAllPagesToHTML(); });
-      $('selectAllProducts').addEventListener('click', (e)=>{ e.preventDefault(); setAllDropdownSelected(elProductDropdown); onProductChange(); });
-      $('selectAllDensities').addEventListener('click', (e)=>{ e.preventDefault(); setAllDropdownSelected(elDensityDropdown); onDensityChange(); });
-      $('selectAllColors').addEventListener('click', (e)=>{ e.preventDefault(); setAllDropdownSelected(elColorDropdown); onColorChange(); });
+
 
       elCategory.addEventListener('change', onCategoryChange);
       
@@ -1747,6 +1821,8 @@
           list.classList.toggle('hidden');
         });
         
+
+        
         // Handle checkbox changes
         list.addEventListener('change', () => {
           if (dropdown === elProductDropdown) onProductChange();
@@ -1761,7 +1837,7 @@
           dropdown.querySelector('.dropdown-list').classList.add('hidden');
         });
       });
-      elSelectAll.addEventListener('change', onSelectAllToggle);
+
       elKg.addEventListener('change', ()=>{ 
         state.kg = elKg.checked;
         // Regenerate preview if segments exist
@@ -1769,6 +1845,8 @@
           renderAllPagesToHTML();
         }
       });
+
+      elSelectAll.addEventListener('change', onSelectAllToggle);
 
   
       elClearSegments.addEventListener('click', clearAllOptions);
@@ -1781,8 +1859,8 @@
       
       // Page navigation event listeners removed - now using HTML preview
       
-      // Price multiplier event listener
-      $('priceMultiplier').addEventListener('input', () => {
+      // Price factor event listener
+      $('priceFactor').addEventListener('input', () => {
         if (state.segments.length > 0) {
           renderAllPagesToHTML();
         }
@@ -1847,7 +1925,8 @@
           const buttons = container.querySelectorAll('button');
           buttons.forEach(button => {
             button.style.flex = '1';
-            button.style.minWidth = '120px';
+            // Mobile-friendly minimum width
+            button.style.minWidth = window.innerWidth <= 640 ? '80px' : '120px';
             button.style.height = '52px';
             button.style.fontSize = '14px';
             button.style.fontWeight = '600';
@@ -1907,8 +1986,11 @@
       
       // Reset form elements
       elCategory.value = '';
-      elSelectAll.checked = false;
       elKg.checked = false;
+      elSelectAll.checked = false;
+      
+      // Clear price factor input
+      document.getElementById('priceFactor').value = '';
       
       // Clear and disable dropdowns
       fillDropdown(elProductDropdown, [], 'Select products...');
@@ -1918,7 +2000,9 @@
       lockDropdown(elDensityDropdown, true);
       lockDropdown(elColorDropdown, true);
       
-      // Hide Share PDF button and reset layout
+      // Hide elements and reset layout
+      elSelectAllWrap.classList.add('hidden');
+      elKgWrap.classList.add('hidden');
       const sharePdfBtn = $('sharePdfBtn');
       sharePdfBtn.classList.add('hidden');
       

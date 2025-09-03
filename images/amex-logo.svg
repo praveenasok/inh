@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 180" width="300" height="180">
+  <rect width="300" height="180" rx="15" fill="#006FCF"/>
+  <g transform="translate(20, 30)">
+    <!-- American Express logo elements -->
+    <g fill="white">
+      <!-- Main AMEX text -->
+      <text x="20" y="40" font-family="Arial, sans-serif" font-size="24" font-weight="bold">AMERICAN</text>
+      <text x="20" y="70" font-family="Arial, sans-serif" font-size="24" font-weight="bold">EXPRESS</text>
+      
+      <!-- Centurion head silhouette -->
+      <g transform="translate(180, 20)">
+        <path d="M40 20 C50 15, 60 15, 70 20 C75 25, 75 35, 70 40 C65 45, 55 50, 50 55 C45 50, 35 45, 30 40 C25 35, 25 25, 30 20 Z" fill="white"/>
+        <circle cx="50" cy="30" r="3" fill="#006FCF"/>
+        <!-- Helmet crest -->
+        <path d="M45 15 L50 10 L55 15 L52 20 L48 20 Z" fill="white"/>
+      </g>
+      
+      <!-- Decorative elements -->
+      <rect x="20" y="90" width="200" height="2" fill="white"/>
+      <rect x="20" y="100" width="150" height="1" fill="white"/>
+    </g>
+  </g>
+</svg>
