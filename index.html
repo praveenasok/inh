@@ -949,10 +949,10 @@
           </div>
           
           <!-- Category Image Section Below Header -->
-          ${segment.category ? `<div class="category-section border-b bg-gray-100" style="margin: 0.5rem 0;">
+          ${segment.category ? `<div class="category-section border-b bg-gray-100" style="margin: 0;">
             <div class="flex items-center justify-center">
                <div class="flex items-center justify-center" style="width: 558px; height: 91px;">
-                 <img src="${getCategoryImage(segment.category)}" alt="${segment.category}" class="max-h-full max-w-full object-contain" onerror="this.style.display='none'">
+                 <img src="${getCategoryImage(segment.category)}" alt="${segment.category}" class="object-contain" style="max-height: 90%; max-width: 90%;" onerror="this.style.display='none'">
                </div>
             </div>
           </div>` : ''}
@@ -1031,11 +1031,29 @@
               <!-- Date and Validity Section -->
               <div class="border-t border-gray-400 pt-1 pb-1">
                 <div class="text-center">
-                  <p class="text-gray-600 font-medium mb-1" style="font-size: clamp(0.625rem, 1.8vw, 0.75rem);">Generated: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
-                  <p class="text-red-600 font-semibold" style="font-size: clamp(0.625rem, 1.8vw, 0.75rem);">Valid until: ${new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                  <p class="text-gray-600 font-medium" style="font-size: clamp(0.625rem, 1.8vw, 0.75rem);">Generated: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })} | <span class="text-red-600 font-semibold">Valid until: ${new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span></p>
                 </div>
               </div>
                 
+              <!-- Standard Weight Section -->
+              ${(() => {
+                const rows = rowsForSegment(segment);
+                if (rows.length > 0) {
+                  const firstRow = rows[0];
+                  const baseWeight = parseFloat(firstRow.meta['Standard Weight']) || 0;
+                  // Only multiply by 10 if kg mode is enabled AND prices are displayed per kg (not per piece)
+                  const pricesArePerKg = segment.kg && /y/i.test(firstRow.meta['Can Be Sold in KG?'] || '');
+                  const displayWeight = pricesArePerKg ? baseWeight * 10 : baseWeight;
+                  const weightText = displayWeight ? `${displayWeight}g` : 'N/A';
+                  return `<div class="border-t border-gray-400 pt-1 pb-1">
+                    <div class="text-center">
+                      <p class="text-gray-600 font-medium" style="font-size: clamp(0.625rem, 1.8vw, 0.75rem);">Standard Weight: <span class="font-semibold">${weightText}</span></p>
+                    </div>
+                  </div>`;
+                }
+                return '';
+              })()} 
+              
               <!-- Brand Tagline Section -->
               <div class="border-t border-gray-400 pt-1">
                 <p class="text-gray-700 italic font-semibold mb-0" style="font-size: clamp(0.75rem, 2vw, 0.875rem);">Premium Quality Hair Products • Trusted Worldwide • ${getCurrentPriceMultiplier().toFixed(2)}x</p>
@@ -1087,31 +1105,31 @@
       // Category image section below main header (no title)
       if (category) {
         ctx.fillStyle='#dddfe0'; 
-        roundRect(ctx, 10, 160, W-20, 100, 15, true, false);
+        roundRect(ctx, 10, 149, W-20, 101, 15, true, false);
         
         // Category image centered within the background rectangle
-        const categoryImageWidth = Math.min(558, W - 40); // Ensure it fits within margins
-        const categoryImageHeight = 91;
+        const categoryImageWidth = Math.min(558, W - 40) * 0.9; // Reduced by 10%
+        const categoryImageHeight = 91 * 0.9; // Reduced by 10%
         const categoryImageX = (W - categoryImageWidth) / 2;
         const categoryImagePath = getCategoryImage(category);
         try{ 
-          await drawImage(categoryImagePath, categoryImageX, 170, categoryImageWidth, categoryImageHeight);
+          await drawImage(categoryImagePath, categoryImageX, 159 + (91 - categoryImageHeight) / 2, categoryImageWidth, categoryImageHeight);
         }catch(e){
           console.warn('Category image not found:', categoryImagePath, e);
           // Draw placeholder rectangle for category image
           ctx.fillStyle='#cccccc';
-          ctx.fillRect(categoryImageX, 170, categoryImageWidth, categoryImageHeight);
+          ctx.fillRect(categoryImageX, 159, categoryImageWidth, categoryImageHeight);
         }
         
         // Add subtle border
         ctx.strokeStyle='#e5e7eb'; ctx.lineWidth=1;
-        ctx.beginPath(); ctx.moveTo(0, 270); ctx.lineTo(W, 270); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, 250); ctx.lineTo(W, 250); ctx.stroke();
       }
     }
-    async function drawFooter(W,H){
-      // Footer background with proper margins - matching header color
+    async function drawFooter(W,H,segment){
+      // Footer background with proper margins - matching header color - increased height for new content
       ctx.fillStyle='#e6eaeb'; 
-      roundRect(ctx, 10, H-100, W-20, 90, 15, true, false);
+      roundRect(ctx, 10, H-130, W-20, 120, 15, true, false);
       
       // Footer text styling and positioning
       ctx.fillStyle='#475569'; 
@@ -1123,14 +1141,39 @@
       
       // Email on top right
       ctx.textAlign='right';
-      ctx.fillText('info@indiannaturalhair.com', rightMargin, H-75);
+      ctx.fillText('info@indiannaturalhair.com', rightMargin, H-105);
       
       // Address on left (two rows)
       ctx.textAlign='left';
-      ctx.fillText('WZ 81/1A, Guru Nanak Nagar', leftMargin, H-75);
-      ctx.fillText('New Delhi 110018, India', leftMargin, H-60);
+      ctx.fillText('WZ 81/1A, Guru Nanak Nagar', leftMargin, H-105);
+      ctx.fillText('New Delhi 110018, India', leftMargin, H-90);
       
-      // Shipping partners label - increased spacing
+      // Generated date and Valid until date in a single row (center)
+      ctx.textAlign='center';
+      ctx.fillStyle='#374151';
+      ctx.font='600 10px system-ui, -apple-system, Segoe UI, Roboto';
+      const currentDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+      const validUntilDate = new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+      ctx.fillText(`Generated: ${currentDate} | Valid until: ${validUntilDate}`, W/2, H-75);
+      
+      // Standard Weight section
+      if (segment) {
+        const rows = rowsForSegment(segment);
+        if (rows.length > 0) {
+          const firstRow = rows[0];
+          const baseWeight = parseFloat(firstRow.meta['Standard Weight']) || 0;
+          // Only multiply by 10 if kg mode is enabled AND prices are displayed per kg (not per piece)
+          const pricesArePerKg = segment.kg && /y/i.test(firstRow.meta['Can Be Sold in KG?'] || '');
+          const displayWeight = pricesArePerKg ? baseWeight * 10 : baseWeight;
+          const weightText = displayWeight ? `${displayWeight}g` : 'N/A';
+          
+          ctx.fillStyle='#475569';
+          ctx.font='500 11px system-ui, -apple-system, Segoe UI, Roboto';
+          ctx.fillText(`Standard Weight: ${weightText}`, W/2, H-60);
+        }
+      }
+      
+      // Shipping partners label - adjusted spacing
       ctx.fillStyle='#374151';
       ctx.font='600 10px system-ui, -apple-system, Segoe UI, Roboto';
       ctx.fillText('SHIPPING PARTNERS', W/2, H-45);
@@ -1184,23 +1227,25 @@
       if (stroke) ctx.stroke();
     }
     function tableHead(W, y, xPad){
-      const imageWidth = 280;
-      const sideColWidth = (W - 2 * xPad - imageWidth) / 2;
+      const imageWidth = 250; // Restored original width
+      const lengthColWidth = 80;
+      const priceColWidth = 100;
+      const remainingWidth = W - 2 * xPad - lengthColWidth - imageWidth - priceColWidth;
       
       ctx.fillStyle='#e6eaeb'; roundRect(ctx, xPad, y, W-2*xPad, 36, 10, true);
       ctx.fillStyle='#444662'; ctx.font='600 14px system-ui, -apple-system, Segoe UI, Roboto';
       
-      // Length header (left column) - left aligned
+      // Length header (first column) - left aligned
       ctx.textAlign='left';
       ctx.fillText('Length', xPad + 10, y+23);
       
-      // Image header (center column) - center aligned
+      // Image header (second column) - center aligned
       ctx.textAlign='center';
-      ctx.fillText('Product', xPad + sideColWidth + imageWidth/2, y+23);
+      ctx.fillText('Product', xPad + lengthColWidth + imageWidth/2, y+23);
       
-      // Price header (right column) - right aligned
+      // Price header (third column) - right aligned
       ctx.textAlign='right';
-      ctx.fillText(`Price (${SYMBOL[state.currency]||''}${state.currency})`, xPad + sideColWidth + imageWidth + sideColWidth - 10, y+23);
+      ctx.fillText(`Price (${SYMBOL[state.currency]||''}${state.currency})`, W - xPad - 10, y+23);
     }
 
     function segmentBlockHeight(rows){ 
@@ -1254,7 +1299,7 @@
         roundRect(ctx, 10, 10, W-20, 80, 15, true, false);
       }
       
-      let y = cat ? 280 : 160; // Start lower if category header is present - adjusted for new header height
+      let y = cat ? 269 : 160; // Start lower if category header is present - adjusted for new header height
       let xPad = 20;
       
       const rows = rowsForSegment(seg);
@@ -1290,19 +1335,16 @@
        ctx.shadowBlur = 0;
        ctx.shadowOffsetY = 0;
        
-       // Calculate layout for centered image with side columns
-       // Table width: 535px, minimum side column width: 120px each
-       // Maximum available image width: 535 - (120 * 2) = 295px
-       const imageWidth = 280;
+       // Calculate layout for 3-column table: Length, Product Image, Price
+       const lengthColWidth = 80;
+       const imageWidth = 250;
+       const priceColWidth = 100;
        const imageHeight = dynamicImageHeight;
-       const sideColWidth = (tableWidth - imageWidth) / 2;
        
-       // Draw product image in center
-
-        
-        let imagePath = getProductImagePath(seg.category, seg.product, seg.density);
+       // Draw product image in second column
+       let imagePath = getProductImagePath(seg.category, seg.product, seg.density);
        
-       const imageX = tableMargin + sideColWidth;
+       const imageX = tableMargin + lengthColWidth;
        const imageY = y;
        
        if (imagePath) {
@@ -1318,7 +1360,7 @@
          }
        }
        
-       // Draw length and price data in side columns with proper spacing
+       // Draw length and price data with proper spacing
        ctx.font='500 13px system-ui, -apple-system, Segoe UI, Roboto';
        const dataRowHeight = 40; // Consistent row height
        const startPadding = 30; // Top padding within table content area
@@ -1327,23 +1369,23 @@
          const row = rows[idx];
          const dataY = y + startPadding + (idx * dataRowHeight);
          
-         // Length column (left side) - left aligned
+         // Length column (first column) - left aligned
          ctx.fillStyle='#444662';
          ctx.textAlign='left';
          ctx.fillText(`${row.length}"`, tableMargin + 10, dataY);
          
-         // Price column (right side) - right aligned
+         // Price column (third column) - right aligned
          ctx.textAlign='right';
          const converted = state.currency==='INR' ? row.priceINR : convertINRto(state.currency, row.priceINR);
          const multiplier = getCurrentPriceMultiplier();
          const adjustedPrice = (converted || 0) * multiplier;
-         ctx.fillText(`${(SYMBOL[state.currency]||'')}${adjustedPrice.toFixed(2)}`, tableMargin + sideColWidth + imageWidth + sideColWidth - 10, dataY);
+         ctx.fillText(`${(SYMBOL[state.currency]||'')}${adjustedPrice.toFixed(2)}`, tableMargin + tableWidth - 10, dataY);
        }
        
        y += dynamicImageHeight + 20;
       
       // Draw footer for this segment
-      await drawFooter(W,H);
+      await drawFooter(W,H,segment);
       
       return 1; // Always consume exactly one segment
     }
