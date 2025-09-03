@@ -516,8 +516,10 @@
         <div id="pageInfo" class="text-center text-sm text-slate-500 min-w-[120px] bg-slate-50 px-3 py-1 rounded-full" role="status" aria-live="polite"></div>
       </div>
       <div class="w-full overflow-auto border-2 border-slate-200 rounded-lg">
-        <div id="htmlPreview" class="w-full max-w-full sm:max-w-[840px] mx-auto bg-white min-h-[200px] p-2">
-          <!-- HTML preview content will be generated here -->
+        <div id="htmlPreview" class="w-full bg-white min-h-[200px] p-2 sm:p-4 flex justify-center">
+          <div class="w-full max-w-[595px] mx-auto" style="min-width: 320px;">
+            <!-- HTML preview content will be generated here -->
+          </div>
         </div>
       </div>
     </div>
@@ -928,7 +930,7 @@
       const contentHeight = Math.max(baseHeight, headerSpace + 250 + (rows.length * rowHeight) + footerHeight);
       
       return `
-        <div class="page-container bg-white border rounded-lg shadow-lg" style="width: 100%; max-width: 595px; height: ${contentHeight}px; page-break-after: always;">
+        <div class="page-container bg-white border rounded-lg shadow-lg mx-auto" style="width: 595px; height: ${contentHeight}px; page-break-after: always; margin: 0 auto; transform-origin: center top; transform: scale(min(1, calc(100vw - 40px) / 595px));">
           <!-- Header Section -->
           <div class="header-section p-2 border-b" style="background-color: #e6eaeb;">
             <div class="flex items-center justify-between">
@@ -947,9 +949,11 @@
           </div>
           
           <!-- Category Image Section Below Header -->
-          ${segment.category ? `<div class="category-section p-2 border-b bg-gray-100">
+          ${segment.category ? `<div class="category-section border-b bg-gray-100" style="margin: 0.5rem 0;">
             <div class="flex items-center justify-center">
-              <img src="${getCategoryImage(segment.category)}" alt="${segment.category}" class="h-12 w-auto object-contain" onerror="this.style.display='none'">
+               <div class="flex items-center justify-center" style="width: 558px; height: 91px;">
+                 <img src="${getCategoryImage(segment.category)}" alt="${segment.category}" class="max-h-full max-w-full object-contain" onerror="this.style.display='none'">
+               </div>
             </div>
           </div>` : ''}
           
@@ -1002,10 +1006,13 @@
           <div class="border-t-2 border-gray-300 rounded-lg" style="background-color: #e6eaeb;">
             <div class="text-center px-3 py-2">
               <!-- Contact Information Section -->
-              <div class="flex justify-between items-start mb-2" style="font-size: clamp(0.75rem, 2vw, 0.875rem);">
+              <div class="grid grid-cols-3 items-start mb-2" style="font-size: clamp(0.75rem, 2vw, 0.875rem);">
                 <div class="text-left text-gray-700">
                   <div class="font-medium">WZ 81/1A, Guru Nanak Nagar</div>
                   <div class="font-medium">New Delhi 110018, India</div>
+                </div>
+                <div class="flex justify-center items-center">
+                  <span class="font-bold text-3xl" style="color: #a37e55;">${SYMBOL[state.currency] || state.currency}</span>
                 </div>
                 <div class="text-right">
                   <a href="mailto:info@indiannaturalhair.com" class="text-gray-700 font-semibold hover:text-gray-900 transition-colors">info@indiannaturalhair.com</a>
@@ -1343,12 +1350,13 @@
 
     function renderAllPagesToHTML(){
       const htmlPreview = document.getElementById('htmlPreview');
+      const previewContainer = htmlPreview.querySelector('div');
       
       // Clear existing content
-      htmlPreview.innerHTML = '';
+      previewContainer.innerHTML = '';
       
       if (state.segments.length === 0) {
-        htmlPreview.innerHTML = '<div class="text-center text-gray-500 p-8">No segments to display. Please select products and generate preview.</div>';
+        previewContainer.innerHTML = '<div class="text-center text-gray-500 p-8">No segments to display. Please select products and generate preview.</div>';
         document.getElementById('pageInfo').textContent = 'No pages to display';
         
         // Hide PNG download button when no segments
@@ -1363,10 +1371,10 @@
       
       // Generate HTML for each segment with minimal spacing
       const pagesHTML = state.segments.map((segment, index) => {
-        return `<div class="page-wrapper mb-2 mx-auto">${createPageHTML(segment, index)}</div>`;
+        return `<div class="page-wrapper mb-4 mx-auto">${createPageHTML(segment, index)}</div>`;
       }).join('');
       
-      htmlPreview.innerHTML = pagesHTML;
+      previewContainer.innerHTML = pagesHTML;
       
       // Update page info
       const pageCount = state.segments.length;
@@ -1464,26 +1472,26 @@
               pdf.addPage();
             }
             
-            // Calculate optimal scaling to fit A4 page
-            const imgWidth = pageWidth - 20; // 10mm margins
-            const imgHeight = (canvas.height * imgWidth) / canvas.width;
+            // Calculate optimal scaling to fit A4 page with better margins
+            const marginX = 15; // 15mm side margins
+            const marginY = 15; // 15mm top/bottom margins
+            const maxWidth = pageWidth - (marginX * 2);
+            const maxHeight = pageHeight - (marginY * 2);
             
-            // Ensure the content fits within a single page
-            if (imgHeight > pageHeight - 20) {
-              // Scale down to fit within page height
-              const scaledHeight = pageHeight - 20;
-              const scaledWidth = (canvas.width * scaledHeight) / canvas.height;
-              
-              // Center horizontally if scaled width is smaller
-              const xOffset = scaledWidth < imgWidth ? (pageWidth - scaledWidth) / 2 : 10;
-              
-              const imgData = canvas.toDataURL('image/jpeg', 0.9);
-              pdf.addImage(imgData, 'JPEG', xOffset, 10, scaledWidth, scaledHeight);
-            } else {
-              // Content fits normally
-              const imgData = canvas.toDataURL('image/jpeg', 0.9);
-              pdf.addImage(imgData, 'JPEG', 10, 10, imgWidth, imgHeight);
-            }
+            // Calculate scaling to fit within margins while maintaining aspect ratio
+            const scaleX = maxWidth / canvas.width;
+            const scaleY = maxHeight / canvas.height;
+            const scale = Math.min(scaleX, scaleY);
+            
+            const scaledWidth = canvas.width * scale;
+            const scaledHeight = canvas.height * scale;
+            
+            // Center the content on the page
+            const xOffset = (pageWidth - scaledWidth) / 2;
+            const yOffset = (pageHeight - scaledHeight) / 2;
+            
+            const imgData = canvas.toDataURL('image/jpeg', 0.95);
+            pdf.addImage(imgData, 'JPEG', xOffset, yOffset, scaledWidth, scaledHeight);
             
           } finally {
             // Clean up temporary container
@@ -1754,7 +1762,8 @@
       
       // Clear existing preview content immediately to ensure fresh output
       const htmlPreview = document.getElementById('htmlPreview');
-      htmlPreview.innerHTML = '<div class="text-center text-gray-500 p-8">Generating preview...</div>';
+      const previewContainer = htmlPreview.querySelector('div');
+      previewContainer.innerHTML = '<div class="text-center text-gray-500 p-8">Generating preview...</div>';
       document.getElementById('pageInfo').textContent = 'Generating...';
       
       // Show loading state
