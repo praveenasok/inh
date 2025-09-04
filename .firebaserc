@@ -1,5 +1,15 @@
 {
   "projects": {
     "default": "quotemaker-app"
-  }
+  },
+  "targets": {
+    "quotemaker-app": {
+      "hosting": {
+        "inhpricelistgenerator": [
+          "inhpricelistgenerator"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }
