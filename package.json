@@ -1,0 +1,26 @@
+{
+  "name": "inh-price-list-generator",
+  "version": "1.0.0",
+  "description": "Indian Natural Hair Price List Generator with Excel to JSON embedding",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "python-server": "python3 -m http.server 8000",
+    "node-server": "node server.js"
+  },
+  "keywords": [
+    "price-list",
+    "excel",
+    "json",
+    "embedding",
+    "hair-products"
+  ],
+  "author": "INH Team",
+  "license": "MIT",
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
