@@ -348,6 +348,79 @@
         min-height: 52px;
       }
       
+      /* Enhanced mobile layout */
+      .container {
+        padding-left: 1rem;
+        padding-right: 1rem;
+      }
+      
+      /* Better mobile grid spacing */
+      .grid {
+        gap: 0.75rem;
+      }
+      
+      /* Mobile-optimized preview section */
+      .preview-container {
+        margin: 0 -1rem;
+        border-radius: 0;
+      }
+      
+      /* Improved mobile header */
+      .header-mobile {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+      }
+      
+      /* Better mobile form layout */
+      .form-row {
+        flex-direction: column;
+        gap: 1rem;
+      }
+      
+      /* Enhanced mobile buttons */
+      .mobile-button-stack {
+        flex-direction: column;
+        width: 100%;
+      }
+      
+      .mobile-button-stack button {
+        width: 100%;
+        margin-bottom: 0.5rem;
+      }
+      
+      /* Mobile-friendly feature images */
+      .feature-images-mobile {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.5rem;
+      }
+      
+      .mobile-feature-section {
+        padding: 0.5rem !important;
+      }
+      
+      .mobile-feature-images {
+        width: 100% !important;
+        max-width: 100% !important;
+        gap: 0.25rem !important;
+        padding: 4px !important;
+        justify-content: center;
+      }
+      
+      .mobile-feature-img {
+        height: 45px !important;
+        max-width: 55px !important;
+        flex-shrink: 0;
+      }
+      
+      /* Better mobile typography */
+      .mobile-text-adjust {
+        font-size: 14px;
+        line-height: 1.5;
+      }
+    }
+      
       .dropdown-option input[type="checkbox"] {
         width: 20px;
         height: 20px;
@@ -359,8 +432,8 @@
   <div class="max-w-4xl mx-auto p-3 sm:p-6 container">
     <header class="mb-4 mobile-padding">
       <!-- Single Row: Title, Price Factor, and Logo -->
-      <div class="flex items-center justify-between gap-3 mb-3">
-        <h1 class="text-xl sm:text-2xl lg:text-3xl font-bold flex-1 min-w-0" style="line-height: 0.7;">
+      <div class="flex items-center justify-between gap-3 mb-3 header-mobile">
+        <h1 class="text-xl sm:text-2xl lg:text-3xl font-bold flex-1 min-w-0 mobile-text-adjust" style="line-height: 0.7;">
           <div class="text-left"><span style="color: #081249;">Insta</span><span style="color: #9b7952;">Q</span><span style="color: #081249;">uote</span></div>
         </h1>
         
@@ -372,7 +445,7 @@
                    title="Price adjustment percentage: empty = no change, 10 = 10% increase, -10 = 10% decrease" 
                    placeholder=" ">
             <label for="priceFactor" 
-                   class="absolute left-3 top-2 text-xs text-gray-500 transition-all duration-200 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-sm peer-placeholder-shown:text-gray-400 peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-500">
+                   class="absolute left-3 top-2 text-xs text-gray-500 transition-all duration-200 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-sm peer-placeholder-shown:text-gray-400 peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-500 mobile-text-adjust">
               Factor %
             </label>
           </div>
@@ -472,7 +545,7 @@
 
         <!-- Actions -->
         <div class="relative" style="margin-top: 20px;">
-          <div class="flex flex-col sm:flex-row gap-1" id="actionButtonsContainer">
+          <div class="flex flex-col sm:flex-row gap-1 mobile-button-stack" id="actionButtonsContainer">
             <button id="clearSegments" class="btn-secondary px-2 py-1 rounded-lg text-sm font-medium hover:bg-slate-300 transition-all duration-200 flex items-center justify-center gap-1 mobile-full" aria-label="Clear all selections" title="Clear all selections">
               <span class="text-base" aria-hidden="true">🗑️</span>
               <span>Clear</span>
@@ -512,10 +585,10 @@
     </div>
 
     <!-- Preview Section -->
-    <div class="bg-white rounded-xl shadow-soft p-4 sm:p-6 mobile-padding">
-      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-2">
-        <h3 class="text-lg sm:text-xl font-semibold">Preview</h3>
-        <div id="pageInfo" class="text-center text-sm text-slate-500 min-w-[120px] bg-slate-50 px-3 py-1 rounded-full" role="status" aria-live="polite"></div>
+    <div class="bg-white rounded-xl shadow-soft p-4 sm:p-6 mobile-padding preview-container">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-2 form-row">
+        <h3 class="text-lg sm:text-xl font-semibold mobile-text-adjust">Preview</h3>
+        <div id="pageInfo" class="text-center text-sm text-slate-500 min-w-[120px] bg-slate-50 px-3 py-1 rounded-full mobile-text-adjust" role="status" aria-live="polite"></div>
       </div>
       <div class="w-full overflow-auto border-2 border-slate-200 rounded-lg">
         <div id="htmlPreview" class="w-full bg-white min-h-[200px] p-2 sm:p-4 flex justify-center">
@@ -672,6 +745,25 @@
         'Toppers': 'images/generalstamps.png'
       };
       return categoryImageMap[category] || 'images/generalstamps.png';
+    }
+
+    /* Category to feature images mapping */
+    function getCategoryFeatureImages(category) {
+      const categoryFeatureMap = {
+        'Bulk': ['cuticle.png', 'color.png', 'measure.png', 'durable.png', 'noshedding.png', 'cut.png'],
+        'Weaves': ['cuticle.png', 'color.png', 'measure.png', 'durable.png', 'noshedding.png', 'stitch.png'],
+        'Wigs': ['transparentlace.png', 'plucked.png', 'cuticle.png', 'color.png', 'durable.png', 'noshedding.png'],
+        'Toppers': ['plucked.png', 'cuticle.png', 'color.png', 'durable.png', 'noshedding.png', 'cut.png'],
+        'Closures': ['transparentlace.png', 'plucked.png', 'cuticle.png', 'color.png', 'durable.png', 'noshedding.png'],
+        'Tapes': ['tapes.png', 'cuticle.png', 'color.png', 'durable.png', 'noshedding.png', 'cut.png'],
+        'Tips': ['tips.png', 'cuticle.png', 'color.png', 'durable.png', 'noshedding.png', 'cut.png'],
+        'Genius': ['genius.png', 'cuticle.png', 'color.png', 'durable.png', 'noshedding.png', 'cut.png'],
+        'Genius Weaves': ['genius.png', 'cuticle.png', 'color.png', 'durable.png', 'noshedding.png', 'cut.png'],
+        'DIY': ['diy.png', 'cuticle.png', 'color.png', 'measure.png', 'durable.png', 'cut.png'],
+        'ClipOn': ['cuticle.png', 'color.png', 'measure.png', 'durable.png', 'noshedding.png', 'stitch.png']
+      };
+      const images = categoryFeatureMap[category] || [];
+      return images.map(img => `images/category-images/${category}/${img}`);
     }
 
 
@@ -984,11 +1076,13 @@
             </div>
           </div>
           
-          <!-- Category Image Section Below Header -->
-          ${segment.category ? `<div class="category-section border-b bg-gray-100" style="margin: 0;">
-            <div class="flex items-center justify-center">
-               <div class="flex items-center justify-center" style="width: 558px; height: 91px;">
-                 <img src="${getCategoryImage(segment.category)}" alt="${segment.category}" class="object-contain" style="max-height: 90%; max-width: 90%;" onerror="this.style.display='none'">
+          <!-- Category Feature Images Section Below Header -->
+          ${segment.category ? `<div class="category-section border-b bg-gray-100 mobile-feature-section" style="margin: 0;">
+            <div class="flex items-center justify-center p-2">
+               <div class="flex items-center justify-center gap-1 flex-wrap mobile-feature-images" style="width: 558px; min-height: 91px; padding: 8px;">
+                 ${getCategoryFeatureImages(segment.category).map(imagePath => 
+                   `<img src="${imagePath}" alt="Feature" class="object-contain mobile-feature-img" style="height: 70px; width: auto; max-width: 85px;" onerror="this.style.display='none'">`
+                 ).join('')}
                </div>
             </div>
           </div>` : ''}
@@ -1003,36 +1097,41 @@
           <div class="product-table mx-3 bg-white border rounded-lg overflow-hidden">
             <!-- Single Header Row -->
             <div class="table-header bg-gray-100 p-1 border-b">
-              <div class="grid grid-cols-3 gap-2 items-center">
-                <div class="text-left font-semibold text-gray-700" style="font-size: clamp(0.75rem, 2.5vw, 0.875rem);">Length</div>
+              <div class="grid grid-cols-2 gap-4 items-center">
+                <div class="grid grid-cols-2 gap-2">
+                  <div class="text-left font-semibold text-gray-700" style="font-size: clamp(0.75rem, 2.5vw, 0.875rem);">Length</div>
+                  <div class="text-right font-semibold text-gray-700" style="font-size: clamp(0.75rem, 2.5vw, 0.875rem);">Price (${state.currency})</div>
+                </div>
                 <div class="text-center font-semibold text-gray-700" style="font-size: clamp(0.75rem, 2.5vw, 0.875rem);">Product</div>
-                <div class="text-right font-semibold text-gray-700" style="font-size: clamp(0.75rem, 2.5vw, 0.875rem);">Price (${state.currency})</div>
               </div>
             </div>
             
             <!-- Table Content -->
             <div class="table-content p-2">
-              <div class="grid grid-cols-[1fr_2fr_1fr] gap-2 items-start">
-                <!-- Length Column -->
-                <div class="lengths-column space-y-1">
-                  ${rows.map(row => `<div class="text-left text-gray-900 font-medium py-1 px-2 bg-gray-100 rounded border min-h-[24px] flex items-center" style="font-size: clamp(0.75rem, 2.2vw, 0.875rem);">${row.length}"</div>`).join('')}
+              <div class="grid grid-cols-2 gap-4 items-start">
+                <!-- Left Side: Length and Price Columns -->
+                <div class="grid grid-cols-2 gap-2">
+                  <!-- Length Column -->
+                  <div class="lengths-column space-y-1">
+                    ${rows.map(row => `<div class="text-left text-gray-900 font-medium py-1 px-2 bg-gray-100 rounded border min-h-[24px] flex items-center" style="font-size: clamp(0.75rem, 2.2vw, 0.875rem);">${row.length}"</div>`).join('')}
+                  </div>
+                  
+                  <!-- Price Column -->
+                  <div class="prices-column space-y-1">
+                    ${rows.map(row => {
+                      const converted = state.currency === 'INR' ? row.priceINR : convertINRto(state.currency, row.priceINR);
+                      const adjustedPrice = (converted || 0) * factor;
+                      return `<div class="text-right text-gray-900 font-semibold py-1 px-2 bg-gray-100 rounded border min-h-[24px] flex items-center justify-end" style="font-size: clamp(0.75rem, 2.2vw, 0.875rem);">${(SYMBOL[state.currency] || '')}${adjustedPrice.toFixed(2)}</div>`;
+                    }).join('')}
+                  </div>
                 </div>
                 
-                <!-- Product Image Column (Scaled to fill middle section) -->
+                <!-- Right Side: Product Image -->
                 <div class="product-image-column flex justify-center items-center bg-white border rounded-lg shadow-sm" style="height: ${Math.max(150, rows.length * 28)}px;">
                   <img src="${getProductImagePath(segment.category, segment.product, segment.density)}" alt="${segment.product}" 
                        class="max-w-full max-h-full object-contain" 
                        style="width: auto; height: 90%;" 
                        onerror="this.style.display='none'">
-                </div>
-                
-                <!-- Price Column -->
-                <div class="prices-column space-y-1">
-                  ${rows.map(row => {
-                    const converted = state.currency === 'INR' ? row.priceINR : convertINRto(state.currency, row.priceINR);
-                    const adjustedPrice = (converted || 0) * factor;
-                    return `<div class="text-right text-gray-900 font-semibold py-1 px-2 bg-gray-100 rounded border min-h-[24px] flex items-center justify-end" style="font-size: clamp(0.75rem, 2.2vw, 0.875rem);">${(SYMBOL[state.currency] || '')}${adjustedPrice.toFixed(2)}</div>`;
-                  }).join('')}
                 </div>
               </div>
             </div>
@@ -1153,23 +1252,32 @@
         ctx.fillRect(badgeX, badgeY, badgeWidth, badgeHeight);
       }
       
-      // Category image section below main header (no title)
+      // Category feature images section below main header
       if (category) {
         ctx.fillStyle='#dddfe0'; 
         roundRect(ctx, 10, 149, W-20, 101, 15, true, false);
         
-        // Category image centered within the background rectangle
-        const categoryImageWidth = Math.min(558, W - 40) * 0.9; // Reduced by 10%
-        const categoryImageHeight = 91 * 0.9; // Reduced by 10%
-        const categoryImageX = (W - categoryImageWidth) / 2;
-        const categoryImagePath = getCategoryImage(category);
-        try{ 
-          await drawImage(categoryImagePath, categoryImageX, 159 + (91 - categoryImageHeight) / 2, categoryImageWidth, categoryImageHeight);
-        }catch(e){
-          console.warn('Category image not found:', categoryImagePath, e);
-          // Draw placeholder rectangle for category image
-          ctx.fillStyle='#cccccc';
-          ctx.fillRect(categoryImageX, 159, categoryImageWidth, categoryImageHeight);
+        // Draw multiple feature images in a row
+        const featureImages = getCategoryFeatureImages(category);
+        const imageHeight = 70;
+        const imageSpacing = 4;
+        const imageWidth = 85;
+        const totalImagesWidth = featureImages.length * imageWidth + (featureImages.length - 1) * imageSpacing;
+        const startX = (W - totalImagesWidth) / 2;
+        const imageY = 159 + (91 - imageHeight) / 2;
+        
+        for (let i = 0; i < featureImages.length; i++) {
+          const imagePath = featureImages[i];
+          const imageX = startX + i * (imageWidth + imageSpacing);
+          
+          try {
+            await drawImage(imagePath, imageX, imageY, imageWidth, imageHeight);
+          } catch(e) {
+            console.warn('Feature image not found:', imagePath, e);
+            // Draw placeholder rectangle for missing image
+            ctx.fillStyle='#cccccc';
+            ctx.fillRect(imageX, imageY, imageWidth, imageHeight);
+          }
         }
         
         // Add subtle border
@@ -1236,7 +1344,7 @@
       const shippingLogoWidth = 45;
       const shippingLogoHeight = 15;
       const paymentLogoWidth = 30;
-      const paymentLogoHeight = 18;
+      const paymentLogoHeight = 15;
       
       // Determine payment logos based on currency
       const isINR = state.currency === 'INR';
@@ -1310,25 +1418,22 @@
       if (stroke) ctx.stroke();
     }
     function tableHead(W, y, xPad){
-      const imageWidth = 250; // Restored original width
-      const lengthColWidth = 80;
-      const priceColWidth = 100;
-      const remainingWidth = W - 2 * xPad - lengthColWidth - imageWidth - priceColWidth;
+      const lengthPriceColWidth = 180;
+      const imageWidth = 250;
       
       ctx.fillStyle='#e6eaeb'; roundRect(ctx, xPad, y, W-2*xPad, 36, 10, true);
       ctx.fillStyle='#081249'; ctx.font='600 14px system-ui, -apple-system, Segoe UI, Roboto';
       
-      // Length header (first column) - left aligned
+      // Length header (left side) - left aligned
       ctx.textAlign='left';
       ctx.fillText('Length', xPad + 10, y+23);
       
-      // Image header (second column) - center aligned
-      ctx.textAlign='center';
-      ctx.fillText('Product', xPad + lengthColWidth + imageWidth/2, y+23);
+      // Price header (left side, next to length) - left aligned
+      ctx.fillText(`Price (${SYMBOL[state.currency]||''}${state.currency})`, xPad + 90, y+23);
       
-      // Price header (third column) - right aligned
-      ctx.textAlign='right';
-      ctx.fillText(`Price (${SYMBOL[state.currency]||''}${state.currency})`, W - xPad - 10, y+23);
+      // Product image header (right side) - center aligned
+      ctx.textAlign='center';
+      ctx.fillText('Product', xPad + lengthPriceColWidth + imageWidth/2, y+23);
     }
 
     function segmentBlockHeight(rows){ 
@@ -1418,16 +1523,15 @@
        ctx.shadowBlur = 0;
        ctx.shadowOffsetY = 0;
        
-       // Calculate layout for 3-column table: Length, Product Image, Price
-       const lengthColWidth = 80;
+       // Calculate layout for 3-column table: Length+Price, Product Image
+       const lengthPriceColWidth = 180;
        const imageWidth = 250;
-       const priceColWidth = 100;
        const imageHeight = dynamicImageHeight;
        
-       // Draw product image in second column
+       // Draw product image in right column
        let imagePath = getProductImagePath(seg.category, seg.product, seg.density);
        
-       const imageX = tableMargin + lengthColWidth;
+       const imageX = tableMargin + lengthPriceColWidth;
        const imageY = y;
        
        if (imagePath) {
@@ -1452,17 +1556,16 @@
          const row = rows[idx];
          const dataY = y + startPadding + (idx * dataRowHeight);
          
-         // Length column (first column) - left aligned
+         // Length column (left side) - left aligned
          ctx.fillStyle='#444662';
          ctx.textAlign='left';
          ctx.fillText(`${row.length}"`, tableMargin + 10, dataY);
          
-         // Price column (third column) - right aligned
-         ctx.textAlign='right';
+         // Price column (left side, next to length) - left aligned
          const converted = state.currency==='INR' ? row.priceINR : convertINRto(state.currency, row.priceINR);
          const factor = getCurrentPriceFactor();
         const adjustedPrice = (converted || 0) * factor;
-         ctx.fillText(`${(SYMBOL[state.currency]||'')}${adjustedPrice.toFixed(2)}`, tableMargin + tableWidth - 10, dataY);
+         ctx.fillText(`${(SYMBOL[state.currency]||'')}${adjustedPrice.toFixed(2)}`, tableMargin + 90, dataY);
        }
        
        y += dynamicImageHeight + 20;
