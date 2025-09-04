@@ -966,7 +966,7 @@
       const contentHeight = Math.max(baseHeight, headerSpace + 260 + (rows.length * rowHeight) + footerHeight);
       
       return `
-        <div class="page-container bg-white border rounded-lg shadow-lg mx-auto" style="width: 595px; height: ${contentHeight}px; page-break-after: always; margin: 0 auto; transform-origin: center top; transform: scale(min(1, calc(100vw - 40px) / 595px));">
+        <div class="page-container bg-white border rounded-lg shadow-lg mx-auto" style="width: 615px; height: ${contentHeight}px; page-break-after: always; margin: 0 auto; transform-origin: center top; transform: scale(min(1, calc(100vw - 40px) / 615px));">
           <!-- Header Section -->
           <div class="header-section p-2 border-b" style="background-color: #e6eaeb;">
             <div class="flex items-center justify-between">
@@ -1194,7 +1194,7 @@
       ctx.textAlign='right';
       ctx.fillText('info@indiannaturalhair.com', rightMargin, H-125);
       
-      // Address on left (single line for first part, second line for city/country)
+      // Address on left (two lines)
       ctx.textAlign='left';
       ctx.font='500 9px system-ui, -apple-system, Segoe UI, Roboto'; // Slightly smaller font to fit
       ctx.fillText('WZ 81/1A, Guru Nanak Nagar', leftMargin, H-125);
@@ -1573,7 +1573,7 @@
           tempContainer.style.position = 'absolute';
           tempContainer.style.left = '-9999px';
           tempContainer.style.top = '0';
-          tempContainer.style.width = '595px';
+          tempContainer.style.width = '615px';
           tempContainer.style.backgroundColor = '#ffffff';
           tempContainer.innerHTML = createPageHTML(segment, i);
           
@@ -1586,7 +1586,7 @@
               useCORS: true,
               allowTaint: true,
               backgroundColor: '#ffffff',
-              width: 595,
+              width: 615,
               height: tempContainer.scrollHeight,
               logging: false,
               removeContainer: false
