@@ -3,23 +3,35 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Quote Maker — Indian Natural Hair</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <title>IND NATURAL HAIR — Quote Maker (PRO v2.5)</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
-    /* Canvas card */
-    .shadow-soft { box-shadow: 0 10px 25px rgba(0,0,0,0.08); }
-    @media (max-width: 640px) {
-      .stack-mobile { flex-direction: column; }
-    }
+    :root{ --indigo:#eef2ff; --mint:#ecfeff; --amber:#fff7ed; --rose:#fff1f2; --slate:#f8fafc; }
+    body { font-family: Arial, sans-serif; background-color: #f1f5f9; }
+    .container { max-width: 980px; margin: auto; padding: 10px; }
+    .section { border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); padding: 14px; margin-bottom: 12px; background:white; }
+    .section.indigo { background: var(--indigo); }
+    .section.mint   { background: var(--mint); }
+    .section.amber  { background: var(--amber); }
+    .section.rose   { background: var(--rose); }
+    .section.slate  { background: var(--slate); }
+    .table th, .table td { padding: 8px; text-align: left; }
+    .table th { background-color: #e5e7eb; }
+    input, select, textarea { padding: 8px; font-size: 1rem; }
+    button { padding: 8px 12px; font-size: 0.95rem; border-radius: 10px; }
+    .header-container { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+    .chip { font-size: 0.75rem; background:#dbeafe; padding: 2px 6px; border-radius: 999px; }
+    #items-table.zebra tbody tr:nth-child(odd) { background-color:#ffffff; }
+    #items-table.zebra tbody tr:nth-child(even) { background-color:#f9fafb; }
     .pressable { transition: transform 120ms ease, box-shadow 120ms ease; box-shadow: 0 2px 0 rgba(0,0,0,0.15); }
     .pressable:active, .pressed { transform: translateY(1px) scale(0.99); box-shadow: 0 0 0 rgba(0,0,0,0.1); }
     @media print { .no-print { display: none !important; } body { background:#fff; } .section { border: 1px solid #e5e7eb; box-shadow:none; } }
+    .help { font-size: 12px; color:#475569; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
     .dropdown { position: relative; display: inline-block; }
     .dropdown-menu { display: none; position: absolute; right: 0; z-index: 40; min-width: 220px; background: white; border: 1px solid #e5e7eb; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.12); padding: 8px; }
     .dropdown.open .dropdown-menu { display: block; }
-    #items-table.zebra tbody tr:nth-child(odd) { background-color:#ffffff; }
-    #items-table.zebra tbody tr:nth-child(even) { background-color:#f9fafb; }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="productData.js"></script>
@@ -469,16 +481,7 @@
     async function checkForSyncUpdates() {
       try {
         const response = await fetch('/api/sync-status');
-        if (!response.ok) {
-          // Silently fail if sync endpoint is not available
-          return;
-        }
-        const text = await response.text();
-        if (!text || text === 'File not found') {
-          // Silently fail if no sync data available
-          return;
-        }
-        const data = JSON.parse(text);
+        const data = await response.json();
         
         if (data.success && data.syncData) {
           const lastUpdate = localStorage.getItem('quoteMaker_lastSync') || '0';

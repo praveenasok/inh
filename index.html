@@ -3665,6 +3665,83 @@
       $('category').value = '';
       clearProducts();
       renderAllPagesToHTML();
+      
+      // Notify other modules about price list change
+      notifyPriceListChange();
+    }
+    
+    // --------- Real-time Synchronization Functions ---------
+    
+    // Notify other modules when price lists are updated
+    async function notifyPriceListChange() {
+      try {
+        const currentPriceLists = Array.from(availablePriceLists);
+        const response = await fetch('/api/sync-price-lists', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'price_list_updated',
+            priceLists: currentPriceLists,
+            sourceModule: 'priceListGenerator'
+          })
+        });
+        
+        if (response.ok) {
+          console.log('Price list change notification sent successfully');
+        }
+      } catch (error) {
+        console.error('Failed to notify price list change:', error);
+      }
+    }
+    
+    // Check for updates from other modules
+    async function checkForSyncUpdates() {
+      try {
+        const response = await fetch('/api/sync-status');
+        const data = await response.json();
+        
+        if (data.success && data.syncData) {
+          const lastUpdate = localStorage.getItem('priceListGenerator_lastSync') || '0';
+          
+          if (data.syncData.timestamp > parseInt(lastUpdate)) {
+            // Update available price lists from sync data
+            const syncedPriceLists = data.syncData.priceLists || [];
+            
+            // Check if price lists have changed
+            const currentPriceLists = Array.from(availablePriceLists).sort();
+            const newPriceLists = syncedPriceLists.sort();
+            
+            if (JSON.stringify(currentPriceLists) !== JSON.stringify(newPriceLists)) {
+              console.log('Price lists updated from other modules:', newPriceLists);
+              
+              // Update local price lists
+              availablePriceLists.clear();
+              newPriceLists.forEach(pl => availablePriceLists.add(pl));
+              
+              // Update dropdown
+              updatePriceListDropdown();
+              
+              showAdminMessage('Price lists synchronized from other modules', 'info');
+            }
+            
+            // Update last sync timestamp
+            localStorage.setItem('priceListGenerator_lastSync', data.syncData.timestamp.toString());
+          }
+        }
+      } catch (error) {
+        console.error('Failed to check for sync updates:', error);
+      }
+    }
+    
+    // Initialize real-time synchronization
+    function initializeRealTimeSync() {
+      // Check for updates every 5 seconds
+      setInterval(checkForSyncUpdates, 5000);
+      
+      // Initial check
+      checkForSyncUpdates();
+      
+      console.log('Real-time synchronization initialized for Price List Generator');
     }
     
 
@@ -3833,6 +3910,9 @@
       
       // Initialize navigation
       initNavigation();
+      
+      // Initialize real-time synchronization
+      initializeRealTimeSync();
     });
     
     // Navigation functionality

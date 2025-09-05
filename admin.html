@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Interface - Product Data Management</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .section {
+            margin-bottom: 40px;
+            padding: 30px;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            background: #f8f9fa;
+        }
+        
+        .section h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        
+        .upload-area {
+            border: 3px dashed #3498db;
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            background: white;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .upload-area:hover {
+            border-color: #2980b9;
+            background: #f8f9fa;
+        }
+        
+        .upload-area.dragover {
+            border-color: #27ae60;
+            background: #d5f4e6;
+        }
+        
+        .upload-icon {
+            font-size: 3rem;
+            color: #3498db;
+            margin-bottom: 20px;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        }
+        
+        .status {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-weight: 500;
+        }
+        
+        .status.success {
+            background: #d5f4e6;
+            color: #27ae60;
+            border: 1px solid #27ae60;
+        }
+        
+        .status.error {
+            background: #fadbd8;
+            color: #e74c3c;
+            border: 1px solid #e74c3c;
+        }
+        
+        .status.info {
+            background: #d6eaf8;
+            color: #3498db;
+            border: 1px solid #3498db;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .card h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+        
+        .progress {
+            width: 100%;
+            height: 8px;
+            background: #ecf0f1;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #3498db, #2980b9);
+            transition: width 0.3s ease;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .file-info {
+            background: #ecf0f1;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        
+        .file-info strong {
+            color: #2c3e50;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔧 Admin Interface</h1>
+            <p>Product Data Management & Dynamic Embedding System</p>
+        </div>
+        
+        <div class="content">
+            <!-- Upload Section -->
+            <div class="section">
+                <h2>📁 Excel File Upload</h2>
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📊</div>
+                    <h3>Drop Excel file here or click to browse</h3>
+                    <p>Supported formats: .xlsx, .xls</p>
+                    <input type="file" id="fileInput" accept=".xlsx,.xls" style="display: none;">
+                </div>
+                
+                <div id="fileInfo" class="file-info hidden">
+                    <strong>Selected File:</strong> <span id="fileName"></span><br>
+                    <strong>Size:</strong> <span id="fileSize"></span><br>
+                    <strong>Type:</strong> <span id="fileType"></span>
+                </div>
+                
+                <div id="uploadStatus" class="hidden"></div>
+                
+                <div class="progress hidden" id="progressContainer">
+                    <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+                </div>
+            </div>
+            
+            <!-- Data Management Section -->
+            <div class="section">
+                <h2>📊 Data Management</h2>
+                <div class="grid">
+                    <div class="card">
+                        <h3>Current Data Status</h3>
+                        <div id="dataStatus">No data loaded</div>
+                        <button class="btn" id="validateBtn" disabled>Validate Data</button>
+                    </div>
+                    
+                    <div class="card">
+                        <h3>Price Lists Detected</h3>
+                        <div id="priceListsInfo">Upload Excel file to detect price lists</div>
+                    </div>
+                    
+                    <div class="card">
+                        <h3>Data Statistics</h3>
+                        <div id="dataStats">
+                            <p>Products: <span id="productCount">0</span></p>
+                            <p>Categories: <span id="categoryCount">0</span></p>
+                            <p>Price Lists: <span id="priceListCount">0</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Embedding Section -->
+            <div class="section">
+                <h2>🔄 Dynamic Data Embedding</h2>
+                <p>Embed the uploaded data into both HTML applications:</p>
+                
+                <div class="grid">
+                    <div class="card">
+                        <h3>Price List Generator</h3>
+                        <div id="priceListStatus">Ready for embedding</div>
+                        <button class="btn btn-success" id="embedPriceListBtn" disabled>Embed Data</button>
+                    </div>
+                    
+                    <div class="card">
+                        <h3>Quote Maker</h3>
+                        <div id="quoteMakerStatus">Ready for embedding</div>
+                        <button class="btn btn-success" id="embedQuoteMakerBtn" disabled>Embed Data</button>
+                    </div>
+                </div>
+                
+                <div class="card" style="margin-top: 20px;">
+                    <h3>Batch Operations</h3>
+                    <button class="btn btn-success" id="embedAllBtn" disabled>Embed Data to All Applications</button>
+                    <button class="btn btn-danger" id="clearAllBtn">Clear All Data</button>
+                </div>
+            </div>
+            
+            <!-- Server Management -->
+            <div class="section">
+                <h2>⚙️ Server Management</h2>
+                <div class="grid">
+                    <div class="card">
+                        <h3>Server Status</h3>
+                        <div id="serverStatus">Checking...</div>
+                        <button class="btn" id="checkServerBtn">Check Server</button>
+                    </div>
+                    
+                    <div class="card">
+                        <h3>Data Persistence</h3>
+                        <div id="persistenceStatus">Ready</div>
+                        <button class="btn" id="saveDataBtn" disabled>Save to Server</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let currentData = null;
+        let availablePriceLists = new Set();
+        
+        // DOM Elements
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const fileInfo = document.getElementById('fileInfo');
+        const uploadStatus = document.getElementById('uploadStatus');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressBar = document.getElementById('progressBar');
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            setupEventListeners();
+            checkServerStatus();
+            loadExistingData();
+        });
+        
+        function setupEventListeners() {
+            // Upload area events
+            uploadArea.addEventListener('click', () => fileInput.click());
+            uploadArea.addEventListener('dragover', handleDragOver);
+            uploadArea.addEventListener('dragleave', handleDragLeave);
+            uploadArea.addEventListener('drop', handleDrop);
+            
+            // File input
+            fileInput.addEventListener('change', handleFileSelect);
+            
+            // Buttons
+            document.getElementById('validateBtn').addEventListener('click', validateData);
+            document.getElementById('embedPriceListBtn').addEventListener('click', () => embedData('priceList'));
+            document.getElementById('embedQuoteMakerBtn').addEventListener('click', () => embedData('quoteMaker'));
+            document.getElementById('embedAllBtn').addEventListener('click', embedAllData);
+            document.getElementById('clearAllBtn').addEventListener('click', clearAllData);
+            document.getElementById('checkServerBtn').addEventListener('click', checkServerStatus);
+            document.getElementById('saveDataBtn').addEventListener('click', saveDataToServer);
+        }
+        
+        function handleDragOver(e) {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        }
+        
+        function handleDragLeave(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+        }
+        
+        function handleDrop(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        }
+        
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (file) {
+                handleFile(file);
+            }
+        }
+        
+        function handleFile(file) {
+            // Validate file type
+            const validTypes = ['.xlsx', '.xls'];
+            const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+            
+            if (!validTypes.includes(fileExtension)) {
+                showStatus('error', 'Invalid file type. Please upload an Excel file (.xlsx or .xls)');
+                return;
+            }
+            
+            // Show file info
+            document.getElementById('fileName').textContent = file.name;
+            document.getElementById('fileSize').textContent = formatFileSize(file.size);
+            document.getElementById('fileType').textContent = file.type || 'Excel file';
+            fileInfo.classList.remove('hidden');
+            
+            // Process file
+            processExcelFile(file);
+        }
+        
+        async function processExcelFile(file) {
+            try {
+                showStatus('info', 'Starting data import workflow...');
+                showProgress(0);
+                
+                // Step 1: Automatic data clearance
+                showStatus('info', 'Step 1/4: Clearing existing data from all modules...');
+                await performAutomaticDataClearance();
+                showProgress(20);
+                
+                // Step 2: Process Excel file
+                showStatus('info', 'Step 2/4: Processing Excel file...');
+                const arrayBuffer = await file.arrayBuffer();
+                showProgress(40);
+                
+                const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+                showProgress(50);
+                
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                
+                showProgress(60);
+                
+                if (jsonData.length < 2) {
+                    throw new Error('Excel file must contain at least a header row and one data row');
+                }
+                
+                const result = parseProductData(jsonData);
+                currentData = result;
+                
+                showProgress(70);
+                
+                // Step 3: Synchronized data embedding
+                showStatus('info', 'Step 3/4: Embedding data into both modules simultaneously...');
+                await performSynchronizedEmbedding(result);
+                showProgress(90);
+                
+                // Step 4: Initialize synchronization
+                showStatus('info', 'Step 4/4: Initializing real-time synchronization...');
+                await initializeDataSynchronization();
+                showProgress(100);
+                
+                showStatus('success', `✅ Workflow completed! Successfully processed ${result.products.length} products with ${result.priceLists.length} price lists`);
+                
+                updateDataDisplay();
+                enableButtons();
+                
+                setTimeout(() => {
+                    hideProgress();
+                }, 1500);
+                
+            } catch (error) {
+                showStatus('error', `❌ Workflow failed: ${error.message}`);
+                hideProgress();
+                console.error('Excel processing workflow error:', error);
+            }
+        }
+        
+        function parseProductData(jsonData) {
+            const headers = jsonData[0];
+            const products = [];
+            const categories = new Set();
+            const priceLists = new Set();
+            
+            // Find required column indices
+            const requiredColumns = ['Category', 'Product', 'Density', 'Length', 'Rate'];
+            const columnIndices = {};
+            
+            requiredColumns.forEach(col => {
+                const index = headers.findIndex(h => 
+                    h && h.toString().toLowerCase().includes(col.toLowerCase())
+                );
+                if (index === -1) {
+                    throw new Error(`Required column '${col}' not found in Excel file`);
+                }
+                columnIndices[col] = index;
+            });
+            
+            // Find optional columns
+            const optionalColumns = ['PriceList', 'Colors', 'Standard Weight', 'Can Be Sold in KG?'];
+            optionalColumns.forEach(col => {
+                const index = headers.findIndex(h => 
+                    h && h.toString().toLowerCase().includes(col.toLowerCase())
+                );
+                if (index !== -1) {
+                    columnIndices[col] = index;
+                }
+            });
+            
+            // Process data rows
+            for (let i = 1; i < jsonData.length; i++) {
+                const row = jsonData[i];
+                if (!row || row.length === 0) continue;
+                
+                const product = {
+                    Category: row[columnIndices.Category] || '',
+                    Product: row[columnIndices.Product] || '',
+                    Density: row[columnIndices.Density] || '',
+                    Length: row[columnIndices.Length] || '',
+                    Rate: row[columnIndices.Rate] || 0
+                };
+                
+                // Add optional fields if they exist
+                if (columnIndices.PriceList !== undefined) {
+                    product.PriceList = row[columnIndices.PriceList] || '';
+                    if (product.PriceList) {
+                        priceLists.add(product.PriceList);
+                    }
+                }
+                
+                if (columnIndices.Colors !== undefined) {
+                    product.Colors = row[columnIndices.Colors] || '';
+                }
+                
+                if (columnIndices['Standard Weight'] !== undefined) {
+                    product['Standard Weight'] = row[columnIndices['Standard Weight']] || 0;
+                }
+                
+                if (columnIndices['Can Be Sold in KG?'] !== undefined) {
+                    product['Can Be Sold in KG?'] = row[columnIndices['Can Be Sold in KG?']] || 'N';
+                }
+                
+                // Skip empty rows
+                if (!product.Category && !product.Product) continue;
+                
+                products.push(product);
+                categories.add(product.Category);
+            }
+            
+            availablePriceLists = priceLists;
+            
+            return {
+                products,
+                categories: Array.from(categories),
+                priceLists: Array.from(priceLists),
+                headers
+            };
+        }
+        
+        function updateDataDisplay() {
+            if (!currentData) return;
+            
+            // Update data status
+            document.getElementById('dataStatus').innerHTML = `
+                <div class="status success">
+                    ✅ ${currentData.products.length} products loaded successfully
+                </div>
+            `;
+            
+            // Update price lists info
+            const priceListsDiv = document.getElementById('priceListsInfo');
+            if (currentData.priceLists.length > 0) {
+                priceListsDiv.innerHTML = `
+                    <strong>Found ${currentData.priceLists.length} price lists:</strong><br>
+                    ${currentData.priceLists.map(pl => `• ${pl}`).join('<br>')}
+                `;
+            } else {
+                priceListsDiv.innerHTML = 'No price lists detected in data';
+            }
+            
+            // Update statistics
+            document.getElementById('productCount').textContent = currentData.products.length;
+            document.getElementById('categoryCount').textContent = currentData.categories.length;
+            document.getElementById('priceListCount').textContent = currentData.priceLists.length;
+        }
+        
+        function enableButtons() {
+            document.getElementById('validateBtn').disabled = false;
+            document.getElementById('embedPriceListBtn').disabled = false;
+            document.getElementById('embedQuoteMakerBtn').disabled = false;
+            document.getElementById('embedAllBtn').disabled = false;
+            document.getElementById('saveDataBtn').disabled = false;
+        }
+        
+        function validateData() {
+            if (!currentData) {
+                showStatus('error', 'No data to validate');
+                return;
+            }
+            
+            const errors = [];
+            const warnings = [];
+            
+            // Check for required fields
+            currentData.products.forEach((product, index) => {
+                if (!product.Category) errors.push(`Row ${index + 2}: Missing Category`);
+                if (!product.Product) errors.push(`Row ${index + 2}: Missing Product`);
+                if (!product.Rate || isNaN(product.Rate)) errors.push(`Row ${index + 2}: Invalid Rate`);
+            });
+            
+            // Check for duplicates
+            const seen = new Set();
+            currentData.products.forEach((product, index) => {
+                const key = `${product.Category}-${product.Product}-${product.Density}-${product.Length}`;
+                if (seen.has(key)) {
+                    warnings.push(`Row ${index + 2}: Duplicate product combination`);
+                }
+                seen.add(key);
+            });
+            
+            if (errors.length === 0) {
+                let message = '✅ Data validation passed!';
+                if (warnings.length > 0) {
+                    message += `<br><br><strong>Warnings:</strong><br>${warnings.join('<br>')}`;
+                }
+                showStatus('success', message);
+            } else {
+                let message = `❌ Data validation failed:<br><br><strong>Errors:</strong><br>${errors.join('<br>')}`;
+                if (warnings.length > 0) {
+                    message += `<br><br><strong>Warnings:</strong><br>${warnings.join('<br>')}`;
+                }
+                showStatus('error', message);
+            }
+        }
+        
+        async function embedData(target) {
+            if (!currentData) {
+                showStatus('error', 'No data to embed');
+                return;
+            }
+            
+            try {
+                showStatus('info', `Embedding data into ${target}...`);
+                
+                const response = await fetch('/api/embed-data', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        target,
+                        data: currentData
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Server error: ${response.statusText}`);
+                }
+                
+                const result = await response.json();
+                showStatus('success', `Successfully embedded data into ${target}`);
+                
+                // Update status displays
+                if (target === 'priceList') {
+                    document.getElementById('priceListStatus').innerHTML = '<div class="status success">✅ Data embedded successfully</div>';
+                } else if (target === 'quoteMaker') {
+                    document.getElementById('quoteMakerStatus').innerHTML = '<div class="status success">✅ Data embedded successfully</div>';
+                }
+                
+            } catch (error) {
+                showStatus('error', `Failed to embed data into ${target}: ${error.message}`);
+                console.error('Embedding error:', error);
+            }
+        }
+        
+        async function embedAllData() {
+            if (!currentData) {
+                showStatus('error', 'No data to embed');
+                return;
+            }
+            
+            try {
+                showStatus('info', 'Embedding data into all applications...');
+                
+                await embedData('priceList');
+                await embedData('quoteMaker');
+                
+                showStatus('success', 'Successfully embedded data into all applications!');
+                
+            } catch (error) {
+                showStatus('error', `Failed to embed data: ${error.message}`);
+            }
+        }
+        
+        async function performAutomaticDataClearance() {
+            try {
+                const response = await fetch('/api/clear-data', {
+                    method: 'POST'
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Server error: ${response.statusText}`);
+                }
+                
+                // Clear local data
+                currentData = null;
+                availablePriceLists.clear();
+                
+                // Reset UI elements
+                resetUIElements();
+                
+                return true;
+            } catch (error) {
+                throw new Error(`Data clearance failed: ${error.message}`);
+            }
+        }
+        
+        async function performSynchronizedEmbedding(data) {
+            try {
+                // Embed data into both modules simultaneously
+                const embedPromises = [
+                    fetch('/api/embed-data', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ target: 'priceList', data })
+                    }),
+                    fetch('/api/embed-data', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ target: 'quoteMaker', data })
+                    })
+                ];
+                
+                const results = await Promise.all(embedPromises);
+                
+                // Check if all embeddings were successful
+                for (const result of results) {
+                    if (!result.ok) {
+                        throw new Error(`Embedding failed: ${result.statusText}`);
+                    }
+                }
+                
+                // Update status displays
+                document.getElementById('priceListStatus').innerHTML = '<div class="status success">✅ Data embedded & synchronized</div>';
+                document.getElementById('quoteMakerStatus').innerHTML = '<div class="status success">✅ Data embedded & synchronized</div>';
+                
+                return true;
+            } catch (error) {
+                throw new Error(`Synchronized embedding failed: ${error.message}`);
+            }
+        }
+        
+        async function initializeDataSynchronization() {
+            try {
+                // Initialize real-time synchronization between modules
+                const response = await fetch('/api/init-sync', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        priceLists: currentData.priceLists,
+                        timestamp: Date.now()
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Sync initialization failed: ${response.statusText}`);
+                }
+                
+                return true;
+            } catch (error) {
+                console.warn('Synchronization initialization warning:', error.message);
+                // Don't throw error as this is not critical for basic functionality
+                return false;
+            }
+        }
+        
+        function resetUIElements() {
+            document.getElementById('dataStatus').textContent = 'No data loaded';
+            document.getElementById('priceListsInfo').textContent = 'Upload Excel file to detect price lists';
+            document.getElementById('productCount').textContent = '0';
+            document.getElementById('categoryCount').textContent = '0';
+            document.getElementById('priceListCount').textContent = '0';
+            
+            document.getElementById('priceListStatus').textContent = 'Ready for embedding';
+            document.getElementById('quoteMakerStatus').textContent = 'Ready for embedding';
+            
+            fileInfo.classList.add('hidden');
+            
+            // Disable buttons
+            document.getElementById('validateBtn').disabled = true;
+            document.getElementById('embedPriceListBtn').disabled = true;
+            document.getElementById('embedQuoteMakerBtn').disabled = true;
+            document.getElementById('embedAllBtn').disabled = true;
+            document.getElementById('saveDataBtn').disabled = true;
+        }
+        
+        async function clearAllData() {
+            if (!confirm('Are you sure you want to clear all data? This action cannot be undone.')) {
+                return;
+            }
+            
+            try {
+                showStatus('info', 'Clearing all data...');
+                await performAutomaticDataClearance();
+                showStatus('success', 'All data cleared successfully');
+            } catch (error) {
+                showStatus('error', `Failed to clear data: ${error.message}`);
+            }
+        }
+        
+        async function checkServerStatus() {
+            try {
+                const response = await fetch('/api/status');
+                if (response.ok) {
+                    const status = await response.json();
+                    document.getElementById('serverStatus').innerHTML = `
+                        <div class="status success">
+                            ✅ Server running on port ${status.port || '8001'}
+                        </div>
+                    `;
+                } else {
+                    throw new Error('Server not responding');
+                }
+            } catch (error) {
+                document.getElementById('serverStatus').innerHTML = `
+                    <div class="status error">
+                        ❌ Server not available
+                    </div>
+                `;
+            }
+        }
+        
+        async function saveDataToServer() {
+            if (!currentData) {
+                showStatus('error', 'No data to save');
+                return;
+            }
+            
+            try {
+                showStatus('info', 'Saving data to server...');
+                
+                const response = await fetch('/api/save-data', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(currentData)
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Server error: ${response.statusText}`);
+                }
+                
+                showStatus('success', 'Data saved to server successfully');
+                document.getElementById('persistenceStatus').innerHTML = '<div class="status success">✅ Data saved</div>';
+                
+            } catch (error) {
+                showStatus('error', `Failed to save data: ${error.message}`);
+            }
+        }
+        
+        async function loadExistingData() {
+            try {
+                const response = await fetch('/api/get-data');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data && data.products && data.products.length > 0) {
+                        currentData = data;
+                        updateDataDisplay();
+                        enableButtons();
+                        showStatus('info', 'Loaded existing data from server');
+                    }
+                }
+            } catch (error) {
+                console.log('No existing data found on server');
+            }
+        }
+        
+        // Utility functions
+        function showStatus(type, message) {
+            const statusDiv = uploadStatus;
+            statusDiv.className = `status ${type}`;
+            statusDiv.innerHTML = message;
+            statusDiv.classList.remove('hidden');
+        }
+        
+        function showProgress(percent) {
+            progressContainer.classList.remove('hidden');
+            progressBar.style.width = percent + '%';
+        }
+        
+        function hideProgress() {
+            progressContainer.classList.add('hidden');
+            progressBar.style.width = '0%';
+        }
+        
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+    </script>
+</body>
+</html>

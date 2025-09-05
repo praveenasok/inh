@@ -479,12 +479,8 @@
         let currentCurrency = 'USD';
         let salesReps = [];
         let quoteCounter = 1;
-        let products = [
-            { id: 1, name: 'Product A', price: 100, description: 'High-quality product A' },
-            { id: 2, name: 'Product B', price: 250, description: 'Premium product B' },
-            { id: 3, name: 'Product C', price: 75, description: 'Standard product C' },
-            { id: 4, name: 'Product D', price: 500, description: 'Enterprise product D' }
-        ];
+        let products = [];
+        // No pre-embedded data - products will be loaded from uploaded Excel file
 
         // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
