@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Interface - Product Data Management</title>
+    <title>Excel Data Synchronization - Admin Panel</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         * {
@@ -20,159 +20,234 @@
         }
         
         .container {
-            max-width: 1200px;
+            max-width: 900px;
             margin: 0 auto;
             background: white;
-            border-radius: 12px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            border-radius: 16px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.15);
             overflow: hidden;
         }
         
         .header {
             background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
             color: white;
-            padding: 30px;
+            padding: 40px;
             text-align: center;
         }
         
         .header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
+            font-size: 2.8rem;
+            margin-bottom: 15px;
+            font-weight: 700;
         }
         
         .header p {
             opacity: 0.9;
-            font-size: 1.1rem;
+            font-size: 1.2rem;
+            font-weight: 300;
         }
         
         .content {
-            padding: 40px;
+            padding: 50px;
         }
         
-        .section {
+        .upload-section {
             margin-bottom: 40px;
-            padding: 30px;
-            border: 2px solid #e9ecef;
-            border-radius: 12px;
-            background: #f8f9fa;
-        }
-        
-        .section h2 {
-            color: #2c3e50;
-            margin-bottom: 20px;
-            font-size: 1.5rem;
-            border-bottom: 2px solid #3498db;
-            padding-bottom: 10px;
         }
         
         .upload-area {
-            border: 3px dashed #3498db;
-            border-radius: 12px;
-            padding: 40px;
+            border: 4px dashed #3498db;
+            border-radius: 20px;
+            padding: 60px 40px;
             text-align: center;
-            background: white;
-            transition: all 0.3s ease;
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            transition: all 0.4s ease;
             cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .upload-area::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(52, 152, 219, 0.1), transparent);
+            transform: rotate(45deg);
+            transition: all 0.6s ease;
+            opacity: 0;
         }
         
         .upload-area:hover {
             border-color: #2980b9;
-            background: #f8f9fa;
+            background: linear-gradient(135deg, #e3f2fd 0%, #f8f9fa 100%);
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(52, 152, 219, 0.2);
+        }
+        
+        .upload-area:hover::before {
+            opacity: 1;
+            animation: shimmer 1.5s ease-in-out;
         }
         
         .upload-area.dragover {
             border-color: #27ae60;
-            background: #d5f4e6;
+            background: linear-gradient(135deg, #e8f5e8 0%, #f0f8f0 100%);
+            transform: scale(1.02);
+        }
+        
+        @keyframes shimmer {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
         }
         
         .upload-icon {
-            font-size: 3rem;
+            font-size: 4rem;
             color: #3498db;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
+            display: block;
+        }
+        
+        .upload-title {
+            font-size: 2rem;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+        
+        .upload-subtitle {
+            color: #7f8c8d;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+        }
+        
+        .upload-formats {
+            color: #95a5a6;
+            font-size: 0.95rem;
+            font-style: italic;
         }
         
         .btn {
             background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
             color: white;
             border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
+            padding: 15px 30px;
+            border-radius: 12px;
             cursor: pointer;
-            font-size: 1rem;
+            font-size: 1.1rem;
+            font-weight: 600;
             transition: all 0.3s ease;
-            margin: 5px;
+            margin: 10px;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
         }
         
         .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(52, 152, 219, 0.4);
+        }
+        
+        .btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
         }
         
         .btn-success {
             background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
         }
         
-        .btn-danger {
-            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        .btn-success:hover {
+            box-shadow: 0 8px 25px rgba(39, 174, 96, 0.4);
         }
         
         .status {
-            padding: 15px;
-            border-radius: 8px;
-            margin: 15px 0;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
             font-weight: 500;
+            font-size: 1.1rem;
+            border-left: 5px solid;
         }
         
         .status.success {
-            background: #d5f4e6;
+            background: linear-gradient(135deg, #d5f4e6 0%, #e8f5e8 100%);
             color: #27ae60;
-            border: 1px solid #27ae60;
+            border-left-color: #27ae60;
         }
         
         .status.error {
-            background: #fadbd8;
+            background: linear-gradient(135deg, #fadbd8 0%, #fdeaea 100%);
             color: #e74c3c;
-            border: 1px solid #e74c3c;
+            border-left-color: #e74c3c;
         }
         
         .status.info {
-            background: #d6eaf8;
+            background: linear-gradient(135deg, #d6eaf8 0%, #e3f2fd 100%);
             color: #3498db;
-            border: 1px solid #3498db;
+            border-left-color: #3498db;
         }
         
-        .grid {
+        .data-preview {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 25px 0;
+            border: 2px solid #e9ecef;
+        }
+        
+        .data-preview h3 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.4rem;
+        }
+        
+        .data-stats {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
             gap: 20px;
-            margin-top: 20px;
+            margin: 20px 0;
         }
         
-        .card {
-            background: white;
-            border-radius: 8px;
+        .stat-item {
+            text-align: center;
             padding: 20px;
+            background: white;
+            border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
         
-        .card h3 {
-            color: #2c3e50;
-            margin-bottom: 15px;
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #3498db;
+            display: block;
+        }
+        
+        .stat-label {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            margin-top: 5px;
         }
         
         .progress {
             width: 100%;
-            height: 8px;
+            height: 12px;
             background: #ecf0f1;
-            border-radius: 4px;
+            border-radius: 6px;
             overflow: hidden;
-            margin: 10px 0;
+            margin: 20px 0;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
         }
         
         .progress-bar {
             height: 100%;
             background: linear-gradient(90deg, #3498db, #2980b9);
-            transition: width 0.3s ease;
+            transition: width 0.5s ease;
+            border-radius: 6px;
         }
         
         .hidden {
@@ -180,39 +255,48 @@
         }
         
         .file-info {
-            background: #ecf0f1;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 15px 0;
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            padding: 25px;
+            border-radius: 12px;
+            margin: 25px 0;
+            border: 2px solid #e9ecef;
         }
         
         .file-info strong {
             color: #2c3e50;
+        }
+        
+        .sync-actions {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 30px 0;
+            flex-wrap: wrap;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>🔧 Admin Interface</h1>
-            <p>Product Data Management & Dynamic Embedding System</p>
+            <h1>📊 Excel Data Sync</h1>
+            <p>Seamless data synchronization between Price List Generator and Quote Maker</p>
         </div>
         
         <div class="content">
             <!-- Upload Section -->
-            <div class="section">
-                <h2>📁 Excel File Upload</h2>
+            <div class="upload-section">
                 <div class="upload-area" id="uploadArea">
-                    <div class="upload-icon">📊</div>
-                    <h3>Drop Excel file here or click to browse</h3>
-                    <p>Supported formats: .xlsx, .xls</p>
+                    <div class="upload-icon">📁</div>
+                    <div class="upload-title">Upload Excel File</div>
+                    <div class="upload-subtitle">Drop your Excel file here or click to browse</div>
+                    <div class="upload-formats">Supported formats: .xlsx, .xls</div>
                     <input type="file" id="fileInput" accept=".xlsx,.xls" style="display: none;">
                 </div>
                 
                 <div id="fileInfo" class="file-info hidden">
-                    <strong>Selected File:</strong> <span id="fileName"></span><br>
-                    <strong>Size:</strong> <span id="fileSize"></span><br>
-                    <strong>Type:</strong> <span id="fileType"></span>
+                    <strong>📄 Selected File:</strong> <span id="fileName"></span><br>
+                    <strong>📏 Size:</strong> <span id="fileSize"></span><br>
+                    <strong>🏷️ Type:</strong> <span id="fileType"></span>
                 </div>
                 
                 <div id="uploadStatus" class="hidden"></div>
@@ -222,81 +306,38 @@
                 </div>
             </div>
             
-            <!-- Data Management Section -->
-            <div class="section">
-                <h2>📊 Data Management</h2>
-                <div class="grid">
-                    <div class="card">
-                        <h3>Current Data Status</h3>
-                        <div id="dataStatus">No data loaded</div>
-                        <button class="btn" id="validateBtn" disabled>Validate Data</button>
+            <!-- Data Preview Section -->
+            <div id="dataPreview" class="data-preview hidden">
+                <h3>📊 Data Preview</h3>
+                <div class="data-stats">
+                    <div class="stat-item">
+                        <span class="stat-number" id="productCount">0</span>
+                        <div class="stat-label">Products</div>
                     </div>
-                    
-                    <div class="card">
-                        <h3>Price Lists Detected</h3>
-                        <div id="priceListsInfo">Upload Excel file to detect price lists</div>
+                    <div class="stat-item">
+                        <span class="stat-number" id="categoryCount">0</span>
+                        <div class="stat-label">Categories</div>
                     </div>
-                    
-                    <div class="card">
-                        <h3>Data Statistics</h3>
-                        <div id="dataStats">
-                            <p>Products: <span id="productCount">0</span></p>
-                            <p>Categories: <span id="categoryCount">0</span></p>
-                            <p>Price Lists: <span id="priceListCount">0</span></p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Embedding Section -->
-            <div class="section">
-                <h2>🔄 Dynamic Data Embedding</h2>
-                <p>Embed the uploaded data into both HTML applications:</p>
-                
-                <div class="grid">
-                    <div class="card">
-                        <h3>Price List Generator</h3>
-                        <div id="priceListStatus">Ready for embedding</div>
-                        <button class="btn btn-success" id="embedPriceListBtn" disabled>Embed Data</button>
-                    </div>
-                    
-                    <div class="card">
-                        <h3>Quote Maker</h3>
-                        <div id="quoteMakerStatus">Ready for embedding</div>
-                        <button class="btn btn-success" id="embedQuoteMakerBtn" disabled>Embed Data</button>
+                    <div class="stat-item">
+                        <span class="stat-number" id="priceListCount">0</span>
+                        <div class="stat-label">Price Lists</div>
                     </div>
                 </div>
                 
-                <div class="card" style="margin-top: 20px;">
-                    <h3>Batch Operations</h3>
-                    <button class="btn btn-success" id="embedAllBtn" disabled>Embed Data to All Applications</button>
-                    <button class="btn btn-danger" id="clearAllBtn">Clear All Data</button>
-                </div>
+                <div id="dataStatus"></div>
             </div>
             
-            <!-- Server Management -->
-            <div class="section">
-                <h2>⚙️ Server Management</h2>
-                <div class="grid">
-                    <div class="card">
-                        <h3>Server Status</h3>
-                        <div id="serverStatus">Checking...</div>
-                        <button class="btn" id="checkServerBtn">Check Server</button>
-                    </div>
-                    
-                    <div class="card">
-                        <h3>Data Persistence</h3>
-                        <div id="persistenceStatus">Ready</div>
-                        <button class="btn" id="saveDataBtn" disabled>Save to Server</button>
-                    </div>
-                </div>
+            <!-- Synchronization Actions -->
+            <div class="sync-actions">
+                <button class="btn btn-success" id="syncAllBtn" disabled>
+                    🔄 Sync to Both Applications
+                </button>
             </div>
         </div>
     </div>
     
     <script>
         let currentData = null;
-        let availablePriceLists = new Set();
         
         // DOM Elements
         const uploadArea = document.getElementById('uploadArea');
@@ -305,12 +346,13 @@
         const uploadStatus = document.getElementById('uploadStatus');
         const progressContainer = document.getElementById('progressContainer');
         const progressBar = document.getElementById('progressBar');
+        const dataPreview = document.getElementById('dataPreview');
+        const syncAllBtn = document.getElementById('syncAllBtn');
         
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
             setupEventListeners();
-            checkServerStatus();
-            loadExistingData();
+            showStatus('info', '🚀 Ready to upload Excel file for data synchronization');
         });
         
         function setupEventListeners() {
@@ -323,14 +365,8 @@
             // File input
             fileInput.addEventListener('change', handleFileSelect);
             
-            // Buttons
-            document.getElementById('validateBtn').addEventListener('click', validateData);
-            document.getElementById('embedPriceListBtn').addEventListener('click', () => embedData('priceList'));
-            document.getElementById('embedQuoteMakerBtn').addEventListener('click', () => embedData('quoteMaker'));
-            document.getElementById('embedAllBtn').addEventListener('click', embedAllData);
-            document.getElementById('clearAllBtn').addEventListener('click', clearAllData);
-            document.getElementById('checkServerBtn').addEventListener('click', checkServerStatus);
-            document.getElementById('saveDataBtn').addEventListener('click', saveDataToServer);
+            // Sync button
+            syncAllBtn.addEventListener('click', syncToAllApplications);
         }
         
         function handleDragOver(e) {
@@ -381,60 +417,55 @@
         
         async function processExcelFile(file) {
             try {
-                showStatus('info', 'Starting data import workflow...');
-                showProgress(0);
+                showStatus('info', '🔄 Processing Excel file and converting to JSON...');
+                showProgress(10);
                 
-                // Step 1: Automatic data clearance
-                showStatus('info', 'Step 1/4: Clearing existing data from all modules...');
-                await performAutomaticDataClearance();
-                showProgress(20);
-                
-                // Step 2: Process Excel file
-                showStatus('info', 'Step 2/4: Processing Excel file...');
+                // Read Excel file
                 const arrayBuffer = await file.arrayBuffer();
-                showProgress(40);
+                showProgress(30);
                 
                 const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-                showProgress(50);
-                
                 const firstSheetName = workbook.SheetNames[0];
                 const worksheet = workbook.Sheets[firstSheetName];
                 const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
                 
-                showProgress(60);
+                showProgress(50);
                 
                 if (jsonData.length < 2) {
                     throw new Error('Excel file must contain at least a header row and one data row');
                 }
                 
+                // Parse and convert to JSON
                 const result = parseProductData(jsonData);
                 currentData = result;
                 
                 showProgress(70);
                 
-                // Step 3: Synchronized data embedding
-                showStatus('info', 'Step 3/4: Embedding data into both modules simultaneously...');
-                await performSynchronizedEmbedding(result);
+                // Show data preview
+                updateDataDisplay();
+                dataPreview.classList.remove('hidden');
+                
+                // Enable sync button
+                syncAllBtn.disabled = false;
+                
                 showProgress(90);
                 
-                // Step 4: Initialize synchronization
-                showStatus('info', 'Step 4/4: Initializing real-time synchronization...');
-                await initializeDataSynchronization();
+                // Automatically sync to both applications
+                showStatus('info', '🔄 Automatically syncing data to both applications...');
+                await syncToAllApplications();
+                
                 showProgress(100);
                 
-                showStatus('success', `✅ Workflow completed! Successfully processed ${result.products.length} products with ${result.priceLists.length} price lists`);
-                
-                updateDataDisplay();
-                enableButtons();
+                showStatus('success', `✅ Success! Processed ${result.products.length} products and synced to both applications`);
                 
                 setTimeout(() => {
                     hideProgress();
                 }, 1500);
                 
             } catch (error) {
-                showStatus('error', `❌ Workflow failed: ${error.message}`);
+                showStatus('error', `❌ Processing failed: ${error.message}`);
                 hideProgress();
-                console.error('Excel processing workflow error:', error);
+                console.error('Excel processing error:', error);
             }
         }
         
@@ -509,8 +540,6 @@
                 categories.add(product.Category);
             }
             
-            availablePriceLists = priceLists;
-            
             return {
                 products,
                 categories: Array.from(categories),
@@ -519,98 +548,26 @@
             };
         }
         
-        function updateDataDisplay() {
-            if (!currentData) return;
-            
-            // Update data status
-            document.getElementById('dataStatus').innerHTML = `
-                <div class="status success">
-                    ✅ ${currentData.products.length} products loaded successfully
-                </div>
-            `;
-            
-            // Update price lists info
-            const priceListsDiv = document.getElementById('priceListsInfo');
-            if (currentData.priceLists.length > 0) {
-                priceListsDiv.innerHTML = `
-                    <strong>Found ${currentData.priceLists.length} price lists:</strong><br>
-                    ${currentData.priceLists.map(pl => `• ${pl}`).join('<br>')}
-                `;
-            } else {
-                priceListsDiv.innerHTML = 'No price lists detected in data';
-            }
-            
-            // Update statistics
-            document.getElementById('productCount').textContent = currentData.products.length;
-            document.getElementById('categoryCount').textContent = currentData.categories.length;
-            document.getElementById('priceListCount').textContent = currentData.priceLists.length;
-        }
-        
-        function enableButtons() {
-            document.getElementById('validateBtn').disabled = false;
-            document.getElementById('embedPriceListBtn').disabled = false;
-            document.getElementById('embedQuoteMakerBtn').disabled = false;
-            document.getElementById('embedAllBtn').disabled = false;
-            document.getElementById('saveDataBtn').disabled = false;
-        }
-        
-        function validateData() {
+        async function syncToAllApplications() {
             if (!currentData) {
-                showStatus('error', 'No data to validate');
-                return;
-            }
-            
-            const errors = [];
-            const warnings = [];
-            
-            // Check for required fields
-            currentData.products.forEach((product, index) => {
-                if (!product.Category) errors.push(`Row ${index + 2}: Missing Category`);
-                if (!product.Product) errors.push(`Row ${index + 2}: Missing Product`);
-                if (!product.Rate || isNaN(product.Rate)) errors.push(`Row ${index + 2}: Invalid Rate`);
-            });
-            
-            // Check for duplicates
-            const seen = new Set();
-            currentData.products.forEach((product, index) => {
-                const key = `${product.Category}-${product.Product}-${product.Density}-${product.Length}`;
-                if (seen.has(key)) {
-                    warnings.push(`Row ${index + 2}: Duplicate product combination`);
-                }
-                seen.add(key);
-            });
-            
-            if (errors.length === 0) {
-                let message = '✅ Data validation passed!';
-                if (warnings.length > 0) {
-                    message += `<br><br><strong>Warnings:</strong><br>${warnings.join('<br>')}`;
-                }
-                showStatus('success', message);
-            } else {
-                let message = `❌ Data validation failed:<br><br><strong>Errors:</strong><br>${errors.join('<br>')}`;
-                if (warnings.length > 0) {
-                    message += `<br><br><strong>Warnings:</strong><br>${warnings.join('<br>')}`;
-                }
-                showStatus('error', message);
-            }
-        }
-        
-        async function embedData(target) {
-            if (!currentData) {
-                showStatus('error', 'No data to embed');
+                showStatus('error', 'No data to synchronize');
                 return;
             }
             
             try {
-                showStatus('info', `Embedding data into ${target}...`);
+                // Disable button during sync to prevent multiple clicks
+                syncAllBtn.disabled = true;
+                syncAllBtn.textContent = '🔄 Syncing...';
+                showStatus('info', '🔄 Syncing data to both applications...');
                 
+                // Sync to both applications simultaneously
                 const response = await fetch('/api/embed-data', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        target,
+                        target: 'all',
                         data: currentData
                     })
                 });
@@ -620,223 +577,95 @@
                 }
                 
                 const result = await response.json();
-                showStatus('success', `Successfully embedded data into ${target}`);
+                showStatus('success', '✅ Data successfully synchronized to both Price List Generator and Quote Maker!');
                 
-                // Update status displays
-                if (target === 'priceList') {
-                    document.getElementById('priceListStatus').innerHTML = '<div class="status success">✅ Data embedded successfully</div>';
-                } else if (target === 'quoteMaker') {
-                    document.getElementById('quoteMakerStatus').innerHTML = '<div class="status success">✅ Data embedded successfully</div>';
-                }
+                // Re-enable button after successful sync
+                syncAllBtn.disabled = false;
+                syncAllBtn.textContent = '🔄 Sync to Both Applications';
                 
             } catch (error) {
-                showStatus('error', `Failed to embed data into ${target}: ${error.message}`);
-                console.error('Embedding error:', error);
+                showStatus('error', `❌ Synchronization failed: ${error.message}`);
+                console.error('Sync error:', error);
+                
+                // Re-enable button after error
+                syncAllBtn.disabled = false;
+                syncAllBtn.textContent = '🔄 Sync to Both Applications';
             }
         }
         
-        async function embedAllData() {
-            if (!currentData) {
-                showStatus('error', 'No data to embed');
-                return;
+        function updateDataDisplay() {
+            if (!currentData) return;
+            
+            // Update data stats
+            const statsGrid = document.querySelector('.data-stats');
+            if (statsGrid) {
+                statsGrid.innerHTML = `
+                    <div class="stat-item">
+                        <div class="stat-number">${currentData.products.length}</div>
+                        <div class="stat-label">Products</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">${currentData.categories.length}</div>
+                        <div class="stat-label">Categories</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">${currentData.priceLists.length}</div>
+                        <div class="stat-label">Price Lists</div>
+                    </div>
+                `;
             }
             
-            try {
-                showStatus('info', 'Embedding data into all applications...');
-                
-                await embedData('priceList');
-                await embedData('quoteMaker');
-                
-                showStatus('success', 'Successfully embedded data into all applications!');
-                
-            } catch (error) {
-                showStatus('error', `Failed to embed data: ${error.message}`);
-            }
+            // Update data status
+            document.getElementById('dataStatus').innerHTML = `
+                <div class="status success">
+                    ✅ ${currentData.products.length} products loaded successfully
+                </div>
+            `;
+            
+            // Update file info
+            fileInfo.innerHTML = `
+                <div class="file-details">
+                    <div class="file-detail">
+                        <span class="label">📊 Products:</span>
+                        <span class="value">${currentData.products.length}</span>
+                    </div>
+                    <div class="file-detail">
+                        <span class="label">🏷️ Categories:</span>
+                        <span class="value">${currentData.categories.length}</span>
+                    </div>
+                    <div class="file-detail">
+                        <span class="label">💰 Price Lists:</span>
+                        <span class="value">${currentData.priceLists.length}</span>
+                    </div>
+                </div>
+            `;
         }
         
-        async function performAutomaticDataClearance() {
-            try {
-                const response = await fetch('/api/clear-data', {
-                    method: 'POST'
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`Server error: ${response.statusText}`);
-                }
-                
-                // Clear local data
-                currentData = null;
-                availablePriceLists.clear();
-                
-                // Reset UI elements
-                resetUIElements();
-                
-                return true;
-            } catch (error) {
-                throw new Error(`Data clearance failed: ${error.message}`);
-            }
-        }
+
         
-        async function performSynchronizedEmbedding(data) {
-            try {
-                // Embed data into both modules simultaneously
-                const embedPromises = [
-                    fetch('/api/embed-data', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ target: 'priceList', data })
-                    }),
-                    fetch('/api/embed-data', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ target: 'quoteMaker', data })
-                    })
-                ];
-                
-                const results = await Promise.all(embedPromises);
-                
-                // Check if all embeddings were successful
-                for (const result of results) {
-                    if (!result.ok) {
-                        throw new Error(`Embedding failed: ${result.statusText}`);
-                    }
-                }
-                
-                // Update status displays
-                document.getElementById('priceListStatus').innerHTML = '<div class="status success">✅ Data embedded & synchronized</div>';
-                document.getElementById('quoteMakerStatus').innerHTML = '<div class="status success">✅ Data embedded & synchronized</div>';
-                
-                return true;
-            } catch (error) {
-                throw new Error(`Synchronized embedding failed: ${error.message}`);
-            }
-        }
+
         
-        async function initializeDataSynchronization() {
-            try {
-                // Initialize real-time synchronization between modules
-                const response = await fetch('/api/init-sync', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        priceLists: currentData.priceLists,
-                        timestamp: Date.now()
-                    })
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`Sync initialization failed: ${response.statusText}`);
-                }
-                
-                return true;
-            } catch (error) {
-                console.warn('Synchronization initialization warning:', error.message);
-                // Don't throw error as this is not critical for basic functionality
-                return false;
-            }
-        }
+
+        
+
         
         function resetUIElements() {
-            document.getElementById('dataStatus').textContent = 'No data loaded';
-            document.getElementById('priceListsInfo').textContent = 'Upload Excel file to detect price lists';
             document.getElementById('productCount').textContent = '0';
             document.getElementById('categoryCount').textContent = '0';
             document.getElementById('priceListCount').textContent = '0';
             
-            document.getElementById('priceListStatus').textContent = 'Ready for embedding';
-            document.getElementById('quoteMakerStatus').textContent = 'Ready for embedding';
-            
             fileInfo.classList.add('hidden');
-            
-            // Disable buttons
-            document.getElementById('validateBtn').disabled = true;
-            document.getElementById('embedPriceListBtn').disabled = true;
-            document.getElementById('embedQuoteMakerBtn').disabled = true;
-            document.getElementById('embedAllBtn').disabled = true;
-            document.getElementById('saveDataBtn').disabled = true;
+            dataPreview.classList.add('hidden');
+            syncAllBtn.disabled = true;
         }
         
-        async function clearAllData() {
-            if (!confirm('Are you sure you want to clear all data? This action cannot be undone.')) {
-                return;
-            }
-            
-            try {
-                showStatus('info', 'Clearing all data...');
-                await performAutomaticDataClearance();
-                showStatus('success', 'All data cleared successfully');
-            } catch (error) {
-                showStatus('error', `Failed to clear data: ${error.message}`);
-            }
-        }
+
         
-        async function checkServerStatus() {
-            try {
-                const response = await fetch('/api/status');
-                if (response.ok) {
-                    const status = await response.json();
-                    document.getElementById('serverStatus').innerHTML = `
-                        <div class="status success">
-                            ✅ Server running on port ${status.port || '8001'}
-                        </div>
-                    `;
-                } else {
-                    throw new Error('Server not responding');
-                }
-            } catch (error) {
-                document.getElementById('serverStatus').innerHTML = `
-                    <div class="status error">
-                        ❌ Server not available
-                    </div>
-                `;
-            }
-        }
+
         
-        async function saveDataToServer() {
-            if (!currentData) {
-                showStatus('error', 'No data to save');
-                return;
-            }
-            
-            try {
-                showStatus('info', 'Saving data to server...');
-                
-                const response = await fetch('/api/save-data', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(currentData)
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`Server error: ${response.statusText}`);
-                }
-                
-                showStatus('success', 'Data saved to server successfully');
-                document.getElementById('persistenceStatus').innerHTML = '<div class="status success">✅ Data saved</div>';
-                
-            } catch (error) {
-                showStatus('error', `Failed to save data: ${error.message}`);
-            }
-        }
+
         
-        async function loadExistingData() {
-            try {
-                const response = await fetch('/api/get-data');
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data && data.products && data.products.length > 0) {
-                        currentData = data;
-                        updateDataDisplay();
-                        enableButtons();
-                        showStatus('info', 'Loaded existing data from server');
-                    }
-                }
-            } catch (error) {
-                console.log('No existing data found on server');
-            }
-        }
+
         
         // Utility functions
         function showStatus(type, message) {

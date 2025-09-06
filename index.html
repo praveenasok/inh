@@ -13,6 +13,30 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
   <style>
+    /* CSS Variables for Quote Maker sections */
+    :root{ --indigo:#eef2ff; --mint:#ecfeff; --amber:#fff7ed; --rose:#fff1f2; --slate:#f8fafc; }
+    
+    /* Quote Maker section styles */
+    .section { padding: 16px; margin-bottom: 16px; border-radius: 12px; border: 1px solid #e5e7eb; }
+    .section.indigo { background: var(--indigo); }
+    .section.mint   { background: var(--mint); }
+    .section.amber  { background: var(--amber); }
+    .section.rose   { background: var(--rose); }
+    .section.slate  { background: var(--slate); }
+    
+    /* Quote Maker table styles */
+    .table th, .table td { padding: 8px; text-align: left; }
+    .table th { background-color: #e5e7eb; }
+    #items-table.zebra tbody tr:nth-child(odd) { background-color:#ffffff; }
+    #items-table.zebra tbody tr:nth-child(even) { background-color:#f9fafb; }
+    
+    /* Quote Maker button styles */
+    .pressable { transition: transform 120ms ease, box-shadow 120ms ease; box-shadow: 0 2px 0 rgba(0,0,0,0.15); }
+    .pressable:active, .pressed { transform: translateY(1px) scale(0.99); box-shadow: 0 0 0 rgba(0,0,0,0.1); }
+    
+    /* Quote Maker utility styles */
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+    
     /* Base responsive styles */
     .shadow-soft { box-shadow: 0 10px 25px rgba(0,0,0,0.08); }
     
@@ -894,7 +918,14 @@
       updatedAt: null, mode:'auto'
     };
 
-    let productData = [];
+    let productData = [
+  {
+    "Length": 4,
+    "Category": "DIY",
+    "Product": "Test",
+    "Density": "Double Drawn"
+  }
+];
     let state = {
       currency:'INR', rates: { ...DEFAULT_RATES },
       category:'', selectAll:false, kg:false,
@@ -2212,7 +2243,15 @@
           } else {
             // Initialize with empty data - users can upload their own Excel files
             console.log('No existing data found, initializing with empty data...');
-            productData = [];
+            productData = [
+  {
+    "Length": 6,
+    "Category": "Bulk",
+    "Product": "Bulk150",
+    "Density": "Single Drawn",
+    "Rate": 500
+  }
+];
             console.log('Initialized with empty data - ready for Excel upload');
           }
         }
@@ -2671,113 +2710,184 @@
       <!-- Quote Maker Module -->
       <div id="quote-maker-module" class="module-content">
         <!-- Quote Details -->
-        <section class="bg-white rounded-xl shadow-soft p-4 sm:p-6 mb-4 mobile-padding" style="background: #eef2ff;">
+        <section class="section indigo" id="quote-details">
           <div class="flex items-center justify-between mb-2">
             <h2 class="text-lg font-semibold text-gray-800">Quote Details</h2>
             <span class="chip no-print" id="quote-chip">Draft</span>
           </div>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
             <div>
-              <input type="text" id="quote-number" placeholder="Quote # (INV-YYYYMMDD-###)" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none" />
+              <label class="block text-xs font-medium text-gray-700">Quote #</label>
+              <input type="text" id="quote-number" placeholder="INV-YYYYMMDD-###" class="mt-1 w-full p-1 border rounded-lg" />
             </div>
             <div>
-              <input type="date" id="quote-date" placeholder="Date" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none" />
+              <label class="block text-xs font-medium text-gray-700">Date</label>
+              <input type="date" id="quote-date" class="mt-1 w-full p-1 border rounded-lg" />
             </div>
             <div>
-              <input type="text" id="client-name" placeholder="Client Name" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none" />
+              <label class="block text-xs font-medium text-gray-700">Client Name</label>
+              <input type="text" id="client-name" class="mt-1 w-full p-1 border rounded-lg" />
             </div>
             <div>
-              <input type="text" id="client-contact" placeholder="Client Contact" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none" />
+              <label class="block text-xs font-medium text-gray-700">Client Contact</label>
+              <input type="text" id="client-contact" class="mt-1 w-full p-1 border rounded-lg" />
             </div>
             <div>
-              <input type="text" id="salesman-name" placeholder="Salesman" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none" />
+              <label class="block text-xs font-medium text-gray-700">Salesman</label>
+              <input type="text" id="salesman-name" class="mt-1 w-full p-1 border rounded-lg" />
             </div>
             <div>
-              <input type="number" id="valid-days" value="14" placeholder="Valid for (days)" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none" />
+              <label class="block text-xs font-medium text-gray-700">Valid for (days)</label>
+              <input type="number" id="valid-days" value="14" class="mt-1 w-full p-1 border rounded-lg" />
             </div>
             <div class="md:col-span-2">
-              <textarea id="brief-preview" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none" rows="2" placeholder="Brief Preview (e.g., Clip-on set, 18–22 inch mix, 200g total)"></textarea>
+              <label class="block text-xs font-medium text-gray-700">Brief Preview</label>
+              <textarea id="brief-preview" class="mt-1 w-full p-1 border rounded-lg" rows="2" placeholder="e.g., Clip-on set, 18–22 inch mix, 200g total"></textarea>
+            </div>
+          </div>
+        </section>
+
+        <!-- Price List Selection -->
+        <section class="section mint mb-4">
+          <h2 class="text-lg font-semibold text-gray-800 mb-2">Price List Selection</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-medium text-gray-700 mb-1">Select Price List</label>
+              <select id="priceListSelector" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
+                <option value="">All Price Lists</option>
+              </select>
+            </div>
+            <div class="flex items-center">
+              <div id="price-list-status" class="text-sm text-gray-600">
+                <span id="filtered-count">No price list selected</span>
+              </div>
             </div>
           </div>
         </section>
 
         <!-- Catalog -->
-        <section class="bg-white rounded-xl shadow-soft p-4 sm:p-6 mb-4 mobile-padding" style="background: #ecfeff;">
+        <section class="section cyan">
           <h2 class="text-lg font-semibold text-gray-800 mb-2">Catalog</h2>
           <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
             <div>
-              <select id="new-item-category" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
+              <label class="block text-xs font-medium text-gray-700">Category</label>
+              <select id="new-item-category" class="mt-1 w-full p-1 border rounded-lg">
                 <option value="">Select Category</option>
               </select>
             </div>
             <div>
-              <select id="new-item-density" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none" disabled>
+              <label class="block text-xs font-medium text-gray-700">Density</label>
+              <select id="new-item-density" class="mt-1 w-full p-1 border rounded-lg" disabled>
                 <option value="">Select Density</option>
               </select>
             </div>
             <div>
-              <select id="new-item-product" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none" disabled>
+              <label class="block text-xs font-medium text-gray-700">Product</label>
+              <select id="new-item-product" class="mt-1 w-full p-1 border rounded-lg" disabled>
                 <option value="">Select Product</option>
               </select>
             </div>
             <div>
-              <select id="new-item-length" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
+              <label class="block text-xs font-medium text-gray-700">Length</label>
+              <select id="new-item-length" class="mt-1 w-full p-1 border rounded-lg">
                 <option value="">Select Length</option>
               </select>
             </div>
             <div>
-              <input type="number" id="new-item-quantity" value="1" min="1" placeholder="Quantity" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none" />
+              <label class="block text-xs font-medium text-gray-700">Quantity</label>
+              <input type="number" id="new-item-quantity" value="1" min="1" class="mt-1 w-full p-1 border rounded-lg" />
             </div>
             <div>
-              <input type="number" id="new-item-override-price" placeholder="Override Unit Price (Optional)" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none" />
+              <label class="block text-xs font-medium text-gray-700">Override Unit Price (in selected currency)</label>
+              <input type="number" id="new-item-override-price" placeholder="Optional" class="mt-1 w-full p-1 border rounded-lg" />
             </div>
           </div>
           <div class="flex items-center gap-2 mt-2">
-            <button id="add-item-btn" class="btn-primary px-3 py-1 rounded-lg">Add Item</button>
-            <span class="text-xs text-gray-600">Override converts back to INR using current FX.</span>
+            <button id="add-item-btn" class="pressable px-3 py-1 bg-blue-600 text-white rounded-lg no-print">Add Item</button>
+            <span class="help">Override converts back to INR using current FX.</span>
           </div>
         </section>
 
-        <!-- Items Table -->
-        <section class="card-responsive section-spacing">
+        <!-- Discount & Tax -->
+        <section class="section rose">
+          <h2 class="text-lg font-semibold text-gray-800 mb-2">Discount & Tax</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+            <div>
+              <label class="block text-xs font-medium text-gray-700">Discount</label>
+              <div class="flex gap-2">
+                <input type="number" id="discount-percent" placeholder="Percent (%)" class="mt-1 w-full p-1 border rounded-lg" />
+                <input type="number" id="discount-amount" placeholder="Amount" class="mt-1 w-full p-1 border rounded-lg" />
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-700">Tax</label>
+              <div class="flex gap-2">
+                <input type="number" id="tax-percent" placeholder="Percent (%)" class="mt-1 w-full p-1 border rounded-lg" />
+                <input type="number" id="tax-amount" placeholder="Amount" class="mt-1 w-full p-1 border rounded-lg" />
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-700">Shipping</label>
+              <input type="number" id="shipping-cost" placeholder="Shipping Cost" class="mt-1 w-full p-1 border rounded-lg" />
+            </div>
+          </div>
+        </section>
+
+        <!-- Items -->
+        <section class="section slate" id="items-section">
           <h2 class="text-lg font-semibold text-gray-800 mb-2">Items</h2>
           <div class="overflow-x-auto">
-            <table id="items-table" class="w-full border-collapse">
+            <table id="items-table" class="table w-full border-collapse zebra">
               <thead>
-                <tr class="bg-gray-100">
-                  <th class="p-2 text-left">#</th>
-                  <th class="p-2 text-left">Product</th>
-                  <th class="p-2 text-left">Variant</th>
-                  <th class="p-2 text-left">Length</th>
-                  <th class="p-2 text-left">Weight</th>
-                  <th class="p-2 text-left">Qty</th>
-                  <th class="p-2 text-left">Unit Price</th>
-                  <th class="p-2 text-left">Line Total</th>
-                  <th class="p-2 text-left no-print">Actions</th>
+                <tr>
+                  <th>#</th>
+                  <th>Product</th>
+                  <th>Variant</th>
+                  <th>Length</th>
+                  <th>Weight</th>
+                  <th>Qty</th>
+                  <th>Unit Price</th>
+                  <th>Line Total</th>
+                  <th class="no-print">Actions</th>
                 </tr>
               </thead>
               <tbody></tbody>
               <tfoot>
-                <tr><td colspan="7" class="font-semibold p-2">Grand Total Weight</td><td id="grand-weight" class="p-2">—</td><td class="no-print"></td></tr>
-                <tr><td colspan="7" class="font-semibold p-2">Subtotal</td><td id="subtotal" class="p-2">—</td><td class="no-print"></td></tr>
-                <tr><td colspan="7" class="font-semibold p-2">Discount</td><td id="discount" class="p-2">—</td><td class="no-print"></td></tr>
-                <tr><td colspan="7" class="font-semibold p-2">Tax</td><td id="tax" class="p-2">—</td><td class="no-print"></td></tr>
-                <tr><td colspan="7" class="font-semibold p-2">Shipping</td><td id="shipping-total" class="p-2">—</td><td class="no-print"></td></tr>
-                <tr><td colspan="7" class="font-semibold p-2">Grand Total</td><td id="grand-total-table" class="p-2">—</td><td class="no-print"></td></tr>
+                <tr><td colspan="7" class="font-semibold">Grand Total Weight</td><td id="grand-weight">—</td><td class="no-print"></td></tr>
+                <tr><td colspan="7" class="font-semibold">Subtotal</td><td id="subtotal">—</td><td class="no-print"></td></tr>
+                <tr><td colspan="7" class="font-semibold">Discount</td><td id="discount">—</td><td class="no-print"></td></tr>
+                <tr><td colspan="7" class="font-semibold">Tax</td><td id="tax">—</td><td class="no-print"></td></tr>
+                <tr><td colspan="7" class="font-semibold">Shipping</td><td id="shipping-total">—</td><td class="no-print"></td></tr>
+                <tr><td colspan="7" class="font-semibold">Grand Total</td><td id="grand-total-table">—</td><td class="no-print"></td></tr>
               </tfoot>
             </table>
           </div>
-          <textarea id="notes-terms" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none" rows="3" placeholder="Notes / Terms (Payment terms, lead time, shipping details, etc.)"></textarea>
+          <div class="mt-2">
+            <label class="block text-xs font-medium text-gray-700">Notes / Terms</label>
+            <textarea id="notes-terms" class="mt-1 w-full p-1 border rounded-lg" rows="3" placeholder="Payment terms, lead time, shipping details, etc."></textarea>
+          </div>
         </section>
 
-        <!-- Actions -->
-        <section class="bg-white rounded-xl shadow-soft p-4 sm:p-6 mb-4 mobile-padding">
-          <h2 class="text-lg font-semibold text-gray-800 mb-2">Actions</h2>
-          <div class="flex gap-2 flex-wrap">
-            <button id="save-quote-btn" class="btn-primary px-4 py-2 rounded-lg">Save Quote</button>
-            <button id="q2o-btn" class="btn-info px-4 py-2 rounded-lg">Convert to Order</button>
-            <button class="btn-secondary px-4 py-2 rounded-lg">Export PDF</button>
+        <div id="grand-total" class="text-xl font-bold text-right text-gray-800 mt-2">Grand Total: —</div>
+
+        <!-- Recall & Actions -->
+        <section class="section indigo no-print">
+          <h2 class="text-lg font-semibold text-gray-800 mb-2">History & Recall</h2>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+            <div class="md:col-span-3">
+              <label class="block text-xs font-medium text-gray-700 mb-1">Quote</label>
+              <select id="recall-quote" class="w-full p-1 border rounded-lg">
+                <option value="">Select a quote</option>
+              </select>
+              <div class="text-xs text-gray-600 mt-1">Selected is shown with ☑ inside the option.</div>
+            </div>
           </div>
+          <div class="flex gap-2 mt-2">
+            <button id="recall-btn" class="pressable bg-gray-800 text-white rounded-lg px-3 py-1">Recall Selected</button>
+            <button id="save-quote-btn" class="pressable bg-blue-600 text-white rounded-lg px-3 py-1">Save Quote</button>
+            <button id="q2o-btn" class="pressable bg-green-600 text-white rounded-lg px-3 py-1">Convert to Order</button>
+          </div>
+          <pre id="debug-log" class="mono text-xs bg-gray-100 p-2 rounded mt-2 overflow-x-auto"></pre>
         </section>
       </div>
       
@@ -3308,7 +3418,14 @@
             
             // Parse the data
             const headers = jsonData[0];
-            const products = [];
+            const products = [
+  {
+    "Length": 4,
+    "Category": "DIY",
+    "Product": "Test",
+    "Density": "Double Drawn"
+  }
+];
             
             // Map common header variations to standard field names
             const headerMap = {
@@ -4237,147 +4354,14 @@
 
     // Define comprehensive product catalog with proper image mapping
     const productCatalog = {
-      'Bulk': {
-        image: 'Bulk.png',
-        description: 'Premium bulk hair for various styling needs',
-        variants: ['150g', '200g', '250g']
-      },
-      'Weaves': {
-        image: 'Weaves-SD.png',
-        description: 'High-quality weave extensions',
-        variants: ['Single Drawn', 'Double Drawn', 'Super Double Drawn']
-      },
-      'Weaves DD': {
-        image: 'Weaves-DD.png',
-        description: 'Double drawn weave extensions for fuller look',
-        variants: ['12"', '14"', '16"', '18"', '20"', '22"', '24"']
-      },
-      'Weaves SDD': {
-        image: 'Weaves-SDD.png',
-        description: 'Super double drawn premium weaves',
-        variants: ['12"', '14"', '16"', '18"', '20"', '22"', '24"']
-      },
-      'Tapes': {
-        image: 'Tapes.png',
-        description: 'Seamless tape-in hair extensions',
-        variants: ['16"', '18"', '20"', '22"', '24"']
-      },
-      'ClipOn': {
-        image: 'ClipOn.png',
-        description: 'Easy-to-use clip-in extensions',
-        variants: ['7 pieces', '9 pieces', '11 pieces']
-      },
-      'Closures': {
-        image: 'Closure.png',
-        description: 'Natural-looking lace closures',
-        variants: ['4x4', '5x5', '6x6']
-      },
-      'Frontals': {
-        image: 'Frontal.png',
-        description: 'Full frontal lace pieces',
-        variants: ['13x4', '13x6', '360 Frontal']
-      },
-      'Frontline': {
-        image: 'Frontline.png',
-        description: 'Frontline hair systems',
-        variants: ['Natural', 'Curly', 'Wavy']
-      },
-      'I Tips': {
-        image: 'ITIPS.png',
-        description: 'I-tip micro link extensions',
-        variants: ['0.5g', '0.8g', '1g']
-      },
-      'U Tips': {
-        image: 'UTIPS.png',
-        description: 'U-tip keratin bond extensions',
-        variants: ['0.5g', '0.8g', '1g']
-      },
-      'Y Tips': {
-        image: 'YTIPS.png',
-        description: 'Y-tip fusion extensions',
-        variants: ['0.5g', '0.8g', '1g']
-      },
-      'Flat Tips': {
-        image: 'FlatTips.png',
-        description: 'Flat tip keratin extensions',
-        variants: ['0.5g', '0.8g', '1g']
-      },
-      'Nano Tips': {
-        image: 'Nano.png',
-        description: 'Ultra-fine nano tip extensions',
-        variants: ['0.3g', '0.5g', '0.8g']
-      },
-      'Genius': {
-        image: 'Genius.png',
-        description: 'Genius weft hair extensions',
-        variants: ['16"', '18"', '20"', '22"']
-      },
-      'Toppers': {
-        image: 'SILKTOPPER.png',
-        description: 'Silk base hair toppers',
-        variants: ['6x6', '7x7', '8x8']
-      },
-      'Wigs': {
-        image: 'WIGFRONTAL.png',
-        description: 'Full lace and frontal wigs',
-        variants: ['Full Lace', 'Lace Front', '360 Lace']
-      },
-      'Wig Closure': {
-        image: 'WIGCLOSURE.png',
-        description: 'Closure wig systems',
-        variants: ['4x4', '5x5', '6x6']
-      },
-      'Wig Frontal': {
-        image: 'WIGFRONTAL.png',
-        description: 'Frontal wig systems',
-        variants: ['13x4', '13x6']
-      },
-      'PonyTail': {
-        image: 'PonyTail.png',
-        description: 'Clip-in ponytail extensions',
-        variants: ['16"', '18"', '20"', '22"']
-      },
-      'Flat Clip Ponytail': {
-        image: 'FLATCLIPPONYTAIL.png',
-        description: 'Flat clip ponytail extensions',
-        variants: ['16"', '18"', '20"', '22"']
-      },
-      'Bun': {
-        image: 'BUN.png',
-        description: 'Hair bun accessories',
-        variants: ['Small', 'Medium', 'Large']
-      },
-      'Curly Bun': {
-        image: 'CurlyBun.png',
-        description: 'Curly textured hair buns',
-        variants: ['Small', 'Medium', 'Large']
-      },
-      'Clutch Bun': {
-        image: 'ClutchBun.png',
-        description: 'Clutch-style hair buns',
-        variants: ['Small', 'Medium', 'Large']
-      },
-      'Bangs': {
-        image: 'Bangs.png',
-        description: 'Clip-in bang pieces',
-        variants: ['Straight', 'Side Swept', 'Wispy']
-      },
-      'Halo': {
-        image: 'Halo.png',
-        description: 'Halo-style hair extensions',
-        variants: ['16"', '18"', '20"', '22"']
-      },
-      'Cover Patch': {
-        image: 'CoverPatch.png',
-        description: 'Hair coverage patches',
-        variants: ['2x3', '3x4', '4x5']
-      },
-      'Highlights': {
-        image: 'Highlights.png',
-        description: 'Highlight hair pieces',
-        variants: ['Blonde', 'Brown', 'Custom']
-      }
-    };
+  "Bulk": {
+    "image": "default.png",
+    "description": "Bulk products",
+    "variants": [
+      "Single Drawn"
+    ]
+  }
+};
 
     function populateCatalogFilters() {
       const categorySelect = document.getElementById('catalog-category');

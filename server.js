@@ -98,19 +98,38 @@ const server = http.createServer((req, res) => {
     req.on('data', chunk => { body += chunk.toString(); });
     req.on('end', () => {
       try {
+        console.log('Embed data request received');
         const { target, data } = JSON.parse(body);
+        console.log(`Target: ${target}, Data length: ${data ? data.products?.length || 'unknown' : 'no data'}`);
         
         if (target === 'priceList') {
+          console.log('Embedding into price list...');
           embedDataIntoFile(PRICE_LIST_FILE_PATH, data, 'price-list');
         } else if (target === 'quoteMaker') {
+          console.log('Embedding into quote maker...');
           embedDataIntoFile(QUOTE_MAKER_FILE_PATH, data, 'quote-maker');
+        } else if (target === 'mainApp') {
+          console.log('Embedding into main app...');
+          embedDataIntoFile(HTML_FILE_PATH, data, 'main-app');
+        } else if (target === 'all') {
+          // Embed into all modules for synchronization
+          console.log('Embedding into all applications...');
+          console.log('1. Embedding into price list...');
+          embedDataIntoFile(PRICE_LIST_FILE_PATH, data, 'price-list');
+          console.log('2. Embedding into quote maker...');
+          embedDataIntoFile(QUOTE_MAKER_FILE_PATH, data, 'quote-maker');
+          console.log('3. Embedding into main app...');
+          embedDataIntoFile(HTML_FILE_PATH, data, 'main-app');
         } else {
-          throw new Error('Invalid target specified');
+          throw new Error('Invalid target specified. Use: priceList, quoteMaker, mainApp, or all');
         }
         
+        console.log('Embed operation completed successfully');
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ success: true, message: `Data embedded into ${target}` }));
       } catch (error) {
+        console.error('Embed data error:', error.message);
+        console.error('Error stack:', error.stack);
         res.writeHead(500, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: 'Failed to embed data: ' + error.message }));
       }
@@ -307,8 +326,17 @@ function embedDataIntoFile(filePath, data, type) {
   const backupPath = filePath.replace('.html', `_backup_${Date.now()}.html`);
   fs.writeFileSync(backupPath, htmlContent, 'utf8');
   
-  // Prepare data for embedding
-  const jsonData = JSON.stringify(data.products, null, 2);
+  // Prepare data for embedding - handle both array and object with products property
+  let productsArray;
+  if (Array.isArray(data)) {
+    productsArray = data;
+  } else if (data && data.products && Array.isArray(data.products)) {
+    productsArray = data.products;
+  } else {
+    throw new Error('Invalid data format: expected array or object with products property');
+  }
+  
+  const jsonData = JSON.stringify(productsArray, null, 2);
   
   if (type === 'price-list') {
     // For price list generator, replace the productData array
@@ -331,7 +359,52 @@ function embedDataIntoFile(filePath, data, type) {
       }
     }
   } else if (type === 'quote-maker') {
-    // For quote maker, replace the products array
+    // For quote maker, we need to update the productData.js file instead
+    const productDataJsPath = path.join(path.dirname(filePath), 'productData.js');
+    if (fs.existsSync(productDataJsPath)) {
+      let jsContent = fs.readFileSync(productDataJsPath, 'utf8');
+      const productsRegex = /let products = \[\s*\];/;
+      if (productsRegex.test(jsContent)) {
+        jsContent = jsContent.replace(
+          productsRegex,
+          `let products = ${jsonData};`
+        );
+        // Create backup
+        const timestamp = Date.now();
+        const backupPath = productDataJsPath.replace('.js', `_backup_${timestamp}.js`);
+        fs.copyFileSync(productDataJsPath, backupPath);
+        // Write updated content
+        fs.writeFileSync(productDataJsPath, jsContent, 'utf8');
+        console.log(`Quote maker productData.js updated at ${new Date().toISOString()}`);
+        console.log(`Backup created: ${backupPath}`);
+      } else {
+        throw new Error('Could not find products array to replace in quote maker productData.js');
+      }
+    } else {
+      throw new Error('productData.js file not found in quote maker directory');
+    }
+    // Return early since we're not modifying the HTML file
+    return;
+  } else if (type === 'main-app') {
+    // For main app, replace productData, products arrays, and productCatalog
+    // First replace productData for price list generator
+    const productDataRegex = /(const|let)\s+productData\s*=\s*\[\s*\];/;
+    if (productDataRegex.test(htmlContent)) {
+      htmlContent = htmlContent.replace(
+        productDataRegex,
+        (match, declaration) => `${declaration} productData = ${jsonData};`
+      );
+    } else {
+      const fallbackProductDataRegex = /productData\s*=\s*\[\s*\];/;
+      if (fallbackProductDataRegex.test(htmlContent)) {
+        htmlContent = htmlContent.replace(
+          fallbackProductDataRegex,
+          `productData = ${jsonData};`
+        );
+      }
+    }
+    
+    // Then replace products for quote maker
     const productsRegex = /let products = \[\s*\];/;
     if (productsRegex.test(htmlContent)) {
       htmlContent = htmlContent.replace(
@@ -339,16 +412,42 @@ function embedDataIntoFile(filePath, data, type) {
         `let products = ${jsonData};`
       );
     } else {
-      // Fallback: look for any empty products array
-      const fallbackRegex = /products\s*=\s*\[\s*\];/;
-      if (fallbackRegex.test(htmlContent)) {
+      const fallbackProductsRegex = /products\s*=\s*\[\s*\];/;
+      if (fallbackProductsRegex.test(htmlContent)) {
         htmlContent = htmlContent.replace(
-          fallbackRegex,
+          fallbackProductsRegex,
           `products = ${jsonData};`
         );
-      } else {
-        throw new Error('Could not find products array to replace in quote maker');
       }
+    }
+    
+    // Replace hardcoded productCatalog with dynamic data from Excel
+    const productCatalogRegex = /const productCatalog = \{[\s\S]*?\};/;
+    if (productCatalogRegex.test(htmlContent)) {
+      const catalogData = productsArray.reduce((catalog, product) => {
+        const category = product.Category || product.category;
+        const productName = product.Product || product.product;
+        const density = product.Density || product.density;
+        
+        if (category && !catalog[category]) {
+          catalog[category] = {
+            image: product.image || 'default.png',
+            description: product.description || `${category} products`,
+            variants: []
+          };
+        }
+        
+        if (category && density && !catalog[category].variants.includes(density)) {
+          catalog[category].variants.push(density);
+        }
+        
+        return catalog;
+      }, {});
+      
+      htmlContent = htmlContent.replace(
+        productCatalogRegex,
+        `const productCatalog = ${JSON.stringify(catalogData, null, 2)};`
+      );
     }
   }
   
