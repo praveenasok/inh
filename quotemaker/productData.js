@@ -5,7 +5,18 @@ let products = [];
 // Load existing product data from the main system if available
 async function loadExistingProductData() {
   try {
-    // Try to load from the main price list Excel file
+    // First try to load from the server API (embedded data)
+    const apiResponse = await fetch('/api/get-data');
+    if (apiResponse.ok) {
+      const apiData = await apiResponse.json();
+      if (apiData.success && apiData.data && apiData.data.length > 0) {
+        products = apiData.data;
+        console.log(`Loaded ${products.length} products from server API`);
+        return true;
+      }
+    }
+    
+    // Fallback: Try to load from the main price list Excel file
     const response = await fetch('../PriceLists/productData.xlsx');
     if (response.ok) {
       const arrayBuffer = await response.arrayBuffer();
@@ -19,7 +30,7 @@ async function loadExistingProductData() {
       if (jsonData.length >= 2) {
         const parsedData = parseProductData(jsonData);
         products = parsedData.products;
-        console.log(`Loaded ${products.length} products from existing database`);
+        console.log(`Loaded ${products.length} products from Excel fallback`);
         return true;
       }
     }

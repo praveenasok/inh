@@ -677,8 +677,55 @@
             }
         }
         
+        // Extract price list name from data and update dropdown
+        function extractPriceListName(data) {
+            const priceLists = new Set();
+            data.products.forEach(row => {
+                if (row.PriceList) {
+                    priceLists.add(row.PriceList);
+                }
+            });
+            return Array.from(priceLists);
+        }
+
+        // Update price list dropdown in main application
+        async function updatePriceListDropdown(priceLists) {
+            try {
+                showStatus('Updating price list dropdown...', 'info');
+                
+                // Send price lists to server for synchronization
+                const response = await fetch('/api/sync-price-lists', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        priceLists: priceLists,
+                        timestamp: Date.now()
+                    })
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    showStatus(`Price list dropdown updated with ${priceLists.length} lists`, 'success');
+                    console.log('Price lists synchronized:', priceLists);
+                } else {
+                    throw new Error('Failed to sync price lists');
+                }
+            } catch (error) {
+                console.error('Error updating price list dropdown:', error);
+                showStatus('Warning: Price list dropdown update failed', 'warning');
+            }
+        }
+
         async function performSynchronizedEmbedding(data) {
             try {
+                // Extract and update price lists first
+                const extractedPriceLists = extractPriceListName(data);
+                if (extractedPriceLists.length > 0) {
+                    await updatePriceListDropdown(extractedPriceLists);
+                }
+                
                 // Embed data into both modules simultaneously
                 const embedPromises = [
                     fetch('/api/embed-data', {

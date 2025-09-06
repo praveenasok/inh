@@ -2229,6 +2229,11 @@
       // Initialize price list dropdown first
       initPriceListDropdown();
       
+      // Refresh price lists from server data if available
+      if (state.allProducts.length > 0) {
+        await refreshPriceListsFromServer();
+      }
+      
       // Then populate categories (will be empty initially until price list is selected)
       populateCategories();
       
@@ -2670,6 +2675,24 @@
       
       <!-- Quote Maker Module -->
       <div id="quote-maker-module" class="module-content">
+        <!-- Price List Selection -->
+        <section class="bg-white rounded-xl shadow-soft p-4 sm:p-6 mb-4 mobile-padding" style="background: #f0f9ff;">
+          <div class="flex items-center justify-between mb-2">
+            <h2 class="text-lg font-semibold text-gray-800">Price List Selection</h2>
+            <div id="price-list-status" class="text-sm text-gray-600">
+              <span id="filtered-count">0 products available</span>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+            <div>
+              <label for="priceListSelector" class="block text-sm font-medium text-gray-700 mb-1">Select Price List</label>
+              <select id="priceListSelector" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
+                <option value="">Select a price list...</option>
+              </select>
+            </div>
+          </div>
+        </section>
+
         <!-- Quote Details -->
         <section class="bg-white rounded-xl shadow-soft p-4 sm:p-6 mb-4 mobile-padding" style="background: #eef2ff;">
           <div class="flex items-center justify-between mb-2">
@@ -2703,7 +2726,7 @@
 
         <!-- Catalog -->
         <section class="bg-white rounded-xl shadow-soft p-4 sm:p-6 mb-4 mobile-padding" style="background: #ecfeff;">
-          <h2 class="text-lg font-semibold text-gray-800 mb-2">Catalog</h2>
+          <h2 class="text-lg font-semibold text-gray-800 mb-2">Product Catalog</h2>
           <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
             <div>
               <select id="new-item-category" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
@@ -3596,6 +3619,10 @@
       state.allProducts.forEach(product => {
         if (product.PriceList) {
           availablePriceLists.add(product.PriceList);
+        } else {
+          // If no PriceList field exists, add a default one
+          product.PriceList = 'General';
+          availablePriceLists.add('General');
         }
       });
       
@@ -3632,6 +3659,33 @@
         option.textContent = priceList;
         priceListSelector.appendChild(option);
       });
+    }
+    
+    // Refresh price lists from server data
+    async function refreshPriceListsFromServer() {
+      try {
+        const response = await fetch('/api/get-data');
+        if (response.ok) {
+          const data = await response.json();
+          if (data && data.products) {
+            // Clear existing price lists
+            availablePriceLists.clear();
+            
+            // Extract price lists from server data
+            data.products.forEach(product => {
+              if (product.PriceList) {
+                availablePriceLists.add(product.PriceList);
+              }
+            });
+            
+            // Update dropdown
+            updatePriceListDropdown();
+            console.log('Price lists refreshed from server:', Array.from(availablePriceLists));
+          }
+        }
+      } catch (error) {
+        console.error('Error refreshing price lists from server:', error);
+      }
     }
     
     // Handle price list selection change
@@ -3971,6 +4025,79 @@
     let quoteCounter = 1;
     let quoteMakerInitialized = false;
 
+    // Initialize price list selector with embedded data
+    function initializePriceListSelector() {
+      const priceListSelector = document.getElementById('priceListSelector');
+      if (!priceListSelector) {
+        console.error('Price list selector element not found!');
+        return;
+      }
+
+      // Clear existing options
+      priceListSelector.innerHTML = '<option value="">All Price Lists</option>';
+
+      // Extract unique price lists from embedded product data
+      const availablePriceLists = new Set();
+      if (state.allProducts && state.allProducts.length > 0) {
+        state.allProducts.forEach(product => {
+          if (product.PriceList) {
+            availablePriceLists.add(product.PriceList);
+          } else {
+            // If no PriceList field exists, add a default one
+            product.PriceList = 'General';
+            availablePriceLists.add('General');
+          }
+        });
+      }
+
+      // Populate dropdown with price lists
+      Array.from(availablePriceLists).sort().forEach(priceList => {
+        const option = document.createElement('option');
+        option.value = priceList;
+        option.textContent = priceList;
+        priceListSelector.appendChild(option);
+      });
+
+      // Add event listener for price list changes
+      priceListSelector.addEventListener('change', function() {
+        const selectedPriceList = this.value;
+        if (selectedPriceList) {
+          // Filter products by selected price list for quote maker
+          const filteredProducts = state.allProducts.filter(product => 
+            product.PriceList === selectedPriceList
+          );
+          console.log(`Filtered to ${filteredProducts.length} products from price list: ${selectedPriceList}`);
+          // Update quote maker dropdowns with filtered data
+          updateQuoteDropdownsWithFilteredData(filteredProducts);
+        } else {
+          // Show all products
+          updateQuoteDropdownsWithFilteredData(state.allProducts);
+        }
+      });
+
+      console.log(`Price list selector initialized with ${availablePriceLists.size} price lists:`, Array.from(availablePriceLists));
+    }
+
+    // Update quote maker dropdowns with filtered product data
+    function updateQuoteDropdownsWithFilteredData(products) {
+      const categorySelect = document.getElementById('new-item-category');
+      if (categorySelect && products) {
+        const categories = [...new Set(products.map(p => p.Category).filter(c => c))];
+        const currentValue = categorySelect.value;
+        categorySelect.innerHTML = '<option value="">Select Category</option>';
+        categories.forEach(category => {
+          const option = document.createElement('option');
+          option.value = category;
+          option.textContent = category;
+          categorySelect.appendChild(option);
+        });
+        // Restore selection if still valid
+        if (categories.includes(currentValue)) {
+          categorySelect.value = currentValue;
+        }
+      }
+    }
+
     function initQuoteMaker() {
       if (quoteMakerInitialized) return;
       
@@ -3986,6 +4113,10 @@
 
       // Initialize dropdowns with product data
       populateQuoteDropdowns();
+
+      // Initialize price list functionality
+      initializePriceListSelector();
+      refreshPriceListsFromServer();
 
       // Add event listeners
       const addItemBtn = document.getElementById('add-item-btn');
