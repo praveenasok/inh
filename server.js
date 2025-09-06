@@ -155,6 +155,51 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (pathname === '/api/sync-price-lists' && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => { body += chunk.toString(); });
+    req.on('end', () => {
+      try {
+        const { priceLists, timestamp } = JSON.parse(body);
+        
+        // Update price lists in main application
+        const mainHtmlPath = path.join(__dirname, 'index.html');
+        if (fs.existsSync(mainHtmlPath)) {
+          let htmlContent = fs.readFileSync(mainHtmlPath, 'utf8');
+          
+          // Create backup
+          const backupPath = mainHtmlPath.replace('.html', `_backup_${Date.now()}.html`);
+          fs.writeFileSync(backupPath, htmlContent, 'utf8');
+          
+          // Update availablePriceLists in the HTML
+          const priceListsJson = JSON.stringify(priceLists);
+          const priceListRegex = /availablePriceLists\s*=\s*new\s+Set\(\[.*?\]\);/s;
+          
+          if (priceListRegex.test(htmlContent)) {
+            htmlContent = htmlContent.replace(
+              priceListRegex,
+              `availablePriceLists = new Set(${priceListsJson});`
+            );
+            
+            fs.writeFileSync(mainHtmlPath, htmlContent, 'utf8');
+            console.log(`Price lists updated in main application: ${priceLists.join(', ')}`);
+          }
+        }
+        
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ 
+          success: true, 
+          message: 'Price lists synchronized successfully',
+          priceLists: priceLists
+        }));
+      } catch (error) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Failed to sync price lists: ' + error.message }));
+      }
+    });
+    return;
+  }
+
   if (pathname === '/api/init-sync' && req.method === 'POST') {
     let body = '';
     req.on('data', chunk => { body += chunk.toString(); });
