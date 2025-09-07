@@ -75,20 +75,28 @@ const server = http.createServer((req, res) => {
   if (pathname === '/api/get-data' && req.method === 'GET') {
     try {
       if (currentProductData) {
+        const response = {
+          success: true,
+          data: Array.isArray(currentProductData) ? currentProductData : currentProductData.products || []
+        };
         res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify(currentProductData));
+        res.end(JSON.stringify(response));
       } else if (fs.existsSync(DATA_FILE_PATH)) {
         const data = fs.readFileSync(DATA_FILE_PATH, 'utf8');
         currentProductData = JSON.parse(data);
+        const response = {
+          success: true,
+          data: Array.isArray(currentProductData) ? currentProductData : currentProductData.products || []
+        };
         res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(data);
+        res.end(JSON.stringify(response));
       } else {
         res.writeHead(404, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'No data found' }));
+        res.end(JSON.stringify({ success: false, error: 'No data found' }));
       }
     } catch (error) {
       res.writeHead(500, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'Failed to get data: ' + error.message }));
+      res.end(JSON.stringify({ success: false, error: 'Failed to get data: ' + error.message }));
     }
     return;
   }
@@ -330,8 +338,16 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // Serve static files
-  let filePath = path.join(__dirname, pathname === '/' ? 'index.html' : pathname);
+  // Handle special routes
+  if (pathname === '/quotemaker') {
+    filePath = QUOTE_MAKER_FILE_PATH;
+  } else if (pathname.startsWith('/quotemaker/')) {
+    // Serve files from quotemaker directory
+    filePath = path.join(__dirname, pathname);
+  } else {
+    // Serve static files
+    filePath = path.join(__dirname, pathname === '/' ? 'index.html' : pathname);
+  }
   
   // Security check - prevent directory traversal
   if (!filePath.startsWith(__dirname)) {
@@ -392,8 +408,8 @@ function embedDataIntoFile(filePath, data, type) {
         `const productData = ${jsonData};`
       );
     } else {
-      // Fallback: look for any empty productData array
-      const fallbackRegex = /productData\s*=\s*\[\s*\];/;
+      // Fallback: look for any empty productData array (with or without spaces)
+      const fallbackRegex = /productData\s*=\s*\[\s*\];?/;
       if (fallbackRegex.test(htmlContent)) {
         htmlContent = htmlContent.replace(
           fallbackRegex,
@@ -440,7 +456,7 @@ function embedDataIntoFile(filePath, data, type) {
         (match, declaration) => `${declaration} productData = ${jsonData};`
       );
     } else {
-      const fallbackProductDataRegex = /productData\s*=\s*\[\s*\];/;
+      const fallbackProductDataRegex = /productData\s*=\s*\[\s*\];?/;
       if (fallbackProductDataRegex.test(htmlContent)) {
         htmlContent = htmlContent.replace(
           fallbackProductDataRegex,

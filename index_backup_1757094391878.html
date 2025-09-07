@@ -13,6 +13,30 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
   <style>
+    /* CSS Variables for Quote Maker sections */
+    :root{ --indigo:#eef2ff; --mint:#ecfeff; --amber:#fff7ed; --rose:#fff1f2; --slate:#f8fafc; }
+    
+    /* Quote Maker section styles */
+    .section { padding: 16px; margin-bottom: 16px; border-radius: 12px; border: 1px solid #e5e7eb; }
+    .section.indigo { background: var(--indigo); }
+    .section.mint   { background: var(--mint); }
+    .section.amber  { background: var(--amber); }
+    .section.rose   { background: var(--rose); }
+    .section.slate  { background: var(--slate); }
+    
+    /* Quote Maker table styles */
+    .table th, .table td { padding: 8px; text-align: left; }
+    .table th { background-color: #e5e7eb; }
+    #items-table.zebra tbody tr:nth-child(odd) { background-color:#ffffff; }
+    #items-table.zebra tbody tr:nth-child(even) { background-color:#f9fafb; }
+    
+    /* Quote Maker button styles */
+    .pressable { transition: transform 120ms ease, box-shadow 120ms ease; box-shadow: 0 2px 0 rgba(0,0,0,0.15); }
+    .pressable:active, .pressed { transform: translateY(1px) scale(0.99); box-shadow: 0 0 0 rgba(0,0,0,0.1); }
+    
+    /* Quote Maker utility styles */
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+    
     /* Base responsive styles */
     .shadow-soft { box-shadow: 0 10px 25px rgba(0,0,0,0.08); }
     
@@ -630,257 +654,9 @@
         justify-content: center;
       }
     }
-    
-    /* Mobile-friendly table styles */
-    @media (max-width: 768px) {
-      .table-container {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-      }
-      
-      table {
-        min-width: 600px;
-      }
-      
-      th, td {
-        white-space: nowrap;
-        min-width: 80px;
-      }
-      
-      th:first-child, td:first-child {
-        position: sticky;
-        left: 0;
-        background: inherit;
-        z-index: 1;
-      }
-      
-      th:first-child {
-        background: #f8fafc;
-      }
-    }
-    
-    /* Enhanced table responsiveness */
-    .table-responsive {
-      border-radius: 8px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    }
-    
-    /* Touch-friendly table cells */
-    td input, td select {
-      width: 100%;
-      min-width: 60px;
-    }
-
-    /* Saved Quotes List Styles - Slim Design */
-    .saved-quotes-container {
-      margin-top: 12px;
-      padding: 8px;
-      background-color: #f8f9fa;
-      border-radius: 4px;
-      border: 1px solid #dee2e6;
-    }
-    
-    /* Enhanced Checkbox Styling */
-    .quote-checkbox {
-      appearance: none;
-      -webkit-appearance: none;
-      -moz-appearance: none;
-      width: 1rem;
-      height: 1rem;
-      border: 2px solid #d1d5db;
-      border-radius: 0.25rem;
-      background-color: #f9fafb;
-      cursor: pointer;
-      position: relative;
-      transition: all 0.2s ease;
-    }
-    
-    .quote-checkbox:checked {
-      background-color: #1e3a8a;
-      border-color: #1e3a8a;
-    }
-    
-    .quote-checkbox:checked::after {
-      content: '✓';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      color: white;
-      font-size: 0.75rem;
-      font-weight: bold;
-      line-height: 1;
-    }
-    
-    .quote-checkbox:hover {
-      border-color: #3b82f6;
-    }
-    
-    .quote-checkbox:focus {
-      outline: none;
-      ring: 2px;
-      ring-color: #3b82f6;
-      ring-opacity: 0.5;
-    }
-
-    .saved-quotes-list {
-      max-height: 190px;
-      overflow-y: auto;
-      margin-top: 6px;
-    }
-
-    .quote-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 4px 6px;
-      margin-bottom: 2px;
-      background-color: white;
-      border: 1px solid #e9ecef;
-      border-radius: 2px;
-      cursor: pointer;
-      transition: all 0.15s ease;
-    }
-
-    .quote-item:hover {
-      background-color: #e3f2fd;
-      border-color: #2196f3;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.08);
-    }
-
-    .quote-info {
-      flex: 1;
-      line-height: 1.2;
-    }
-
-    .quote-id {
-      font-weight: 600;
-      color: #2c3e50;
-      font-size: 11px;
-    }
-
-    .quote-details {
-      font-size: 10px;
-      color: #6c757d;
-      margin-top: 1px;
-    }
-
-    .quote-actions-btn {
-      background: #007bff;
-      color: white;
-      border: none;
-      padding: 3px 6px;
-      border-radius: 2px;
-      font-size: 10px;
-      cursor: pointer;
-      transition: background-color 0.15s;
-    }
-
-    .quote-actions-btn:hover {
-      background: #0056b3;
-    }
-
-    .quote-actions-dropdown {
-      position: absolute;
-      background: white;
-      border: 1px solid #ccc;
-      border-radius: 3px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.12);
-      z-index: 1000;
-      min-width: 120px;
-      overflow: hidden;
-    }
-
-    .quote-actions-dropdown button {
-      display: block;
-      width: 100%;
-      padding: 6px 10px;
-      border: none;
-      background: white;
-      text-align: left;
-      cursor: pointer;
-      font-size: 11px;
-      transition: background-color 0.15s;
-    }
-
-    .quote-actions-dropdown button:hover {
-      background-color: #f8f9fa;
-    }
-
-    .quote-actions-dropdown button.recall {
-      color: #28a745;
-    }
-
-    .quote-actions-dropdown button.convert {
-      color: #007bff;
-    }
-
-    .quote-actions-dropdown button.delete {
-      color: #dc3545;
-    }
-
-    .no-quotes-message {
-      text-align: center;
-      color: #6c757d;
-      font-style: italic;
-      padding: 12px;
-      font-size: 11px;
-    }
-
-    /* Custom background colors for table headers - Monochromatic */
-    .bg-gray-25 {
-      background-color: rgba(107, 114, 128, 0.05);
-    }
-    
-    .bg-gray-100 {
-      background-color: rgba(243, 244, 246, 1);
-    }
-    
-    .bg-gray-150 {
-      background-color: rgba(229, 231, 235, 1);
-    }
-    
-    .bg-gray-200 {
-      background-color: rgba(209, 213, 219, 1);
-    }
-    
-    .bg-gray-300 {
-      background-color: rgba(156, 163, 175, 1);
-    }
-    
-    /* Enhanced hover effects for table rows - Monochromatic */
-    .hover\:from-gray-150:hover {
-      background-image: linear-gradient(to right, rgba(229, 231, 235, 1), rgba(209, 213, 219, 1));
-    }
-    
-    .hover\:to-gray-200:hover {
-      background-image: linear-gradient(to right, rgba(229, 231, 235, 1), rgba(209, 213, 219, 1));
-    }
-    
-    .hover\:from-gray-200:hover {
-      background-image: linear-gradient(to right, rgba(209, 213, 219, 1), rgba(156, 163, 175, 1));
-    }
-    
-    .hover\:to-gray-300:hover {
-      background-image: linear-gradient(to right, rgba(209, 213, 219, 1), rgba(156, 163, 175, 1));
-    }
-
-    /* Column visibility controls */
-    .column-toggle {
-      transition: all 0.2s ease;
-    }
-    
-    .column-toggle:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    }
-
-
-
   </style>
 </head>
 <body class="bg-slate-100 min-h-screen text-slate-800">
-
   <!-- Top Menu Bar -->
   <header class="bg-white shadow-soft mb-4">
     <div class="max-w-4xl mx-auto px-3 sm:px-6">
@@ -964,15 +740,14 @@
             <!-- Currency Selector -->
             <div>
               <select id="currency" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
-                <option value="INR">₹ INR - Indian Rupee</option>
-                <option value="USD">$ USD - US Dollar</option>
-                <option value="EUR">€ EUR - Euro</option>
-                <option value="GBP">£ GBP - British Pound</option>
-                <option value="AUD">A$ AUD - Australian Dollar</option>
-                <option value="SAR">SAR - Saudi Riyal</option>
-                <option value="NGN">₦ NGN - Nigerian Naira</option>
-                <option value="AED">د.إ AED - UAE Dirham</option>
-                <option value="JPY">¥ JPY - Japanese Yen</option>
+                <option value="INR">₹ INR</option>
+                <option value="USD">$ USD</option>
+                <option value="EUR">€ EUR</option>
+                <option value="GBP">£ GBP</option>
+                <option value="AUD">A$ AUD</option>
+                <option value="SAR">SAR</option>
+                <option value="NGN">₦ NAIRA</option>
+                <option value="AED">د.إ AED</option>
               </select>
             </div>
             
@@ -1058,19 +833,15 @@
         <!-- Actions -->
         <div class="relative" style="margin-top: 20px;">
           <div class="flex flex-col sm:flex-row gap-1 mobile-button-stack" id="actionButtonsContainer">
-            <button id="clearSegments" class="btn-secondary px-2 py-0 rounded-lg text-sm font-medium hover:bg-slate-300 transition-all duration-200 flex items-center justify-center gap-1 mobile-full" aria-label="Clear all selections" title="Clear all selections">
+            <button id="clearSegments" class="btn-secondary px-2 py-1 rounded-lg text-sm font-medium hover:bg-slate-300 transition-all duration-200 flex items-center justify-center gap-1 mobile-full" aria-label="Clear all selections" title="Clear all selections">
               <span class="text-base" aria-hidden="true">🗑️</span>
               <span>Clear</span>
             </button>
-            <button id="previewBtn" class="btn-primary px-4 py-1 rounded-lg text-sm font-medium hover:bg-emerald-700 transition-all duration-200 flex items-center justify-center gap-1 mobile-full" aria-label="Generate preview" title="Generate preview">
+            <button id="previewBtn" class="btn-primary px-4 py-2 rounded-lg text-sm font-medium hover:bg-emerald-700 transition-all duration-200 flex items-center justify-center gap-1 mobile-full" aria-label="Generate preview" title="Generate preview">
               <span class="text-base" aria-hidden="true">👁️</span>
               <span>Preview</span>
             </button>
-            <button id="shareBtn" class="btn-info px-2 py-0 rounded-lg text-sm font-medium hover:bg-blue-700 transition-all duration-200 flex items-center justify-center gap-1 mobile-full" aria-label="Share Quote" title="Share quote as image to clipboard">
-              <span class="text-base" aria-hidden="true">📤</span>
-              <span>Share</span>
-            </button>
-            <button id="sharePdfBtn" class="btn-info px-2 py-0 rounded-lg text-sm font-medium hover:bg-blue-700 transition-all duration-200 flex items-center justify-center gap-1 mobile-full hidden" aria-label="Share PDF" title="Share PDF using device's native sharing options">
+            <button id="sharePdfBtn" class="btn-info px-2 py-1 rounded-lg text-sm font-medium hover:bg-blue-700 transition-all duration-200 flex items-center justify-center gap-1 mobile-full hidden" aria-label="Share PDF" title="Share PDF using device's native sharing options">
               <span class="text-base" aria-hidden="true">📤</span>
               <span>Share PDF</span>
             </button>
@@ -1087,11 +858,6 @@
                <button id="downloadPNG" class="w-full text-left px-4 py-3 text-base font-medium hover:bg-slate-100 rounded-lg flex items-center gap-3 transition-all duration-200 touch-action-manipulation">
                  <span class="text-lg">🖼️</span> 
                  <span>Download as PNG</span>
-               </button>
-
-               <button id="shareInvoiceImage" class="w-full text-left px-4 py-3 text-base font-medium hover:bg-slate-100 rounded-lg flex items-center gap-3 transition-all duration-200 touch-action-manipulation">
-                 <span class="text-lg">📋</span> 
-                 <span>Share Invoice Image</span>
                </button>
 
              </div>
@@ -1145,14 +911,21 @@
       (base) => `https://api.fixer.io/latest?base=${base}`,
       (base) => `https://open.er-api.com/v6/latest/${base}`
     ];
-    const SUPPORTED = ['INR','USD','EUR','GBP','AUD','SAR','NGN','AED','JPY'];
-    const SYMBOL = { INR:'₹', USD:'$', EUR:'€', GBP:'£', AUD:'A$', SAR:'SAR ', NGN:'₦', AED:'د.إ ', JPY:'¥' };
+    const SUPPORTED = ['INR','USD','EUR','GBP','AUD','SAR','NGN','AED'];
+    const SYMBOL = { INR:'₹', USD:'$', EUR:'€', GBP:'£', AUD:'A$', SAR:'SAR ', NGN:'₦', AED:'د.إ ' };
     const DEFAULT_RATES = { base:'INR',
-      rates:{ INR:1, USD:0.0120, EUR:0.0110, GBP:0.0095, AUD:0.0180, SAR:0.0450, NGN:5.5000, AED:0.0440, JPY:1.8000 },
+      rates:{ INR:1, USD:0.0120, EUR:0.0110, GBP:0.0095, AUD:0.0180, SAR:0.0450, NGN:5.5000, AED:0.0440 },
       updatedAt: null, mode:'auto'
     };
 
-    let productData = [];
+    let productData = [
+  {
+    "Length": 4,
+    "Category": "DIY",
+    "Product": "Test",
+    "Density": "Double Drawn"
+  }
+];
     let state = {
       currency:'INR', rates: { ...DEFAULT_RATES },
       category:'', selectAll:false, kg:false,
@@ -1161,103 +934,6 @@
       allProducts: [], // Store all products for filtering
       filteredProducts: [] // Store filtered products based on price list selection
     };
-
-    // Exchange Rate Functions
-    async function loadRates() {
-      const stored = localStorage.getItem('fx_rates_v1');
-      if (stored) {
-        try {
-          const parsed = JSON.parse(stored);
-          if (parsed.updatedAt && Date.now() - parsed.updatedAt < 3600000) { // 1 hour cache
-            state.rates = parsed;
-            return;
-          }
-        } catch (e) {}
-      }
-      await refreshRates(true);
-    }
-
-    async function refreshRates(silent = false) {
-      if (!silent) console.log('Refreshing exchange rates...');
-      
-      for (const apiUrl of FX_APIS) {
-        try {
-          const response = await fetch(apiUrl(state.currency)); // Use selected currency as base
-          const data = await response.json();
-          
-          if (data.rates) {
-            const newRates = { base: state.currency, rates: {}, updatedAt: Date.now(), mode: 'auto' };
-            
-            // Filter only supported currencies
-            for (const currency of SUPPORTED) {
-              newRates.rates[currency] = data.rates[currency] || DEFAULT_RATES.rates[currency] || 1;
-            }
-            
-            state.rates = newRates;
-            localStorage.setItem('fx_rates_v1', JSON.stringify(newRates));
-            
-            if (!silent) {
-              console.log('Exchange rates updated successfully');
-              updateAllPrices(); // Update all displayed prices
-            }
-            return;
-          }
-        } catch (error) {
-          console.warn('Failed to fetch from API:', error);
-        }
-      }
-      
-      // Fallback to default rates if all APIs fail
-      if (!silent) console.warn('All exchange rate APIs failed, using default rates');
-      state.rates = { ...DEFAULT_RATES, base: state.currency, updatedAt: Date.now(), mode: 'fallback' };
-      localStorage.setItem('fx_rates_v1', JSON.stringify(state.rates));
-    }
-
-    function updateAllPrices() {
-      // Update price list generator
-      renderAllPagesToHTML();
-      
-      // Update quote calculations
-      if (typeof updateQuoteCalculations === 'function') updateQuoteCalculations();
-      
-      // Sync with quotemaker iframe if available
-      const quotemakerFrame = document.querySelector('iframe[src*="quotemaker"]');
-      if (quotemakerFrame && quotemakerFrame.contentWindow) {
-        try {
-          // Update quotemaker's FX rates
-          if (typeof quotemakerFrame.contentWindow.setFX === 'function' && state.rates.rates) {
-            quotemakerFrame.contentWindow.setFX(state.rates.rates);
-          }
-          
-          // Currency selectors are now independent - no synchronization
-          
-          // Trigger quotemaker's re-rendering
-          if (typeof quotemakerFrame.contentWindow.renderItems === 'function') {
-            quotemakerFrame.contentWindow.renderItems();
-          }
-          if (typeof quotemakerFrame.contentWindow.renderTotals === 'function') {
-            quotemakerFrame.contentWindow.renderTotals();
-          }
-        } catch (e) {
-          console.log('Could not sync with quotemaker iframe:', e.message);
-        }
-      }
-      
-      // Update any other price displays
-      const event = new CustomEvent('exchangeRatesUpdated', { detail: state.rates });
-      document.dispatchEvent(event);
-    }
-
-    // Currency conversion function for compatibility with quotemaker
-    function fx(cur) {
-      const rates = state.rates.rates || {};
-      return rates[cur] || 1;
-    }
-
-    function convertINRto(curr, amt) {
-      const r = (state.rates.rates && state.rates.rates[curr]) || 0;
-      return amt * (r || 0);
-    }
 
     /* DOM */
     const $ = (id) => document.getElementById(id);
@@ -2601,11 +2277,7 @@
       }
 
       // events
-      elCurrency.addEventListener('change', async ()=>{ 
-        state.currency=elCurrency.value; 
-        await refreshRates(false); // Update exchange rates when currency changes
-        renderAllPagesToHTML(); 
-      });
+      elCurrency.addEventListener('change', ()=>{ state.currency=elCurrency.value; renderAllPagesToHTML(); });
 
 
       elCategory.addEventListener('change', onCategoryChange);
@@ -2663,7 +2335,6 @@
       $('shareDownloadPDF').addEventListener('click', downloadPDF);
 
       $('downloadPNG').addEventListener('click', downloadPNG);
-      $('shareInvoiceImage').addEventListener('click', shareInvoiceImage);
 
       
       // Page navigation event listeners removed - now using HTML preview
@@ -3017,230 +2688,6 @@
       }
     }
 
-    // Share Invoice Image functionality
-    async function shareInvoiceImage() {
-      try {
-        // Show loading state
-        const shareBtn = $('shareInvoiceImage');
-        const originalText = shareBtn.innerHTML;
-        shareBtn.innerHTML = '<span>⏳</span> <span>Generating...</span>';
-        shareBtn.disabled = true;
-        
-        // Create invoice-style layout
-        const invoiceHTML = createInvoiceLayout();
-        
-        // Create a temporary container for rendering
-        const tempContainer = document.createElement('div');
-        tempContainer.style.position = 'absolute';
-        tempContainer.style.left = '-9999px';
-        tempContainer.style.top = '-9999px';
-        tempContainer.style.width = '800px';
-        tempContainer.innerHTML = invoiceHTML;
-        document.body.appendChild(tempContainer);
-        
-        // Convert to canvas using html2canvas
-        const canvas = await html2canvas(tempContainer, {
-          scale: 2,
-          useCORS: true,
-          allowTaint: true,
-          backgroundColor: '#ffffff',
-          width: 800,
-          height: tempContainer.scrollHeight
-        });
-        
-        // Remove temporary container
-        document.body.removeChild(tempContainer);
-        
-        // Convert canvas to blob
-        const blob = await new Promise(resolve => {
-          canvas.toBlob(resolve, 'image/png', 1.0);
-        });
-        
-        // Copy to clipboard
-        if (navigator.clipboard && window.ClipboardItem) {
-          await navigator.clipboard.write([
-            new ClipboardItem({
-              'image/png': blob
-            })
-          ]);
-          
-          // Show success message
-          showSuccessMessage('Invoice image copied to clipboard! 📋✨');
-        } else {
-          // Fallback: download the image
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `Invoice-${new Date().toISOString().slice(0,10)}.png`;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          URL.revokeObjectURL(url);
-          
-          showSuccessMessage('Invoice image downloaded! (Clipboard not supported)');
-        }
-        
-        // Reset button state
-        shareBtn.innerHTML = originalText;
-        shareBtn.disabled = false;
-        
-        // Close the share popup
-        $('sharePopup').classList.add('hidden');
-        
-      } catch (error) {
-        console.error('Error generating invoice image:', error);
-        
-        // Show error message
-        showErrorMessage('Failed to generate invoice image. Please try again.');
-        
-        // Reset button state
-        const shareBtn = $('shareInvoiceImage');
-        shareBtn.innerHTML = '<span>📋</span> <span>Share Invoice Image</span>';
-        shareBtn.disabled = false;
-      }
-    }
-    
-    // Create invoice-style layout
-    function createInvoiceLayout() {
-      const category = state.segments.length > 0 ? state.segments[0].category : 'General';
-      const currency = state.currency || 'INR';
-      const currencySymbol = getCurrencySymbol(currency);
-      const unit = state.kg ? 'Per Kg' : 'Per Piece';
-      const currentDate = new Date().toLocaleDateString();
-      
-      // Get current quote items
-      const items = state.segments.flatMap(segment => 
-        segment.items.map(item => ({
-          name: item.name,
-          length: item.length,
-          price: item.price,
-          unit: unit
-        }))
-      );
-      
-      // Calculate totals
-      const subtotal = items.reduce((sum, item) => sum + item.price, 0);
-      const tax = subtotal * 0.18; // 18% GST
-      const total = subtotal + tax;
-      
-      return `
-        <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 40px; background: white; color: #333;">
-          <!-- Header -->
-          <div style="text-align: center; margin-bottom: 40px; border-bottom: 3px solid #081249; padding-bottom: 20px;">
-            <h1 style="color: #081249; font-size: 32px; margin: 0; font-weight: bold;">INVOICE</h1>
-            <p style="color: #9b7952; font-size: 18px; margin: 5px 0;">Indian Natural Hair Pvt Ltd</p>
-            <p style="color: #666; font-size: 14px; margin: 0;">Premium Hair Extensions & Wigs</p>
-          </div>
-          
-          <!-- Invoice Details -->
-          <div style="display: flex; justify-content: space-between; margin-bottom: 30px;">
-            <div>
-              <h3 style="color: #081249; margin: 0 0 10px 0;">Invoice Details</h3>
-              <p style="margin: 5px 0;"><strong>Date:</strong> ${currentDate}</p>
-              <p style="margin: 5px 0;"><strong>Category:</strong> ${category}</p>
-              <p style="margin: 5px 0;"><strong>Currency:</strong> ${currency}</p>
-              <p style="margin: 5px 0;"><strong>Unit:</strong> ${unit}</p>
-            </div>
-            <div style="text-align: right;">
-              <h3 style="color: #081249; margin: 0 0 10px 0;">Company Info</h3>
-              <p style="margin: 5px 0;">Indian Natural Hair Pvt Ltd</p>
-              <p style="margin: 5px 0;">Premium Hair Solutions</p>
-              <p style="margin: 5px 0;">www.indiannaturalhair.com</p>
-            </div>
-          </div>
-          
-          <!-- Items Table -->
-          <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
-            <thead>
-              <tr style="background: #f8f9fa; border-bottom: 2px solid #081249;">
-                <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Product</th>
-                <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Length</th>
-                <th style="padding: 12px; text-align: right; border: 1px solid #ddd;">Price (${currencySymbol})</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${items.map(item => `
-                <tr style="border-bottom: 1px solid #eee;">
-                  <td style="padding: 10px; border: 1px solid #ddd;">${item.name}</td>
-                  <td style="padding: 10px; text-align: center; border: 1px solid #ddd;">${item.length}"</td>
-                  <td style="padding: 10px; text-align: right; border: 1px solid #ddd;">${currencySymbol}${item.price.toFixed(2)}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-          
-          <!-- Totals -->
-          <div style="margin-left: auto; width: 300px;">
-            <div style="border: 2px solid #081249; padding: 20px; background: #f8f9fa;">
-              <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                <span>Subtotal:</span>
-                <span>${currencySymbol}${subtotal.toFixed(2)}</span>
-              </div>
-              <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                <span>Tax (18%):</span>
-                <span>${currencySymbol}${tax.toFixed(2)}</span>
-              </div>
-              <hr style="margin: 15px 0; border: 1px solid #081249;">
-              <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 18px; color: #081249;">
-                <span>Total:</span>
-                <span>${currencySymbol}${total.toFixed(2)}</span>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Footer -->
-          <div style="margin-top: 40px; text-align: center; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 12px;">
-            <p>Thank you for choosing Indian Natural Hair Pvt Ltd</p>
-            <p>For inquiries, please contact us at info@indiannaturalhair.com</p>
-          </div>
-        </div>
-      `;
-    }
-    
-    // Helper function to get currency symbol
-    function getCurrencySymbol(currency) {
-      const symbols = {
-        'INR': '₹',
-        'USD': '$',
-        'EUR': '€',
-        'GBP': '£',
-        'AUD': 'A$',
-        'SAR': 'SAR ',
-        'NGN': '₦',
-        'AED': 'د.إ ',
-        'JPY': '¥'
-      };
-      return symbols[currency] || currency;
-    }
-    
-    // Helper function to show success message
-    function showSuccessMessage(message) {
-      const successMsg = document.createElement('div');
-      successMsg.className = 'fixed top-4 left-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg z-50';
-      successMsg.innerHTML = `
-        <div class="flex items-center gap-2">
-          <span class="text-lg">✅</span>
-          <span class="font-medium">${message}</span>
-        </div>
-      `;
-      document.body.appendChild(successMsg);
-      setTimeout(() => successMsg.remove(), 4000);
-    }
-    
-    // Helper function to show error message
-    function showErrorMessage(message) {
-      const errorMsg = document.createElement('div');
-      errorMsg.className = 'fixed top-4 left-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg z-50';
-      errorMsg.innerHTML = `
-        <div class="flex items-center gap-2">
-          <span class="text-lg">❌</span>
-          <span class="font-medium">${message}</span>
-        </div>
-      `;
-      document.body.appendChild(errorMsg);
-      setTimeout(() => errorMsg.remove(), 4000);
-    }
-
     // WhatsApp PDF sharing functionality
 
     
@@ -3255,328 +2702,192 @@
       <!-- Quote Maker Module -->
       <div id="quote-maker-module" class="module-content">
         <!-- Quote Details -->
-        <section class="bg-white rounded-xl shadow-soft p-4 sm:p-6 mb-4 mobile-padding" style="background: #eef2ff;">
+        <section class="section indigo" id="quote-details">
           <div class="flex items-center justify-between mb-2">
             <h2 class="text-lg font-semibold text-gray-800">Quote Details</h2>
             <span class="chip no-print" id="quote-chip">Draft</span>
           </div>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
             <div>
-              <input type="text" id="quote-number" placeholder="Quote # (INV-YYYYMMDD-###)" class="w-full border-2 border-gray-300 rounded-lg px-3 py-1 focus:border-blue-500 focus:outline-none" />
+              <label class="block text-xs font-medium text-gray-700">Quote #</label>
+              <input type="text" id="quote-number" placeholder="INV-YYYYMMDD-###" class="mt-1 w-full p-1 border rounded-lg" />
             </div>
             <div>
-              <input type="date" id="quote-date" placeholder="Date" class="w-full border-2 border-gray-300 rounded-lg px-3 py-1 focus:border-blue-500 focus:outline-none" />
+              <label class="block text-xs font-medium text-gray-700">Date</label>
+              <input type="date" id="quote-date" class="mt-1 w-full p-1 border rounded-lg" />
             </div>
             <div>
-              <input type="text" id="client-name" placeholder="Client Name" class="w-full border-2 border-gray-300 rounded-lg px-3 py-1 focus:border-blue-500 focus:outline-none" />
+              <label class="block text-xs font-medium text-gray-700">Client Name</label>
+              <input type="text" id="client-name" class="mt-1 w-full p-1 border rounded-lg" />
             </div>
             <div>
-              <input type="text" id="client-contact" placeholder="Client Contact" class="w-full border-2 border-gray-300 rounded-lg px-3 py-1 focus:border-blue-500 focus:outline-none" />
+              <label class="block text-xs font-medium text-gray-700">Client Contact</label>
+              <input type="text" id="client-contact" class="mt-1 w-full p-1 border rounded-lg" />
             </div>
             <div>
-              <input type="text" id="salesman-name" placeholder="Salesman" class="w-full border-2 border-gray-300 rounded-lg px-3 py-1 focus:border-blue-500 focus:outline-none" />
+              <label class="block text-xs font-medium text-gray-700">Salesman</label>
+              <input type="text" id="salesman-name" class="mt-1 w-full p-1 border rounded-lg" />
             </div>
             <div>
-              <input type="number" id="valid-days" value="14" placeholder="Valid for (days)" class="w-full border-2 border-gray-300 rounded-lg px-3 py-1 focus:border-blue-500 focus:outline-none" />
+              <label class="block text-xs font-medium text-gray-700">Valid for (days)</label>
+              <input type="number" id="valid-days" value="14" class="mt-1 w-full p-1 border rounded-lg" />
             </div>
             <div class="md:col-span-2">
-              <textarea id="brief-preview" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none" rows="2" placeholder="Brief Preview (e.g., Clip-on set, 18–22 inch mix, 200g total)"></textarea>
+              <label class="block text-xs font-medium text-gray-700">Brief Preview</label>
+              <textarea id="brief-preview" class="mt-1 w-full p-1 border rounded-lg" rows="2" placeholder="e.g., Clip-on set, 18–22 inch mix, 200g total"></textarea>
             </div>
           </div>
         </section>
 
-        <!-- Currency and Price List Controls -->
-        <section class="bg-white rounded-xl shadow-soft p-4 sm:p-6 mb-4 mobile-padding" style="background: #f8fafc;">
+        <!-- Price List Selection -->
+        <section class="section mint mb-4">
+          <h2 class="text-lg font-semibold text-gray-800 mb-2">Price List Selection</h2>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <select id="quote-currency" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
-                <option value="INR" selected>INR (₹) - Indian Rupee</option>
-                <option value="USD">USD ($) - US Dollar</option>
-                <option value="EUR">EUR (€) - Euro</option>
-                <option value="GBP">GBP (£) - British Pound</option>
-                <option value="AUD">AUD (A$) - Australian Dollar</option>
-                <option value="SAR">SAR - Saudi Riyal</option>
-                <option value="NGN">NGN (₦) - Nigerian Naira</option>
-                <option value="AED">AED (د.إ) - UAE Dirham</option>
-                <option value="JPY">JPY (¥) - Japanese Yen</option>
+              <label class="block text-xs font-medium text-gray-700 mb-1">Select Price List</label>
+              <select id="priceListSelector" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
+                <option value="">All Price Lists</option>
               </select>
             </div>
-            <div>
-              <select id="quote-price-list-selector" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
-              </select>
+            <div class="flex items-center">
+              <div id="price-list-status" class="text-sm text-gray-600">
+                <span id="filtered-count">No price list selected</span>
+              </div>
             </div>
           </div>
         </section>
 
         <!-- Catalog -->
-        <section class="bg-white rounded-xl shadow-soft p-4 sm:p-6 mb-4 mobile-padding" style="background: #ecfeff;">
+        <section class="section cyan">
+          <h2 class="text-lg font-semibold text-gray-800 mb-2">Catalog</h2>
           <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
             <div>
-              <select id="new-item-category" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
+              <label class="block text-xs font-medium text-gray-700">Category</label>
+              <select id="new-item-category" class="mt-1 w-full p-1 border rounded-lg">
                 <option value="">Select Category</option>
               </select>
             </div>
             <div>
-              <select id="new-item-density" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none" disabled>
+              <label class="block text-xs font-medium text-gray-700">Density</label>
+              <select id="new-item-density" class="mt-1 w-full p-1 border rounded-lg" disabled>
                 <option value="">Select Density</option>
               </select>
             </div>
             <div>
-              <select id="new-item-product" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none" disabled>
+              <label class="block text-xs font-medium text-gray-700">Product</label>
+              <select id="new-item-product" class="mt-1 w-full p-1 border rounded-lg" disabled>
                 <option value="">Select Product</option>
               </select>
             </div>
             <div>
-              <select id="new-item-length" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
+              <label class="block text-xs font-medium text-gray-700">Length</label>
+              <select id="new-item-length" class="mt-1 w-full p-1 border rounded-lg">
                 <option value="">Select Length</option>
               </select>
             </div>
             <div>
-              <select id="new-item-color" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
-                <option value="">Select Color</option>
-              </select>
+              <label class="block text-xs font-medium text-gray-700">Quantity</label>
+              <input type="number" id="new-item-quantity" value="1" min="1" class="mt-1 w-full p-1 border rounded-lg" />
             </div>
             <div>
-              <input type="text" id="new-item-color-detail" placeholder="Color Detail" class="w-full border-2 border-gray-300 rounded-lg px-3 py-1 focus:border-blue-500 focus:outline-none" />
-            </div>
-            <div>
-              <input type="text" id="new-item-styles" placeholder="Styles" class="w-full border-2 border-gray-300 rounded-lg px-3 py-1 focus:border-blue-500 focus:outline-none" />
-            </div>
-            <div>
-              <input type="number" id="new-item-quantity" value="1" min="0.01" step="0.01" placeholder="Quantity" class="w-full border-2 border-gray-300 rounded-lg px-3 py-1 focus:border-blue-500 focus:outline-none" />
-            </div>
-            <div>
-              <input type="number" id="new-item-override-price" placeholder="Override Unit Price (Optional)" class="w-full border-2 border-gray-300 rounded-lg px-3 py-1 focus:border-blue-500 focus:outline-none" />
+              <label class="block text-xs font-medium text-gray-700">Override Unit Price (in selected currency)</label>
+              <input type="number" id="new-item-override-price" placeholder="Optional" class="mt-1 w-full p-1 border rounded-lg" />
             </div>
           </div>
           <div class="flex items-center gap-2 mt-2">
-            <button id="add-item-btn" class="btn-primary px-3 py-1 rounded-lg">Add Item</button>
-            <span class="text-xs text-gray-600">Override converts back to INR using current FX.</span>
+            <button id="add-item-btn" class="pressable px-3 py-1 bg-blue-600 text-white rounded-lg no-print">Add Item</button>
+            <span class="help">Override converts back to INR using current FX.</span>
           </div>
         </section>
 
-        <!-- Financial Controls -->
-        <section class="bg-white rounded-xl shadow-soft p-2 mb-2 mobile-padding" style="background: #f0f9ff;">
-          
-          <!-- Discount Controls -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2">
-            <div>
-              <select id="discount-type" class="w-full border-2 border-gray-300 rounded-lg px-2 py-1 focus:border-blue-500 focus:outline-none">
-                <option value="percentage" selected>Percentage Discount</option>
-                <option value="fixed">Fixed Amount Discount</option>
-              </select>
-            </div>
-            <div>
-              <input type="number" id="discount-value" placeholder="Discount Value" min="0" step="0.01" class="w-full border-2 border-gray-300 rounded-lg px-2 py-1 focus:border-blue-500 focus:outline-none" />
-            </div>
-
-          </div>
-          
-          <!-- Tax Controls -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2">
-            <div>
-              <select id="tax-options" class="w-full border-2 border-gray-300 rounded-lg px-2 py-1 focus:border-blue-500 focus:outline-none">
-                <option value="tax-free" selected>Tax Free</option>
-                <option value="percentage">Percentage Tax</option>
-              </select>
-            </div>
-            <div>
-              <input type="number" id="tax-rate" placeholder="Tax Rate (%)" min="0" max="100" step="0.01" disabled class="w-full border-2 border-gray-300 rounded-lg px-2 py-1 focus:border-blue-500 focus:outline-none" />
-            </div>
-
-          </div>
-          
-          <!-- Shipping Controls -->
+        <!-- Discount & Tax -->
+        <section class="section rose">
+          <h2 class="text-lg font-semibold text-gray-800 mb-2">Discount & Tax</h2>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
             <div>
-              <select id="shipping-options" class="w-full border-2 border-gray-300 rounded-lg px-2 py-1 focus:border-blue-500 focus:outline-none">
-                <option value="free" selected>Free Shipping</option>
-                <option value="paid">Paid Shipping</option>
-              </select>
+              <label class="block text-xs font-medium text-gray-700">Discount</label>
+              <div class="flex gap-2">
+                <input type="number" id="discount-percent" placeholder="Percent (%)" class="mt-1 w-full p-1 border rounded-lg" />
+                <input type="number" id="discount-amount" placeholder="Amount" class="mt-1 w-full p-1 border rounded-lg" />
+              </div>
             </div>
             <div>
-              <input type="number" id="shipping-cost" placeholder="Shipping Cost" min="0" step="0.01" disabled class="w-full border-2 border-gray-300 rounded-lg px-2 py-1 focus:border-blue-500 focus:outline-none" />
+              <label class="block text-xs font-medium text-gray-700">Tax</label>
+              <div class="flex gap-2">
+                <input type="number" id="tax-percent" placeholder="Percent (%)" class="mt-1 w-full p-1 border rounded-lg" />
+                <input type="number" id="tax-amount" placeholder="Amount" class="mt-1 w-full p-1 border rounded-lg" />
+              </div>
             </div>
-
+            <div>
+              <label class="block text-xs font-medium text-gray-700">Shipping</label>
+              <input type="number" id="shipping-cost" placeholder="Shipping Cost" class="mt-1 w-full p-1 border rounded-lg" />
+            </div>
           </div>
         </section>
 
-        <!-- Items Table -->
-        <section class="bg-white rounded-xl shadow-soft p-2 mb-2 mobile-padding">
-          <h2 class="text-lg font-semibold text-gray-800 mb-3">Items</h2>
-          <div class="table-container table-responsive overflow-x-auto bg-white rounded-lg border border-gray-200">
-            <table id="items-table" class="w-full border-collapse min-w-full">
+        <!-- Items -->
+        <section class="section slate" id="items-section">
+          <h2 class="text-lg font-semibold text-gray-800 mb-2">Items</h2>
+          <div class="overflow-x-auto">
+            <table id="items-table" class="table w-full border-collapse zebra">
               <thead>
-                <tr class="bg-gradient-to-r from-gray-50 via-gray-100 to-gray-150 border-b-2 border-gray-300">
-                  <th class="px-4 py-2 text-center text-xs font-bold text-gray-800 uppercase tracking-wider border-r border-gray-300">
-                    <div class="flex items-center justify-center">
-                      <span class="w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 font-bold text-xs">#</span>
-                    </div>
-                  </th>
-                  <th class="px-4 py-2 text-left text-xs font-bold text-gray-800 uppercase tracking-wider border-r border-gray-300 bg-gray-100">
-                    <div class="flex items-center space-x-2">
-                      <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
-                      </svg>
-                      <span>Product Details</span>
-                    </div>
-                  </th>
-                  <th class="px-4 py-2 text-left text-xs font-bold text-gray-800 uppercase tracking-wider border-r border-gray-300">
-                    <div class="flex items-center space-x-1">
-                      <span>Variant</span>
-                      <span class="sort-indicator ml-1 text-gray-500 cursor-pointer hover:text-gray-700">↕</span>
-                    </div>
-                  </th>
-                  <th class="px-4 py-2 text-left text-xs font-bold text-gray-800 uppercase tracking-wider border-r border-gray-300">
-                    <div class="flex items-center space-x-1">
-                      <span>Length</span>
-                      <span class="sort-indicator ml-1 text-gray-500 cursor-pointer hover:text-gray-700">↕</span>
-                    </div>
-                  </th>
-                  <th class="px-4 py-2 text-left text-xs font-bold text-gray-800 uppercase tracking-wider border-r border-gray-300">
-                    <span>Color</span>
-                  </th>
-                  <th class="px-4 py-2 text-left text-xs font-bold text-gray-800 uppercase tracking-wider border-r border-gray-300">
-                    <span>Styles</span>
-                  </th>
-                  <th class="px-4 py-2 text-center text-xs font-bold text-gray-800 uppercase tracking-wider border-r border-gray-300 bg-gray-100">
-                    <div class="flex items-center justify-center space-x-1">
-                      <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"></path>
-                      </svg>
-                      <span>Qty</span>
-                    </div>
-                  </th>
-                  <th class="px-4 py-2 text-right text-xs font-bold text-gray-800 uppercase tracking-wider border-r border-gray-300 bg-gray-100">
-                    <div class="flex items-center justify-end space-x-1">
-                      <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
-                      </svg>
-                      <span>Unit Price</span>
-                    </div>
-                  </th>
-                  <th class="px-4 py-2 text-right text-xs font-bold text-gray-800 uppercase tracking-wider border-r border-gray-300 bg-gray-100">
-                    <div class="flex items-center justify-end space-x-1">
-                      <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
-                      </svg>
-                      <span>Line Total</span>
-                    </div>
-                  </th>
-                  <th class="px-4 py-2 text-center text-xs font-bold text-gray-800 uppercase tracking-wider no-print">
-                    <div class="flex items-center justify-center">
-                      <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                      </svg>
-                    </div>
-                  </th>
+                <tr>
+                  <th>#</th>
+                  <th>Product</th>
+                  <th>Variant</th>
+                  <th>Length</th>
+                  <th>Weight</th>
+                  <th>Qty</th>
+                  <th>Unit Price</th>
+                  <th>Line Total</th>
+                  <th class="no-print">Actions</th>
                 </tr>
               </thead>
-              <tbody class="bg-white divide-y divide-gray-200"></tbody>
-              <tfoot class="bg-gradient-to-r from-gray-50 to-gray-100 border-t-2 border-gray-300">
-                <tr class="border-b border-gray-200 bg-gradient-to-r from-gray-100 to-gray-150 hover:from-gray-150 hover:to-gray-200 transition-all duration-200">
-                  <td colspan="8" class="font-semibold px-4 py-3 text-sm text-gray-800">
-                    <div class="flex items-center space-x-2">
-                      <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16l3-1m-3 1l-3-1"></path>
-                      </svg>
-                      <span>Total Weight</span>
-                    </div>
-                  </td>
-                  <td id="grand-weight" class="px-4 py-3 text-sm font-bold text-gray-900 text-right bg-gray-200 rounded-l-lg">—</td>
-                  <td class="no-print"></td>
-                </tr>
-                <tr class="border-b border-gray-200 hover:bg-gray-50 transition-all duration-200">
-                  <td colspan="8" class="font-semibold px-4 py-3 text-sm text-gray-800">
-                    <div class="flex items-center space-x-2">
-                      <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
-                      </svg>
-                      <span>Subtotal</span>
-                    </div>
-                  </td>
-                  <td id="subtotal" class="px-4 py-3 text-sm font-medium text-gray-900 text-right">—</td>
-                  <td class="no-print"></td>
-                </tr>
-                <tr class="border-b border-gray-200 hover:bg-gray-50 transition-all duration-200">
-                  <td colspan="8" class="font-semibold px-4 py-3 text-sm text-gray-800">
-                    <div class="flex items-center space-x-2">
-                      <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
-                      </svg>
-                      <span>Discount</span>
-                    </div>
-                  </td>
-                  <td id="discount" class="px-4 py-3 text-sm font-medium text-gray-900 text-right">—</td>
-                  <td class="no-print"></td>
-                </tr>
-                <tr class="border-b border-gray-200 hover:bg-gray-50 transition-all duration-200">
-                  <td colspan="8" class="font-semibold px-4 py-3 text-sm text-gray-800">
-                    <div class="flex items-center space-x-2">
-                      <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
-                      </svg>
-                      <span>Tax</span>
-                    </div>
-                  </td>
-                  <td id="tax" class="px-4 py-3 text-sm font-medium text-gray-900 text-right">—</td>
-                  <td class="no-print"></td>
-                </tr>
-                <tr class="border-b border-gray-200 hover:bg-gray-50 transition-all duration-200">
-                  <td colspan="8" class="font-semibold px-4 py-3 text-sm text-gray-800">
-                    <div class="flex items-center space-x-2">
-                      <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
-                      </svg>
-                      <span>Shipping</span>
-                    </div>
-                  </td>
-                  <td id="shipping-total" class="px-4 py-3 text-sm font-medium text-gray-900 text-right">—</td>
-                  <td class="no-print"></td>
-                </tr>
-                <tr class="border-t-2 border-gray-400 bg-gradient-to-r from-gray-100 to-gray-200 hover:from-gray-200 hover:to-gray-300 transition-all duration-200">
-                  <td colspan="8" class="font-bold px-4 py-4 text-base text-gray-900">
-                    <div class="flex items-center space-x-2">
-                      <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
-                      </svg>
-                      <span>Grand Total</span>
-                    </div>
-                  </td>
-                  <td id="grand-total-table" class="px-4 py-4 text-base font-bold text-gray-900 text-right bg-gray-300 rounded-l-lg border-l-4 border-gray-600">—</td>
-                  <td class="no-print"></td>
-                </tr>
+              <tbody></tbody>
+              <tfoot>
+                <tr><td colspan="7" class="font-semibold">Grand Total Weight</td><td id="grand-weight">—</td><td class="no-print"></td></tr>
+                <tr><td colspan="7" class="font-semibold">Subtotal</td><td id="subtotal">—</td><td class="no-print"></td></tr>
+                <tr><td colspan="7" class="font-semibold">Discount</td><td id="discount">—</td><td class="no-print"></td></tr>
+                <tr><td colspan="7" class="font-semibold">Tax</td><td id="tax">—</td><td class="no-print"></td></tr>
+                <tr><td colspan="7" class="font-semibold">Shipping</td><td id="shipping-total">—</td><td class="no-print"></td></tr>
+                <tr><td colspan="7" class="font-semibold">Grand Total</td><td id="grand-total-table">—</td><td class="no-print"></td></tr>
               </tfoot>
             </table>
           </div>
-          <textarea id="notes-terms" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none" rows="3" placeholder="Notes / Terms (Payment terms, lead time, shipping details, etc.)"></textarea>
-          
-          <!-- Quote Actions positioned at bottom-left -->
-          <div class="flex gap-2 flex-wrap mt-3">
-            <button id="save-quote-btn" class="btn-primary px-4 py-1 rounded-lg">Save Quote</button>
-            <button id="clear-quote-btn" class="btn-secondary px-4 py-1 rounded-lg">Clear</button>
+          <div class="mt-2">
+            <label class="block text-xs font-medium text-gray-700">Notes / Terms</label>
+            <textarea id="notes-terms" class="mt-1 w-full p-1 border rounded-lg" rows="3" placeholder="Payment terms, lead time, shipping details, etc."></textarea>
           </div>
         </section>
 
+        <div id="grand-total" class="text-xl font-bold text-right text-gray-800 mt-2">Grand Total: —</div>
 
-
-        <!-- Saved Quotes List -->
-        <section class="bg-white rounded-lg shadow-soft p-2 sm:p-3 mb-3 mobile-padding">
-          <h2 class="text-sm font-semibold text-gray-800 mb-2">Saved Quotes</h2>
-          <div id="saved-quotes-container" class="saved-quotes-container">
-            <div id="no-quotes-message" class="no-quotes-message">
-              No saved quotes yet. Save a quote to see it here.
+        <!-- Recall & Actions -->
+        <section class="section indigo no-print">
+          <h2 class="text-lg font-semibold text-gray-800 mb-2">History & Recall</h2>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+            <div class="md:col-span-3">
+              <label class="block text-xs font-medium text-gray-700 mb-1">Quote</label>
+              <select id="recall-quote" class="w-full p-1 border rounded-lg">
+                <option value="">Select a quote</option>
+              </select>
+              <div class="text-xs text-gray-600 mt-1">Selected is shown with ☑ inside the option.</div>
             </div>
           </div>
+          <div class="flex gap-2 mt-2">
+            <button id="recall-btn" class="pressable bg-gray-800 text-white rounded-lg px-3 py-1">Recall Selected</button>
+            <button id="save-quote-btn" class="pressable bg-blue-600 text-white rounded-lg px-3 py-1">Save Quote</button>
+            <button id="q2o-btn" class="pressable bg-green-600 text-white rounded-lg px-3 py-1">Convert to Order</button>
+          </div>
+          <pre id="debug-log" class="mono text-xs bg-gray-100 p-2 rounded mt-2 overflow-x-auto"></pre>
         </section>
-
-
       </div>
       
       <!-- Product Catalog Module -->
       <div id="product-catalog-module" class="module-content">
         <!-- Enhanced Catalog Header -->
         <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-6 mb-6 text-white">
+          <h2 class="text-2xl font-bold mb-2">Product Catalog</h2>
           <p class="text-blue-100">Discover our premium hair extension collection</p>
         </div>
         
@@ -3617,7 +2928,7 @@
                 Search
               </label>
               <div class="relative">
-                <input type="text" id="catalog-search" placeholder="Search products by name..." class="w-full border-2 border-gray-200 rounded-lg px-4 py-1 pl-10 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 bg-gray-50 hover:bg-white" />
+                <input type="text" id="catalog-search" placeholder="Search products by name..." class="w-full border-2 border-gray-200 rounded-lg px-4 py-3 pl-10 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 bg-gray-50 hover:bg-white" />
                 <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                 </svg>
@@ -4099,7 +3410,14 @@
             
             // Parse the data
             const headers = jsonData[0];
-            const products = [];
+            const products = [
+  {
+    "Length": 4,
+    "Category": "DIY",
+    "Product": "Test",
+    "Density": "Double Drawn"
+  }
+];
             
             // Map common header variations to standard field names
             const headerMap = {
@@ -4413,24 +3731,16 @@
     function updatePriceListDropdown() {
       const priceListSelector = document.getElementById('priceListSelector');
       
-      // Clear existing options
-      priceListSelector.innerHTML = '';
+      // Clear existing options except "All Price Lists"
+      priceListSelector.innerHTML = '<option value="">All Price Lists</option>';
       
       // Add price list options
-      const sortedPriceLists = Array.from(availablePriceLists).sort();
-      sortedPriceLists.forEach(priceList => {
+      Array.from(availablePriceLists).sort().forEach(priceList => {
         const option = document.createElement('option');
         option.value = priceList;
         option.textContent = priceList;
         priceListSelector.appendChild(option);
       });
-      
-      // Auto-select the first price list if available
-      if (sortedPriceLists.length > 0) {
-        priceListSelector.value = sortedPriceLists[0];
-        // Trigger the change event to filter products
-        handlePriceListChange();
-      }
     }
     
     // Handle price list selection change
@@ -4708,21 +4018,7 @@
       updateAdminStatus();
       
       // Initialize navigation
-      console.log('About to initialize navigation...');
       initNavigation();
-      console.log('Navigation initialization completed.');
-      
-      // Test navigation after a short delay
-      setTimeout(() => {
-        const testBtn = document.getElementById('nav-quote-maker');
-        if (testBtn) {
-          console.log('Test button found:', testBtn.id);
-          const navStatus = document.getElementById('nav-status');
-          if (navStatus) navStatus.textContent += ' - Ready for testing';
-        } else {
-          console.error('Test button not found!');
-        }
-      }, 1000);
       
       // Initialize real-time synchronization
       initializeRealTimeSync();
@@ -4730,50 +4026,23 @@
     
     // Navigation functionality
     function initNavigation() {
-      console.log('Initializing navigation...');
-      
-
-      
       // Set Price List Calculator as default active
-      const defaultModule = document.getElementById('price-calculator-module');
-      if (defaultModule) {
-        defaultModule.classList.add('active');
-        console.log('Default module activated:', defaultModule.id);
-      } else {
-        console.error('Default module not found!');
-      }
+      document.getElementById('price-calculator-module').classList.add('active');
       
       // Add click handlers for navigation buttons
-      const navButtons = document.querySelectorAll('.nav-btn');
-      
-
-      console.log('Found navigation buttons:', navButtons.length);
-      
-      navButtons.forEach(btn => {
-        console.log('Adding click handler to button:', btn.id);
-        btn.addEventListener('click', function(e) {
-          e.preventDefault();
-          console.log('Navigation button clicked:', this.id);
-          
-
-          
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
           // Handle both desktop and mobile button IDs
           let moduleId = this.id.replace('nav-', '').replace('-mobile', '') + '-module';
-          console.log('Target module ID:', moduleId);
           switchModule(moduleId, this);
         });
       });
     }
     
     function switchModule(moduleId, activeBtn) {
-      console.log('Switching to module:', moduleId);
-      
       // Hide all modules
-      const allModules = document.querySelectorAll('.module-content');
-      console.log('Found modules to hide:', allModules.length);
-      allModules.forEach(module => {
+      document.querySelectorAll('.module-content').forEach(module => {
         module.classList.remove('active');
-        console.log('Hiding module:', module.id);
       });
       
       // Remove active class from all nav buttons
@@ -4785,9 +4054,6 @@
       const targetModule = document.getElementById(moduleId);
       if (targetModule) {
         targetModule.classList.add('active');
-        console.log('Showing module:', targetModule.id);
-      } else {
-        console.error('Target module not found:', moduleId);
       }
       
       // Add active class to both desktop and mobile buttons for the same module
@@ -4800,14 +4066,7 @@
       
       // Initialize Quote Maker if switching to it
       if (moduleId === 'quote-maker-module') {
-        // Ensure exchange rates are available before initializing quote maker
-         if (!state.rates || !state.rates.rates || Object.keys(state.rates.rates).length === 0) {
-           fetchLiveFX().then(() => {
-             initQuoteMaker();
-           });
-         } else {
-           initQuoteMaker();
-         }
+        initQuoteMaker();
       }
       
       // Initialize Product Catalog if switching to it
@@ -4834,9 +4093,6 @@
       // Generate quote number
       generateQuoteNumber();
 
-      // Initialize Quote Maker price list selector
-      initQuoteMakerPriceListSelector();
-
       // Initialize dropdowns with product data
       populateQuoteDropdowns();
 
@@ -4851,27 +4107,9 @@
         saveQuoteBtn.addEventListener('click', saveQuote);
       }
 
-      const clearQuoteBtn = document.getElementById('clear-quote-btn');
-      if (clearQuoteBtn) {
-        clearQuoteBtn.addEventListener('click', clearAllQuoteData);
-      }
-
-      const shareBtn = document.getElementById('shareBtn');
-      if (shareBtn) {
-        shareBtn.addEventListener('click', shareQuoteAsImageFromMain);
-      }
-
-      // Add currency change event listener for quote maker
-      const quoteCurrencySelector = document.getElementById('quote-currency');
-      if (quoteCurrencySelector) {
-        quoteCurrencySelector.addEventListener('change', function() {
-          // Update state currency
-          state.currency = this.value;
-          // Re-render quote items with new currency
-          renderQuoteItems();
-          // Update totals with new currency
-          updateQuoteTotals();
-        });
+      const q2oBtn = document.getElementById('q2o-btn');
+      if (q2oBtn) {
+        q2oBtn.addEventListener('click', convertToOrder);
       }
       
       quoteMakerInitialized = true;
@@ -4882,13 +4120,7 @@
       const dateStr = today.getFullYear().toString() + 
                      (today.getMonth() + 1).toString().padStart(2, '0') + 
                      today.getDate().toString().padStart(2, '0');
-      
-      // Get the next sequential number for today
-      const savedQuotes = JSON.parse(localStorage.getItem('savedQuotes') || '[]');
-      const todayQuotes = savedQuotes.filter(q => q.quoteId && q.quoteId.includes(dateStr));
-      const nextNumber = todayQuotes.length + 1;
-      
-      const quoteNumber = `INV-${dateStr}-${nextNumber.toString().padStart(3, '0')}`;
+      const quoteNumber = `INV-${dateStr}-${quoteCounter.toString().padStart(3, '0')}`;
       
       const quoteNumberInput = document.getElementById('quote-number');
       if (quoteNumberInput) {
@@ -4912,29 +4144,6 @@
         // Add category change listener
         categorySelect.addEventListener('change', updateQuoteDensityOptions);
       }
-      
-      // Add event listeners for product dropdown
-      const productSelect = document.getElementById('new-item-product');
-      if (productSelect) {
-        productSelect.addEventListener('change', updateQuoteLengthOptions);
-      }
-      
-      // Populate colors dropdown
-      populateColorsDropdown();
-    }
-    
-    function populateColorsDropdown() {
-      const colorSelect = document.getElementById('new-item-color');
-      if (colorSelect && state.allProducts) {
-        const colors = [...new Set(state.allProducts.map(p => p.Colors).filter(c => c && c.trim() !== ''))];
-        colorSelect.innerHTML = '<option value="">Select Color</option>';
-        colors.sort().forEach(color => {
-          const option = document.createElement('option');
-          option.value = color;
-          option.textContent = color;
-          colorSelect.appendChild(option);
-        });
-      }
     }
 
     function updateQuoteDensityOptions() {
@@ -4945,23 +4154,11 @@
       // Clear and disable dependent dropdowns
       densitySelect.innerHTML = '<option value="">Select Density</option>';
       productSelect.innerHTML = '<option value="">Select Product</option>';
-      const lengthSelect = document.getElementById('new-item-length');
-      if (lengthSelect) {
-        lengthSelect.innerHTML = '<option value="">Select Length</option>';
-      }
       densitySelect.disabled = !category;
       productSelect.disabled = true;
 
       if (category && state.allProducts) {
-        // Get filtered products based on price list selection
-        const selectedPriceList = document.getElementById('quote-price-list-selector')?.value;
-        let productsToFilter = state.allProducts;
-        
-        if (selectedPriceList) {
-          productsToFilter = state.allProducts.filter(p => p.PriceList === selectedPriceList);
-        }
-        
-        const densities = [...new Set(productsToFilter
+        const densities = [...new Set(state.allProducts
           .filter(p => p.Category === category)
           .map(p => p.Density))]
           .filter(d => d);
@@ -4986,76 +4183,17 @@
       productSelect.disabled = !density;
 
       if (category && density && state.allProducts) {
-        // Get filtered products based on price list selection
-        const selectedPriceList = document.getElementById('quote-price-list-selector')?.value;
-        let productsToFilter = state.allProducts;
-        
-        if (selectedPriceList) {
-          productsToFilter = state.allProducts.filter(p => p.PriceList === selectedPriceList);
-        }
-        
-        const products = productsToFilter.filter(p => 
+        const products = state.allProducts.filter(p => 
           p.Category === category && p.Density === density
         );
         
-        // Get unique product names to avoid duplicates in dropdown
-        const uniqueProducts = new Map();
         products.forEach(product => {
-          if (!uniqueProducts.has(product.Product)) {
-            uniqueProducts.set(product.Product, product);
-          }
-        });
-        
-        // Sort unique products alphabetically and add to dropdown
-         Array.from(uniqueProducts.values())
-           .sort((a, b) => a.Product.localeCompare(b.Product))
-           .forEach(product => {
-             const option = document.createElement('option');
-             option.value = product.Product;
-             option.textContent = product.Product;
-             option.dataset.price = product.Rate || 0;
-             option.dataset.weight = product['Standard Weight'] || 0;
-             productSelect.appendChild(option);
-           });
-      }
-      
-      // Clear length dropdown
-      const lengthSelect = document.getElementById('new-item-length');
-      if (lengthSelect) {
-        lengthSelect.innerHTML = '<option value="">Select Length</option>';
-      }
-    }
-
-    function updateQuoteLengthOptions() {
-      const category = document.getElementById('new-item-category').value;
-      const density = document.getElementById('new-item-density').value;
-      const product = document.getElementById('new-item-product').value;
-      const lengthSelect = document.getElementById('new-item-length');
-      
-      if (!lengthSelect) return;
-      
-      lengthSelect.innerHTML = '<option value="">Select Length</option>';
-      
-      if (category && density && product && state.allProducts) {
-        // Get filtered products based on price list selection
-        const selectedPriceList = document.getElementById('quote-price-list-selector')?.value;
-        let productsToFilter = state.allProducts;
-        
-        if (selectedPriceList) {
-          productsToFilter = state.allProducts.filter(p => p.PriceList === selectedPriceList);
-        }
-        
-        const lengths = [...new Set(productsToFilter
-          .filter(p => p.Category === category && p.Density === density && p.Product === product)
-          .map(p => Number(p.Length))
-          .filter(l => !isNaN(l)))]
-          .sort((a, b) => a - b);
-        
-        lengths.forEach(length => {
           const option = document.createElement('option');
-          option.value = length;
-          option.textContent = length;
-          lengthSelect.appendChild(option);
+          option.value = product.Product;
+          option.textContent = product.Product;
+          option.dataset.price = product.Price || 0;
+          option.dataset.weight = product.Weight || 0;
+          productSelect.appendChild(option);
         });
       }
     }
@@ -5065,88 +4203,19 @@
       const density = document.getElementById('new-item-density').value;
       const productName = document.getElementById('new-item-product').value;
       const length = document.getElementById('new-item-length').value;
-      const quantity = parseFloat(document.getElementById('new-item-quantity').value) || 1;
+      const quantity = parseInt(document.getElementById('new-item-quantity').value) || 1;
       const overridePrice = parseFloat(document.getElementById('new-item-override-price').value);
-      const color = document.getElementById('new-item-color').value;
-      const colorDetail = document.getElementById('new-item-color-detail').value;
-      const styles = document.getElementById('new-item-styles').value;
 
       if (!category || !productName) {
         alert('Please select category and product');
         return;
       }
 
-      // Get filtered products based on price list selection
-      const selectedPriceList = document.getElementById('quote-price-list-selector')?.value;
-      let productsToFilter = state.allProducts;
-      
-      if (selectedPriceList) {
-        productsToFilter = state.allProducts.filter(p => p.PriceList === selectedPriceList);
-      }
-      
-      // Find the exact product match with all factors for accurate pricing
-      let matchingProduct = null;
-      
-      // First try to match with all factors including color and length
-      if (length && color) {
-        matchingProduct = productsToFilter.find(p => 
-          p.Category === category && 
-          p.Density === density && 
-          p.Product === productName && 
-          Number(p.Length) === Number(length) &&
-          p.Colors === color
-        );
-      }
-      
-      // If no exact match with color, try without color but with length
-      if (!matchingProduct && length) {
-        matchingProduct = productsToFilter.find(p => 
-          p.Category === category && 
-          p.Density === density && 
-          p.Product === productName && 
-          Number(p.Length) === Number(length)
-        );
-      }
-      
-      // If still no match, try with color but without length
-      if (!matchingProduct && color) {
-        matchingProduct = productsToFilter.find(p => 
-          p.Category === category && 
-          p.Density === density && 
-          p.Product === productName && 
-          p.Colors === color
-        );
-      }
-      
-      // Final fallback to any product match
-      if (!matchingProduct) {
-        matchingProduct = productsToFilter.find(p => 
-          p.Category === category && 
-          p.Density === density && 
-          p.Product === productName
-        );
-      }
-      
-      const basePrice = matchingProduct ? parseFloat(matchingProduct.Rate) || 0 : 0;
-      const weight = matchingProduct ? parseFloat(matchingProduct['Standard Weight']) || 0 : 0;
-      
-      // Store prices in INR (base currency) for consistency
-      // Override price should be converted back to INR if provided in different currency
-      const selectedCurrency = document.getElementById('quote-currency')?.value || state.currency || 'INR';
-      let unitPriceInINR = basePrice;
-      
-      if (overridePrice) {
-        // If override price is provided, convert it back to INR for storage
-        if (selectedCurrency !== 'INR') {
-          const exchangeRates = state.rates?.rates || {};
-          const rate = exchangeRates[selectedCurrency] || 1;
-          unitPriceInINR = overridePrice / rate; // Convert back to INR
-        } else {
-          unitPriceInINR = overridePrice;
-        }
-      }
-      
-      const unitPrice = unitPriceInINR;
+      const productSelect = document.getElementById('new-item-product');
+      const selectedOption = productSelect.options[productSelect.selectedIndex];
+      const basePrice = parseFloat(selectedOption.dataset.price) || 0;
+      const weight = parseFloat(selectedOption.dataset.weight) || 0;
+      const unitPrice = overridePrice || basePrice;
 
       const item = {
         id: Date.now(),
@@ -5157,76 +4226,12 @@
         weight,
         quantity,
         unitPrice,
-        lineTotal: unitPrice * quantity,
-        color: color || '',
-        colorDetail: colorDetail || '',
-        styles: styles || ''
+        lineTotal: unitPrice * quantity
       };
 
       quoteItems.push(item);
       renderQuoteItems();
       clearQuoteForm();
-      saveQuoteToStorage(); // Auto-save when item is added
-    }
-
-    // Helper function to get color codes for visualization
-    function getColorCode(colorName) {
-      const colorMap = {
-        'Black': '#000000',
-        'Brown': '#6B7280',
-        'Dark Brown': '#4B5563',
-        'Light Brown': '#9CA3AF',
-        'Blonde': '#D1D5DB',
-        'Light Blonde': '#F3F4F6',
-        'Platinum': '#E5E7EB',
-        'Red': '#4B5563',
-        'Auburn': '#6B7280',
-        'Gray': '#808080',
-        'Grey': '#808080',
-        'Silver': '#C0C0C0',
-        'White': '#FFFFFF',
-        'Natural': '#9CA3AF',
-        'Jet Black': '#111827',
-        'Off Black': '#374151',
-        'Dark Auburn': '#4B5563',
-        'Medium Brown': '#6B7280',
-        'Light Auburn': '#9CA3AF',
-        'Dark Blonde': '#9CA3AF',
-        'Medium Blonde': '#D1D5DB',
-        'Light Golden Blonde': '#F3F4F6',
-        'Strawberry Blonde': '#E5E7EB',
-        'Ash Blonde': '#D1D5DB',
-        'Honey Blonde': '#E5E7EB',
-        'Caramel': '#9CA3AF',
-        'Chestnut': '#6B7280',
-        'Mahogany': '#4B5563',
-        'Copper': '#9CA3AF',
-        'Golden Brown': '#6B7280',
-        'Chocolate': '#4B5563'
-      };
-      
-      if (!colorName || colorName === '—') return '#E5E7EB'; // Default gray
-      
-      // Try exact match first
-      if (colorMap[colorName]) return colorMap[colorName];
-      
-      // Try case-insensitive match
-      const lowerColorName = colorName.toLowerCase();
-      for (const [key, value] of Object.entries(colorMap)) {
-        if (key.toLowerCase() === lowerColorName) {
-          return value;
-        }
-      }
-      
-      // Try partial match
-      for (const [key, value] of Object.entries(colorMap)) {
-        if (key.toLowerCase().includes(lowerColorName) || lowerColorName.includes(key.toLowerCase())) {
-          return value;
-        }
-      }
-      
-      // Default to a neutral color if no match found
-      return '#9CA3AF';
     }
 
     function renderQuoteItems() {
@@ -5237,171 +4242,40 @@
       let totalWeight = 0;
       let subtotal = 0;
 
-      // Get current selected currency
-      const selectedCurrency = document.getElementById('quote-currency')?.value || state.currency || 'INR';
-      const exchangeRates = state.rates?.rates || {};
-
       quoteItems.forEach((item, index) => {
-        // Items are stored in their original currency, so we need to convert for display
-        // Assume items are stored in INR base price, convert to selected currency
-        let displayUnitPrice = item.unitPrice;
-        
-        // If current currency is different from INR, convert the price
-        if (selectedCurrency !== 'INR') {
-          const rate = exchangeRates[selectedCurrency] || 1;
-          // Convert from INR to selected currency
-          displayUnitPrice = item.unitPrice * rate;
-        }
-        
-        const displayLineTotal = displayUnitPrice * item.quantity;
-        // Calculate subtotal using base INR price (not converted price)
-        const baseLineTotal = item.unitPrice * item.quantity;
         const row = document.createElement('tr');
-        row.className = 'border-b border-gray-100 hover:bg-gradient-to-r hover:from-blue-25 hover:to-indigo-25 transition-all duration-200 group';
-        
         const itemWeight = item.weight * item.quantity;
         totalWeight += itemWeight;
-        subtotal += baseLineTotal;
+        subtotal += item.lineTotal;
 
         row.innerHTML = `
-          <td class="px-4 py-2 text-center border-r border-gray-100">
-            <div class="w-6 h-6 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center text-gray-700 font-bold text-xs shadow-sm">
-              ${index + 1}
-            </div>
-          </td>
-          <td class="px-4 py-2 border-r border-gray-100">
-            <span class="text-sm font-semibold text-gray-900">${item.product}</span>
-          </td>
-          <td class="px-4 py-2 text-sm text-gray-700 border-r border-gray-100">
-            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-              ${item.density || '—'}
-            </span>
-          </td>
-          <td class="px-4 py-2 text-sm text-gray-700 border-r border-gray-100">
-            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-              ${item.length}
-            </span>
-          </td>
-          <td class="px-4 py-2 border-r border-gray-100">
-            <div class="flex items-center space-x-2">
-              <div class="w-4 h-4 rounded-full border-2 border-gray-300 shadow-sm" style="background-color: ${getColorCode(item.color)}"></div>
-              <span class="text-sm font-medium text-gray-900">${item.color || '—'}</span>
-              <span class="text-xs text-gray-500 ml-2">${item.colorDetail || ''}</span>
-            </div>
-          </td>
-          <td class="px-4 py-2 text-xs text-gray-600 border-r border-gray-100">
-            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-              ${item.styles || '—'}
-            </span>
-          </td>
-          <td class="px-4 py-2 text-center border-r border-gray-100">
-            <div class="flex items-center justify-center">
-              <div class="relative">
-                <input type="number" value="${item.quantity}" min="0.01" step="0.01" 
-                       class="w-16 px-2 py-1 border-2 border-gray-200 rounded-lg text-center font-semibold text-gray-900 focus:border-gray-500 focus:ring-2 focus:ring-gray-200 transition-all duration-200 group-hover:border-gray-300 bg-white text-xs"
-                       onchange="updateQuantity(${index}, this.value)" 
-                       onblur="this.classList.remove('focus:bg-white')" />
-                <div class="absolute inset-y-0 right-0 flex flex-col">
-                  <button type="button" class="px-1 py-0.5 text-xs text-gray-400 hover:text-gray-600 transition-colors" onclick="updateQuantity(${index}, ${item.quantity + 1})">
-                    <svg class="w-2 h-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
-                    </svg>
-                  </button>
-                  <button type="button" class="px-1 py-0.5 text-xs text-gray-400 hover:text-gray-600 transition-colors" onclick="updateQuantity(${index}, Math.max(0.01, ${item.quantity - 1}))">
-                    <svg class="w-2 h-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </td>
-          <td class="px-4 py-2 text-right border-r border-gray-100">
-            <div class="flex flex-col items-end">
-              <span class="text-sm font-semibold text-gray-900">${formatQuoteCurrency(displayUnitPrice)}</span>
-              <span class="text-xs text-gray-500">per unit</span>
-            </div>
-          </td>
-          <td class="px-4 py-2 text-right border-r border-gray-100">
-            <div class="flex flex-col items-end">
-              <span class="text-base font-bold text-gray-700">${formatQuoteCurrency(displayLineTotal)}</span>
-              <span class="text-xs text-gray-500">${item.quantity} × ${formatQuoteCurrency(displayUnitPrice)}</span>
-            </div>
-          </td>
-          <td class="px-4 py-2 text-center no-print">
-            <button onclick="removeQuoteItem(${index})" 
-                    class="group relative p-1 text-red-500 hover:text-white hover:bg-red-500 rounded-full transition-all duration-200 transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-red-300">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-              </svg>
-              <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
-                Remove Item
-              </div>
-            </button>
+          <td class="p-2">${index + 1}</td>
+          <td class="p-2">${item.product}</td>
+          <td class="p-2">${item.density || '—'}</td>
+          <td class="p-2">${item.length}</td>
+          <td class="p-2">${itemWeight.toFixed(2)}g</td>
+          <td class="p-2">${item.quantity}</td>
+          <td class="p-2">${formatQuoteCurrency(item.unitPrice)}</td>
+          <td class="p-2">${formatQuoteCurrency(item.lineTotal)}</td>
+          <td class="p-2 no-print">
+            <button onclick="removeQuoteItem(${index})" class="text-red-600 hover:text-red-800 text-sm px-2 py-1 rounded">Remove</button>
           </td>
         `;
         tbody.appendChild(row);
       });
 
-      // Calculate financial totals using the new function
-      const financials = calculateFinancialTotals(subtotal);
-
-      // Update totals with proper formatting
+      // Update totals
       document.getElementById('grand-weight').textContent = `${totalWeight.toFixed(2)}g`;
-      document.getElementById('subtotal').textContent = formatQuoteCurrency(financials.subtotal);
-      
-      // Update discount display
-      const discountElement = document.getElementById('discount');
-      if (financials.discountAmount > 0) {
-        discountElement.textContent = `-${formatQuoteCurrency(financials.discountAmount)}`;
-        discountElement.className = 'text-green-600 font-medium';
-      } else {
-        discountElement.textContent = '—';
-        discountElement.className = '';
-      }
-      
-      // Update tax display
-      const taxElement = document.getElementById('tax');
-      if (financials.taxAmount > 0) {
-        taxElement.textContent = formatQuoteCurrency(financials.taxAmount);
-      } else {
-        taxElement.textContent = 'Tax Free';
-        taxElement.className = 'text-blue-600 font-medium';
-      }
-      
-      // Update shipping display
-      const shippingElement = document.getElementById('shipping-total');
-      if (financials.shippingAmount > 0) {
-        shippingElement.textContent = formatQuoteCurrency(financials.shippingAmount);
-      } else {
-        shippingElement.textContent = 'Free Shipping';
-        shippingElement.className = 'text-green-600 font-medium';
-      }
-      
-      // Update grand total
-      document.getElementById('grand-total-table').textContent = formatQuoteCurrency(financials.grandTotal);
-      
-      // Update preview displays in financial controls
-      updateFinancialPreviews(financials);
+      document.getElementById('subtotal').textContent = formatQuoteCurrency(subtotal);
+      document.getElementById('discount').textContent = '—';
+      document.getElementById('tax').textContent = '—';
+      document.getElementById('shipping-total').textContent = '—';
+      document.getElementById('grand-total-table').textContent = formatQuoteCurrency(subtotal);
     }
 
     function removeQuoteItem(index) {
       quoteItems.splice(index, 1);
       renderQuoteItems();
-      saveQuoteToStorage(); // Auto-save when item is removed
-    }
-
-    function updateQuantity(index, newQuantity) {
-      let quantity = parseFloat(newQuantity) || 0.01;
-      if (quantity < 0.01) {
-        quantity = 0.01;
-      }
-      
-      quoteItems[index].quantity = quantity;
-      quoteItems[index].lineTotal = quoteItems[index].unitPrice * quantity;
-      
-      renderQuoteItems();
-      saveQuoteToStorage(); // Auto-save when quantity is updated
     }
 
     function clearQuoteForm() {
@@ -5411,91 +4285,14 @@
       document.getElementById('new-item-length').value = '';
       document.getElementById('new-item-quantity').value = '1';
       document.getElementById('new-item-override-price').value = '';
-      document.getElementById('new-item-color').value = '';
-      document.getElementById('new-item-color-detail').value = '';
-      document.getElementById('new-item-styles').value = '';
       
       // Reset dependent dropdowns
       document.getElementById('new-item-density').disabled = true;
       document.getElementById('new-item-product').disabled = true;
     }
 
-    function clearAllQuoteData() {
-      // Clear line items array
-      quoteItems = [];
-      
-      // Clear quote details form
-      document.getElementById('client-name').value = '';
-      document.getElementById('client-contact').value = '';
-      document.getElementById('salesman-name').value = '';
-      document.getElementById('valid-days').value = '14';
-      document.getElementById('brief-preview').value = '';
-      
-      // Clear new item form
-      clearQuoteForm();
-      
-      // Clear notes and terms
-      const notesField = document.getElementById('notes-terms');
-      if (notesField) {
-        notesField.value = '';
-      }
-      
-      // Reset financial controls to defaults
-      const discountType = document.getElementById('discount-type');
-      const taxOptions = document.getElementById('tax-options');
-      const shippingOptions = document.getElementById('shipping-options');
-      
-      if (discountType) {
-        discountType.value = 'percentage';
-        handleDiscountTypeChange('percentage');
-      }
-      
-      if (taxOptions) {
-        taxOptions.value = 'tax-free';
-        handleTaxTypeChange('tax-free');
-      }
-      
-      if (shippingOptions) {
-        shippingOptions.value = 'free';
-        handleShippingTypeChange('free');
-      }
-      
-      // Generate new quote number
-      generateQuoteNumber();
-      
-      // Set current date
-      const today = new Date().toISOString().split('T')[0];
-      const quoteDateInput = document.getElementById('quote-date');
-      if (quoteDateInput) {
-        quoteDateInput.value = today;
-      }
-      
-      // Re-render items and totals
-      renderQuoteItems();
-      const subtotal = quoteItems.reduce((sum, item) => sum + (item.lineTotal || 0), 0);
-      calculateFinancialTotals(subtotal);
-    }
-
     function saveQuote() {
-      if (quoteItems.length === 0) {
-        alert('Please add items to the quote before saving.');
-        return;
-      }
-
-      const now = new Date();
-      const dateStr = now.getFullYear().toString() + 
-                     (now.getMonth() + 1).toString().padStart(2, '0') + 
-                     now.getDate().toString().padStart(2, '0');
-      
-      // Get existing quotes to determine auto number
-      const savedQuotes = JSON.parse(localStorage.getItem('savedQuotes') || '[]');
-      const todayQuotes = savedQuotes.filter(q => q.quoteId && q.quoteId.includes(dateStr));
-      const autoNumber = (todayQuotes.length + 1).toString().padStart(3, '0');
-      
-      const quoteId = `INH-${dateStr}-${autoNumber}`;
-      
       const quoteData = {
-        quoteId: quoteId,
         quoteNumber: document.getElementById('quote-number').value,
         date: document.getElementById('quote-date').value,
         clientName: document.getElementById('client-name').value,
@@ -5503,675 +4300,42 @@
         salesman: document.getElementById('salesman-name').value,
         validDays: document.getElementById('valid-days').value,
         briefPreview: document.getElementById('brief-preview').value,
-        items: [...quoteItems],
-        notes: document.getElementById('notes-terms').value,
-        savedAt: now.toISOString()
+        items: quoteItems,
+        notes: document.getElementById('notes-terms').value
       };
 
+      // Save to localStorage for now
+      const savedQuotes = JSON.parse(localStorage.getItem('savedQuotes') || '[]');
       savedQuotes.push(quoteData);
       localStorage.setItem('savedQuotes', JSON.stringify(savedQuotes));
       
-      alert(`Quote saved successfully as ${quoteId}!`);
-      renderSavedQuotesList();
+      alert('Quote saved successfully!');
+      quoteCounter++;
+      generateQuoteNumber();
     }
 
-    function renderSavedQuotesList() {
-      const container = document.getElementById('saved-quotes-container');
-      const noQuotesMessage = document.getElementById('no-quotes-message');
-      const savedQuotes = JSON.parse(localStorage.getItem('savedQuotes') || '[]');
-      
-      if (savedQuotes.length === 0) {
-        noQuotesMessage.style.display = 'block';
+    function convertToOrder() {
+      if (quoteItems.length === 0) {
+        alert('Please add items to the quote first');
         return;
       }
       
-      noQuotesMessage.style.display = 'none';
-      
-      // Sort quotes by date (newest first)
-      savedQuotes.sort((a, b) => new Date(b.savedAt) - new Date(a.savedAt));
-      
-      // Clear existing quotes except the no-quotes message
-      const existingQuotes = container.querySelectorAll('.quote-item');
-      existingQuotes.forEach(item => item.remove());
-      
-      savedQuotes.forEach((quote, index) => {
-        const quoteItem = document.createElement('div');
-        quoteItem.className = 'quote-item bg-gray-50 border border-gray-200 rounded p-2 hover:bg-gray-100 transition-colors relative';
-        quoteItem.innerHTML = `
-          <div class="flex items-center space-x-3 text-sm">
-            <input type="checkbox" class="quote-checkbox" data-quote-index="${index}">
-            <span class="font-medium text-gray-900">${quote.quoteId}</span>
-            <span class="text-gray-600">${quote.clientName || 'No client name'}</span>
-            <span class="text-gray-500">${new Date(quote.savedAt).toLocaleDateString()}</span>
-            <span class="text-xs text-gray-400">(${quote.items.length} items)</span>
-          </div>
-        `;
-        
-        // Add checkbox event listener
-        const checkbox = quoteItem.querySelector('.quote-checkbox');
-        checkbox.addEventListener('change', (e) => {
-          e.stopPropagation();
-          if (e.target.checked) {
-            showQuoteContextMenu(e.target, index);
-          } else {
-            hideQuoteContextMenu();
-          }
-        });
-        
-        container.appendChild(quoteItem);
-      });
-    }
-
-    function showQuoteContextMenu(checkboxElement, quoteIndex) {
-      // Remove any existing context menu
-      hideQuoteContextMenu();
-      
-      const contextMenu = document.createElement('div');
-      contextMenu.className = 'quote-context-menu fixed bg-white border border-gray-200 rounded-lg shadow-lg z-50 py-1 min-w-48';
-      contextMenu.id = 'quote-context-menu';
-      
-      // Position the menu with viewport boundary checking
-      const rect = checkboxElement.getBoundingClientRect();
-      const menuWidth = 192; // min-w-48 = 12rem = 192px
-      const menuHeight = 120; // Approximate height for 3 buttons
-      
-      let left = rect.right + 10;
-      let top = rect.top;
-      
-      // Check right boundary - if menu would go off screen, position to the left
-      if (left + menuWidth > window.innerWidth) {
-        left = rect.left - menuWidth - 10;
-      }
-      
-      // Check bottom boundary - if menu would go off screen, position above
-      if (top + menuHeight > window.innerHeight) {
-        top = rect.bottom - menuHeight;
-      }
-      
-      // Ensure menu doesn't go above viewport
-      if (top < 0) {
-        top = 10;
-      }
-      
-      // Ensure menu doesn't go left of viewport
-      if (left < 0) {
-        left = 10;
-      }
-      
-      contextMenu.style.left = left + 'px';
-      contextMenu.style.top = top + 'px';
-      
-      contextMenu.innerHTML = `
-        <button class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center" onclick="recallQuote(${quoteIndex}); hideQuoteContextMenu();">
-          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
-          </svg>
-          Recall Quote
-        </button>
-        <button class="w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 flex items-center" onclick="shareQuoteFromContext(${quoteIndex}); hideQuoteContextMenu();">
-          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"></path>
-          </svg>
-          Share Quote
-        </button>
-        <button class="w-full text-left px-4 py-2 text-sm text-green-600 hover:bg-green-50 flex items-center" onclick="convertQuoteToOrder(${quoteIndex}); hideQuoteContextMenu();">
-          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-          </svg>
-          Convert to Order
-        </button>
-        <button class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center" onclick="deleteQuote(${quoteIndex}); hideQuoteContextMenu();">
-          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-          </svg>
-          Delete Quote
-        </button>
-      `;
-      
-      document.body.appendChild(contextMenu);
-      
-      // Store the current quote index for reference
-      contextMenu.dataset.quoteIndex = quoteIndex;
-      
-      // Set up click-outside behavior
-      setTimeout(() => {
-        document.addEventListener('click', handleContextMenuClickOutside);
-      }, 0);
-    }
-    
-    function hideQuoteContextMenu() {
-      const existingMenu = document.getElementById('quote-context-menu');
-      if (existingMenu) {
-        existingMenu.remove();
-        document.removeEventListener('click', handleContextMenuClickOutside);
-      }
-      
-      // Uncheck all checkboxes
-      const checkboxes = document.querySelectorAll('.quote-checkbox');
-      checkboxes.forEach(checkbox => {
-        checkbox.checked = false;
-      });
-    }
-    
-    function handleContextMenuClickOutside(e) {
-      const contextMenu = document.getElementById('quote-context-menu');
-      const checkboxes = document.querySelectorAll('.quote-checkbox');
-      
-      // Check if click is outside the context menu and not on any checkbox
-      let clickedOnCheckbox = false;
-      checkboxes.forEach(checkbox => {
-        if (checkbox.contains(e.target) || checkbox === e.target) {
-          clickedOnCheckbox = true;
-        }
-      });
-      
-      if (contextMenu && !contextMenu.contains(e.target) && !clickedOnCheckbox) {
-        hideQuoteContextMenu();
+      const confirmed = confirm('Convert this quote to an order? This will save the quote and mark it as an order.');
+      if (confirmed) {
+        saveQuote();
+        alert('Quote converted to order successfully!');
       }
     }
-
-     function recallQuote(quoteIndex) {
-       const savedQuotes = JSON.parse(localStorage.getItem('savedQuotes') || '[]');
-       const quote = savedQuotes[quoteIndex];
-       
-       if (!quote) {
-         alert('Quote not found!');
-         return;
-       }
-       
-       // Load quote data into the form
-       document.getElementById('quote-number').value = quote.quoteNumber || '';
-       document.getElementById('quote-date').value = quote.date || '';
-       document.getElementById('client-name').value = quote.clientName || '';
-       document.getElementById('client-contact').value = quote.clientContact || '';
-       document.getElementById('salesman-name').value = quote.salesman || '';
-       document.getElementById('valid-days').value = quote.validDays || '';
-       document.getElementById('brief-preview').value = quote.briefPreview || '';
-       document.getElementById('notes-terms').value = quote.notes || '';
-       
-       // Load quote items
-       quoteItems.length = 0; // Clear existing items
-       quote.items.forEach(item => {
-         quoteItems.push({...item}); // Create a copy of each item
-       });
-       
-       renderQuoteItems();
-       
-       // Remove any existing dropdown
-       const existingDropdown = document.querySelector('.quote-actions-dropdown');
-       if (existingDropdown) {
-         existingDropdown.remove();
-       }
-       
-       alert(`Quote ${quote.quoteId} recalled successfully!`);
-     }
-
-     async function shareQuoteAsImage(quoteIndex) {
-       const savedQuotes = JSON.parse(localStorage.getItem('savedQuotes') || '[]');
-       const quote = savedQuotes[quoteIndex];
-       
-       if (!quote) {
-         alert('Quote not found!');
-         return;
-       }
-       
-       // First recall the quote to load its data
-       recallQuote(quoteIndex);
-       
-       // Wait a moment for the data to load, then share
-       setTimeout(() => {
-         shareQuoteAsImageFromMain();
-       }, 500);
-     }
-
-     async function shareQuoteFromContext(quoteIndex) {
-       const savedQuotes = JSON.parse(localStorage.getItem('savedQuotes') || '[]');
-       const quote = savedQuotes[quoteIndex];
-       
-       if (!quote) {
-         alert('Quote not found!');
-         return;
-       }
-       
-       try {
-         // Show loading message
-         const loadingMsg = document.createElement('div');
-         loadingMsg.className = 'fixed top-4 left-4 right-4 bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded-lg z-50';
-         loadingMsg.innerHTML = `
-           <div class="flex items-center gap-2">
-             <span class="text-lg">⏳</span>
-             <span class="font-medium">Generating quote image for ${quote.quoteId}...</span>
-           </div>
-         `;
-         document.body.appendChild(loadingMsg);
-         
-         // Create quote details layout for image generation
-         const quoteHTML = createQuoteDetailsLayout(quote);
-         
-         // Create a temporary container for rendering
-         const tempContainer = document.createElement('div');
-         tempContainer.style.position = 'absolute';
-         tempContainer.style.left = '-9999px';
-         tempContainer.style.top = '-9999px';
-         tempContainer.style.width = '800px';
-         tempContainer.innerHTML = quoteHTML;
-         document.body.appendChild(tempContainer);
-         
-         // Convert to canvas using html2canvas
-         const canvas = await html2canvas(tempContainer, {
-           scale: 2,
-           useCORS: true,
-           allowTaint: true,
-           backgroundColor: '#ffffff',
-           width: 400,
-           height: 400
-         });
-         
-         // Remove temporary container
-         document.body.removeChild(tempContainer);
-         
-         // Convert canvas to blob
-         const blob = await new Promise(resolve => {
-           canvas.toBlob(resolve, 'image/png', 1.0);
-         });
-         
-         // Share using Web Share API
-         if (navigator.share) {
-           // Create a file from the blob
-           const file = new File([blob], `Quote-${quote.quoteId}-${new Date().toISOString().slice(0,10)}.png`, {
-             type: 'image/png'
-           });
-           
-           try {
-             await navigator.share({
-               title: `Quote ${quote.quoteId} - Indian Natural Hair`,
-               text: `Quote details for ${quote.quoteId}`,
-               files: [file]
-             });
-             
-             // Remove loading message
-             loadingMsg.remove();
-             
-             // Show success message
-             showSuccessMessage(`Quote ${quote.quoteId} shared successfully! 📤✨`);
-           } catch (shareError) {
-             console.log('Share cancelled or failed:', shareError);
-             
-             // Remove loading message
-             loadingMsg.remove();
-             
-             // Fallback to clipboard if share is cancelled
-             if (navigator.clipboard && window.ClipboardItem) {
-               await navigator.clipboard.write([
-                 new ClipboardItem({
-                   'image/png': blob
-                 })
-               ]);
-               showSuccessMessage(`Quote ${quote.quoteId} image copied to clipboard! 📋✨`);
-             } else {
-               // Final fallback: download the image
-               const url = URL.createObjectURL(blob);
-               const a = document.createElement('a');
-               a.href = url;
-               a.download = `Quote-${quote.quoteId}-${new Date().toISOString().slice(0,10)}.png`;
-               document.body.appendChild(a);
-               a.click();
-               document.body.removeChild(a);
-               URL.revokeObjectURL(url);
-               showSuccessMessage(`Quote ${quote.quoteId} image downloaded! 💾`);
-             }
-           }
-         } else {
-           // Fallback for browsers without Web Share API
-           if (navigator.clipboard && window.ClipboardItem) {
-             await navigator.clipboard.write([
-               new ClipboardItem({
-                 'image/png': blob
-               })
-             ]);
-             
-             // Remove loading message
-             loadingMsg.remove();
-             
-             // Show success message
-             showSuccessMessage(`Quote ${quote.quoteId} image copied to clipboard! 📋✨`);
-           } else {
-             // Final fallback: download the image
-             const url = URL.createObjectURL(blob);
-             const a = document.createElement('a');
-             a.href = url;
-             a.download = `Quote-${quote.quoteId}-${new Date().toISOString().slice(0,10)}.png`;
-             document.body.appendChild(a);
-             a.click();
-             document.body.removeChild(a);
-             URL.revokeObjectURL(url);
-              
-              // Remove loading message
-              loadingMsg.remove();
-              
-              showSuccessMessage(`Quote ${quote.quoteId} image downloaded! 💾`);
-            }
-          }
-         
-       } catch (error) {
-         console.error('Error generating quote image:', error);
-         
-         // Remove any existing loading message
-         const existingMsg = document.querySelector('.fixed.top-4');
-         if (existingMsg) existingMsg.remove();
-         
-         // Show error message
-         showErrorMessage(`Failed to generate image for quote ${quote.quoteId}. Please try again.`);
-       }
-     }
-     
-     // Create quote details layout for image generation
-     function createQuoteDetailsLayout(quote) {
-       const currentDate = new Date().toLocaleDateString();
-       
-       // Calculate totals with safety checks
-        const subtotal = quote.items.reduce((sum, item) => {
-          const price = parseFloat(item.unitPrice || item.price) || 0;
-          const quantity = parseInt(item.quantity) || 1;
-          return sum + (price * quantity);
-        }, 0);
-        const tax = subtotal * 0.18; // 18% GST
-        const total = subtotal + tax;
-       
-       return `
-         <div style="font-family: 'Courier New', monospace; width: 400px; margin: 0; padding: 12px; background: white; color: #000; line-height: 1.1; box-sizing: border-box;">
-           <!-- Header -->
-           <div style="text-align: center; margin-bottom: 8px; border-bottom: 2px solid #000; padding-bottom: 6px;">
-             <h1 style="font-size: 18px; margin: 0; font-weight: bold; letter-spacing: 1px;">QUOTE</h1>
-             <p style="font-size: 12px; margin: 2px 0; font-weight: bold;">Indian Natural Hair</p>
-             <p style="font-size: 10px; margin: 0;">Hair Extensions</p>
-           </div>
-           
-           <!-- Quote Details Table -->
-           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; font-size: 10px;">
-             <div><strong>ID:</strong> ${quote.quoteId}</div>
-             <div><strong>Date:</strong> ${quote.date || currentDate}</div>
-             <div><strong>Client:</strong> ${quote.clientName || 'N/A'}</div>
-             <div><strong>Contact:</strong> ${quote.clientContact || 'N/A'}</div>
-             <div><strong>Sales:</strong> ${quote.salesman || 'N/A'}</div>
-             <div><strong>Valid:</strong> ${quote.validDays || 'N/A'} days</div>
-           </div>
-           
-           <!-- Items Section -->
-           <div style="border: 1px solid #000; margin-bottom: 8px;">
-             <div style="background: #f0f0f0; padding: 4px; font-weight: bold; font-size: 11px; border-bottom: 1px solid #000;">
-               <span>ITEMS</span>
-               <span style="float: right;">TOTAL</span>
-             </div>
-             <div style="padding: 4px;">
-               ${quote.items.map((item, index) => {
-                 const unitPrice = parseFloat(item.unitPrice || item.price) || 0;
-                 const quantity = parseInt(item.quantity) || 1;
-                 const lineTotal = unitPrice * quantity;
-                 return `
-                 <div style="display: flex; justify-content: space-between; margin-bottom: 3px; font-size: 9px; border-bottom: 1px dotted #ccc; padding-bottom: 2px;">
-                   <div style="flex: 1;">
-                     <strong>${index + 1}. ${item.product || item.name || 'N/A'}</strong>${item.category ? ` (${item.category})` : ''}${item.density ? ` ${item.density}` : ''}<br/>
-                     Length: ${item.length || 'N/A'} | Qty: ${quantity} | Unit: ${formatQuoteCurrency(unitPrice)}
-                   </div>
-                   <div style="font-weight: bold; margin-left: 8px;">${formatQuoteCurrency(lineTotal)}</div>
-                 </div>
-                 `;
-               }).join('')}
-             </div>
-           </div>
-           
-           <!-- Totals Section -->
-           <div style="border: 1px solid #000; margin-bottom: 8px; background: #f9f9f9;">
-             <div style="padding: 6px; font-size: 10px;">
-               <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
-                 <span>Subtotal:</span><span>${formatQuoteCurrency(subtotal)}</span>
-               </div>
-               <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
-                 <span>Tax (18%):</span><span>${formatQuoteCurrency(tax)}</span>
-               </div>
-               <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 12px; border-top: 1px solid #000; padding-top: 4px;">
-                 <span>TOTAL:</span><span>${formatQuoteCurrency(total)}</span>
-               </div>
-             </div>
-           </div>
-           
-           <!-- Notes -->
-           ${quote.notes ? `
-             <div style="margin-top: 4px;">
-               <p style="font-size: 9px; margin: 0; font-weight: bold;">Notes: ${quote.notes}</p>
-             </div>
-           ` : ''}
-           
-           <!-- Footer -->
-           <div style="text-align: center; font-size: 9px; border-top: 1px solid #000; padding-top: 6px;">
-             <p style="margin: 0; font-weight: bold;">Indian Natural Hair</p>
-             <p style="margin: 0;">info@indiannaturalhair.com</p>
-           </div>
-         </div>
-       `;
-     }
-
-     function deleteQuote(quoteIndex) {
-       const savedQuotes = JSON.parse(localStorage.getItem('savedQuotes') || '[]');
-       const quote = savedQuotes[quoteIndex];
-       
-       if (!quote) {
-         alert('Quote not found!');
-         return;
-       }
-       
-       const confirmed = confirm(`Are you sure you want to delete quote ${quote.quoteId}? This action cannot be undone.`);
-       if (confirmed) {
-         savedQuotes.splice(quoteIndex, 1);
-         localStorage.setItem('savedQuotes', JSON.stringify(savedQuotes));
-         
-         // Remove any existing dropdown
-         const existingDropdown = document.querySelector('.quote-actions-dropdown');
-         if (existingDropdown) {
-           existingDropdown.remove();
-         }
-         
-         renderSavedQuotesList();
-         alert(`Quote ${quote.quoteId} deleted successfully!`);
-       }
-     }
-
-     function convertQuoteToOrder(quoteIndex) {
-       const savedQuotes = JSON.parse(localStorage.getItem('savedQuotes') || '[]');
-       const quote = savedQuotes[quoteIndex];
-       
-       if (!quote) {
-         alert('Quote not found!');
-         return;
-       }
-       
-       const confirmed = confirm(`Convert quote ${quote.quoteId} to order? This will recall the quote and mark it as an order.`);
-       if (confirmed) {
-         // First recall the quote to load its data
-         recallQuote(quoteIndex);
-         
-         // Wait a moment for the data to load, then process as order
-         setTimeout(() => {
-           // Check if there are items in the quote
-           if (quoteItems.length === 0) {
-             alert('Cannot convert to order: No items in quote!');
-             return;
-           }
-           
-           // Save the current quote state as an order
-           saveQuote();
-           
-           alert(`Quote ${quote.quoteId} has been successfully converted to an order!`);
-         }, 500);
-       }
-     }
-
-     // Share current quote as image
-     async function shareQuoteAsImageFromMain() {
-       try {
-         if (quoteItems.length === 0) {
-           alert('Please add items to the quote first');
-           return;
-         }
-         
-         // Generate preview first
-         await generatePreview();
-         
-         // Get the preview element
-         const previewElement = document.getElementById('preview');
-         if (!previewElement) {
-           alert('Please generate a preview first');
-           return;
-         }
-         
-         // Use html2canvas to capture the preview as image
-         const canvas = await html2canvas(previewElement, {
-           backgroundColor: '#ffffff',
-           scale: 2,
-           useCORS: true
-         });
-         
-         // Convert canvas to blob
-         canvas.toBlob(async (blob) => {
-           try {
-             // Copy to clipboard
-             await navigator.clipboard.write([
-               new ClipboardItem({ 'image/png': blob })
-             ]);
-             alert('Quote image copied to clipboard!');
-           } catch (err) {
-             console.error('Failed to copy to clipboard:', err);
-             // Fallback: download the image
-             const url = URL.createObjectURL(blob);
-             const a = document.createElement('a');
-             a.href = url;
-             a.download = 'quote-image.png';
-             a.click();
-             URL.revokeObjectURL(url);
-             alert('Quote image downloaded!');
-           }
-         }, 'image/png');
-         
-       } catch (error) {
-         console.error('Error sharing quote as image:', error);
-         alert('Failed to share quote as image');
-       }
-     }
 
     function formatQuoteCurrency(amount) {
-      // Get current currency from quote-currency selector or state
-      const currency = document.getElementById('quote-currency')?.value || state.currency || 'INR';
+      const currency = state.currency || 'INR';
       const symbols = {
         'INR': '₹',
         'USD': '$',
         'EUR': '€',
-        'GBP': '£',
-        'AUD': 'A$',
-        'SAR': 'SAR ',
-        'NGN': '₦',
-        'AED': 'د.إ ',
-        'JPY': '¥'
+        'GBP': '£'
       };
-      
-      // Convert amount if currency is not INR (assuming amount is in the selected currency already)
-      // Since we're now storing prices in the selected currency, just format with the right symbol
       return `${symbols[currency] || '₹'}${amount.toFixed(2)}`;
-    }
-
-    // Quote Maker Price List Selector Functions
-    function initQuoteMakerPriceListSelector() {
-      console.log('Initializing Quote Maker price list selector...');
-      
-      // Clear existing price lists to ensure fresh data
-      const quotePriceListSelector = document.getElementById('quote-price-list-selector');
-      if (!quotePriceListSelector) {
-        console.error('Quote price list selector element not found!');
-        return;
-      }
-      
-      // Extract unique price lists from existing data
-      const quotePriceLists = new Set();
-      state.allProducts.forEach(product => {
-        if (product.PriceList) {
-          quotePriceLists.add(product.PriceList);
-        }
-      });
-      
-      console.log('Available price lists for Quote Maker:', Array.from(quotePriceLists));
-      
-      // Update dropdown options
-      quotePriceListSelector.innerHTML = '';
-      const sortedQuotePriceLists = Array.from(quotePriceLists).sort();
-      sortedQuotePriceLists.forEach(priceList => {
-        const option = document.createElement('option');
-        option.value = priceList;
-        option.textContent = priceList;
-        quotePriceListSelector.appendChild(option);
-      });
-      
-      // Auto-select the first price list if available
-      if (sortedQuotePriceLists.length > 0) {
-        quotePriceListSelector.value = sortedQuotePriceLists[0];
-        // Trigger the change event to filter products
-        const event = new Event('change');
-        quotePriceListSelector.dispatchEvent(event);
-      }
-      
-      // Add event listener for price list selection
-      quotePriceListSelector.addEventListener('change', handleQuoteMakerPriceListChange);
-    }
-    
-    function handleQuoteMakerPriceListChange() {
-      const selectedPriceList = document.getElementById('quote-price-list-selector').value;
-      
-      if (selectedPriceList) {
-        // Filter products by selected price list for Quote Maker
-        const filteredProducts = state.allProducts.filter(product => 
-          product.PriceList === selectedPriceList
-        );
-        
-        console.log(`Quote Maker filtered to ${filteredProducts.length} products from price list: ${selectedPriceList}`);
-        
-        // Update Quote Maker dropdowns with filtered data
-        updateQuoteDropdownsWithFilteredData(filteredProducts);
-        
-        // Auto-select USD currency for USA25 price list
-        if (selectedPriceList === 'USA25') {
-          const currencySelect = document.getElementById('currency');
-          if (currencySelect) {
-            currencySelect.value = 'USD';
-            state.currency = 'USD';
-          }
-        }
-      }
-    }
-    
-    function updateQuoteDropdownsWithFilteredData(products) {
-      // Update category dropdown with filtered data
-      const categorySelect = document.getElementById('new-item-category');
-      if (categorySelect) {
-        const categories = [...new Set(products.map(p => p.Category))].filter(c => c).sort();
-        categorySelect.innerHTML = '<option value="">Select Category</option>';
-        categories.forEach(category => {
-          const option = document.createElement('option');
-          option.value = category;
-          option.textContent = category;
-          categorySelect.appendChild(option);
-        });
-        
-        // Reset dependent dropdowns
-        const densitySelect = document.getElementById('new-item-density');
-        const productSelect = document.getElementById('new-item-product');
-        if (densitySelect) {
-          densitySelect.innerHTML = '<option value="">Select Density</option>';
-          densitySelect.disabled = true;
-        }
-        if (productSelect) {
-          productSelect.innerHTML = '<option value="">Select Product</option>';
-          productSelect.disabled = true;
-        }
-      }
     }
 
     // Product Catalog Functions
@@ -6182,147 +4346,14 @@
 
     // Define comprehensive product catalog with proper image mapping
     const productCatalog = {
-      'Bulk': {
-        image: 'Bulk.png',
-        description: 'Premium bulk hair for various styling needs',
-        variants: ['150g', '200g', '250g']
-      },
-      'Weaves': {
-        image: 'Weaves-SD.png',
-        description: 'High-quality weave extensions',
-        variants: ['Single Drawn', 'Double Drawn', 'Super Double Drawn']
-      },
-      'Weaves DD': {
-        image: 'Weaves-DD.png',
-        description: 'Double drawn weave extensions for fuller look',
-        variants: ['12"', '14"', '16"', '18"', '20"', '22"', '24"']
-      },
-      'Weaves SDD': {
-        image: 'Weaves-SDD.png',
-        description: 'Super double drawn premium weaves',
-        variants: ['12"', '14"', '16"', '18"', '20"', '22"', '24"']
-      },
-      'Tapes': {
-        image: 'Tapes.png',
-        description: 'Seamless tape-in hair extensions',
-        variants: ['16"', '18"', '20"', '22"', '24"']
-      },
-      'ClipOn': {
-        image: 'ClipOn.png',
-        description: 'Easy-to-use clip-in extensions',
-        variants: ['7 pieces', '9 pieces', '11 pieces']
-      },
-      'Closures': {
-        image: 'Closure.png',
-        description: 'Natural-looking lace closures',
-        variants: ['4x4', '5x5', '6x6']
-      },
-      'Frontals': {
-        image: 'Frontal.png',
-        description: 'Full frontal lace pieces',
-        variants: ['13x4', '13x6', '360 Frontal']
-      },
-      'Frontline': {
-        image: 'Frontline.png',
-        description: 'Frontline hair systems',
-        variants: ['Natural', 'Curly', 'Wavy']
-      },
-      'I Tips': {
-        image: 'ITIPS.png',
-        description: 'I-tip micro link extensions',
-        variants: ['0.5g', '0.8g', '1g']
-      },
-      'U Tips': {
-        image: 'UTIPS.png',
-        description: 'U-tip keratin bond extensions',
-        variants: ['0.5g', '0.8g', '1g']
-      },
-      'Y Tips': {
-        image: 'YTIPS.png',
-        description: 'Y-tip fusion extensions',
-        variants: ['0.5g', '0.8g', '1g']
-      },
-      'Flat Tips': {
-        image: 'FlatTips.png',
-        description: 'Flat tip keratin extensions',
-        variants: ['0.5g', '0.8g', '1g']
-      },
-      'Nano Tips': {
-        image: 'Nano.png',
-        description: 'Ultra-fine nano tip extensions',
-        variants: ['0.3g', '0.5g', '0.8g']
-      },
-      'Genius': {
-        image: 'Genius.png',
-        description: 'Genius weft hair extensions',
-        variants: ['16"', '18"', '20"', '22"']
-      },
-      'Toppers': {
-        image: 'SILKTOPPER.png',
-        description: 'Silk base hair toppers',
-        variants: ['6x6', '7x7', '8x8']
-      },
-      'Wigs': {
-        image: 'WIGFRONTAL.png',
-        description: 'Full lace and frontal wigs',
-        variants: ['Full Lace', 'Lace Front', '360 Lace']
-      },
-      'Wig Closure': {
-        image: 'WIGCLOSURE.png',
-        description: 'Closure wig systems',
-        variants: ['4x4', '5x5', '6x6']
-      },
-      'Wig Frontal': {
-        image: 'WIGFRONTAL.png',
-        description: 'Frontal wig systems',
-        variants: ['13x4', '13x6']
-      },
-      'PonyTail': {
-        image: 'PonyTail.png',
-        description: 'Clip-in ponytail extensions',
-        variants: ['16"', '18"', '20"', '22"']
-      },
-      'Flat Clip Ponytail': {
-        image: 'FLATCLIPPONYTAIL.png',
-        description: 'Flat clip ponytail extensions',
-        variants: ['16"', '18"', '20"', '22"']
-      },
-      'Bun': {
-        image: 'BUN.png',
-        description: 'Hair bun accessories',
-        variants: ['Small', 'Medium', 'Large']
-      },
-      'Curly Bun': {
-        image: 'CurlyBun.png',
-        description: 'Curly textured hair buns',
-        variants: ['Small', 'Medium', 'Large']
-      },
-      'Clutch Bun': {
-        image: 'ClutchBun.png',
-        description: 'Clutch-style hair buns',
-        variants: ['Small', 'Medium', 'Large']
-      },
-      'Bangs': {
-        image: 'Bangs.png',
-        description: 'Clip-in bang pieces',
-        variants: ['Straight', 'Side Swept', 'Wispy']
-      },
-      'Halo': {
-        image: 'Halo.png',
-        description: 'Halo-style hair extensions',
-        variants: ['16"', '18"', '20"', '22"']
-      },
-      'Cover Patch': {
-        image: 'CoverPatch.png',
-        description: 'Hair coverage patches',
-        variants: ['2x3', '3x4', '4x5']
-      },
-      'Highlights': {
-        image: 'Highlights.png',
-        description: 'Highlight hair pieces',
-        variants: ['Blonde', 'Brown', 'Custom']
-      }
-    };
+  "DIY": {
+    "image": "default.png",
+    "description": "DIY products",
+    "variants": [
+      "Double Drawn"
+    ]
+  }
+};
 
     function populateCatalogFilters() {
       const categorySelect = document.getElementById('catalog-category');
@@ -6629,689 +4660,6 @@
         message.remove();
       }, 3000);
     }
-
-    // Financial Controls Functions
-    function initFinancialControls() {
-      // Initialize currency selector
-      const currencySelect = document.getElementById('currency-selector');
-      if (currencySelect) {
-        currencySelect.addEventListener('change', handleCurrencyChange);
-      }
-
-      // Initialize discount controls
-      const discountType = document.getElementById('discount-type');
-      const discountValue = document.getElementById('discount-value');
-      
-      if (discountType) {
-        discountType.addEventListener('change', updateQuoteCalculations);
-      }
-      if (discountValue) {
-        discountValue.addEventListener('input', updateQuoteCalculations);
-      }
-
-      // Initialize tax controls
-      const taxOptions = document.getElementById('tax-options');
-      const taxRate = document.getElementById('tax-rate');
-      
-      if (taxOptions) {
-        taxOptions.addEventListener('change', handleTaxTypeChange);
-      }
-      if (taxRate) {
-        taxRate.addEventListener('input', updateQuoteCalculations);
-      }
-
-      // Initialize shipping controls
-      const shippingOptions = document.getElementById('shipping-options');
-      const shippingCost = document.getElementById('shipping-cost');
-      
-      if (shippingOptions) {
-        shippingOptions.addEventListener('change', handleShippingTypeChange);
-      }
-      if (shippingCost) {
-        shippingCost.addEventListener('input', updateQuoteCalculations);
-      }
-
-      // Initialize price list selector
-      const priceListSelector = document.getElementById('quote-price-list-selector');
-      if (priceListSelector) {
-        priceListSelector.addEventListener('change', handlePriceListChange);
-        initPriceListOptions();
-      }
-    }
-
-    async function handleCurrencyChange() {
-      const currencySelect = document.getElementById('currency-selector');
-      const selectedCurrency = currencySelect.value;
-      
-      // Update global currency state
-      state.currency = selectedCurrency;
-      
-      // Fetch fresh exchange rates when currency changes
-      await refreshRates(false);
-      
-      // Update currency preview with complete symbol set
-      const currencyPreview = document.getElementById('currency-preview');
-      if (currencyPreview) {
-        const symbols = { 
-          'INR': '₹', 'USD': '$', 'EUR': '€', 'GBP': '£', 
-          'AUD': 'A$', 'SAR': 'SR', 'NGN': '₦', 'AED': 'د.إ', 'JPY': '¥' 
-        };
-        currencyPreview.textContent = `${symbols[selectedCurrency] || '₹'} ${selectedCurrency}`;
-      }
-      
-      // Sync with price list if needed
-      const priceListSelector = document.getElementById('quote-price-list-selector');
-      if (selectedCurrency === 'USD' && priceListSelector) {
-        priceListSelector.value = 'USA25';
-        handlePriceListChange();
-      }
-      
-      // Update all calculations and displays with fresh rates
-      updateQuoteCalculations();
-      updateAllPrices();
-    }
-
-    function handleDiscountToggle() {
-      const discountToggle = document.getElementById('discount-toggle');
-      const discountPercentage = document.getElementById('discount-percentage');
-      const discountFixed = document.getElementById('discount-fixed');
-      const discountPreview = document.getElementById('discount-preview');
-      
-      if (discountToggle.checked) {
-        // Percentage mode
-        discountPercentage.style.display = 'block';
-        discountFixed.style.display = 'none';
-        discountFixed.value = '';
-        if (discountPreview) {
-          const value = parseFloat(discountPercentage.value) || 0;
-          discountPreview.textContent = `${value}%`;
-        }
-      } else {
-        // Fixed amount mode
-        discountPercentage.style.display = 'none';
-        discountFixed.style.display = 'block';
-        discountPercentage.value = '';
-        if (discountPreview) {
-          const value = parseFloat(discountFixed.value) || 0;
-          const currency = state.currency || 'INR';
-          const symbols = { 'INR': '₹', 'USD': '$', 'EUR': '€', 'GBP': '£', 'AUD': 'A$', 'SAR': 'SAR ', 'NGN': '₦', 'AED': 'د.إ ', 'JPY': '¥' };
-          discountPreview.textContent = `${symbols[currency]}${value.toFixed(2)}`;
-        }
-      }
-      updateQuoteCalculations();
-    }
-
-    // handleTaxToggle function removed - replaced by handleTaxTypeChange
-
-    // handleShippingToggle function removed - replaced by handleShippingTypeChange
-
-    function handlePriceListChange() {
-      const priceListSelector = document.getElementById('quote-price-list-selector');
-      if (!priceListSelector) {
-        console.error('Price list selector not found');
-        return;
-      }
-      const selectedPriceList = priceListSelector.value;
-      
-      if (selectedPriceList) {
-        // Filter products by selected price list
-        const filteredProducts = state.allProducts.filter(product => 
-          product.PriceList === selectedPriceList
-        );
-        
-        // Update dropdowns with filtered data
-        updateQuoteDropdownsWithFilteredData(filteredProducts);
-        
-        // Auto-select currency for specific price lists
-        if (selectedPriceList === 'USA25') {
-          const currencySelect = document.getElementById('currency-selector');
-          if (currencySelect) {
-            currencySelect.value = 'USD';
-            handleCurrencyChange();
-          }
-        }
-      } else {
-        // Show all products
-        updateQuoteDropdownsWithFilteredData(state.allProducts);
-      }
-    }
-
-    function initPriceListOptions() {
-      const priceListSelector = document.getElementById('quote-price-list-selector');
-      if (!priceListSelector) return;
-      
-      // Extract unique price lists
-      const priceLists = new Set();
-      state.allProducts.forEach(product => {
-        if (product.PriceList) {
-          priceLists.add(product.PriceList);
-        }
-      });
-      
-      // Update dropdown options
-      priceListSelector.innerHTML = '';
-      const sortedPriceLists = Array.from(priceLists).sort();
-      sortedPriceLists.forEach(priceList => {
-        const option = document.createElement('option');
-        option.value = priceList;
-        option.textContent = priceList;
-        priceListSelector.appendChild(option);
-      });
-      
-      // Auto-select the first price list if available
-      if (sortedPriceLists.length > 0) {
-        priceListSelector.value = sortedPriceLists[0];
-      }
-    }
-
-    // New dropdown handler functions
-    function handleDiscountTypeChange(type) {
-      const discountValue = document.getElementById('discount-value');
-      const discountPreview = document.getElementById('discount-preview');
-      
-      if (type === 'percentage') {
-        discountValue.placeholder = '0';
-        discountValue.max = '100';
-      } else {
-        discountValue.placeholder = '0';
-        discountValue.removeAttribute('max');
-      }
-      updateQuoteCalculations();
-    }
-
-    function handleTaxTypeChange(type) {
-      const taxRate = document.getElementById('tax-rate');
-      const taxPreview = document.getElementById('tax-preview');
-      
-      if (type === 'tax-free') {
-        taxRate.disabled = true;
-        taxRate.value = '';
-        if (taxPreview) {
-          taxPreview.textContent = 'Tax: ₹0.00';
-        }
-      } else {
-        taxRate.disabled = false;
-      }
-      updateQuoteCalculations();
-    }
-
-    function handleShippingTypeChange(type) {
-      const shippingCost = document.getElementById('shipping-cost');
-      const shippingPreview = document.getElementById('shipping-preview');
-      
-      if (type === 'free') {
-        shippingCost.disabled = true;
-        shippingCost.value = '';
-        if (shippingPreview) {
-          shippingPreview.textContent = 'Shipping: ₹0.00';
-        }
-      } else {
-        shippingCost.disabled = false;
-      }
-      updateQuoteCalculations();
-    }
-
-    function updateQuoteCalculations() {
-      // Recalculate and re-render the quote items table
-      renderQuoteItems();
-    }
-
-    function calculateFinancialTotals(subtotal) {
-      const currency = state.currency || 'INR';
-      
-      // Use dynamic exchange rates from state
-      const exchangeRates = state.rates.rates || DEFAULT_RATES.rates;
-      
-      // Convert subtotal from INR to selected currency
-      let convertedSubtotal = subtotal;
-      if (currency !== 'INR') {
-        const rate = exchangeRates[currency] || 1;
-        convertedSubtotal = subtotal * rate;
-      }
-      
-      // Calculate discount
-      let discountAmount = 0;
-      const discountType = document.getElementById('discount-type');
-      const discountValue = document.getElementById('discount-value');
-      
-      if (discountType && discountValue && discountValue.value) {
-        const value = parseFloat(discountValue.value) || 0;
-        if (discountType.value === 'percentage') {
-          // Percentage discount
-          discountAmount = (convertedSubtotal * value) / 100;
-        } else {
-          // Fixed discount - already in selected currency
-          discountAmount = value;
-        }
-      }
-      
-      const afterDiscount = convertedSubtotal - discountAmount;
-      
-      // Calculate tax
-      let taxAmount = 0;
-      const taxOptions = document.getElementById('tax-options');
-      const taxRate = document.getElementById('tax-rate');
-      
-      if (taxOptions && taxOptions.value === 'percentage' && taxRate && taxRate.value) {
-        // Apply tax percentage
-        const taxPercent = parseFloat(taxRate.value) || 0;
-        taxAmount = (afterDiscount * taxPercent) / 100;
-      }
-      
-      const afterTax = afterDiscount + taxAmount;
-      
-      // Calculate shipping
-      let shippingAmount = 0;
-      const shippingOptions = document.getElementById('shipping-options');
-      const shippingCost = document.getElementById('shipping-cost');
-      
-      if (shippingOptions && shippingOptions.value === 'paid' && shippingCost && shippingCost.value) {
-        // Convert shipping cost from INR to selected currency
-        const baseShippingAmount = parseFloat(shippingCost.value) || 0;
-        if (currency !== 'INR') {
-          const rate = exchangeRates[currency] || 1;
-          shippingAmount = baseShippingAmount * rate;
-        } else {
-          shippingAmount = baseShippingAmount;
-        }
-      }
-      
-      const grandTotal = afterTax + shippingAmount;
-      
-      return {
-         subtotal: convertedSubtotal,
-         discountAmount,
-         afterDiscount,
-         taxAmount,
-         afterTax,
-         shippingAmount,
-         grandTotal
-       };
-     }
-
-     function updateFinancialPreviews(financials) {
-       // Update discount preview
-       const discountPreview = document.getElementById('discount-preview');
-       const discountType = document.getElementById('discount-type');
-       const discountValue = document.getElementById('discount-value');
-       
-       if (discountPreview && discountType && discountValue && discountValue.value) {
-         const value = parseFloat(discountValue.value) || 0;
-         if (discountType.value === 'percentage') {
-           discountPreview.textContent = `${value}%`;
-         } else {
-           const currency = state.currency || 'INR';
-           const symbols = { 'INR': '₹', 'USD': '$', 'EUR': '€', 'GBP': '£', 'AUD': 'A$', 'SAR': 'SAR ', 'NGN': '₦', 'AED': 'د.إ ', 'JPY': '¥' };
-           discountPreview.textContent = `${symbols[currency]}${value.toFixed(2)}`;
-         }
-       } else if (discountPreview) {
-         discountPreview.textContent = 'No Discount';
-       }
-       
-       // Update tax preview
-       const taxPreview = document.getElementById('tax-preview');
-       const taxOptions = document.getElementById('tax-options');
-       const taxRate = document.getElementById('tax-rate');
-       
-       if (taxPreview) {
-         if (taxOptions && taxOptions.value === 'tax-free') {
-           taxPreview.textContent = 'Tax Free';
-         } else if (taxRate && taxRate.value) {
-           const value = parseFloat(taxRate.value) || 0;
-           taxPreview.textContent = `${value}%`;
-         } else {
-           taxPreview.textContent = 'Tax Free';
-         }
-       }
-       
-       // Update shipping preview
-       const shippingPreview = document.getElementById('shipping-preview');
-       const shippingOptions = document.getElementById('shipping-options');
-       const shippingCost = document.getElementById('shipping-cost');
-       
-       if (shippingPreview) {
-         if (shippingOptions && shippingOptions.value === 'free') {
-           shippingPreview.textContent = 'Free Shipping';
-         } else if (shippingCost && shippingCost.value) {
-           const value = parseFloat(shippingCost.value) || 0;
-           const currency = state.currency || 'INR';
-           const symbols = { 'INR': '₹', 'USD': '$', 'EUR': '€', 'GBP': '£', 'AUD': 'A$', 'SAR': 'SAR ', 'NGN': '₦', 'AED': 'د.إ ', 'JPY': '¥' };
-           shippingPreview.textContent = `${symbols[currency]}${value.toFixed(2)}`;
-         } else {
-           shippingPreview.textContent = 'Free Shipping';
-         }
-       }
-     }
-
-     // Validation functions for financial inputs
-     function validatePercentage(input) {
-       const value = parseFloat(input.value);
-       if (isNaN(value) || value < 0 || value > 100) {
-         input.setCustomValidity('Please enter a percentage between 0 and 100');
-         input.classList.add('border-red-500');
-         return false;
-       } else {
-         input.setCustomValidity('');
-         input.classList.remove('border-red-500');
-         return true;
-       }
-     }
-
-     function validateCurrency(input) {
-       const value = parseFloat(input.value);
-       if (isNaN(value) || value < 0) {
-         input.setCustomValidity('Please enter a valid positive amount');
-         input.classList.add('border-red-500');
-         return false;
-       } else {
-         input.setCustomValidity('');
-         input.classList.remove('border-red-500');
-         return true;
-       }
-     }
-
-     function addInputValidation() {
-       // Add validation to discount and tax value inputs
-       const discountValue = document.getElementById('discount-value');
-       const taxRate = document.getElementById('tax-rate');
-       const shippingCost = document.getElementById('shipping-cost');
-       
-       if (discountValue) {
-         discountValue.addEventListener('blur', () => validateCurrency(discountValue));
-         discountValue.addEventListener('input', () => {
-           if (discountValue.value) validateCurrency(discountValue);
-         });
-       }
-       
-       if (taxRate) {
-         taxRate.addEventListener('blur', () => validatePercentage(taxRate));
-         taxRate.addEventListener('input', () => {
-           if (taxRate.value) validatePercentage(taxRate);
-         });
-       }
-       
-       if (shippingCost) {
-         shippingCost.addEventListener('blur', () => validateCurrency(shippingCost));
-         shippingCost.addEventListener('input', () => {
-           if (shippingCost.value) validateCurrency(shippingCost);
-         });
-       }
-     }
-
-     // Table sorting functionality
-     let currentSort = { column: null, direction: 'asc' };
-     
-     function initTableSorting() {
-       const sortableHeaders = document.querySelectorAll('.sortable');
-       sortableHeaders.forEach(header => {
-         header.addEventListener('click', () => {
-           const sortColumn = header.getAttribute('data-sort');
-           sortTable(sortColumn);
-         });
-       });
-     }
-     
-     function sortTable(column) {
-       const tbody = document.querySelector('#items-table tbody');
-       const rows = Array.from(tbody.querySelectorAll('tr'));
-       
-       // Determine sort direction
-       if (currentSort.column === column) {
-         currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
-       } else {
-         currentSort.direction = 'asc';
-       }
-       currentSort.column = column;
-       
-       // Update sort indicators
-       updateSortIndicators(column, currentSort.direction);
-       
-       // Sort rows
-       rows.sort((a, b) => {
-         let aValue = getCellValue(a, column);
-         let bValue = getCellValue(b, column);
-         
-         // Handle numeric sorting
-         if (column === 'qty' || column === 'price' || column === 'total' || column === 'weight') {
-           aValue = parseFloat(aValue) || 0;
-           bValue = parseFloat(bValue) || 0;
-         }
-         
-         if (aValue < bValue) return currentSort.direction === 'asc' ? -1 : 1;
-         if (aValue > bValue) return currentSort.direction === 'asc' ? 1 : -1;
-         return 0;
-       });
-       
-       // Re-append sorted rows
-       rows.forEach(row => tbody.appendChild(row));
-     }
-     
-     function getCellValue(row, column) {
-       const columnMap = {
-         'product': 1,
-         'variant': 2,
-         'length': 3,
-         'weight': 4,
-         'qty': 5,
-         'price': 6,
-         'total': 7
-       };
-       
-       const cell = row.cells[columnMap[column]];
-       return cell ? cell.textContent.trim().replace(/[^\d.-]/g, '') : '';
-     }
-     
-     function updateSortIndicators(activeColumn, direction) {
-       // Reset all indicators
-       document.querySelectorAll('.sort-indicator').forEach(indicator => {
-         indicator.textContent = '↕';
-       });
-       
-       // Set active indicator
-       const activeHeader = document.querySelector(`[data-sort="${activeColumn}"] .sort-indicator`);
-       if (activeHeader) {
-         activeHeader.textContent = direction === 'asc' ? '↑' : '↓';
-       }
-     }
-
-     // Local storage functionality
-     function saveQuoteToStorage() {
-       const quoteData = {
-         items: quoteItems,
-         currency: document.getElementById('currency-selector')?.value || 'INR',
-         priceList: document.getElementById('quote-price-list-selector')?.value || '',
-         discount: {
-           type: document.getElementById('discount-type')?.value || 'percentage',
-           value: document.getElementById('discount-value')?.value || '0'
-         },
-         tax: {
-           type: document.getElementById('tax-options')?.value || 'tax-free',
-           rate: document.getElementById('tax-rate')?.value || '0'
-         },
-         shipping: {
-           type: document.getElementById('shipping-options')?.value || 'free',
-           cost: document.getElementById('shipping-cost')?.value || '0'
-         },
-         notes: document.getElementById('notes-terms')?.value || '',
-         timestamp: new Date().toISOString()
-       };
-       
-       localStorage.setItem('currentQuote', JSON.stringify(quoteData));
-     }
-     
-     function loadQuoteFromStorage() {
-       try {
-         const savedQuote = localStorage.getItem('currentQuote');
-         if (savedQuote) {
-           const quoteData = JSON.parse(savedQuote);
-           
-           // Restore items
-           if (quoteData.items && Array.isArray(quoteData.items)) {
-             quoteItems = quoteData.items;
-             renderQuoteItems();
-           }
-           
-           // Restore currency
-           const currencySelect = document.getElementById('currency-selector');
-           if (currencySelect && quoteData.currency) {
-             currencySelect.value = quoteData.currency;
-           }
-           
-           // Restore price list
-           const priceListSelect = document.getElementById('quote-price-list-selector');
-           if (priceListSelect && quoteData.priceList) {
-             priceListSelect.value = quoteData.priceList;
-           }
-           
-           // Restore discount
-           if (quoteData.discount) {
-             const discountType = document.getElementById('discount-type');
-             const discountValue = document.getElementById('discount-value');
-             if (discountType) discountType.value = quoteData.discount.type;
-             if (discountValue) discountValue.value = quoteData.discount.value;
-             handleDiscountTypeChange(quoteData.discount.type);
-           }
-           
-           // Restore tax
-           if (quoteData.tax) {
-             const taxOptions = document.getElementById('tax-options');
-             const taxRate = document.getElementById('tax-rate');
-             if (taxOptions) taxOptions.value = quoteData.tax.type;
-             if (taxRate) taxRate.value = quoteData.tax.rate;
-             handleTaxTypeChange(quoteData.tax.type);
-           }
-           
-           // Restore shipping
-           if (quoteData.shipping) {
-             const shippingOptions = document.getElementById('shipping-options');
-             const shippingCost = document.getElementById('shipping-cost');
-             if (shippingOptions) shippingOptions.value = quoteData.shipping.type;
-             if (shippingCost) shippingCost.value = quoteData.shipping.cost;
-             handleShippingTypeChange(quoteData.shipping.type);
-           }
-           
-           // Restore notes
-           const notesField = document.getElementById('notes-terms');
-           if (notesField && quoteData.notes) {
-             notesField.value = quoteData.notes;
-           }
-         }
-       } catch (error) {
-         console.warn('Failed to load quote from storage:', error);
-       }
-     }
-     
-     function clearQuoteStorage() {
-       localStorage.removeItem('currentQuote');
-     }
-
-     // Add visual indicators for editable fields
-     function addVisualIndicators() {
-       // Add focus and blur effects to all input fields
-       const inputs = document.querySelectorAll('input[type="number"], input[type="text"], select, textarea');
-       inputs.forEach(input => {
-         input.addEventListener('focus', function() {
-           this.classList.add('ring-2', 'ring-blue-300', 'border-blue-500');
-         });
-         
-         input.addEventListener('blur', function() {
-           this.classList.remove('ring-2', 'ring-blue-300');
-           if (!this.classList.contains('border-red-500')) {
-             this.classList.remove('border-blue-500');
-             this.classList.add('border-gray-300');
-           }
-         });
-       });
-       
-       // Add hover effects to buttons
-       const buttons = document.querySelectorAll('button');
-       buttons.forEach(button => {
-         if (!button.classList.contains('hover:bg-gray-200')) {
-           button.classList.add('hover:opacity-90', 'transition-opacity');
-         }
-       });
-       
-       // Auto-save functionality
-       const autoSaveElements = document.querySelectorAll('#discount-type, #discount-value, #tax-options, #tax-rate, #shipping-options, #shipping-cost, #notes-terms, #quote-currency, #quote-price-list-selector');
-       autoSaveElements.forEach(element => {
-         element.addEventListener('input', () => {
-           clearTimeout(window.autoSaveTimeout);
-           window.autoSaveTimeout = setTimeout(saveQuoteToStorage, 1000); // Save after 1 second of inactivity
-         });
-       });
-       
-       autoSaveElements.forEach(element => {
-         element.addEventListener('change', () => {
-           clearTimeout(window.autoSaveTimeout);
-           window.autoSaveTimeout = setTimeout(saveQuoteToStorage, 1000); // Save after 1 second of inactivity
-         });
-       });
-     }
-
-     // Initialize financial controls when page loads
-     document.addEventListener('DOMContentLoaded', function() {
-       // Initialize financial controls after a short delay to ensure all elements are loaded
-       setTimeout(() => {
-         initFinancialControls();
-         addInputValidation();
-         initTableSorting();
-         addVisualIndicators();
-         
-         // Clear all quote data for fresh start
-         clearAllQuoteData();
-         
-         // Render saved quotes list
-         renderSavedQuotesList();
-         
-         // Set default values only if not loaded from storage
-         const currencySelect = document.getElementById('currency-selector');
-         if (currencySelect && !currencySelect.value) {
-           currencySelect.value = 'INR';
-           handleCurrencyChange();
-         }
-         
-         // Set default dropdown values only if not loaded from storage
-         const discountType = document.getElementById('discount-type');
-         const taxOptions = document.getElementById('tax-options');
-         const shippingOptions = document.getElementById('shipping-options');
-         
-         if (discountType && !discountType.value) {
-           discountType.value = 'percentage';
-           handleDiscountTypeChange('percentage');
-         }
-         
-         if (taxOptions && !taxOptions.value) {
-           taxOptions.value = 'tax-free';
-           handleTaxTypeChange('tax-free');
-         }
-         
-         if (shippingOptions && !shippingOptions.value) {
-           shippingOptions.value = 'free';
-           handleShippingTypeChange('free');
-         }
-         
-         // Add event listeners for dropdown changes
-         if (discountType) {
-           discountType.addEventListener('change', function() {
-             handleDiscountTypeChange(this.value);
-           });
-         }
-         
-         if (taxOptions) {
-           taxOptions.addEventListener('change', function() {
-             handleTaxTypeChange(this.value);
-           });
-         }
-         
-         if (shippingOptions) {
-           shippingOptions.addEventListener('change', function() {
-             handleShippingTypeChange(this.value);
-           });
-         }
-       }, 500);
-     });
-
-
-    </script>
+  </script>
 </body>
 </html>

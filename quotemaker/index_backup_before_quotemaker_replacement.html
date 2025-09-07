@@ -18,45 +18,8 @@
     .dropdown { position: relative; display: inline-block; }
     .dropdown-menu { display: none; position: absolute; right: 0; z-index: 40; min-width: 220px; background: white; border: 1px solid #e5e7eb; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.12); padding: 8px; }
     .dropdown.open .dropdown-menu { display: block; }
-    .header-container { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
-    #items-table {
-      border: 1px solid #e5e7eb;
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-    }
-    #items-table thead th {
-      background-color: #f3f4f6;
-      font-weight: 600;
-      text-align: left;
-      padding: 12px 8px;
-      border-bottom: 2px solid #e5e7eb;
-      color: #374151;
-    }
-    #items-table tbody td {
-      padding: 10px 8px;
-      border-bottom: 1px solid #f3f4f6;
-      vertical-align: middle;
-    }
-    #items-table.zebra tbody tr:nth-child(odd) { 
-      background-color: #ffffff; 
-    }
-    #items-table.zebra tbody tr:nth-child(even) { 
-      background-color: #f9fafb; 
-    }
-    #items-table tbody tr:hover {
-      background-color: #f0f9ff;
-    }
-    #items-table tfoot td {
-      padding: 8px;
-      font-weight: 600;
-      border-top: 2px solid #e5e7eb;
-      background-color: #f9fafb;
-    }
-    #items-table tfoot tr:last-child td {
-      background-color: #f3f4f6;
-      font-size: 1.1em;
-    }
+    #items-table.zebra tbody tr:nth-child(odd) { background-color:#ffffff; }
+    #items-table.zebra tbody tr:nth-child(even) { background-color:#f9fafb; }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="productData.js"></script>
@@ -73,9 +36,6 @@
           </div>
         </div>
         <div class="flex items-center gap-2">
-          <select id="priceListSelector" class="px-3 py-1 border rounded-lg text-sm font-medium text-gray-700 bg-gray-50" title="Select Price List">
-            <option value="">All Price Lists</option>
-          </select>
           <select id="currency-selector" class="px-3 py-1 border rounded-lg text-sm font-medium text-gray-700 bg-gray-200" title="Double-click to edit exchange rates">
             <option value="INR" selected>INR (₹)</option>
             <option value="USD">USD ($)</option>
@@ -167,12 +127,20 @@
       <div id="upload-status" class="mt-2 text-sm hidden"></div>
     </section>
 
-    <!-- Price List Status -->
+    <!-- Price List Selection -->
     <section class="section mint mb-4">
-      <div class="flex items-center justify-between">
-        <h2 class="text-lg font-semibold text-gray-800">Product Catalog</h2>
-        <div id="price-list-status" class="text-sm text-gray-600">
-          <span id="filtered-count">No price list selected</span>
+      <h2 class="text-lg font-semibold text-gray-800 mb-2">Price List Selection</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-medium text-gray-700 mb-1">Select Price List</label>
+          <select id="priceListSelector" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
+            <option value="">All Price Lists</option>
+          </select>
+        </div>
+        <div class="flex items-center">
+          <div id="price-list-status" class="text-sm text-gray-600">
+            <span id="filtered-count">No price list selected</span>
+          </div>
         </div>
       </div>
     </section>
@@ -263,25 +231,25 @@
         <table id="items-table" class="table w-full border-collapse zebra">
           <thead>
             <tr>
-              <th class="text-center" style="width: 50px;">#</th>
-              <th style="min-width: 150px;">Product</th>
-              <th style="min-width: 120px;">Variant</th>
-              <th class="text-center" style="width: 80px;">Length</th>
-              <th class="text-center" style="width: 100px;">Weight</th>
-              <th class="text-center" style="width: 60px;">Qty</th>
-              <th class="text-right" style="width: 120px;">Unit Price</th>
-              <th class="text-right" style="width: 120px;">Line Total</th>
-              <th class="no-print text-center" style="width: 80px;">Actions</th>
+              <th>#</th>
+              <th>Product</th>
+              <th>Variant</th>
+              <th>Length</th>
+              <th>Weight</th>
+              <th>Qty</th>
+              <th>Unit Price</th>
+              <th>Line Total</th>
+              <th class="no-print">Actions</th>
             </tr>
           </thead>
           <tbody></tbody>
           <tfoot>
-            <tr><td colspan="7" class="font-semibold text-right">Grand Total Weight</td><td id="grand-weight" class="text-right font-semibold">—</td><td class="no-print"></td></tr>
-            <tr><td colspan="7" class="font-semibold text-right">Subtotal</td><td id="subtotal" class="text-right font-semibold">—</td><td class="no-print"></td></tr>
-            <tr><td colspan="7" class="font-semibold text-right">Discount</td><td id="discount" class="text-right font-semibold">—</td><td class="no-print"></td></tr>
-            <tr><td colspan="7" class="font-semibold text-right">Tax</td><td id="tax" class="text-right font-semibold">—</td><td class="no-print"></td></tr>
-            <tr><td colspan="7" class="font-semibold text-right">Shipping</td><td id="shipping-total" class="text-right font-semibold">—</td><td class="no-print"></td></tr>
-            <tr><td colspan="7" class="font-semibold text-right">Grand Total</td><td id="grand-total-table" class="text-right font-bold text-lg">—</td><td class="no-print"></td></tr>
+            <tr><td colspan="7" class="font-semibold">Grand Total Weight</td><td id="grand-weight">—</td><td class="no-print"></td></tr>
+            <tr><td colspan="7" class="font-semibold">Subtotal</td><td id="subtotal">—</td><td class="no-print"></td></tr>
+            <tr><td colspan="7" class="font-semibold">Discount</td><td id="discount">—</td><td class="no-print"></td></tr>
+            <tr><td colspan="7" class="font-semibold">Tax</td><td id="tax">—</td><td class="no-print"></td></tr>
+            <tr><td colspan="7" class="font-semibold">Shipping</td><td id="shipping-total">—</td><td class="no-print"></td></tr>
+            <tr><td colspan="7" class="font-semibold">Grand Total</td><td id="grand-total-table">—</td><td class="no-print"></td></tr>
           </tfoot>
         </table>
       </div>
@@ -516,48 +484,39 @@
           const lastUpdate = localStorage.getItem('quoteMaker_lastSync') || '0';
           
           if (data.syncData.timestamp > parseInt(lastUpdate)) {
-            // Refresh product data from server
-            const dataLoaded = await loadExistingProductData();
-            if (dataLoaded) {
-              console.log('Product data refreshed from server in Quote Maker');
+            // Update available price lists from sync data
+            const syncedPriceLists = data.syncData.priceLists || [];
+            
+            // Check if price lists have changed
+            const currentPriceLists = Array.from(availablePriceLists).sort();
+            const newPriceLists = syncedPriceLists.sort();
+            
+            if (JSON.stringify(currentPriceLists) !== JSON.stringify(newPriceLists)) {
+              console.log('Price lists updated from other modules in Quote Maker:', newPriceLists);
               
-              // Update available price lists from refreshed data
-              const syncedPriceLists = [...new Set(products.map(p => p.PriceList).filter(pl => pl))];
+              // Update local price lists
+              availablePriceLists.clear();
+              newPriceLists.forEach(pl => availablePriceLists.add(pl));
               
-              // Check if price lists have changed
-              const currentPriceLists = Array.from(availablePriceLists).sort();
-              const newPriceLists = syncedPriceLists.sort();
+              // Update dropdown
+              updatePriceListDropdown();
               
-              if (JSON.stringify(currentPriceLists) !== JSON.stringify(newPriceLists)) {
-                console.log('Price lists updated from refreshed data in Quote Maker:', newPriceLists);
-                
-                // Update local price lists
-                availablePriceLists.clear();
-                newPriceLists.forEach(pl => availablePriceLists.add(pl));
-                
-                // Update dropdown
-                updatePriceListDropdown();
-                
-                // Refresh categories and products based on current selection
-                handlePriceListChange();
-                
-                // Show notification to user
-                const statusEl = el('filtered-count');
-                if (statusEl) {
-                  statusEl.textContent = 'Data synchronized from server';
-                  statusEl.className = 'text-green-600 font-medium';
-                  setTimeout(() => {
-                    const selectedPriceList = el('priceListSelector').value;
-                    if (selectedPriceList) {
-                      const count = products.filter(p => p.PriceList === selectedPriceList).length;
-                      statusEl.textContent = `${count} products from ${selectedPriceList}`;
-                      statusEl.className = 'text-green-600 font-medium';
-                    } else {
-                      statusEl.textContent = `${products.length} products (all price lists)`;
-                      statusEl.className = 'text-blue-600 font-medium';
-                    }
-                  }, 3000);
-                }
+              // Show notification to user
+              const statusEl = el('filtered-count');
+              if (statusEl) {
+                statusEl.textContent = 'Price lists synchronized from other modules';
+                statusEl.className = 'text-blue-600 font-medium';
+                setTimeout(() => {
+                  const selectedPriceList = el('priceListSelector').value;
+                  if (selectedPriceList) {
+                    const count = products.filter(p => p.PriceList === selectedPriceList).length;
+                    statusEl.textContent = `${count} products from ${selectedPriceList}`;
+                    statusEl.className = 'text-green-600 font-medium';
+                  } else {
+                    statusEl.textContent = `${products.length} products (all price lists)`;
+                    statusEl.className = 'text-blue-600 font-medium';
+                  }
+                }, 3000);
               }
             }
             
@@ -697,7 +656,7 @@
       items.forEach((it,idx)=>{
         const unit=displayUnit(it); const line=unit*it.qty; const weightStr = (()=>{ const g=(Number(it.stdWeight)||0)*(Number(it.qty)||0); const kg=g/1000; return (kg>9.99)?kg.toFixed(2)+" kg":Math.round(g)+" g"; })();
         const tr=document.createElement("tr");
-        tr.innerHTML=`<td class="text-center">${idx+1}</td><td>${it.product}</td><td>${it.category} • ${it.density}</td><td class="text-center">${it.length}</td><td class="text-center" title="Std ${it.stdWeight||""} g each">${weightStr}</td><td class="text-center">${it.qty}</td><td class="text-right">${fmtMoney(unit)}</td><td class="text-right">${fmtMoney(line)}</td><td class="no-print text-center"><button class="text-red-600 underline text-sm pressable" data-idx="${idx}" data-act="del">Delete</button></td>`;
+        tr.innerHTML=`<td>${idx+1}</td><td>${it.product}</td><td>${it.category} • ${it.density}</td><td>${it.length}</td><td title="Std ${it.stdWeight||""} g each">${weightStr}</td><td>${it.qty}</td><td>${fmtMoney(unit)}</td><td>${fmtMoney(line)} </td><td class="no-print"><button class="text-red-600 underline text-sm pressable" data-idx="${idx}" data-act="del">Delete</button></td>`;
         tbody.appendChild(tr);
       });
       tbody.querySelectorAll("button[data-act='del']").forEach(btn=>{
