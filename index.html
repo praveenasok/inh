@@ -5505,6 +5505,18 @@
         briefPreview: document.getElementById('brief-preview').value,
         items: [...quoteItems],
         notes: document.getElementById('notes-terms').value,
+        discount: {
+          type: document.getElementById('discount-type')?.value || 'percentage',
+          value: document.getElementById('discount-value')?.value || '0'
+        },
+        shipping: {
+          type: document.getElementById('shipping-options')?.value || 'free',
+          cost: document.getElementById('shipping-cost')?.value || '0'
+        },
+        tax: {
+          type: document.getElementById('tax-options')?.value || 'tax-free',
+          rate: document.getElementById('tax-rate')?.value || '0'
+        },
         savedAt: now.toISOString()
       };
 
@@ -5875,8 +5887,33 @@
           const quantity = parseInt(item.quantity) || 1;
           return sum + (price * quantity);
         }, 0);
-        const tax = subtotal * 0.18; // 18% GST
-        const total = subtotal + tax;
+        
+        // Calculate discount
+        let discountAmount = 0;
+        if (quote.discount && quote.discount.value && parseFloat(quote.discount.value) > 0) {
+          const discountValue = parseFloat(quote.discount.value);
+          if (quote.discount.type === 'percentage') {
+            discountAmount = (subtotal * discountValue) / 100;
+          } else {
+            discountAmount = discountValue;
+          }
+        }
+        
+        // Calculate tax on discounted amount
+        const taxableAmount = subtotal - discountAmount;
+        let taxAmount = 0;
+        if (quote.tax && quote.tax.type === 'percentage' && quote.tax.rate) {
+          const taxRate = parseFloat(quote.tax.rate) || 0;
+          taxAmount = (taxableAmount * taxRate) / 100;
+        }
+        
+        // Calculate shipping
+        let shippingAmount = 0;
+        if (quote.shipping && quote.shipping.type === 'paid' && quote.shipping.cost) {
+          shippingAmount = parseFloat(quote.shipping.cost) || 0;
+        }
+        
+        const total = taxableAmount + taxAmount + shippingAmount;
        
        return `
          <div style="font-family: 'Courier New', monospace; width: 400px; margin: 0; padding: 12px; background: white; color: #000; line-height: 1.1; box-sizing: border-box;">
@@ -5896,6 +5933,13 @@
              <div><strong>Sales:</strong> ${quote.salesman || 'N/A'}</div>
              <div><strong>Valid:</strong> ${quote.validDays || 'N/A'} days</div>
            </div>
+           
+           <!-- Brief Preview -->
+           ${quote.briefPreview ? `
+             <div style="margin-bottom: 8px; padding: 4px; background: #f9f9f9; border: 1px solid #ddd; font-size: 9px;">
+               <strong>Info:</strong> ${quote.briefPreview}
+             </div>
+           ` : ''}
            
            <!-- Items Section -->
            <div style="border: 1px solid #000; margin-bottom: 8px;">
@@ -5927,9 +5971,25 @@
                <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
                  <span>Subtotal:</span><span>${formatQuoteCurrency(subtotal)}</span>
                </div>
-               <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
-                 <span>Tax (18%):</span><span>${formatQuoteCurrency(tax)}</span>
-               </div>
+               ${discountAmount > 0 ? `
+                 <div style="display: flex; justify-content: space-between; margin-bottom: 2px; color: #d63384;">
+                   <span>Discount ${quote.discount.type === 'percentage' ? `(${quote.discount.value}%)` : ''}:</span><span>-${formatQuoteCurrency(discountAmount)}</span>
+                 </div>
+               ` : ''}
+               ${taxAmount > 0 ? `
+                 <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
+                   <span>Tax (${quote.tax.rate}%):</span><span>${formatQuoteCurrency(taxAmount)}</span>
+                 </div>
+               ` : ''}
+               ${shippingAmount > 0 ? `
+                 <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
+                   <span>Shipping:</span><span>${formatQuoteCurrency(shippingAmount)}</span>
+                 </div>
+               ` : quote.shipping && quote.shipping.type === 'free' ? `
+                 <div style="display: flex; justify-content: space-between; margin-bottom: 2px; color: #198754;">
+                   <span>Shipping:</span><span>FREE</span>
+                 </div>
+               ` : ''}
                <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 12px; border-top: 1px solid #000; padding-top: 4px;">
                  <span>TOTAL:</span><span>${formatQuoteCurrency(total)}</span>
                </div>
