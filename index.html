@@ -1472,16 +1472,21 @@
       elKgWrap.classList.toggle('hidden', !hasKg); if (!hasKg) elKg.checked=false;
       elSelectAllWrap.classList.toggle('hidden', !state.category); elSelectAll.checked=false; state.selectAll=false;
 
-      // Get unique products with their price list information
-      const productMap = new Map();
-      dataSource.filter(i => i.Category===state.category).forEach(item => {
-        const key = item.Product;
-        if (!productMap.has(key)) {
-          productMap.set(key, { name: item.Product, priceList: item.PriceList });
-        }
-      });
-      const products = Array.from(productMap.values()).sort((a, b) => a.name.localeCompare(b.name));
-      fillDropdownWithPriceList(elProductDropdown, products, 'Select Products');
+      // Check if price list is selected
+      if (state.filteredProducts.length === 0) {
+        fillDropdownWithPriceList(elProductDropdown, [], 'Please select a price list first');
+      } else {
+        // Get unique products with their price list information
+        const productMap = new Map();
+        dataSource.filter(i => i.Category===state.category).forEach(item => {
+          const key = item.Product;
+          if (!productMap.has(key)) {
+            productMap.set(key, { name: item.Product, priceList: item.PriceList });
+          }
+        });
+        const products = Array.from(productMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+        fillDropdownWithPriceList(elProductDropdown, products, 'Select Products');
+      }
       fillDropdown(elDensityDropdown, [], 'Select Densities');
       fillDropdown(elColorDropdown, [], 'Select Colors');
       lockDropdown(elProductDropdown, !state.category); lockDropdown(elDensityDropdown, true); lockDropdown(elColorDropdown, true);
@@ -1494,7 +1499,7 @@
     function onProductChange(){
       const selP = getDropdownValues(elProductDropdown);
       state.selProducts = selP;
-      const dataSource = state.filteredProducts.length > 0 ? state.filteredProducts : productData;
+      const dataSource = state.filteredProducts;
       const densPool = uniqSorted(dataSource.filter(i => i.Category===state.category && (selP.length===0 || selP.includes(i.Product))).map(i => i.Density));
       fillDropdown(elDensityDropdown, densPool, 'Select Densities'); lockDropdown(elDensityDropdown,false);
       const selD = getDropdownValues(elDensityDropdown); state.selDensities = selD;
@@ -1507,7 +1512,7 @@
       const selD = getDropdownValues(elDensityDropdown);
       state.selDensities = selD;
       const selP = state.selProducts;
-      const dataSource = state.filteredProducts.length > 0 ? state.filteredProducts : productData;
+      const dataSource = state.filteredProducts;
       const colorPool = uniqSorted(dataSource.filter(i => i.Category===state.category && (selP.length===0 || selP.includes(i.Product)) && (selD.length===0 || selD.includes(i.Density))).map(i => i.Colors));
       fillDropdown(elColorDropdown, colorPool, 'Select Colors'); lockDropdown(elColorDropdown,false);
       state.selColors = getDropdownValues(elColorDropdown);
@@ -1527,7 +1532,7 @@
     /* Segments (explode combinations) */
     function explodeCombosToSegments(){
       if (!state.category) return;
-      const dataSource = state.filteredProducts.length > 0 ? state.filteredProducts : productData;
+      const dataSource = state.filteredProducts;
       const pool = dataSource.filter(i => i.Category===state.category);
       let P = state.selectAll ? uniqSorted(pool.map(x=>x.Product)) : (state.selProducts.length? state.selProducts : uniqSorted(pool.map(x=>x.Product)));
       let D = state.selectAll ? uniqSorted(pool.map(x=>x.Density)) : (state.selDensities.length? state.selDensities : uniqSorted(pool.map(x=>x.Density)));
@@ -4472,10 +4477,9 @@
       
       updatePriceListDropdown();
       
-      // Ensure filteredProducts shows all products by default
+      // Do not show products until a price list is selected
       if (state.filteredProducts.length === 0 && state.allProducts.length > 0) {
-        state.filteredProducts = [...state.allProducts];
-        console.log('Set filteredProducts to show all products by default');
+        console.log('No price list selected - products will be empty until price list is chosen');
       }
       
       // Add event listener for price list selection
