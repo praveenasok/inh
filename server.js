@@ -4,7 +4,7 @@ const path = require('path');
 const url = require('url');
 const XLSX = require('xlsx');
 
-const PORT = 8001;
+const PORT = 3000;
 const HTML_FILE_PATH = path.join(__dirname, 'index.html');
 const DATA_FILE_PATH = path.join(__dirname, 'data.json');
 const EXCEL_FILE_PATH = path.join(__dirname, 'PriceLists', 'productData.xlsx');

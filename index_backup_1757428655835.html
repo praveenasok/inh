@@ -7282,7 +7282,7 @@
          if (emptyElement) emptyElement.classList.add('hidden');
        
          productsGrid.innerHTML = products.map(([category, data]) => {
-        const imagePath = `images/Products/${data.image}`;
+        const imagePath = `/images/Products/${data.image}`;
         
         return `
           <div class="bg-white rounded-lg border border-gray-200 hover:shadow-lg transition-all duration-300 overflow-hidden group cursor-pointer" 

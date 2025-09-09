@@ -1160,20 +1160,28 @@
             </button>
             <button id="shareBtn" class="btn-info px-2 py-0 rounded-lg text-sm font-medium hover:bg-blue-700 transition-all duration-200 flex items-center justify-center gap-1 mobile-full" aria-label="Share Quote" title="Share quote as image to clipboard">
               <span class="text-base" aria-hidden="true">📤</span>
-              <span>Share Now</span>
+              <span>Share</span>
             </button>
           </div>
            
            <!-- Enhanced Share Popup for Mobile -->
-           <div id="sharePopup" class="hidden absolute z-50 mt-2 w-full sm:w-64 bg-white border-2 rounded-xl shadow-xl p-3" style="top: 100%; left: 0; display: none;">
+           <div id="sharePopup" class="hidden absolute z-30 mt-2 w-full sm:w-64 bg-white border-2 rounded-xl shadow-xl p-3">
              <div class="space-y-2">
+               <button id="shareDownloadPDF" class="w-full text-left px-4 py-3 text-base font-medium hover:bg-slate-100 rounded-lg flex items-center gap-3 transition-all duration-200 touch-action-manipulation">
+                 <span class="text-lg">📄</span> 
+                 <span>Save as PDF</span>
+               </button>
 
+               <button id="downloadPNG" class="w-full text-left px-4 py-3 text-base font-medium hover:bg-slate-100 rounded-lg flex items-center gap-3 transition-all duration-200 touch-action-manipulation">
+                 <span class="text-lg">🖼️</span> 
+                 <span>Download as PNG</span>
+               </button>
 
                <!-- Share PNG with Selection -->
                <div class="relative">
                  <button id="sharePNGBtn" class="w-full text-left px-4 py-3 text-base font-medium hover:bg-slate-100 rounded-lg flex items-center gap-3 transition-all duration-200 touch-action-manipulation">
                    <span class="text-lg">📤</span> 
-                   <span>Share Price Lists</span>
+                   <span>Share PNG Files</span>
                    <span class="ml-auto text-sm">▼</span>
                  </button>
                  
@@ -1195,6 +1203,11 @@
                    </div>
                  </div>
                </div>
+
+               <button id="shareInvoiceImage" class="w-full text-left px-4 py-3 text-base font-medium hover:bg-slate-100 rounded-lg flex items-center gap-3 transition-all duration-200 touch-action-manipulation">
+                 <span class="text-lg">📋</span> 
+                 <span>Share Invoice Image</span>
+               </button>
 
              </div>
            </div>
@@ -1519,19 +1532,13 @@
         'Closures': ['transparentlace.png', 'plucked.png', 'cuticle.png', 'color.png', 'durable.png', 'noshedding.png'],
         'Tapes': ['tapes.png', 'cuticle.png', 'color.png', 'durable.png', 'noshedding.png', 'cut.png'],
         'Tips': ['tips.png', 'cuticle.png', 'color.png', 'durable.png', 'noshedding.png', 'cut.png'],
-        'Genius': ['genius.png', 'cuticle.png', 'color.png', 'durable.png', 'noshedding.png', 'cut.png'],
-        'Genius Weaves': ['genius.png', 'cuticle.png', 'color.png', 'durable.png', 'noshedding.png', 'cut.png'],
+        'Genius': ['Genius.png', 'cuticle.png', 'color.png', 'durable.png', 'noshedding.png', 'cut.png'],
+        'Genius Weaves': ['Genius.png', 'cuticle.png', 'color.png', 'durable.png', 'noshedding.png', 'cut.png'],
         'DIY': ['diy.png', 'cuticle.png', 'color.png', 'measure.png', 'durable.png', 'cut.png'],
         'ClipOn': ['cuticle.png', 'color.png', 'measure.png', 'durable.png', 'noshedding.png', 'stitch.png']
       };
       const images = categoryFeatureMap[category] || [];
-      return images.map(img => {
-        // For genius.png, use the Products directory path
-        if (img === 'genius.png') {
-          return `images/Products/Genius.png`;
-        }
-        return `images/category-images/${category}/${img}`;
-      });
+      return images.map(img => `images/category-images/${category}/${img}`);
     }
 
 
@@ -1870,7 +1877,7 @@
             <div class="flex items-center justify-center p-2">
                <div class="flex items-center justify-center gap-1 flex-nowrap mobile-feature-images" style="width: 458px; min-height: 91px; padding: 8px; overflow-x: auto;">
                  ${getCategoryFeatureImages(segment.category).map(imagePath => 
-                   `<img src="${imagePath}" alt="Feature" class="object-contain mobile-feature-img" style="height: 65px; width: auto; max-width: 75px; flex-shrink: 0;" onerror="this.style.display='none'">` 
+                   `<img src="${imagePath}" alt="Feature" class="object-contain mobile-feature-img" style="height: 65px; width: auto; max-width: 75px; flex-shrink: 0;" onerror="this.style.display='none'">`
                  ).join('')}
                </div>
             </div>
@@ -1933,22 +1940,26 @@
               <div class="grid grid-cols-3 items-start mb-2" style="font-size: clamp(0.75rem, 2vw, 0.875rem);">
                 ${document.getElementById('priceListSelector').value === 'USA25' ? `
                 <div class="text-left text-gray-700">
-                  <div class="font-medium text-xs">8 SUMMIT CT, HACKENSACK NJ 07601, USA</div>
-                  <div class="font-medium text-xs">us@indiannaturalhair.com</div>
-                  <div class="font-medium text-xs">+1 (646) 919-2921</div>
+                  <div class="font-medium">8 SUMMIT CT</div>
+                  <div class="font-medium">HACKENSACK NJ 07601, USA</div>
                 </div>
-                <div class="flex-1"></div>
-                <div class="text-right flex justify-end items-center">
-                  <span class="font-bold text-4xl" style="color: #a37e55;">${SYMBOL[state.currency] || state.currency}</span>
+                <div class="flex justify-center items-center">
+                  <span class="font-bold text-3xl" style="color: #a37e55;">${SYMBOL[state.currency] || state.currency}</span>
+                </div>
+                <div class="text-right">
+                  <a href="mailto:us@indiannaturalhair.com" class="text-gray-700 font-semibold hover:text-gray-900 transition-colors">us@indiannaturalhair.com</a>
+                  <div class="text-gray-700 font-semibold">+1 (646) 919-2921</div>
                 </div>
                 ` : `
                 <div class="text-left text-gray-700">
-                  <div class="font-medium text-xs">WZ 81/1A, Guru Nanak Nagar, New Delhi 110018, India</div>
-                  <div class="font-medium text-xs">info@indiannaturalhair.com</div>
+                  <div class="font-medium text-sm">WZ 81/1A, Guru Nanak Nagar</div>
+                  <div class="font-medium">New Delhi 110018, India</div>
                 </div>
-                <div class="flex-1"></div>
-                <div class="text-right flex justify-end items-center">
-                  <span class="font-bold text-4xl" style="color: #a37e55;">${SYMBOL[state.currency] || state.currency}</span>
+                <div class="flex justify-center items-center">
+                  <span class="font-bold text-3xl" style="color: #a37e55;">${SYMBOL[state.currency] || state.currency}</span>
+                </div>
+                <div class="text-right" style="margin-right: 10px;">
+                  <a href="mailto:info@indiannaturalhair.com" class="text-gray-700 font-semibold hover:text-gray-900 transition-colors">info@indiannaturalhair.com</a>
                 </div>
                 `}
               </div>
@@ -2428,7 +2439,12 @@
         previewContainer.innerHTML = '<div class="text-center text-gray-500 p-8">No segments to display. Please select products and generate preview.</div>';
         document.getElementById('pageInfo').textContent = 'No pages to display';
         
-
+        // Hide PNG download button when no segments
+        const pngButton = document.getElementById('downloadPNG');
+        if (pngButton) {
+          pngButton.style.display = 'none';
+          pngButton.disabled = true;
+        }
         
         return;
       }
@@ -2842,8 +2858,10 @@
   
       elClearSegments.addEventListener('click', clearAllOptions);
       $('previewBtn').addEventListener('click', generatePreview);
+      $('shareDownloadPDF').addEventListener('click', downloadPNG);
 
-
+      $('downloadPNG').addEventListener('click', downloadPNG);
+      $('shareInvoiceImage').addEventListener('click', shareInvoiceImage);
       
       // PNG sharing functionality
       $('sharePNGBtn').addEventListener('click', togglePNGSelectionDropdown);
@@ -3031,27 +3049,10 @@
 
     // Share functionality
     async function shareNatively() {
-      console.log('shareNatively called, segments:', state.segments.length, 'PNGs:', state.lastGeneratedPNGs?.length || 0);
-      
       // Check if we have segments to share
       if (state.segments.length === 0) {
-        // For Price List Calculator Module, try to generate preview automatically
-        if (state.category) {
-          console.log('No segments found, but category exists. Generating preview first...');
-          generatePreview();
-          // Wait a moment for preview generation to complete
-          setTimeout(() => {
-            if (state.segments.length > 0) {
-              shareNatively(); // Retry sharing
-            } else {
-              alert('Unable to generate preview. Please ensure you have selected products and try the Preview button first.');
-            }
-          }, 1000);
-          return;
-        } else {
-          alert('Please select a category and generate a preview first before sharing.');
-          return;
-        }
+        alert('Please generate a preview first before sharing.');
+        return;
       }
       
       // Check if we have generated PNG images to share
@@ -3092,21 +3093,11 @@
     }
     
     function toggleSharePopup() {
-      console.log('toggleSharePopup called');
       const popup = $('sharePopup');
-      console.log('popup element:', popup);
+      const isHidden = popup.classList.contains('hidden');
       
-      if (popup.style.display === 'none' || popup.classList.contains('hidden')) {
-        popup.style.display = 'block';
-        popup.classList.remove('hidden');
-        console.log('Popup shown');
-      } else {
-        popup.style.display = 'none';
-        popup.classList.add('hidden');
-        console.log('Popup hidden');
-      }
-      console.log('popup classes after toggle:', popup.className);
-      console.log('popup display style:', popup.style.display);
+      popup.classList.toggle('hidden');
+      // sharePdfBtn removed - no longer needed for aria-expanded
     }
 
     async function downloadPNG() {
@@ -3668,169 +3659,6 @@
       setTimeout(() => errorMsg.remove(), 4000);
     }
 
-    // PNG Selection Dropdown Functions
-    function togglePNGSelectionDropdown() {
-      const dropdown = document.getElementById('pngSelectionDropdown');
-      const isHidden = dropdown.classList.contains('hidden');
-      
-      if (isHidden) {
-        // Auto-generate PNGs when dropdown is opened
-        generateAllPNGFiles();
-      }
-      
-      dropdown.classList.toggle('hidden');
-    }
-    
-    function toggleSelectAllPNGs() {
-      const checkboxes = document.querySelectorAll('#pngFilesList input[type="checkbox"]');
-      const selectAllBtn = document.getElementById('selectAllPNGs');
-      const allChecked = Array.from(checkboxes).every(cb => cb.checked);
-      
-      checkboxes.forEach(cb => {
-        cb.checked = !allChecked;
-      });
-      
-      selectAllBtn.textContent = allChecked ? 'Select All' : 'Deselect All';
-      updateShareButton();
-    }
-    
-    function shareSelectedPNGFiles() {
-      const selectedCheckboxes = document.querySelectorAll('#pngFilesList input[type="checkbox"]:checked');
-      
-      if (selectedCheckboxes.length === 0) {
-        alert('Please select at least one PNG file to share.');
-        return;
-      }
-      
-      // Get the selected PNG data
-      const selectedPNGs = Array.from(selectedCheckboxes).map(cb => {
-        const filename = cb.getAttribute('data-filename');
-        const blob = cb.getAttribute('data-blob');
-        return { filename, blob };
-      });
-      
-      // For now, download each selected PNG
-      selectedPNGs.forEach(png => {
-        const url = png.blob;
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = png.filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-      });
-      
-      // Close dropdown and show success message
-      document.getElementById('pngSelectionDropdown').classList.add('hidden');
-      
-      const successMsg = document.createElement('div');
-      successMsg.className = 'fixed top-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg z-50';
-      successMsg.innerHTML = `
-        <div class="flex items-center gap-2">
-          <span class="text-lg">✅</span>
-          <span class="font-medium">${selectedPNGs.length} PNG file(s) downloaded successfully!</span>
-        </div>
-      `;
-      document.body.appendChild(successMsg);
-      setTimeout(() => successMsg.remove(), 3000);
-    }
-    
-    async function generateAllPNGFiles() {
-      // Show loading indicator
-      const pngFilesList = document.getElementById('pngFilesList');
-      pngFilesList.innerHTML = '<div class="text-center py-4"><span class="text-lg">⏳</span> Generating PNG files...</div>';
-      
-      if (state.segments.length === 0) {
-        pngFilesList.innerHTML = '<div class="text-center py-4 text-gray-500">No segments available. Please generate a preview first.</div>';
-        return;
-      }
-      
-      const htmlPreview = document.getElementById('htmlPreview');
-      const generatedPNGs = [];
-      
-      try {
-        // Generate PNG for each segment
-        for (let i = 0; i < state.segments.length; i++) {
-          const segment = state.segments[i];
-          
-          // Create a temporary container for this segment
-          const tempContainer = document.createElement('div');
-          tempContainer.innerHTML = createPageHTML(segment, i);
-          tempContainer.style.position = 'absolute';
-          tempContainer.style.left = '-9999px';
-          tempContainer.style.top = '0';
-          tempContainer.style.width = '800px';
-          document.body.appendChild(tempContainer);
-          
-          // Generate PNG using html2canvas
-          const canvas = await html2canvas(tempContainer, {
-            scale: 2,
-            useCORS: true,
-            allowTaint: true,
-            backgroundColor: '#ffffff'
-          });
-          
-          // Convert to blob
-          const blob = await new Promise(resolve => {
-            canvas.toBlob(resolve, 'image/png');
-          });
-          
-          const url = URL.createObjectURL(blob);
-          const filename = `${segment.category} - ${segment.product} - ${segment.density} - ${segment.color} - ${state.currency} - ${state.kg ? 'Per Kg' : 'Per Piece'}.png`;
-          
-          generatedPNGs.push({ filename, url, blob });
-          
-          // Clean up temporary container
-          document.body.removeChild(tempContainer);
-        }
-        
-        // Populate the PNG files list
-        populatePNGFilesList(generatedPNGs);
-        
-      } catch (error) {
-        console.error('Error generating PNG files:', error);
-        pngFilesList.innerHTML = '<div class="text-center py-4 text-red-500">Error generating PNG files. Please try again.</div>';
-      }
-    }
-    
-    function populatePNGFilesList(pngFiles) {
-      const pngFilesList = document.getElementById('pngFilesList');
-      
-      if (pngFiles.length === 0) {
-        pngFilesList.innerHTML = '<div class="text-center py-4 text-gray-500">No PNG files generated.</div>';
-        return;
-      }
-      
-      const checkboxesHTML = pngFiles.map((png, index) => `
-        <label class="flex items-center gap-2 p-2 hover:bg-gray-50 rounded cursor-pointer">
-          <input type="checkbox" 
-                 data-filename="${png.filename}" 
-                 data-blob="${png.url}"
-                 class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                 onchange="updateShareButton()">
-          <span class="text-sm text-gray-700 truncate" title="${png.filename}">
-            ${png.filename.length > 40 ? png.filename.substring(0, 40) + '...' : png.filename}
-          </span>
-        </label>
-      `).join('');
-      
-      pngFilesList.innerHTML = checkboxesHTML;
-      updateShareButton();
-    }
-    
-    function updateShareButton() {
-      const selectedCount = document.querySelectorAll('#pngFilesList input[type="checkbox"]:checked').length;
-      const shareBtn = document.getElementById('shareSelectedPNGs');
-      const selectAllBtn = document.getElementById('selectAllPNGs');
-      
-      shareBtn.disabled = selectedCount === 0;
-      shareBtn.textContent = selectedCount > 0 ? `Share ${selectedCount} PNG${selectedCount > 1 ? 's' : ''}` : 'Share Selected PNGs';
-      
-      const totalCheckboxes = document.querySelectorAll('#pngFilesList input[type="checkbox"]').length;
-      const allChecked = selectedCount === totalCheckboxes && totalCheckboxes > 0;
-      selectAllBtn.textContent = allChecked ? 'Deselect All' : 'Select All';
-    }
-
     // WhatsApp PDF sharing functionality
 
     
@@ -3838,7 +3666,7 @@
 
 
 
-    </script>
+  </script>
       
       </div> <!-- End Price List Calculator Module -->
       
@@ -4991,6 +4819,7 @@
     
     // Initialize price calculator salesman dropdown
     function initPriceCalculatorSalesmanDropdown() {
+      alert('Function called: initPriceCalculatorSalesmanDropdown');
       console.log('Initializing price calculator salesman dropdown...');
       
       const salesmanSelector = document.getElementById('price-calculator-salesman');
@@ -5004,8 +4833,8 @@
       console.log('Salesman selector visible:', window.getComputedStyle(salesmanSelector).display);
       console.log('Salesman selector offsetParent:', salesmanSelector.offsetParent);
       
-      // Debug logging for dropdown visibility
-      console.log('Dropdown found:', salesmanSelector ? 'YES' : 'NO', 'Visible:', window.getComputedStyle(salesmanSelector).display);
+      // Temporary alert for debugging
+      alert('Dropdown found: ' + (salesmanSelector ? 'YES' : 'NO') + '\nVisible: ' + window.getComputedStyle(salesmanSelector).display);
       
       // Clear existing options
       salesmanSelector.innerHTML = '<option value="">Select Salesman</option>';
@@ -5413,7 +5242,7 @@
           console.log('Share button clicked!');
           console.log('Current state.segments:', state.segments);
           console.log('Generated PNGs:', state.generatedPNGs);
-          toggleSharePopup();
+          shareNatively(e);
         });
         console.log('Share button event listener attached');
       } else {
@@ -7282,7 +7111,7 @@
          if (emptyElement) emptyElement.classList.add('hidden');
        
          productsGrid.innerHTML = products.map(([category, data]) => {
-        const imagePath = `images/Products/${data.image}`;
+        const imagePath = `/images/Products/${data.image}`;
         
         return `
           <div class="bg-white rounded-lg border border-gray-200 hover:shadow-lg transition-all duration-300 overflow-hidden group cursor-pointer" 

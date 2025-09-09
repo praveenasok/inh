@@ -1167,7 +1167,10 @@
            <!-- Enhanced Share Popup for Mobile -->
            <div id="sharePopup" class="hidden absolute z-50 mt-2 w-full sm:w-64 bg-white border-2 rounded-xl shadow-xl p-3" style="top: 100%; left: 0; display: none;">
              <div class="space-y-2">
-
+               <button id="downloadPNG" class="w-full text-left px-4 py-3 text-base font-medium hover:bg-slate-100 rounded-lg flex items-center gap-3 transition-all duration-200 touch-action-manipulation">
+                 <span class="text-lg">🖼️</span> 
+                 <span>Download as PNG</span>
+               </button>
 
                <!-- Share PNG with Selection -->
                <div class="relative">
@@ -1870,7 +1873,7 @@
             <div class="flex items-center justify-center p-2">
                <div class="flex items-center justify-center gap-1 flex-nowrap mobile-feature-images" style="width: 458px; min-height: 91px; padding: 8px; overflow-x: auto;">
                  ${getCategoryFeatureImages(segment.category).map(imagePath => 
-                   `<img src="${imagePath}" alt="Feature" class="object-contain mobile-feature-img" style="height: 65px; width: auto; max-width: 75px; flex-shrink: 0;" onerror="this.style.display='none'">` 
+                   `<img src="${imagePath}" alt="Feature" class="object-contain mobile-feature-img" style="height: 65px; width: auto; max-width: 75px; flex-shrink: 0;" onerror="this.style.display='none'">`
                  ).join('')}
                </div>
             </div>
@@ -1933,22 +1936,26 @@
               <div class="grid grid-cols-3 items-start mb-2" style="font-size: clamp(0.75rem, 2vw, 0.875rem);">
                 ${document.getElementById('priceListSelector').value === 'USA25' ? `
                 <div class="text-left text-gray-700">
-                  <div class="font-medium text-xs">8 SUMMIT CT, HACKENSACK NJ 07601, USA</div>
-                  <div class="font-medium text-xs">us@indiannaturalhair.com</div>
-                  <div class="font-medium text-xs">+1 (646) 919-2921</div>
+                  <div class="font-medium">8 SUMMIT CT</div>
+                  <div class="font-medium">HACKENSACK NJ 07601, USA</div>
                 </div>
-                <div class="flex-1"></div>
-                <div class="text-right flex justify-end items-center">
-                  <span class="font-bold text-4xl" style="color: #a37e55;">${SYMBOL[state.currency] || state.currency}</span>
+                <div class="flex justify-center items-center">
+                  <span class="font-bold text-3xl" style="color: #a37e55;">${SYMBOL[state.currency] || state.currency}</span>
+                </div>
+                <div class="text-right">
+                  <a href="mailto:us@indiannaturalhair.com" class="text-gray-700 font-semibold hover:text-gray-900 transition-colors">us@indiannaturalhair.com</a>
+                  <div class="text-gray-700 font-semibold">+1 (646) 919-2921</div>
                 </div>
                 ` : `
                 <div class="text-left text-gray-700">
-                  <div class="font-medium text-xs">WZ 81/1A, Guru Nanak Nagar, New Delhi 110018, India</div>
-                  <div class="font-medium text-xs">info@indiannaturalhair.com</div>
+                  <div class="font-medium text-sm">WZ 81/1A, Guru Nanak Nagar</div>
+                  <div class="font-medium">New Delhi 110018, India</div>
                 </div>
-                <div class="flex-1"></div>
-                <div class="text-right flex justify-end items-center">
-                  <span class="font-bold text-4xl" style="color: #a37e55;">${SYMBOL[state.currency] || state.currency}</span>
+                <div class="flex justify-center items-center">
+                  <span class="font-bold text-3xl" style="color: #a37e55;">${SYMBOL[state.currency] || state.currency}</span>
+                </div>
+                <div class="text-right" style="margin-right: 10px;">
+                  <a href="mailto:info@indiannaturalhair.com" class="text-gray-700 font-semibold hover:text-gray-900 transition-colors">info@indiannaturalhair.com</a>
                 </div>
                 `}
               </div>
@@ -2428,7 +2435,12 @@
         previewContainer.innerHTML = '<div class="text-center text-gray-500 p-8">No segments to display. Please select products and generate preview.</div>';
         document.getElementById('pageInfo').textContent = 'No pages to display';
         
-
+        // Hide PNG download button when no segments
+        const pngButton = document.getElementById('downloadPNG');
+        if (pngButton) {
+          pngButton.style.display = 'none';
+          pngButton.disabled = true;
+        }
         
         return;
       }
@@ -2843,7 +2855,7 @@
       elClearSegments.addEventListener('click', clearAllOptions);
       $('previewBtn').addEventListener('click', generatePreview);
 
-
+      $('downloadPNG').addEventListener('click', downloadPNG);
       
       // PNG sharing functionality
       $('sharePNGBtn').addEventListener('click', togglePNGSelectionDropdown);
@@ -4991,6 +5003,7 @@
     
     // Initialize price calculator salesman dropdown
     function initPriceCalculatorSalesmanDropdown() {
+      alert('Function called: initPriceCalculatorSalesmanDropdown');
       console.log('Initializing price calculator salesman dropdown...');
       
       const salesmanSelector = document.getElementById('price-calculator-salesman');
@@ -5004,8 +5017,8 @@
       console.log('Salesman selector visible:', window.getComputedStyle(salesmanSelector).display);
       console.log('Salesman selector offsetParent:', salesmanSelector.offsetParent);
       
-      // Debug logging for dropdown visibility
-      console.log('Dropdown found:', salesmanSelector ? 'YES' : 'NO', 'Visible:', window.getComputedStyle(salesmanSelector).display);
+      // Temporary alert for debugging
+      alert('Dropdown found: ' + (salesmanSelector ? 'YES' : 'NO') + '\nVisible: ' + window.getComputedStyle(salesmanSelector).display);
       
       // Clear existing options
       salesmanSelector.innerHTML = '<option value="">Select Salesman</option>';
@@ -7282,7 +7295,7 @@
          if (emptyElement) emptyElement.classList.add('hidden');
        
          productsGrid.innerHTML = products.map(([category, data]) => {
-        const imagePath = `images/Products/${data.image}`;
+        const imagePath = `/images/Products/${data.image}`;
         
         return `
           <div class="bg-white rounded-lg border border-gray-200 hover:shadow-lg transition-all duration-300 overflow-hidden group cursor-pointer" 

@@ -893,74 +893,7 @@
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
 
-    /* PNG Selection Dropdown Styles */
-    #pngSelectionDropdown {
-      position: absolute;
-      top: 100%;
-      left: 0;
-      right: 0;
-      background: white;
-      border: 2px solid #d1d5db;
-      border-radius: 8px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-      max-height: 300px;
-      overflow-y: auto;
-      z-index: 1000;
-      margin-top: 4px;
-      width: 100%;
-      box-sizing: border-box;
-    }
 
-    #pngSelectionDropdown.hidden {
-      display: none;
-    }
-
-    #pngSelectionDropdown .select-all-btn {
-      padding: 12px 16px;
-      background: #f8fafc;
-      border-bottom: 1px solid #e2e8f0;
-      font-weight: 500;
-      color: #3b82f6;
-      cursor: pointer;
-      transition: background-color 0.2s ease;
-    }
-
-    #pngSelectionDropdown .select-all-btn:hover {
-      background: #e0f2fe;
-    }
-
-    #pngFilesList .png-file-option {
-      padding: 12px 16px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      border-bottom: 1px solid #f3f4f6;
-      font-size: 14px;
-      transition: background-color 0.2s ease;
-    }
-
-    #pngFilesList .png-file-option:last-child {
-      border-bottom: none;
-    }
-
-    #pngFilesList .png-file-option:hover {
-      background-color: #f1f5f9;
-    }
-
-    #pngFilesList .png-file-option input[type="checkbox"] {
-      margin: 0;
-      width: 16px;
-      height: 16px;
-      cursor: pointer;
-    }
-
-    #pngFilesList .png-file-option label {
-      cursor: pointer;
-      flex: 1;
-      font-weight: 400;
-      line-height: 1.4;
-    }
 
   </style>
 </head>
@@ -1160,41 +1093,31 @@
             </button>
             <button id="shareBtn" class="btn-info px-2 py-0 rounded-lg text-sm font-medium hover:bg-blue-700 transition-all duration-200 flex items-center justify-center gap-1 mobile-full" aria-label="Share Quote" title="Share quote as image to clipboard">
               <span class="text-base" aria-hidden="true">📤</span>
-              <span>Share Now</span>
+              <span>Share</span>
+            </button>
+            <button id="sharePdfBtn" class="btn-info px-2 py-0 rounded-lg text-sm font-medium hover:bg-blue-700 transition-all duration-200 flex items-center justify-center gap-1 mobile-full hidden" aria-label="Share PDF" title="Share PDF using device's native sharing options">
+              <span class="text-base" aria-hidden="true">📤</span>
+              <span>Share PDF</span>
             </button>
           </div>
            
            <!-- Enhanced Share Popup for Mobile -->
-           <div id="sharePopup" class="hidden absolute z-50 mt-2 w-full sm:w-64 bg-white border-2 rounded-xl shadow-xl p-3" style="top: 100%; left: 0; display: none;">
+           <div id="sharePopup" class="hidden absolute z-30 mt-2 w-full sm:w-64 bg-white border-2 rounded-xl shadow-xl p-3">
              <div class="space-y-2">
+               <button id="shareDownloadPDF" class="w-full text-left px-4 py-3 text-base font-medium hover:bg-slate-100 rounded-lg flex items-center gap-3 transition-all duration-200 touch-action-manipulation">
+                 <span class="text-lg">📄</span> 
+                 <span>Save as PDF</span>
+               </button>
 
+               <button id="downloadPNG" class="w-full text-left px-4 py-3 text-base font-medium hover:bg-slate-100 rounded-lg flex items-center gap-3 transition-all duration-200 touch-action-manipulation">
+                 <span class="text-lg">🖼️</span> 
+                 <span>Download as PNG</span>
+               </button>
 
-               <!-- Share PNG with Selection -->
-               <div class="relative">
-                 <button id="sharePNGBtn" class="w-full text-left px-4 py-3 text-base font-medium hover:bg-slate-100 rounded-lg flex items-center gap-3 transition-all duration-200 touch-action-manipulation">
-                   <span class="text-lg">📤</span> 
-                   <span>Share Price Lists</span>
-                   <span class="ml-auto text-sm">▼</span>
-                 </button>
-                 
-                 <!-- PNG Selection Dropdown -->
-                 <div id="pngSelectionDropdown" class="hidden absolute top-full left-0 right-0 mt-1 bg-white border rounded-lg shadow-lg z-40 max-h-64 overflow-y-auto">
-                   <div class="p-3">
-                     <div class="flex items-center justify-between mb-3">
-                       <span class="text-sm font-medium text-gray-700">Select PNG Files:</span>
-                       <button id="selectAllPNGs" class="text-xs text-blue-600 hover:text-blue-800">Select All</button>
-                     </div>
-                     <div id="pngFilesList" class="space-y-2">
-                       <!-- PNG files will be populated here -->
-                     </div>
-                     <div class="mt-3 pt-3 border-t">
-                       <button id="shareSelectedPNGs" class="w-full px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm rounded-lg font-medium transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed" disabled>
-                         Share Selected Files
-                       </button>
-                     </div>
-                   </div>
-                 </div>
-               </div>
+               <button id="shareInvoiceImage" class="w-full text-left px-4 py-3 text-base font-medium hover:bg-slate-100 rounded-lg flex items-center gap-3 transition-all duration-200 touch-action-manipulation">
+                 <span class="text-lg">📋</span> 
+                 <span>Share Invoice Image</span>
+               </button>
 
              </div>
            </div>
@@ -1215,7 +1138,7 @@
       </div>
       <div class="w-full overflow-auto border-2 border-slate-200 rounded-lg">
         <div id="htmlPreview" class="w-full bg-white min-h-[200px] p-2 sm:p-4 flex justify-center">
-          <div class="w-full max-w-[515px] mx-auto" style="min-width: 320px;">
+          <div class="w-full max-w-[595px] mx-auto" style="min-width: 320px;">
             <!-- HTML preview content will be generated here -->
           </div>
         </div>
@@ -1519,19 +1442,13 @@
         'Closures': ['transparentlace.png', 'plucked.png', 'cuticle.png', 'color.png', 'durable.png', 'noshedding.png'],
         'Tapes': ['tapes.png', 'cuticle.png', 'color.png', 'durable.png', 'noshedding.png', 'cut.png'],
         'Tips': ['tips.png', 'cuticle.png', 'color.png', 'durable.png', 'noshedding.png', 'cut.png'],
-        'Genius': ['genius.png', 'cuticle.png', 'color.png', 'durable.png', 'noshedding.png', 'cut.png'],
-        'Genius Weaves': ['genius.png', 'cuticle.png', 'color.png', 'durable.png', 'noshedding.png', 'cut.png'],
+        'Genius': ['Genius.png', 'cuticle.png', 'color.png', 'durable.png', 'noshedding.png', 'cut.png'],
+        'Genius Weaves': ['Genius.png', 'cuticle.png', 'color.png', 'durable.png', 'noshedding.png', 'cut.png'],
         'DIY': ['diy.png', 'cuticle.png', 'color.png', 'measure.png', 'durable.png', 'cut.png'],
         'ClipOn': ['cuticle.png', 'color.png', 'measure.png', 'durable.png', 'noshedding.png', 'stitch.png']
       };
       const images = categoryFeatureMap[category] || [];
-      return images.map(img => {
-        // For genius.png, use the Products directory path
-        if (img === 'genius.png') {
-          return `images/Products/Genius.png`;
-        }
-        return `images/category-images/${category}/${img}`;
-      });
+      return images.map(img => `images/category-images/${category}/${img}`);
     }
 
 
@@ -1844,7 +1761,7 @@
       const contentHeight = Math.max(baseHeight, headerSpace + 260 + (rows.length * rowHeight) + footerHeight);
       
       return `
-        <div class="page-container bg-white border rounded-lg shadow-lg mx-auto" style="width: 515px; height: ${contentHeight}px; page-break-after: always; margin: 0 auto; transform-origin: center top; transform: scale(min(1, calc(100vw - 40px) / 515px));">
+        <div class="page-container bg-white border rounded-lg shadow-lg mx-auto" style="width: 615px; height: ${contentHeight}px; page-break-after: always; margin: 0 auto; transform-origin: center top; transform: scale(min(1, calc(100vw - 40px) / 615px));">
           <!-- Header Section -->
           <div class="header-section p-2 border-b" style="background-color: #e6eaeb;">
             <div class="flex items-center justify-between">
@@ -1868,22 +1785,22 @@
           <!-- Category Feature Images Section Below Header -->
           ${segment.category ? `<div class="category-section border-b bg-gray-100 mobile-feature-section" style="margin: 0;">
             <div class="flex items-center justify-center p-2">
-               <div class="flex items-center justify-center gap-1 flex-nowrap mobile-feature-images" style="width: 458px; min-height: 91px; padding: 8px; overflow-x: auto;">
+               <div class="flex items-center justify-center gap-1 flex-wrap mobile-feature-images" style="width: 558px; min-height: 91px; padding: 8px;">
                  ${getCategoryFeatureImages(segment.category).map(imagePath => 
-                   `<img src="${imagePath}" alt="Feature" class="object-contain mobile-feature-img" style="height: 65px; width: auto; max-width: 75px; flex-shrink: 0;" onerror="this.style.display='none'">` 
+                   `<img src="${imagePath}" alt="Feature" class="object-contain mobile-feature-img" style="height: 70px; width: auto; max-width: 85px;" onerror="this.style.display='none'">`
                  ).join('')}
                </div>
             </div>
           </div>` : ''}
           
           <!-- Product Title with Responsive Dynamic Sizing -->
-          <div class="text-center py-2 px-1">
+          <div class="text-center py-2 px-2">
             <h3 class="font-bold text-gray-800" 
                 style="font-size: ${titleText.length > 60 ? 'clamp(0.625rem, 2vw, 0.75rem)' : titleText.length > 40 ? 'clamp(0.75rem, 2.5vw, 0.875rem)' : 'clamp(0.875rem, 3vw, 1rem)'}; line-height: 1.2; word-wrap: break-word;">${titleText}</h3>
           </div>
           
           <!-- Product Table with Optimized Layout -->
-          <div class="product-table mx-1 bg-white border rounded-lg overflow-hidden">
+          <div class="product-table mx-3 bg-white border rounded-lg overflow-hidden">
             <!-- Single Header Row -->
             <div class="table-header bg-gray-100 p-1 border-b">
               <div class="grid grid-cols-2 gap-4 items-center">
@@ -1928,27 +1845,31 @@
           
           <!-- Footer integrated within main content -->
           <div class="border-t-2 border-gray-300 rounded-lg" style="background-color: #e6eaeb;">
-            <div class="text-center px-1 py-2">
+            <div class="text-center px-3 py-2">
               <!-- Contact Information Section -->
               <div class="grid grid-cols-3 items-start mb-2" style="font-size: clamp(0.75rem, 2vw, 0.875rem);">
                 ${document.getElementById('priceListSelector').value === 'USA25' ? `
                 <div class="text-left text-gray-700">
-                  <div class="font-medium text-xs">8 SUMMIT CT, HACKENSACK NJ 07601, USA</div>
-                  <div class="font-medium text-xs">us@indiannaturalhair.com</div>
-                  <div class="font-medium text-xs">+1 (646) 919-2921</div>
+                  <div class="font-medium">8 SUMMIT CT</div>
+                  <div class="font-medium">HACKENSACK NJ 07601, USA</div>
                 </div>
-                <div class="flex-1"></div>
-                <div class="text-right flex justify-end items-center">
-                  <span class="font-bold text-4xl" style="color: #a37e55;">${SYMBOL[state.currency] || state.currency}</span>
+                <div class="flex justify-center items-center">
+                  <span class="font-bold text-3xl" style="color: #a37e55;">${SYMBOL[state.currency] || state.currency}</span>
+                </div>
+                <div class="text-right">
+                  <a href="mailto:us@indiannaturalhair.com" class="text-gray-700 font-semibold hover:text-gray-900 transition-colors">us@indiannaturalhair.com</a>
+                  <div class="text-gray-700 font-semibold">+1 (646) 919-2921</div>
                 </div>
                 ` : `
                 <div class="text-left text-gray-700">
-                  <div class="font-medium text-xs">WZ 81/1A, Guru Nanak Nagar, New Delhi 110018, India</div>
-                  <div class="font-medium text-xs">info@indiannaturalhair.com</div>
+                  <div class="font-medium">WZ 81/1A, Guru Nanak Nagar</div>
+                  <div class="font-medium">New Delhi 110018, India</div>
                 </div>
-                <div class="flex-1"></div>
-                <div class="text-right flex justify-end items-center">
-                  <span class="font-bold text-4xl" style="color: #a37e55;">${SYMBOL[state.currency] || state.currency}</span>
+                <div class="flex justify-center items-center">
+                  <span class="font-bold text-3xl" style="color: #a37e55;">${SYMBOL[state.currency] || state.currency}</span>
+                </div>
+                <div class="text-right">
+                  <a href="mailto:info@indiannaturalhair.com" class="text-gray-700 font-semibold hover:text-gray-900 transition-colors">info@indiannaturalhair.com</a>
                 </div>
                 `}
               </div>
@@ -2122,7 +2043,7 @@
       
       // Address (left aligned, two rows) and email (right aligned, top row)
       const leftMargin = 25;
-      const rightMargin = W - 5;
+      const rightMargin = W - 25;
       const selectedPriceList = document.getElementById('priceListSelector').value;
       
       if (selectedPriceList === 'USA25') {
@@ -2140,11 +2061,11 @@
       } else {
         // Default Indian company information
         ctx.textAlign='right';
-        ctx.fillText('info@indiannaturalhair.com', rightMargin - 10, H-125); // Add 10px right space
+        ctx.fillText('info@indiannaturalhair.com', rightMargin, H-125);
         
         // Address on left (two lines)
         ctx.textAlign='left';
-        ctx.font='500 8px system-ui, -apple-system, Segoe UI, Roboto'; // Smaller font to fit in one row
+        ctx.font='500 9px system-ui, -apple-system, Segoe UI, Roboto'; // Slightly smaller font to fit
         ctx.fillText('WZ 81/1A, Guru Nanak Nagar', leftMargin, H-125);
         ctx.fillText('New Delhi 110018, India', leftMargin, H-110);
         ctx.font='500 10px system-ui, -apple-system, Segoe UI, Roboto'; // Reset font size
@@ -2428,14 +2349,19 @@
         previewContainer.innerHTML = '<div class="text-center text-gray-500 p-8">No segments to display. Please select products and generate preview.</div>';
         document.getElementById('pageInfo').textContent = 'No pages to display';
         
-
+        // Hide PNG download button when no segments
+        const pngButton = document.getElementById('downloadPNG');
+        if (pngButton) {
+          pngButton.style.display = 'none';
+          pngButton.disabled = true;
+        }
         
         return;
       }
       
-      // Generate HTML for each segment with 200px spacing
+      // Generate HTML for each segment with 10px spacing
       const pagesHTML = state.segments.map((segment, index) => {
-        return `<div class="page-wrapper mx-auto" style="margin-bottom: 60px;">${createPageHTML(segment, index)}</div>`;
+        return `<div class="page-wrapper mx-auto" style="margin-bottom: 10px;">${createPageHTML(segment, index)}</div>`;
       }).join('');
       
       previewContainer.innerHTML = pagesHTML;
@@ -2444,11 +2370,16 @@
       const pageCount = state.segments.length;
       document.getElementById('pageInfo').textContent = pageCount > 1 ? `Showing all ${pageCount} pages` : 'Single page preview';
       
-      // Show PNG download button for all page counts since we support multiple PNG generation
+      // Show/hide PNG download button based on page count
       const pngButton = document.getElementById('downloadPNG');
       if (pngButton) {
-        pngButton.style.display = 'flex';
-        pngButton.disabled = false;
+        if (pageCount === 1) {
+          pngButton.style.display = 'flex';
+          pngButton.disabled = false;
+        } else {
+          pngButton.style.display = 'none';
+          pngButton.disabled = true;
+        }
       }
       
       return { pageCount };
@@ -2486,41 +2417,19 @@
       document.body.appendChild(loadingOverlay);
       
       try {
-        // Create a temporary container to measure content dimensions
-        const measureContainer = document.createElement('div');
-        measureContainer.style.position = 'absolute';
-        measureContainer.style.left = '-9999px';
-        measureContainer.style.top = '0';
-        measureContainer.style.width = 'auto';
-        measureContainer.style.height = 'auto';
-        measureContainer.style.backgroundColor = '#ffffff';
-        measureContainer.innerHTML = createPageHTML(state.segments[0], 0);
-        document.body.appendChild(measureContainer);
+        // Create PDF with optimized settings
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF({
+          orientation: 'portrait',
+          unit: 'mm',
+          format: 'a4',
+          compress: true
+        });
         
-        // Measure content dimensions
-        const contentWidth = measureContainer.scrollWidth;
-        const contentHeight = measureContainer.scrollHeight;
-        document.body.removeChild(measureContainer);
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
         
-        // Convert 20px margins to mm (1px ≈ 0.264583mm)
-        const marginMM = 20 * 0.264583;
-        
-        // Calculate page dimensions with 20px margins on all sides
-        const pageWidthMM = (contentWidth * 0.264583) + (marginMM * 2);
-        const pageHeightMM = (contentHeight * 0.264583) + (marginMM * 2);
-        
-        // Log dimensions for debugging
-        console.log('📏 Content Dimensions:');
-        console.log(`  Content Width: ${contentWidth}px`);
-        console.log(`  Content Height: ${contentHeight}px`);
-        console.log('📄 PDF Page Dimensions:');
-        console.log(`  Page Width: ${pageWidthMM.toFixed(2)}mm (${(pageWidthMM / 0.264583).toFixed(0)}px equivalent)`);
-        console.log(`  Page Height: ${pageHeightMM.toFixed(2)}mm (${(pageHeightMM / 0.264583).toFixed(0)}px equivalent)`);
-        console.log(`  Margin: ${marginMM.toFixed(2)}mm (20px)`);
-        
-        // Process each segment as a separate PNG image
-        const generatedImages = [];
-        
+        // Process each segment as a separate page
         for (let i = 0; i < state.segments.length; i++) {
           const segment = state.segments[i];
           
@@ -2529,55 +2438,50 @@
           tempContainer.style.position = 'absolute';
           tempContainer.style.left = '-9999px';
           tempContainer.style.top = '0';
-          tempContainer.style.width = 'auto';
-          tempContainer.style.minWidth = '800px';
+          tempContainer.style.width = '615px';
           tempContainer.style.backgroundColor = '#ffffff';
-          tempContainer.style.padding = '20px';
           tempContainer.innerHTML = createPageHTML(segment, i);
           
           document.body.appendChild(tempContainer);
           
           try {
-            // Render this segment to canvas with high quality settings
+            // Render this segment to canvas with optimized settings
             const canvas = await html2canvas(tempContainer, {
-              scale: 3, // Higher quality for PNG
+              scale: 2, // Higher quality for PDF
               useCORS: true,
               allowTaint: true,
               backgroundColor: '#ffffff',
-              width: tempContainer.scrollWidth,
+              width: 615,
               height: tempContainer.scrollHeight,
               logging: false,
               removeContainer: false
             });
             
-            // Convert canvas to PNG blob
-            const pngBlob = await new Promise(resolve => {
-              canvas.toBlob(resolve, 'image/png', 1.0);
-            });
+            // Add new page if not the first segment
+            if (i > 0) {
+              pdf.addPage();
+            }
             
-            // Generate filename for this segment
-            const category = segment.category || 'General';
-            const currency = state.currency || 'INR';
-            const hasKgMode = segment.kg;
-            const unit = hasKgMode ? 'Per Kg' : 'Per Piece';
+            // Calculate optimal scaling to fit A4 page with better margins
+            const marginX = 15; // 15mm side margins
+            const marginY = 15; // 15mm top/bottom margins
+            const maxWidth = pageWidth - (marginX * 2);
+            const maxHeight = pageHeight - (marginY * 2);
             
-            // Format category name with proper capitalization
-            const formattedCategory = category.split(' ').map(word => 
-              word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
-            ).join(' ');
+            // Calculate scaling to fit within margins while maintaining aspect ratio
+            const scaleX = maxWidth / canvas.width;
+            const scaleY = maxHeight / canvas.height;
+            const scale = Math.min(scaleX, scaleY);
             
-            const filename = state.segments.length > 1 
-              ? `${formattedCategory} - ${currency} - ${unit} - Page ${i + 1}.png`
-              : `${formattedCategory} - ${currency} - ${unit}.png`;
+            const scaledWidth = canvas.width * scale;
+            const scaledHeight = canvas.height * scale;
             
-            // Store the generated image
-            generatedImages.push({
-              blob: pngBlob,
-              filename: filename,
-              canvas: canvas
-            });
+            // Precise content centering for optimal alignment
+            const xOffset = (pageWidth - scaledWidth) / 2;
+            const yOffset = (pageHeight - scaledHeight) / 2;
             
-            console.log(`Generated PNG image ${i + 1}/${state.segments.length}: ${filename}`);
+            const imgData = canvas.toDataURL('image/jpeg', 0.95);
+            pdf.addImage(imgData, 'JPEG', xOffset, yOffset, scaledWidth, scaledHeight);
             
           } finally {
             // Clean up temporary container
@@ -2585,24 +2489,29 @@
           }
         }
         
-        // Download all generated PNG images
-        for (const imageData of generatedImages) {
-          const url = URL.createObjectURL(imageData.blob);
-          const downloadLink = document.createElement('a');
-          downloadLink.href = url;
-          downloadLink.download = imageData.filename;
-          downloadLink.style.display = 'none';
-          document.body.appendChild(downloadLink);
-          downloadLink.click();
-          document.body.removeChild(downloadLink);
-          URL.revokeObjectURL(url);
-        }
+        // Generate filename with format: ${Category} - ${Currency} - ${Unit}
+        const category = state.segments.length > 0 ? state.segments[0].category : 'General';
+        const currency = state.currency || 'INR';
+        const hasKgMode = state.segments.some(seg => seg.kg);
+        const unit = hasKgMode ? 'Per Kg' : 'Per Piece';
         
-        console.log(`Generated ${generatedImages.length} PNG images successfully`);
+        // Format category name with proper capitalization
+        const formattedCategory = category.split(' ').map(word => 
+          word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+        ).join(' ');
         
-        // Store the generated images for sharing
-        state.lastGeneratedImages = {
-          images: generatedImages,
+        const filename = `${formattedCategory} - ${currency} - ${unit}.pdf`;
+        
+        // Save the PDF
+        pdf.save(filename);
+        
+        console.log(`PDF generated successfully with ${state.segments.length} pages`);
+        
+        // Store the generated PDF for sharing
+        const pdfBlob = pdf.output('blob');
+        state.lastGeneratedPDF = {
+          blob: pdfBlob,
+          filename: filename,
           timestamp: Date.now()
         };
         
@@ -2842,13 +2751,11 @@
   
       elClearSegments.addEventListener('click', clearAllOptions);
       $('previewBtn').addEventListener('click', generatePreview);
+      $('sharePdfBtn').addEventListener('click', shareNatively);
+      $('shareDownloadPDF').addEventListener('click', downloadPDF);
 
-
-      
-      // PNG sharing functionality
-      $('sharePNGBtn').addEventListener('click', togglePNGSelectionDropdown);
-      $('selectAllPNGs').addEventListener('click', toggleSelectAllPNGs);
-      $('shareSelectedPNGs').addEventListener('click', shareSelectedPNGFiles);
+      $('downloadPNG').addEventListener('click', downloadPNG);
+      $('shareInvoiceImage').addEventListener('click', shareInvoiceImage);
 
       
       // Page navigation event listeners removed - now using HTML preview
@@ -2865,15 +2772,9 @@
 
       // Close share popup when clicking outside
       document.addEventListener('click', (e) => {
-        if (!e.target.closest('#sharePopup')) {
+        if (!e.target.closest('#sharePdfBtn') && !e.target.closest('#sharePopup')) {
           $('sharePopup').classList.add('hidden');
-        }
-        // Close PNG dropdown when clicking outside
-        if (!e.target.closest('#pngSelectionDropdown') && !e.target.closest('#sharePNGBtn')) {
-          const dropdown = $('pngSelectionDropdown');
-          if (dropdown && !dropdown.classList.contains('hidden')) {
-            dropdown.classList.add('hidden');
-          }
+          $('sharePdfBtn').setAttribute('aria-expanded', 'false');
         }
       });
 
@@ -2900,7 +2801,9 @@
       previewBtn.innerHTML = '<span>⏳</span> <span class="hidden sm:inline">Generating...</span><span class="sm:hidden">Loading...</span>';
       previewBtn.disabled = true;
       
-      // Share PDF button removed - no longer needed
+      // Hide Share PDF button during generation
+      const sharePdfBtn = $('sharePdfBtn');
+      sharePdfBtn.classList.add('hidden');
       
       // Use setTimeout to allow UI to update
       setTimeout(() => {
@@ -2915,7 +2818,8 @@
           previewBtn.innerHTML = originalText;
           previewBtn.disabled = false;
           
-          // Share PDF button removed - no longer needed
+          // Show Share PDF button after successful generation
+          sharePdfBtn.classList.remove('hidden');
           
           // Ensure all buttons have equal flex properties with improved styling
           const container = document.getElementById('actionButtonsContainer');
@@ -3000,7 +2904,8 @@
       // Hide elements and reset layout
       elSelectAllWrap.classList.add('hidden');
       elKgWrap.classList.add('hidden');
-      // sharePdfBtn removed - no longer needed
+      const sharePdfBtn = $('sharePdfBtn');
+      sharePdfBtn.classList.add('hidden');
       
       // Reset button styling to original state
       const container = document.getElementById('actionButtonsContainer');
@@ -3031,48 +2936,25 @@
 
     // Share functionality
     async function shareNatively() {
-      console.log('shareNatively called, segments:', state.segments.length, 'PNGs:', state.lastGeneratedPNGs?.length || 0);
-      
-      // Check if we have segments to share
-      if (state.segments.length === 0) {
-        // For Price List Calculator Module, try to generate preview automatically
-        if (state.category) {
-          console.log('No segments found, but category exists. Generating preview first...');
-          generatePreview();
-          // Wait a moment for preview generation to complete
-          setTimeout(() => {
-            if (state.segments.length > 0) {
-              shareNatively(); // Retry sharing
-            } else {
-              alert('Unable to generate preview. Please ensure you have selected products and try the Preview button first.');
-            }
-          }, 1000);
-          return;
-        } else {
-          alert('Please select a category and generate a preview first before sharing.');
-          return;
+      // Check if we have a generated PDF to share
+      if (!state.lastGeneratedPDF || !state.lastGeneratedPDF.blob) {
+        // Generate PDF first if not available
+        await downloadPDF();
+        if (!state.lastGeneratedPDF || !state.lastGeneratedPDF.blob) {
+          return; // PDF generation failed
         }
-      }
-      
-      // Check if we have generated PNG images to share
-      if (!state.lastGeneratedPNGs || state.lastGeneratedPNGs.length === 0) {
-        // Show popup directly for user to choose sharing options
-        toggleSharePopup();
-        return;
       }
       
       // Check if Web Share API is supported and can share files
       if (navigator.share && navigator.canShare) {
-        const files = state.lastGeneratedPNGs.map(png => 
-          new File([png.blob], png.filename, {
-            type: 'image/png'
-          })
-        );
+        const file = new File([state.lastGeneratedPDF.blob], state.lastGeneratedPDF.filename, {
+          type: 'application/pdf'
+        });
         
         const shareData = {
-          title: 'Price List Images',
-          text: 'Check out these price lists',
-          files: files
+          title: 'Price List PDF',
+          text: 'Check out this price list',
+          files: [file]
         };
         
         // Check if the device can share this data
@@ -3092,26 +2974,18 @@
     }
     
     function toggleSharePopup() {
-      console.log('toggleSharePopup called');
       const popup = $('sharePopup');
-      console.log('popup element:', popup);
+      const sharePdfBtn = $('sharePdfBtn');
+      const isHidden = popup.classList.contains('hidden');
       
-      if (popup.style.display === 'none' || popup.classList.contains('hidden')) {
-        popup.style.display = 'block';
-        popup.classList.remove('hidden');
-        console.log('Popup shown');
-      } else {
-        popup.style.display = 'none';
-        popup.classList.add('hidden');
-        console.log('Popup hidden');
-      }
-      console.log('popup classes after toggle:', popup.className);
-      console.log('popup display style:', popup.style.display);
+      popup.classList.toggle('hidden');
+      sharePdfBtn.setAttribute('aria-expanded', isHidden ? 'true' : 'false');
     }
 
     async function downloadPNG() {
-      // Validate that segments exist
-      if (state.segments.length === 0) {
+      // Validate that a preview exists
+      const htmlPreview = document.getElementById('htmlPreview');
+      if (!htmlPreview || !htmlPreview.innerHTML.trim() || htmlPreview.innerHTML.includes('No preview available')) {
         if (window.innerWidth <= 768) {
           const errorMsg = document.createElement('div');
           errorMsg.className = 'fixed top-4 left-4 right-4 bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded-lg z-50';
@@ -3136,144 +3010,78 @@
         downloadBtn.innerHTML = '<span>⏳</span> <span class="hidden sm:inline">Generating PNG...</span><span class="sm:hidden">Generating...</span>';
         downloadBtn.disabled = true;
         
-        // Add mobile-specific loading indicator
-        const loadingOverlay = document.createElement('div');
-        loadingOverlay.id = 'pngLoadingOverlay';
-        loadingOverlay.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
-        loadingOverlay.innerHTML = `
-          <div class="bg-white rounded-lg p-6 text-center max-w-xs mx-4">
-            <div class="text-2xl mb-2">🖼️</div>
-            <div class="font-medium">Generating PNG Images...</div>
-            <div class="text-sm text-gray-600 mt-1">Processing ${state.segments.length} price list${state.segments.length > 1 ? 's' : ''}</div>
-          </div>
-        `;
-        document.body.appendChild(loadingOverlay);
+        // Use html2canvas to convert the preview to canvas
+        const canvas = await html2canvas(htmlPreview, {
+          scale: 2, // Higher quality
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: '#ffffff'
+        });
         
-        const generatedImages = [];
-        
-        // Process each segment as a separate PNG
-        for (let i = 0; i < state.segments.length; i++) {
-          const segment = state.segments[i];
+        // Convert canvas to blob and download
+        canvas.toBlob((blob) => {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
           
-          // Create a temporary container for this segment only
-          const tempContainer = document.createElement('div');
-          tempContainer.style.position = 'absolute';
-          tempContainer.style.left = '-9999px';
-          tempContainer.style.top = '0';
-          tempContainer.style.width = '615px';
-          tempContainer.style.backgroundColor = '#ffffff';
-          tempContainer.style.padding = '20px';
-          tempContainer.style.fontFamily = 'Arial, sans-serif';
-          
-          // Generate HTML for this specific segment
-          tempContainer.innerHTML = createPageHTML(segment, i);
-          document.body.appendChild(tempContainer);
-          
-          // Convert this segment to canvas
-          const canvas = await html2canvas(tempContainer, {
-            scale: 2, // Higher quality
-            useCORS: true,
-            allowTaint: true,
-            backgroundColor: '#ffffff',
-            width: 615,
-            height: tempContainer.scrollHeight
-          });
-          
-          // Convert canvas to blob
-          const blob = await new Promise(resolve => {
-            canvas.toBlob(resolve, 'image/png');
-          });
-          
-          // Generate filename for this segment
-          const categoryName = segment.category.split(' ').map(word => 
-            word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
-          ).join(' ');
+          // Generate filename using the same format as PDF
+          const category = state.segments.length > 0 ? 
+            state.segments[0].category.split(' ').map(word => 
+              word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+            ).join(' ') : 'General';
           const currency = state.currency || 'INR';
           const unit = state.kg ? 'Per Kg' : 'Per Piece';
-          const segmentSuffix = state.segments.length > 1 ? ` - Page ${i + 1}` : '';
-          const filename = `${categoryName} - ${currency} - ${unit}${segmentSuffix}.png`;
           
-          generatedImages.push({
-            blob: blob,
-            filename: filename,
-            segment: segment
-          });
-          
-          // Clean up temporary container
-          document.body.removeChild(tempContainer);
-        }
-        
-        // Download all generated images
-        for (const imageData of generatedImages) {
-          const url = URL.createObjectURL(imageData.blob);
-          const downloadLink = document.createElement('a');
-          downloadLink.href = url;
-          downloadLink.download = imageData.filename;
-          downloadLink.style.display = 'none';
-          document.body.appendChild(downloadLink);
-          downloadLink.click();
-          document.body.removeChild(downloadLink);
+          a.href = url;
+          a.download = `${category} - ${currency} - ${unit}.png`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
           URL.revokeObjectURL(url);
-        }
-        
-        console.log(`Generated ${generatedImages.length} PNG images successfully`);
-        
-        // Store the generated images for sharing
-        state.lastGeneratedPNGs = generatedImages;
-        
-        // Reset button state
-        downloadBtn.innerHTML = originalText;
-        downloadBtn.disabled = false;
-        
-        // Remove mobile loading overlay
-        const overlay = document.getElementById('pngLoadingOverlay');
-        if (overlay) overlay.remove();
-        
-        // Hide share popup
-        $('sharePopup').classList.add('hidden');
-        
-        // Show enhanced success message
-        const successModal = document.createElement('div');
-        successModal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
-        const fileList = generatedImages.map(img => `<div class="text-sm text-gray-600 truncate">• ${img.filename}</div>`).join('');
-        successModal.innerHTML = `
-          <div class="bg-white rounded-lg p-6 max-w-md w-full mx-auto">
-            <div class="text-center mb-4">
-              <div class="text-3xl mb-2">✅</div>
-              <h3 class="font-semibold text-lg">PNG Images Downloaded Successfully!</h3>
-              <p class="text-gray-600 text-sm mt-1">${generatedImages.length} image${generatedImages.length > 1 ? 's' : ''} saved to your device</p>
-            </div>
-            <div class="space-y-3">
-              <div class="bg-gray-50 rounded-lg p-3 max-h-32 overflow-y-auto">
-                <div class="text-sm font-medium text-gray-700 mb-2">Files:</div>
-                ${fileList}
+          
+          // Reset button state
+          downloadBtn.innerHTML = originalText;
+          downloadBtn.disabled = false;
+          
+          // Close the share popup
+          $('sharePopup').classList.add('hidden');
+          
+          // Show enhanced success message with file opening option
+          const filename = `${category} - ${currency} - ${unit}.png`;
+          const successModal = document.createElement('div');
+          successModal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
+          successModal.innerHTML = `
+            <div class="bg-white rounded-lg p-6 max-w-md w-full mx-auto">
+              <div class="text-center mb-4">
+                <div class="text-3xl mb-2">✅</div>
+                <h3 class="font-semibold text-lg">PNG Downloaded Successfully!</h3>
+                <p class="text-gray-600 text-sm mt-1">Your image has been saved to your device</p>
               </div>
-              <button onclick="this.parentElement.parentElement.parentElement.remove()" class="w-full px-4 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors touch-action-manipulation">
-                Close
-              </button>
+              <div class="space-y-3">
+                <div class="bg-gray-50 rounded-lg p-3">
+                  <div class="text-sm font-medium text-gray-700">File:</div>
+                  <div class="text-sm text-gray-600 truncate">${filename}</div>
+                </div>
+                <button onclick="openDownloadedFile('${filename}', 'png')" class="w-full px-4 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors touch-action-manipulation">
+                  🖼️ Open PNG Image
+                </button>
+                <button onclick="this.parentElement.parentElement.parentElement.remove()" class="w-full px-4 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-medium transition-colors touch-action-manipulation">
+                  Close
+                </button>
+              </div>
             </div>
-          </div>
-        `;
-        document.body.appendChild(successModal);
-        
-        // Auto-close after 10 seconds
-        setTimeout(() => {
-          if (successModal.parentElement) {
-            successModal.remove();
-          }
-        }, 10000);
+          `;
+          document.body.appendChild(successModal);
+          
+          // Auto-close after 10 seconds
+          setTimeout(() => {
+            if (successModal.parentElement) {
+              successModal.remove();
+            }
+          }, 10000);
+        }, 'image/png');
         
       } catch (error) {
         console.error('Error generating PNG:', error);
-        
-        // Reset button state
-        const downloadBtn = $('downloadPNG');
-        downloadBtn.innerHTML = originalText;
-        downloadBtn.disabled = false;
-        
-        // Remove mobile loading overlay
-        const overlay = document.getElementById('pngLoadingOverlay');
-        if (overlay) overlay.remove();
         
         // Mobile-friendly error message
         if (window.innerWidth <= 768) {
@@ -3293,155 +3101,12 @@
         } else {
           alert('Error generating PNG: ' + error.message);
         }
-      }
-    }
-
-    // PNG Selection and Sharing Functions
-    function togglePNGSelectionDropdown() {
-      const dropdown = document.getElementById('pngSelectionDropdown');
-      const isHidden = dropdown.classList.contains('hidden');
-      
-      if (isHidden) {
-        // Populate the dropdown with available PNG files
-        populatePNGFilesList();
-        dropdown.classList.remove('hidden');
-      } else {
-        dropdown.classList.add('hidden');
-      }
-    }
-
-    function populatePNGFilesList() {
-      const filesList = document.getElementById('pngFilesList');
-      const shareBtn = document.getElementById('shareSelectedPNGs');
-      
-      // Clear existing content
-      filesList.innerHTML = '';
-      
-      // Check if we have generated PNG files
-      if (!state.lastGeneratedPNGs || state.lastGeneratedPNGs.length === 0) {
-        filesList.innerHTML = '<div class="text-sm text-gray-500 text-center py-2">No PNG files available. Generate PNGs first.</div>';
-        shareBtn.disabled = true;
-        return;
-      }
-      
-      // Create checkboxes for each PNG file
-      state.lastGeneratedPNGs.forEach((pngData, index) => {
-        const checkboxContainer = document.createElement('div');
-        checkboxContainer.className = 'flex items-center gap-2';
         
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.id = `png-file-${index}`;
-        checkbox.className = 'png-file-checkbox';
-        checkbox.addEventListener('change', updateShareButtonState);
-        
-        const label = document.createElement('label');
-        label.htmlFor = `png-file-${index}`;
-        label.className = 'text-sm text-gray-700 cursor-pointer flex-1 truncate';
-        label.textContent = pngData.filename;
-        label.title = pngData.filename; // Show full filename on hover
-        
-        checkboxContainer.appendChild(checkbox);
-        checkboxContainer.appendChild(label);
-        filesList.appendChild(checkboxContainer);
-      });
-      
-      updateShareButtonState();
-    }
-
-    function toggleSelectAllPNGs() {
-      const checkboxes = document.querySelectorAll('.png-file-checkbox');
-      const selectAllBtn = document.getElementById('selectAllPNGs');
-      const allChecked = Array.from(checkboxes).every(cb => cb.checked);
-      
-      checkboxes.forEach(checkbox => {
-        checkbox.checked = !allChecked;
-      });
-      
-      selectAllBtn.textContent = allChecked ? 'Select All' : 'Deselect All';
-      updateShareButtonState();
-    }
-
-    function updateShareButtonState() {
-      const checkboxes = document.querySelectorAll('.png-file-checkbox');
-      const shareBtn = document.getElementById('shareSelectedPNGs');
-      const selectAllBtn = document.getElementById('selectAllPNGs');
-      
-      const checkedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
-      const allChecked = checkboxes.length > 0 && Array.from(checkboxes).every(cb => cb.checked);
-      
-      // Update share button
-      shareBtn.disabled = checkedCount === 0;
-      shareBtn.textContent = checkedCount === 0 ? 'Share Selected Files' : `Share ${checkedCount} File${checkedCount > 1 ? 's' : ''}`;
-      
-      // Update select all button
-      selectAllBtn.textContent = allChecked ? 'Deselect All' : 'Select All';
-    }
-
-    async function shareSelectedPNGFiles() {
-      const checkboxes = document.querySelectorAll('.png-file-checkbox:checked');
-      
-      if (checkboxes.length === 0) {
-        alert('Please select at least one PNG file to share.');
-        return;
+        // Reset button state
+        const downloadBtn = $('downloadPNG');
+        downloadBtn.innerHTML = '<span>🖼️</span> Download as PNG';
+        downloadBtn.disabled = false;
       }
-      
-      const selectedFiles = [];
-      checkboxes.forEach(checkbox => {
-        const index = parseInt(checkbox.id.split('-')[2]);
-        const pngData = state.lastGeneratedPNGs[index];
-        if (pngData) {
-          selectedFiles.push(new File([pngData.blob], pngData.filename, { type: 'image/png' }));
-        }
-      });
-      
-      // Check if Web Share API is supported and can share files
-      if (navigator.share && navigator.canShare) {
-        const shareData = {
-          title: 'PNG Price Lists',
-          text: `Sharing ${selectedFiles.length} price list image${selectedFiles.length > 1 ? 's' : ''}`,
-          files: selectedFiles
-        };
-        
-        if (navigator.canShare(shareData)) {
-          try {
-            await navigator.share(shareData);
-            // Hide the dropdown and share popup on successful share
-            document.getElementById('pngSelectionDropdown').classList.add('hidden');
-            document.getElementById('sharePopup').classList.add('hidden');
-            return;
-          } catch (error) {
-            console.log('Native sharing cancelled or failed:', error);
-          }
-        }
-      }
-      
-      // Fallback: Download selected files
-      selectedFiles.forEach(file => {
-        const url = URL.createObjectURL(file);
-        const downloadLink = document.createElement('a');
-        downloadLink.href = url;
-        downloadLink.download = file.name;
-        downloadLink.style.display = 'none';
-        document.body.appendChild(downloadLink);
-        downloadLink.click();
-        document.body.removeChild(downloadLink);
-        URL.revokeObjectURL(url);
-      });
-      
-      // Show success message
-      const successMsg = document.createElement('div');
-      successMsg.className = 'fixed top-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg z-50 flex items-center gap-2';
-      successMsg.innerHTML = `
-        <span class="text-lg">✅</span>
-        <span>Downloaded ${selectedFiles.length} PNG file${selectedFiles.length > 1 ? 's' : ''}</span>
-      `;
-      document.body.appendChild(successMsg);
-      setTimeout(() => successMsg.remove(), 3000);
-      
-      // Hide the dropdown and share popup
-      document.getElementById('pngSelectionDropdown').classList.add('hidden');
-      document.getElementById('sharePopup').classList.add('hidden');
     }
 
     // Share Invoice Image functionality
@@ -3668,169 +3333,6 @@
       setTimeout(() => errorMsg.remove(), 4000);
     }
 
-    // PNG Selection Dropdown Functions
-    function togglePNGSelectionDropdown() {
-      const dropdown = document.getElementById('pngSelectionDropdown');
-      const isHidden = dropdown.classList.contains('hidden');
-      
-      if (isHidden) {
-        // Auto-generate PNGs when dropdown is opened
-        generateAllPNGFiles();
-      }
-      
-      dropdown.classList.toggle('hidden');
-    }
-    
-    function toggleSelectAllPNGs() {
-      const checkboxes = document.querySelectorAll('#pngFilesList input[type="checkbox"]');
-      const selectAllBtn = document.getElementById('selectAllPNGs');
-      const allChecked = Array.from(checkboxes).every(cb => cb.checked);
-      
-      checkboxes.forEach(cb => {
-        cb.checked = !allChecked;
-      });
-      
-      selectAllBtn.textContent = allChecked ? 'Select All' : 'Deselect All';
-      updateShareButton();
-    }
-    
-    function shareSelectedPNGFiles() {
-      const selectedCheckboxes = document.querySelectorAll('#pngFilesList input[type="checkbox"]:checked');
-      
-      if (selectedCheckboxes.length === 0) {
-        alert('Please select at least one PNG file to share.');
-        return;
-      }
-      
-      // Get the selected PNG data
-      const selectedPNGs = Array.from(selectedCheckboxes).map(cb => {
-        const filename = cb.getAttribute('data-filename');
-        const blob = cb.getAttribute('data-blob');
-        return { filename, blob };
-      });
-      
-      // For now, download each selected PNG
-      selectedPNGs.forEach(png => {
-        const url = png.blob;
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = png.filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-      });
-      
-      // Close dropdown and show success message
-      document.getElementById('pngSelectionDropdown').classList.add('hidden');
-      
-      const successMsg = document.createElement('div');
-      successMsg.className = 'fixed top-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg z-50';
-      successMsg.innerHTML = `
-        <div class="flex items-center gap-2">
-          <span class="text-lg">✅</span>
-          <span class="font-medium">${selectedPNGs.length} PNG file(s) downloaded successfully!</span>
-        </div>
-      `;
-      document.body.appendChild(successMsg);
-      setTimeout(() => successMsg.remove(), 3000);
-    }
-    
-    async function generateAllPNGFiles() {
-      // Show loading indicator
-      const pngFilesList = document.getElementById('pngFilesList');
-      pngFilesList.innerHTML = '<div class="text-center py-4"><span class="text-lg">⏳</span> Generating PNG files...</div>';
-      
-      if (state.segments.length === 0) {
-        pngFilesList.innerHTML = '<div class="text-center py-4 text-gray-500">No segments available. Please generate a preview first.</div>';
-        return;
-      }
-      
-      const htmlPreview = document.getElementById('htmlPreview');
-      const generatedPNGs = [];
-      
-      try {
-        // Generate PNG for each segment
-        for (let i = 0; i < state.segments.length; i++) {
-          const segment = state.segments[i];
-          
-          // Create a temporary container for this segment
-          const tempContainer = document.createElement('div');
-          tempContainer.innerHTML = createPageHTML(segment, i);
-          tempContainer.style.position = 'absolute';
-          tempContainer.style.left = '-9999px';
-          tempContainer.style.top = '0';
-          tempContainer.style.width = '800px';
-          document.body.appendChild(tempContainer);
-          
-          // Generate PNG using html2canvas
-          const canvas = await html2canvas(tempContainer, {
-            scale: 2,
-            useCORS: true,
-            allowTaint: true,
-            backgroundColor: '#ffffff'
-          });
-          
-          // Convert to blob
-          const blob = await new Promise(resolve => {
-            canvas.toBlob(resolve, 'image/png');
-          });
-          
-          const url = URL.createObjectURL(blob);
-          const filename = `${segment.category} - ${segment.product} - ${segment.density} - ${segment.color} - ${state.currency} - ${state.kg ? 'Per Kg' : 'Per Piece'}.png`;
-          
-          generatedPNGs.push({ filename, url, blob });
-          
-          // Clean up temporary container
-          document.body.removeChild(tempContainer);
-        }
-        
-        // Populate the PNG files list
-        populatePNGFilesList(generatedPNGs);
-        
-      } catch (error) {
-        console.error('Error generating PNG files:', error);
-        pngFilesList.innerHTML = '<div class="text-center py-4 text-red-500">Error generating PNG files. Please try again.</div>';
-      }
-    }
-    
-    function populatePNGFilesList(pngFiles) {
-      const pngFilesList = document.getElementById('pngFilesList');
-      
-      if (pngFiles.length === 0) {
-        pngFilesList.innerHTML = '<div class="text-center py-4 text-gray-500">No PNG files generated.</div>';
-        return;
-      }
-      
-      const checkboxesHTML = pngFiles.map((png, index) => `
-        <label class="flex items-center gap-2 p-2 hover:bg-gray-50 rounded cursor-pointer">
-          <input type="checkbox" 
-                 data-filename="${png.filename}" 
-                 data-blob="${png.url}"
-                 class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                 onchange="updateShareButton()">
-          <span class="text-sm text-gray-700 truncate" title="${png.filename}">
-            ${png.filename.length > 40 ? png.filename.substring(0, 40) + '...' : png.filename}
-          </span>
-        </label>
-      `).join('');
-      
-      pngFilesList.innerHTML = checkboxesHTML;
-      updateShareButton();
-    }
-    
-    function updateShareButton() {
-      const selectedCount = document.querySelectorAll('#pngFilesList input[type="checkbox"]:checked').length;
-      const shareBtn = document.getElementById('shareSelectedPNGs');
-      const selectAllBtn = document.getElementById('selectAllPNGs');
-      
-      shareBtn.disabled = selectedCount === 0;
-      shareBtn.textContent = selectedCount > 0 ? `Share ${selectedCount} PNG${selectedCount > 1 ? 's' : ''}` : 'Share Selected PNGs';
-      
-      const totalCheckboxes = document.querySelectorAll('#pngFilesList input[type="checkbox"]').length;
-      const allChecked = selectedCount === totalCheckboxes && totalCheckboxes > 0;
-      selectAllBtn.textContent = allChecked ? 'Deselect All' : 'Select All';
-    }
-
     // WhatsApp PDF sharing functionality
 
     
@@ -3838,7 +3340,7 @@
 
 
 
-    </script>
+  </script>
       
       </div> <!-- End Price List Calculator Module -->
       
@@ -4991,6 +4493,7 @@
     
     // Initialize price calculator salesman dropdown
     function initPriceCalculatorSalesmanDropdown() {
+      alert('Function called: initPriceCalculatorSalesmanDropdown');
       console.log('Initializing price calculator salesman dropdown...');
       
       const salesmanSelector = document.getElementById('price-calculator-salesman');
@@ -5004,8 +4507,8 @@
       console.log('Salesman selector visible:', window.getComputedStyle(salesmanSelector).display);
       console.log('Salesman selector offsetParent:', salesmanSelector.offsetParent);
       
-      // Debug logging for dropdown visibility
-      console.log('Dropdown found:', salesmanSelector ? 'YES' : 'NO', 'Visible:', window.getComputedStyle(salesmanSelector).display);
+      // Temporary alert for debugging
+      alert('Dropdown found: ' + (salesmanSelector ? 'YES' : 'NO') + '\nVisible: ' + window.getComputedStyle(salesmanSelector).display);
       
       // Clear existing options
       salesmanSelector.innerHTML = '<option value="">Select Salesman</option>';
@@ -5405,20 +4908,6 @@
       
       // Initialize real-time synchronization
       initializeRealTimeSync();
-      
-      // Initialize share button event listener
-      const shareBtn = document.getElementById('shareBtn');
-      if (shareBtn) {
-        shareBtn.addEventListener('click', function(e) {
-          console.log('Share button clicked!');
-          console.log('Current state.segments:', state.segments);
-          console.log('Generated PNGs:', state.generatedPNGs);
-          toggleSharePopup();
-        });
-        console.log('Share button event listener attached');
-      } else {
-        console.error('Share button not found during initialization');
-      }
     });
     
     // Navigation functionality
@@ -5603,7 +5092,10 @@
         clearQuoteBtn.addEventListener('click', clearAllQuoteData);
       }
 
-      // shareBtn event listener moved to main DOMContentLoaded block
+      const shareBtn = document.getElementById('shareBtn');
+      if (shareBtn) {
+        shareBtn.addEventListener('click', shareQuoteAsImageFromMain);
+      }
 
       // Add currency change event listener for quote maker
       const quoteCurrencySelector = document.getElementById('quote-currency');
@@ -7282,7 +6774,7 @@
          if (emptyElement) emptyElement.classList.add('hidden');
        
          productsGrid.innerHTML = products.map(([category, data]) => {
-        const imagePath = `images/Products/${data.image}`;
+        const imagePath = `/images/Products/${data.image}`;
         
         return `
           <div class="bg-white rounded-lg border border-gray-200 hover:shadow-lg transition-all duration-300 overflow-hidden group cursor-pointer" 
