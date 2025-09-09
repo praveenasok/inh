@@ -5014,14 +5014,9 @@
     function populateQuoteDropdowns() {
       // Populate categories from existing product data filtered by selected price list
       const categorySelect = document.getElementById('new-item-category');
-      if (categorySelect && state.allProducts) {
-        // Get filtered products based on price list selection
-        const selectedPriceList = document.getElementById('quote-price-list-selector')?.value;
-        let productsToFilter = state.allProducts;
-        
-        if (selectedPriceList) {
-          productsToFilter = state.allProducts.filter(p => p.PriceList === selectedPriceList);
-        }
+      if (categorySelect && state.filteredProducts && state.filteredProducts.length > 0) {
+        // Use already filtered products from price list selection
+        const productsToFilter = state.filteredProducts;
         
         const categories = [...new Set(productsToFilter.map(p => p.Category).filter(c => c))];
         categorySelect.innerHTML = '<option value="">Select Category</option>';
@@ -5048,14 +5043,9 @@
     
     function populateColorsDropdown() {
       const colorSelect = document.getElementById('new-item-color');
-      if (colorSelect && state.allProducts) {
-        // Get filtered products based on price list selection
-        const selectedPriceList = document.getElementById('quote-price-list-selector')?.value;
-        let productsToFilter = state.allProducts;
-        
-        if (selectedPriceList) {
-          productsToFilter = state.allProducts.filter(p => p.PriceList === selectedPriceList);
-        }
+      if (colorSelect && state.filteredProducts && state.filteredProducts.length > 0) {
+        // Use already filtered products from price list selection
+        const productsToFilter = state.filteredProducts;
         
         const colors = [...new Set(productsToFilter.map(p => p.Colors).filter(c => c && c.trim() !== ''))];
         colorSelect.innerHTML = '<option value="">Select Color</option>';
@@ -5081,14 +5071,9 @@
       }
       densitySelect.disabled = !product;
 
-      if (category && product && state.allProducts) {
-        // Get filtered products based on price list selection
-        const selectedPriceList = document.getElementById('quote-price-list-selector')?.value;
-        let productsToFilter = state.allProducts;
-        
-        if (selectedPriceList) {
-          productsToFilter = state.allProducts.filter(p => p.PriceList === selectedPriceList);
-        }
+      if (category && product && state.filteredProducts && state.filteredProducts.length > 0) {
+        // Use already filtered products from price list selection
+        const productsToFilter = state.filteredProducts;
         
         const densities = [...new Set(productsToFilter
           .filter(p => p.Category === category && p.Product === product)
@@ -5121,14 +5106,9 @@
       productSelect.disabled = !category;
       densitySelect.disabled = true;
 
-      if (category && state.allProducts) {
-        // Get filtered products based on price list selection
-        const selectedPriceList = document.getElementById('quote-price-list-selector')?.value;
-        let productsToFilter = state.allProducts;
-        
-        if (selectedPriceList) {
-          productsToFilter = state.allProducts.filter(p => p.PriceList === selectedPriceList);
-        }
+      if (category && state.filteredProducts && state.filteredProducts.length > 0) {
+        // Use already filtered products from price list selection
+        const productsToFilter = state.filteredProducts;
         
         const products = productsToFilter.filter(p => 
           p.Category === category
@@ -5168,14 +5148,9 @@
       
       lengthSelect.innerHTML = '<option value="">Select Length</option>';
       
-      if (category && product && density && state.allProducts) {
-        // Get filtered products based on price list selection
-        const selectedPriceList = document.getElementById('quote-price-list-selector')?.value;
-        let productsToFilter = state.allProducts;
-        
-        if (selectedPriceList) {
-          productsToFilter = state.allProducts.filter(p => p.PriceList === selectedPriceList);
-        }
+      if (category && product && density && state.filteredProducts && state.filteredProducts.length > 0) {
+        // Use already filtered products from price list selection
+        const productsToFilter = state.filteredProducts;
         
         const lengths = [...new Set(productsToFilter
           .filter(p => p.Category === category && p.Product === product && p.Density === density)
@@ -5208,13 +5183,8 @@
         return;
       }
 
-      // Get filtered products based on price list selection
-      const selectedPriceList = document.getElementById('quote-price-list-selector')?.value;
-      let productsToFilter = state.allProducts;
-      
-      if (selectedPriceList) {
-        productsToFilter = state.allProducts.filter(p => p.PriceList === selectedPriceList);
-      }
+      // Use already filtered products from price list selection
+      const productsToFilter = state.filteredProducts || [];
       
       // Find the exact product match with all factors for accurate pricing
       let matchingProduct = null;
@@ -7664,18 +7634,13 @@
        const currencyRateValue = document.getElementById('currency-rate-value');
        const rateBreakdown = document.getElementById('rate-breakdown');
        
-       if (!category || !product || !state.allProducts) {
+       if (!category || !product || !state.filteredProducts || state.filteredProducts.length === 0) {
          rateDisplay.classList.add('hidden');
          return;
        }
        
-       // Get filtered products based on price list selection
-       const selectedPriceList = document.getElementById('quote-price-list-selector')?.value;
-       let productsToFilter = state.allProducts;
-       
-       if (selectedPriceList) {
-         productsToFilter = state.allProducts.filter(p => p.PriceList === selectedPriceList);
-       }
+       // Use already filtered products from price list selection
+       const productsToFilter = state.filteredProducts;
        
        // Find matching product with all available criteria
        let matchingProduct = null;
