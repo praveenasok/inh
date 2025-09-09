@@ -4541,6 +4541,9 @@
       // Update categories and products based on filtered data
       populateCategories();
       
+      // Update catalog filters to reflect filtered products
+      populateCatalogFilters();
+      
       // Clear current selections
       state.category = '';
       $('category').value = '';
@@ -6384,21 +6387,20 @@
       const selectedPriceList = document.getElementById('quote-price-list-selector').value;
       
       if (selectedPriceList) {
-        // Filter products by selected price list for Quote Maker
-        const filteredProducts = state.allProducts.filter(product => 
-          product.PriceList === selectedPriceList
-        );
-        
-        console.log(`Quote Maker filtered to ${filteredProducts.length} products from price list: ${selectedPriceList}`);
+        // Use already filtered products from price list selection
+        console.log(`Quote Maker using ${state.filteredProducts.length} products from price list: ${selectedPriceList}`);
         
         // Update categories dropdown to show only categories from selected price list
         populateQuoteDropdowns();
         
         // Update Quote Maker dropdowns with filtered data
-        updateQuoteDropdownsWithFilteredData(filteredProducts);
+        updateQuoteDropdownsWithFilteredData(state.filteredProducts);
         
         // Update color dropdown to show only colors from selected price list
         populateColorsDropdown();
+        
+        // Update catalog filters to reflect filtered products
+        populateCatalogFilters();
         
         // Auto-select USD currency for USA25 price list
         if (selectedPriceList === 'USA25') {
@@ -6448,6 +6450,75 @@
     }
 
     // Define comprehensive product catalog with proper image mapping
+    // Helper functions for dynamic catalog generation
+    function getProductImage(category) {
+      const imageMap = {
+        'Bulk': 'Bulk.png',
+        'Weaves': 'Weaves-SD.png',
+        'Weaves DD': 'Weaves-DD.png', 
+        'Weaves SDD': 'Weaves-SDD.png',
+        'Tapes': 'Tapes.png',
+        'ClipOn': 'ClipOn.png',
+        'Closures': 'Closure.png',
+        'Frontals': 'Frontal.png',
+        'Frontline': 'Frontline.png',
+        'I Tips': 'ITIPS.png',
+        'U Tips': 'UTIPS.png',
+        'Y Tips': 'YTIPS.png',
+        'Flat Tips': 'FlatTips.png',
+        'Nano': 'Nano.png',
+        'PonyTail': 'PonyTail.png',
+        'BUN': 'BUN.png',
+        'Curly Bun': 'CurlyBun.png',
+        'Clutch Bun': 'ClutchBun.png',
+        'Bangs': 'Bangs.png',
+        'Halo': 'Halo.png',
+        'Highlights': 'Highlights.png',
+        'Cover Patch': 'CoverPatch.png',
+        'Genius': 'Genius.png',
+        'Wigs': 'WIGFRONTAL.png',
+        'Wig Closure': 'WIGCLOSURE.png',
+        'Wig Frontal': 'WIGFRONTAL.png',
+        'Silk Topper': 'SILKTOPPER.png',
+        'Flat Clip Ponytail': 'FLATCLIPPONYTAIL.png'
+      };
+      return imageMap[category] || 'template.png';
+    }
+    
+    function getProductDescription(category) {
+      const descriptionMap = {
+        'Bulk': 'Premium bulk hair for various styling needs',
+        'Weaves': 'High-quality weave extensions',
+        'Weaves DD': 'Double drawn weave extensions for fuller look',
+        'Weaves SDD': 'Super double drawn premium weaves',
+        'Tapes': 'Seamless tape-in hair extensions',
+        'ClipOn': 'Easy-to-use clip-in extensions',
+        'Closures': 'Natural-looking lace closures',
+        'Frontals': 'Full frontal lace pieces',
+        'Frontline': 'Frontline hair systems',
+        'I Tips': 'I-tip micro link extensions',
+        'U Tips': 'U-tip keratin bond extensions',
+        'Y Tips': 'Y-tip flat bond extensions',
+        'Flat Tips': 'Flat tip keratin extensions',
+        'Nano': 'Ultra-fine nano ring extensions',
+        'PonyTail': 'Ready-to-wear ponytail pieces',
+        'BUN': 'Instant bun hair pieces',
+        'Curly Bun': 'Textured curly bun pieces',
+        'Clutch Bun': 'Secure clutch bun accessories',
+        'Bangs': 'Clip-in fringe pieces',
+        'Halo': 'Invisible wire halo extensions',
+        'Highlights': 'Color highlight pieces',
+        'Cover Patch': 'Coverage patches for thinning areas',
+        'Genius': 'Genius weft extensions',
+        'Wigs': 'Full lace and synthetic wigs',
+        'Wig Closure': 'Wig pieces with closure',
+        'Wig Frontal': 'Wig pieces with frontal',
+        'Silk Topper': 'Silk base hair toppers',
+        'Flat Clip Ponytail': 'Flat clip ponytail extensions'
+      };
+      return descriptionMap[category] || 'Premium hair extension products';
+    }
+
     const productCatalog = {
       'Bulk': {
         image: 'Bulk.png',
@@ -6597,13 +6668,16 @@
       // Clear existing options
       categorySelect.innerHTML = '<option value="">All Categories</option>';
       
-      // Add categories from product catalog
-      Object.keys(productCatalog).forEach(category => {
-        const option = document.createElement('option');
-        option.value = category;
-        option.textContent = category;
-        categorySelect.appendChild(option);
-      });
+      // Add categories from filtered products (based on selected price list)
+      if (state.filteredProducts && state.filteredProducts.length > 0) {
+        const categories = [...new Set(state.filteredProducts.map(p => p.Category).filter(c => c))];
+        categories.sort().forEach(category => {
+          const option = document.createElement('option');
+          option.value = category;
+          option.textContent = category;
+          categorySelect.appendChild(option);
+        });
+      }
     }
 
     function loadProductCatalog(filters = {}) {
@@ -6625,8 +6699,24 @@
       
       // Simulate loading delay for better UX
       setTimeout(() => {
-        // Get all products from catalog
-        let products = Object.entries(productCatalog);
+        // Generate dynamic catalog from filtered products
+        let catalogData = {};
+        if (state.filteredProducts && state.filteredProducts.length > 0) {
+          state.filteredProducts.forEach(product => {
+            if (product.Category && !catalogData[product.Category]) {
+              catalogData[product.Category] = {
+                image: getProductImage(product.Category),
+                description: getProductDescription(product.Category),
+                variants: []
+              };
+            }
+            if (product.Category && product.Product && !catalogData[product.Category].variants.includes(product.Product)) {
+              catalogData[product.Category].variants.push(product.Product);
+            }
+          });
+        }
+        
+        let products = Object.entries(catalogData);
         
         // Apply filters
         if (filters.category) {
@@ -7006,13 +7096,9 @@
       const selectedPriceList = priceListSelector.value;
       
       if (selectedPriceList) {
-        // Filter products by selected price list
-        const filteredProducts = state.allProducts.filter(product => 
-          product.PriceList === selectedPriceList
-        );
-        
+        // Use already filtered products from price list selection
         // Update dropdowns with filtered data
-        updateQuoteDropdownsWithFilteredData(filteredProducts);
+        updateQuoteDropdownsWithFilteredData(state.filteredProducts);
         
         // Auto-select currency for specific price lists
         if (selectedPriceList === 'USA25') {
