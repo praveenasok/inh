@@ -2,15 +2,53 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const url = require('url');
+const XLSX = require('xlsx');
 
 const PORT = 8001;
 const HTML_FILE_PATH = path.join(__dirname, 'index.html');
 const DATA_FILE_PATH = path.join(__dirname, 'data.json');
+const EXCEL_FILE_PATH = path.join(__dirname, 'PriceLists', 'productData.xlsx');
 const PRICE_LIST_FILE_PATH = path.join(__dirname, 'oldfiles', 'Price List Generator — Indian Natural Hair.html');
 const QUOTE_MAKER_FILE_PATH = path.join(__dirname, 'quotemaker', 'index.html');
 
 // In-memory data storage
 let currentProductData = null;
+
+// Function to read salesmen data from Excel file
+function getSalesmenFromExcel() {
+  try {
+    if (fs.existsSync(EXCEL_FILE_PATH)) {
+      const workbook = XLSX.readFile(EXCEL_FILE_PATH);
+      if (workbook.SheetNames.includes('salesmen')) {
+        const worksheet = workbook.Sheets['salesmen'];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+        
+        // Extract names from the data (skip header row)
+        const salesmen = jsonData.slice(1)
+          .map(row => row[0]) // Get first column (Name)
+          .filter(name => name && name.trim()) // Filter out empty values
+          .map(name => name.trim()); // Trim whitespace
+        
+        console.log(`Loaded ${salesmen.length} salesmen from Excel:`, salesmen);
+        return salesmen;
+      }
+    }
+  } catch (error) {
+    console.error('Error reading salesmen from Excel:', error);
+  }
+  
+  // Fallback to default salesmen if Excel reading fails
+  return [
+    "John Smith",
+    "Sarah Johnson", 
+    "Michael Brown",
+    "Emily Davis",
+    "David Wilson",
+    "Lisa Anderson",
+    "Robert Taylor",
+    "Jennifer Martinez"
+  ];
+}
 
 // MIME types for different file extensions
 const mimeTypes = {
@@ -75,18 +113,27 @@ const server = http.createServer((req, res) => {
   if (pathname === '/api/get-data' && req.method === 'GET') {
     try {
       if (currentProductData) {
+        // Add salesmen data from Excel
+        const dataWithSalesmen = {
+          ...currentProductData,
+          salesmen: getSalesmenFromExcel()
+        };
         const response = {
           success: true,
-          data: Array.isArray(currentProductData) ? currentProductData : currentProductData.products || []
+          data: Array.isArray(currentProductData) ? currentProductData : currentProductData.products || [],
+          salesmen: dataWithSalesmen.salesmen
         };
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(response));
       } else if (fs.existsSync(DATA_FILE_PATH)) {
         const data = fs.readFileSync(DATA_FILE_PATH, 'utf8');
         currentProductData = JSON.parse(data);
+        // Add salesmen data from Excel
+        currentProductData.salesmen = getSalesmenFromExcel();
         const response = {
           success: true,
-          data: Array.isArray(currentProductData) ? currentProductData : currentProductData.products || []
+          data: Array.isArray(currentProductData) ? currentProductData : currentProductData.products || [],
+          salesmen: currentProductData.salesmen
         };
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(response));
@@ -338,7 +385,32 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // Handle special routes
+  // Handle data.json requests with dynamic salesmen data
+  if (pathname === '/data.json' && req.method === 'GET') {
+    if (fs.existsSync(DATA_FILE_PATH)) {
+      try {
+        const data = fs.readFileSync(DATA_FILE_PATH, 'utf8');
+        const jsonData = JSON.parse(data);
+        
+        // Replace salesmen data with Excel data
+        jsonData.salesmen = getSalesmenFromExcel();
+        
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(jsonData, null, 2));
+      } catch (error) {
+        console.error('Error reading data.json:', error);
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Failed to read data file' }));
+      }
+    } else {
+      res.writeHead(404, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Data file not found' }));
+    }
+    return;
+  }
+
+  // Determine file path based on request
+  let filePath;
   if (pathname === '/quotemaker') {
     filePath = QUOTE_MAKER_FILE_PATH;
   } else if (pathname.startsWith('/quotemaker/')) {
@@ -518,6 +590,8 @@ function embedDataIntoFile(filePath, data, type) {
   console.log(`Data embedded into ${type} at ${new Date().toISOString()}`);
   console.log(`Backup created: ${backupPath}`);
 }
+
+
 
 // Load existing data on startup
 if (fs.existsSync(DATA_FILE_PATH)) {
