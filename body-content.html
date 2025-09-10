@@ -1,970 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes"/>
-  <title>Price List Generator — Multi-Select + PDF</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- jsPDF for PDF export -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <!-- html2canvas for HTML to canvas conversion -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  <!-- SheetJS for Excel parsing -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
-  <style>
-    /* Base responsive styles */
-    .shadow-soft { box-shadow: 0 10px 25px rgba(0,0,0,0.08); }
-    
-    /* Touch-friendly interactive elements */
-    select, button, input[type="checkbox"], input[type="text"], input[type="number"] { 
-      min-height: 48px; 
-      font-size: 16px; /* Prevents zoom on iOS */
-      border-radius: 8px;
-      transition: all 0.2s ease;
-    }
-    
-    /* Enhanced visual feedback for form elements */
-    input[type="number"], input[type="text"], select {
-      transition: all 0.2s ease;
-    }
-    
-    input[type="number"]:focus, input[type="text"]:focus, select:focus {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
-    }
-    
-    input[type="number"]:hover, input[type="text"]:hover, select:hover {
-      border-color: #9ca3af;
-    }
-    
-    /* Loading spinner animation */
-    @keyframes spin {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
-    }
-    
-    .loading-spinner {
-      animation: spin 1s linear infinite;
-    }
-    
-    /* Pulse animation for loading states */
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
-    }
-    
-    .pulse {
-      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-    }
-    
-    /* Success/Error state indicators */
-    .success-glow {
-      box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2);
-      border-color: #22c55e;
-    }
-    
-    .error-glow {
-      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
-      border-color: #ef4444;
-    }
-    
-    /* Enhanced button styles with better touch targets */
-    button {
-      min-height: 48px;
-      padding: 12px 16px;
-      font-weight: 500;
-      cursor: pointer;
-      touch-action: manipulation;
-    }
-    
-    button:focus { 
-      outline: 3px solid #3b82f6; 
-      outline-offset: 2px; 
-    }
-    
-    button:disabled { 
-      cursor: not-allowed; 
-      opacity: 0.6;
-    }
-    
-    /* Button variants */
-    .btn-primary { 
-      background: #081249; 
-      color: white; 
-      border: 2px solid #081249;
-      box-shadow: 0 4px 12px rgba(8, 18, 73, 0.3);
-    }
-    .btn-primary:hover:not(:disabled) { 
-      background: #0a1555; 
-      border-color: #0a1555;
-      transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(8, 18, 73, 0.4);
-    }
-    
-    .btn-secondary { 
-      background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%); 
-      color: #475569; 
-      border: 2px solid #e2e8f0;
-      box-shadow: 0 4px 12px rgba(71, 85, 105, 0.15);
-    }
-    .btn-secondary:hover:not(:disabled) { 
-      background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%); 
-      border-color: #cbd5e1;
-      transform: translateY(-1px);
-      box-shadow: 0 6px 16px rgba(71, 85, 105, 0.2);
-    }
-    
-    .btn-info { 
-      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); 
-      color: white; 
-      border: 2px solid #2563eb;
-      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
-    }
-    .btn-info:hover:not(:disabled) { 
-      background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%); 
-      border-color: #1d4ed8;
-      transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
-    }
-    
-    /* Responsive typography */
-    .chip { 
-      display: inline-flex; 
-      align-items: center; 
-      gap: 0.5rem; 
-      padding: 0.5rem 0.75rem; 
-      border-radius: 9999px; 
-      background: #f1f5f9; 
-      color: #334155; 
-      font-size: 0.875rem;
-      min-height: 36px;
-      transition: all 0.2s ease;
-      cursor: pointer;
-    }
-    
-    .chip:hover {
-      background: #e2e8f0;
-      transform: translateY(-1px);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    }
-    
-    .chip:active {
-      transform: translateY(0);
-      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
-    }
-    
-    /* Responsive grid system */
-    .grid-col { 
-      display: grid; 
-      grid-template-columns: 1fr; 
-      gap: 1rem; 
-    }
-    
-    @media (min-width: 480px) { 
-      .grid-col { 
-        grid-template-columns: repeat(2, minmax(0, 1fr)); 
-        gap: 0.75rem;
-      }
-    }
-    
-    @media (min-width: 768px) { 
-      .grid-col { 
-        grid-template-columns: repeat(3, minmax(0, 1fr)); 
-        gap: 0.5rem;
-      }
-    }
-    
-    /* Fluid typography system */
-     html {
-       font-size: clamp(14px, 2.5vw, 16px);
-     }
-     
-     body {
-       font-size: 1rem;
-       line-height: 1.6;
-       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-     }
-     
-     /* Responsive heading scales */
-     h1 {
-       font-size: clamp(1.5rem, 4vw, 2.5rem);
-       line-height: 1.2;
-       font-weight: 700;
-       color: #081249;
-     }
-     
-     h2 {
-       font-size: clamp(1.25rem, 3vw, 2rem);
-       line-height: 1.3;
-       font-weight: 600;
-       color: #081249;
-     }
-     
-     h3 {
-       font-size: clamp(1.125rem, 2.5vw, 1.5rem);
-       line-height: 1.4;
-       font-weight: 600;
-       color: #081249;
-     }
-     
-     /* Responsive text sizes */
-     .text-xs { font-size: clamp(0.75rem, 1.5vw, 0.875rem); }
-     .text-sm { font-size: clamp(0.875rem, 2vw, 1rem); }
-     .text-base { font-size: clamp(1rem, 2.5vw, 1.125rem); }
-     .text-lg { font-size: clamp(1.125rem, 3vw, 1.25rem); }
-     .text-xl { font-size: clamp(1.25rem, 3.5vw, 1.5rem); }
-     
-     /* Enhanced readability */
-     p, span, div {
-       line-height: 1.6;
-     }
-     
-     label {
-       font-weight: 500;
-       line-height: 1.4;
-     }
-     
-     /* Mobile-first responsive breakpoints */
-     @media (max-width: 640px) { 
-       .stack-mobile { 
-         flex-direction: column; 
-         gap: 1rem;
-       }
-       
-       /* Enhanced mobile typography */
-       body {
-         font-size: 16px; /* Prevents zoom on iOS */
-         line-height: 1.7;
-       }
-       
-       /* Better spacing on mobile */
-       .mobile-padding {
-         padding: 1rem;
-       }
-       
-       /* Full-width elements on mobile */
-       .mobile-full {
-         width: 100%;
-       }
-       
-       /* Hide less important elements on very small screens */
-       .mobile-hide {
-         display: none;
-       }
-       
-       /* Improved mobile text spacing */
-       p, div, span {
-         line-height: 1.7;
-       }
-       
-       /* Better button text on mobile */
-       button {
-         font-size: 16px;
-         line-height: 1.4;
-         letter-spacing: 0.025em;
-       }
-       
-       /* Make icons 2x bigger on mobile */
-       .md\:hidden button span:first-child,
-       .mobile-full span[aria-hidden="true"],
-       button span.text-base,
-       button span.text-lg {
-         font-size: 2em !important;
-         line-height: 1;
-       }
-     }
-    
-    @media (max-width: 480px) {
-      /* Extra small screens */
-      .container {
-        padding-left: 0.75rem;
-        padding-right: 0.75rem;
-      }
-      
-      /* Smaller buttons on very small screens but still touch-friendly */
-      button {
-        min-height: 44px;
-        padding: 10px 12px;
-        font-size: 14px;
-      }
-      
-      /* Compact grid on very small screens */
-      .grid-cols-2 {
-        grid-template-columns: 1fr;
-      }
-      
-      /* Admin modal adjustments for very small screens */
-      #adminModal .bg-white {
-        margin: 1rem;
-        max-height: calc(100vh - 2rem);
-      }
-      
-      /* Ensure dropdowns don't overflow on small screens */
-      .dropdown-list {
-        max-height: 150px;
-      }
-      
-      /* Better spacing for form elements */
-      .space-y-4 > * + * {
-        margin-top: 1rem;
-      }
-      
-      /* Ensure icons remain 2x bigger on smaller mobile screens */
-      .md\:hidden button span:first-child,
-      .mobile-full span[aria-hidden="true"],
-      button span.text-base,
-      button span.text-lg {
-        font-size: 2em !important;
-        line-height: 1;
-      }
-    }
-    
-    /* Consistent spacing utilities */
-    .section-spacing {
-      margin-bottom: 1.5rem;
-    }
-    
-    @media (max-width: 640px) {
-      .section-spacing {
-        margin-bottom: 1rem;
-      }
-    }
-    
-    /* Responsive form elements */
-    .form-input {
-      width: 100%;
-      padding: 0.75rem;
-      border: 2px solid #e5e7eb;
-      border-radius: 0.5rem;
-      font-size: 1rem;
-      transition: all 0.2s ease;
-    }
-    
-    .form-input:focus {
-      outline: none;
-      border-color: #3b82f6;
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-    }
-    
-    @media (max-width: 480px) {
-      .form-input {
-        padding: 0.625rem;
-        font-size: 0.875rem;
-      }
-    }
-    
-    /* Responsive card layouts */
-    .card-responsive {
-      background: white;
-      border-radius: 0.75rem;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-      padding: 1.5rem;
-      margin-bottom: 1.5rem;
-    }
-    
-    @media (max-width: 640px) {
-      .card-responsive {
-        padding: 1rem;
-        margin-bottom: 1rem;
-        border-radius: 0.5rem;
-      }
-    }
-    
-    @media (max-width: 480px) {
-      .card-responsive {
-        padding: 0.75rem;
-        margin-bottom: 0.75rem;
-      }
-    }
-    /* Enhanced dropdown styles for mobile */
-    .custom-dropdown { 
-      position: relative; 
-      width: 100%; 
-    }
-    
-    .dropdown-btn { 
-      display: flex; 
-      justify-content: space-between; 
-      align-items: center;
-      cursor: pointer;
-      padding: 12px 16px;
-      border: 2px solid #d1d5db;
-      border-radius: 8px;
-      background: white;
-      min-height: 48px;
-      width: 100%;
-      box-sizing: border-box;
-      font-size: 16px;
-      transition: all 0.2s ease;
-      touch-action: manipulation;
-    }
-    
-    .dropdown-btn:hover:not(:disabled) {
-      border-color: #9ca3af;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      transform: translateY(-1px);
-    }
-    
-    .dropdown-btn:focus {
-      outline: 3px solid #3b82f6;
-      outline-offset: 2px;
-      border-color: #3b82f6;
-    }
-    
-    .dropdown-btn:active {
-      transform: translateY(0);
-    }
-    
-    .dropdown-btn:disabled { 
-      cursor: not-allowed;
-      background-color: #f9fafb;
-      color: #6b7280;
-      opacity: 0.6;
-    }
-    
-    .dropdown-btn::after {
-      content: '▼';
-      font-size: 14px;
-      color: #6b7280;
-      transition: transform 0.2s ease;
-    }
-    
-    .dropdown-btn.open::after {
-      transform: rotate(180deg);
-    }
-    
-    .dropdown-list {
-      position: absolute;
-      top: 100%;
-      left: 0;
-      right: 0;
-      background: white;
-      border: 2px solid #d1d5db;
-      border-radius: 8px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-      max-height: 240px;
-      overflow-y: auto;
-      z-index: 1000;
-      margin-top: 4px;
-      width: 100%;
-      box-sizing: border-box;
-    }
-    
-    .dropdown-list.hidden {
-      display: none;
-    }
-    
-    .dropdown-option {
-      padding: 12px 16px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      border-bottom: 1px solid #f3f4f6;
-      font-size: 16px;
-      min-height: 48px;
-      transition: background-color 0.2s ease;
-      touch-action: manipulation;
-    }
-    
-    .dropdown-option:last-child {
-      border-bottom: none;
-    }
-    
-    .dropdown-option:hover {
-      background-color: #f1f5f9;
-    }
-    
-    .dropdown-option:active {
-      background-color: #e2e8f0;
-    }
-    
-    .dropdown-option input[type="checkbox"] {
-      margin: 0;
-      width: 18px;
-      height: 18px;
-      cursor: pointer;
-    }
-    
-    .dropdown-option label {
-      cursor: pointer;
-      flex: 1;
-      font-weight: 400;
-      line-height: 1.4;
-    }
-    
-    /* Mobile-specific dropdown optimizations */
-    @media (max-width: 640px) {
-      .dropdown-list {
-        max-height: 200px;
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-      }
-      
-      .dropdown-option {
-        padding: 14px 16px;
-        min-height: 52px;
-      }
-      
-      /* Better mobile header layout */
-      .header-mobile {
-        flex-wrap: wrap;
-        justify-content: center;
-      }
-      
-      /* Improved mobile controls layout */
-      .grid.grid-cols-1.sm\:grid-cols-2.lg\:grid-cols-3 {
-        grid-template-columns: 1fr;
-        gap: 1rem;
-      }
-      
-      /* Enhanced mobile layout */
-      .container {
-        padding-left: 1rem;
-        padding-right: 1rem;
-      }
-      
-      /* Better mobile grid spacing */
-      .grid {
-        gap: 0.75rem;
-      }
-      
-      /* Mobile-optimized preview section */
-      .preview-container {
-        margin: 0 -1rem;
-        border-radius: 0;
-      }
-      
-      /* Improved mobile header */
-      .header-mobile {
-        flex-direction: column;
-        gap: 1rem;
-        text-align: center;
-      }
-      
-      /* Better mobile form layout */
-      .form-row {
-        flex-direction: column;
-        gap: 1rem;
-      }
-      
-      /* Enhanced mobile buttons */
-      .mobile-button-stack {
-        flex-direction: column;
-        width: 100%;
-      }
-      
-      .mobile-button-stack button {
-        width: 100%;
-        margin-bottom: 0.5rem;
-      }
-      
-      /* Mobile-friendly feature images */
-      .feature-images-mobile {
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 0.5rem;
-      }
-      
-      .mobile-feature-section {
-        padding: 0.5rem !important;
-      }
-      
-      .mobile-feature-images {
-        width: 100% !important;
-        max-width: 100% !important;
-        gap: 0.25rem !important;
-        padding: 4px !important;
-        justify-content: center;
-      }
-      
-      .mobile-feature-img {
-        height: 45px !important;
-        max-width: 55px !important;
-        flex-shrink: 0;
-      }
-      
-      /* Better mobile typography */
-      .mobile-text-adjust {
-        font-size: 14px;
-        line-height: 1.5;
-      }
-    }
-      
-      .dropdown-option input[type="checkbox"] {
-        width: 20px;
-        height: 20px;
-      }
-    
-    /* Navigation Menu Styles */
-    .nav-btn {
-      background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
-      color: #475569;
-      border: 2px solid #e2e8f0;
-      box-shadow: 0 2px 8px rgba(71, 85, 105, 0.1);
-      min-height: 48px;
-      cursor: pointer;
-      touch-action: manipulation;
-    }
-    
-    .nav-btn:hover {
-      background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
-      border-color: #cbd5e1;
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(71, 85, 105, 0.15);
-    }
-    
-    .nav-btn-active {
-      background: linear-gradient(135deg, #081249 0%, #0a1555 100%);
-      color: white;
-      border-color: #081249;
-      box-shadow: 0 4px 12px rgba(8, 18, 73, 0.3);
-    }
-    
-    .nav-btn-active:hover {
-      background: linear-gradient(135deg, #0a1555 0%, #0c1a66 100%);
-      border-color: #0a1555;
-      transform: translateY(-1px);
-      box-shadow: 0 6px 16px rgba(8, 18, 73, 0.4);
-    }
-    
-    /* Module Content Styles */
-    .module-content {
-      display: none;
-    }
-    
-    .module-content.active {
-      display: block;
-    }
-    
-    /* Responsive navigation */
-    @media (max-width: 640px) {
-      .nav-btn span:last-child {
-        display: none;
-      }
-      
-      .nav-btn {
-        min-width: 60px;
-        justify-content: center;
-      }
-    }
-    
-    /* Mobile-friendly table styles */
-    @media (max-width: 768px) {
-      .table-container {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-      }
-      
-      table {
-        min-width: 600px;
-      }
-      
-      th, td {
-        white-space: nowrap;
-        min-width: 80px;
-      }
-      
-      th:first-child, td:first-child {
-        position: sticky;
-        left: 0;
-        background: inherit;
-        z-index: 1;
-      }
-      
-      th:first-child {
-        background: #f8fafc;
-      }
-    }
-    
-    /* Enhanced table responsiveness */
-    .table-responsive {
-      border-radius: 8px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    }
-    
-    /* Touch-friendly table cells */
-    td input, td select {
-      width: 100%;
-      min-width: 60px;
-    }
-
-    /* Saved Quotes List Styles - Slim Design */
-    .saved-quotes-container {
-      margin-top: 12px;
-      padding: 8px;
-      background-color: #f8f9fa;
-      border-radius: 4px;
-      border: 1px solid #dee2e6;
-    }
-    
-    /* Enhanced Checkbox Styling */
-    .quote-checkbox {
-      appearance: none;
-      -webkit-appearance: none;
-      -moz-appearance: none;
-      width: 1rem;
-      height: 1rem;
-      border: 2px solid #d1d5db;
-      border-radius: 0.25rem;
-      background-color: #f9fafb;
-      cursor: pointer;
-      position: relative;
-      transition: all 0.2s ease;
-    }
-    
-    .quote-checkbox:checked {
-      background-color: #1e3a8a;
-      border-color: #1e3a8a;
-    }
-    
-    .quote-checkbox:checked::after {
-      content: '✓';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      color: white;
-      font-size: 0.75rem;
-      font-weight: bold;
-      line-height: 1;
-    }
-    
-    .quote-checkbox:hover {
-      border-color: #3b82f6;
-    }
-    
-    .quote-checkbox:focus {
-      outline: none;
-      ring: 2px;
-      ring-color: #3b82f6;
-      ring-opacity: 0.5;
-    }
-
-    .saved-quotes-list {
-      max-height: 190px;
-      overflow-y: auto;
-      margin-top: 6px;
-    }
-
-    .quote-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 4px 6px;
-      margin-bottom: 2px;
-      background-color: white;
-      border: 1px solid #e9ecef;
-      border-radius: 2px;
-      cursor: pointer;
-      transition: all 0.15s ease;
-    }
-
-    .quote-item:hover {
-      background-color: #e3f2fd;
-      border-color: #2196f3;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.08);
-    }
-
-    .quote-info {
-      flex: 1;
-      line-height: 1.2;
-    }
-
-    .quote-id {
-      font-weight: 600;
-      color: #2c3e50;
-      font-size: 11px;
-    }
-
-    .quote-details {
-      font-size: 10px;
-      color: #6c757d;
-      margin-top: 1px;
-    }
-
-    .quote-actions-btn {
-      background: #007bff;
-      color: white;
-      border: none;
-      padding: 3px 6px;
-      border-radius: 2px;
-      font-size: 10px;
-      cursor: pointer;
-      transition: background-color 0.15s;
-    }
-
-    .quote-actions-btn:hover {
-      background: #0056b3;
-    }
-
-    .quote-actions-dropdown {
-      position: absolute;
-      background: white;
-      border: 1px solid #ccc;
-      border-radius: 3px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.12);
-      z-index: 1000;
-      min-width: 120px;
-      overflow: hidden;
-    }
-
-    .quote-actions-dropdown button {
-      display: block;
-      width: 100%;
-      padding: 6px 10px;
-      border: none;
-      background: white;
-      text-align: left;
-      cursor: pointer;
-      font-size: 11px;
-      transition: background-color 0.15s;
-    }
-
-    .quote-actions-dropdown button:hover {
-      background-color: #f8f9fa;
-    }
-
-    .quote-actions-dropdown button.recall {
-      color: #28a745;
-    }
-
-    .quote-actions-dropdown button.convert {
-      color: #007bff;
-    }
-
-    .quote-actions-dropdown button.delete {
-      color: #dc3545;
-    }
-
-    .no-quotes-message {
-      text-align: center;
-      color: #6c757d;
-      font-style: italic;
-      padding: 12px;
-      font-size: 11px;
-    }
-
-    /* Custom background colors for table headers - Monochromatic */
-    .bg-gray-25 {
-      background-color: rgba(107, 114, 128, 0.05);
-    }
-    
-    .bg-gray-100 {
-      background-color: rgba(243, 244, 246, 1);
-    }
-    
-    .bg-gray-150 {
-      background-color: rgba(229, 231, 235, 1);
-    }
-    
-    .bg-gray-200 {
-      background-color: rgba(209, 213, 219, 1);
-    }
-    
-    .bg-gray-300 {
-      background-color: rgba(156, 163, 175, 1);
-    }
-    
-    /* Enhanced hover effects for table rows - Monochromatic */
-    .hover\:from-gray-150:hover {
-      background-image: linear-gradient(to right, rgba(229, 231, 235, 1), rgba(209, 213, 219, 1));
-    }
-    
-    .hover\:to-gray-200:hover {
-      background-image: linear-gradient(to right, rgba(229, 231, 235, 1), rgba(209, 213, 219, 1));
-    }
-    
-    .hover\:from-gray-200:hover {
-      background-image: linear-gradient(to right, rgba(209, 213, 219, 1), rgba(156, 163, 175, 1));
-    }
-    
-    .hover\:to-gray-300:hover {
-      background-image: linear-gradient(to right, rgba(209, 213, 219, 1), rgba(156, 163, 175, 1));
-    }
-
-    /* Column visibility controls */
-    .column-toggle {
-      transition: all 0.2s ease;
-    }
-    
-    .column-toggle:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    /* PNG Selection Dropdown Styles */
-    #pngSelectionDropdown {
-      position: absolute;
-      top: 100%;
-      left: 0;
-      right: 0;
-      background: white;
-      border: 2px solid #d1d5db;
-      border-radius: 8px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-      max-height: 300px;
-      overflow-y: auto;
-      z-index: 1000;
-      margin-top: 4px;
-      width: 100%;
-      box-sizing: border-box;
-    }
-
-    #pngSelectionDropdown.hidden {
-      display: none;
-    }
-
-    #pngSelectionDropdown .select-all-btn {
-      padding: 12px 16px;
-      background: #f8fafc;
-      border-bottom: 1px solid #e2e8f0;
-      font-weight: 500;
-      color: #3b82f6;
-      cursor: pointer;
-      transition: background-color 0.2s ease;
-    }
-
-    #pngSelectionDropdown .select-all-btn:hover {
-      background: #e0f2fe;
-    }
-
-    #pngFilesList .png-file-option {
-      padding: 12px 16px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      border-bottom: 1px solid #f3f4f6;
-      font-size: 14px;
-      transition: background-color 0.2s ease;
-    }
-
-    #pngFilesList .png-file-option:last-child {
-      border-bottom: none;
-    }
-
-    #pngFilesList .png-file-option:hover {
-      background-color: #f1f5f9;
-    }
-
-    #pngFilesList .png-file-option input[type="checkbox"] {
-      margin: 0;
-      width: 16px;
-      height: 16px;
-      cursor: pointer;
-    }
-
-    #pngFilesList .png-file-option label {
-      cursor: pointer;
-      flex: 1;
-      font-weight: 400;
-      line-height: 1.4;
-    }
-
-  </style>
-</head>
-<body class="bg-slate-100 min-h-screen text-slate-800">
+﻿<body class="bg-slate-100 min-h-screen text-slate-800">
 
   <!-- Top Menu Bar -->
   <header class="bg-white shadow-soft mb-4">
@@ -986,19 +20,19 @@
       <div class="pb-3">
         <nav class="hidden md:flex gap-2 justify-center">
           <button id="nav-price-calculator" class="nav-btn nav-btn-active btn-primary px-4 py-2 rounded-lg font-medium hover:bg-emerald-700 transition-all duration-200 flex items-center gap-2">
-            <span>📊</span>
+            <span>ðŸ“Š</span>
             <span>PriceLists</span>
           </button>
           <button id="nav-quote-maker" class="nav-btn px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2">
-            <span class="text-lg">📋</span>
+            <span class="text-lg">ðŸ“‹</span>
             <span>Quote Maker</span>
           </button>
           <button id="nav-product-catalog" class="nav-btn px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2">
-            <span class="text-lg">📦</span>
+            <span class="text-lg">ðŸ“¦</span>
             <span>Product Catalog</span>
           </button>
           <button id="nav-admin-panel" class="nav-btn px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2">
-            <span class="text-lg">⚙️</span>
+            <span class="text-lg">âš™ï¸</span>
             <span>Admin Panel</span>
           </button>
         </nav>
@@ -1008,19 +42,19 @@
       <nav class="md:hidden pb-3">
         <div class="flex flex-wrap justify-center gap-2">
           <button id="nav-price-calculator-mobile" class="nav-btn nav-btn-active btn-primary px-3 py-2 rounded-lg font-medium hover:bg-emerald-700 transition-all duration-200 flex items-center gap-1 text-sm">
-            <span>📊</span>
+            <span>ðŸ“Š</span>
             <span>PriceLists</span>
           </button>
           <button id="nav-quote-maker-mobile" class="nav-btn px-3 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-1 text-sm">
-            <span>📋</span>
+            <span>ðŸ“‹</span>
             <span>Quote</span>
           </button>
           <button id="nav-product-catalog-mobile" class="nav-btn px-3 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-1 text-sm">
-            <span>📦</span>
+            <span>ðŸ“¦</span>
             <span>Catalog</span>
           </button>
           <button id="nav-admin-panel-mobile" class="nav-btn px-3 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-1 text-sm">
-            <span>⚙️</span>
+            <span>âš™ï¸</span>
             <span>Admin</span>
           </button>
         </div>
@@ -1049,15 +83,15 @@
             <!-- Currency Selector -->
             <div>
               <select id="currency" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
-                <option value="INR">₹ INR - Indian Rupee</option>
+                <option value="INR">â‚¹ INR - Indian Rupee</option>
                 <option value="USD">$ USD - US Dollar</option>
-                <option value="EUR">€ EUR - Euro</option>
-                <option value="GBP">£ GBP - British Pound</option>
+                <option value="EUR">â‚¬ EUR - Euro</option>
+                <option value="GBP">Â£ GBP - British Pound</option>
                 <option value="AUD">A$ AUD - Australian Dollar</option>
                 <option value="SAR">SAR - Saudi Riyal</option>
-                <option value="NGN">₦ NGN - Nigerian Naira</option>
-                <option value="AED">د.إ AED - UAE Dirham</option>
-                <option value="JPY">¥ JPY - Japanese Yen</option>
+                <option value="NGN">â‚¦ NGN - Nigerian Naira</option>
+                <option value="AED">Ø¯.Ø¥ AED - UAE Dirham</option>
+                <option value="JPY">Â¥ JPY - Japanese Yen</option>
               </select>
             </div>
             
@@ -1089,18 +123,7 @@
             <!-- Control Options -->
             <div>
               <div class="flex flex-wrap gap-4">
-                <div id="kgWrap" class="hidden">
-                  <label class="inline-flex items-center gap-2">
-                    <input type="checkbox" id="kgMode" class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
-                    <span class="text-sm text-gray-700">List in KG</span>
-                  </label>
-                </div>
-                <div id="selectAllWrap" class="hidden">
-                  <label class="inline-flex items-center gap-2">
-                    <input type="checkbox" id="selectAll" class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
-                    <span class="text-sm text-gray-700">Select All</span>
-                  </label>
-                </div>
+                <!-- Checkbox elements removed -->
               </div>
             </div>
           </div>
@@ -1151,63 +174,38 @@
         <div class="relative" style="margin-top: 20px;">
           <div class="flex flex-col sm:flex-row gap-1 mobile-button-stack" id="actionButtonsContainer">
             <button id="clearSegments" class="btn-secondary px-2 py-0 rounded-lg text-sm font-medium hover:bg-slate-300 transition-all duration-200 flex items-center justify-center gap-1 mobile-full" aria-label="Clear all selections" title="Clear all selections">
-              <span class="text-base" aria-hidden="true">🗑️</span>
+              <span class="text-base" aria-hidden="true">ðŸ—‘ï¸</span>
               <span>Clear</span>
             </button>
             <button id="previewBtn" class="btn-primary px-4 py-1 rounded-lg text-sm font-medium hover:bg-emerald-700 transition-all duration-200 flex items-center justify-center gap-1 mobile-full" aria-label="Generate preview" title="Generate preview">
-              <span class="text-base" aria-hidden="true">👁️</span>
+              <span class="text-base" aria-hidden="true">ðŸ‘ï¸</span>
               <span>Preview</span>
             </button>
-            <button id="shareBtn" class="btn-info px-2 py-0 rounded-lg text-sm font-medium hover:bg-blue-700 transition-all duration-200 flex items-center justify-center gap-1 mobile-full" aria-label="Share Quote" title="Share quote as image to clipboard">
-              <span class="text-base" aria-hidden="true">📤</span>
+            <button id="shareBtn" class="btn-primary px-4 py-1 rounded-lg text-sm font-medium hover:bg-emerald-700 transition-all duration-200 flex items-center justify-center gap-1 mobile-full" aria-label="Share Quote" title="Share quote as image to clipboard">
+              <span class="text-base" aria-hidden="true">ðŸ“¤</span>
               <span>Share</span>
             </button>
           </div>
            
            <!-- Enhanced Share Popup for Mobile -->
-           <div id="sharePopup" class="hidden absolute z-30 mt-2 w-full sm:w-64 bg-white border-2 rounded-xl shadow-xl p-3">
+           <div id="sharePopup" class="hidden absolute z-50 mt-2 w-full sm:w-64 bg-white border-2 rounded-xl shadow-xl p-3" style="top: 100%; left: 0; display: none;">
              <div class="space-y-2">
-               <button id="shareDownloadPDF" class="w-full text-left px-4 py-3 text-base font-medium hover:bg-slate-100 rounded-lg flex items-center gap-3 transition-all duration-200 touch-action-manipulation">
-                 <span class="text-lg">📄</span> 
-                 <span>Save as PDF</span>
-               </button>
 
-               <button id="downloadPNG" class="w-full text-left px-4 py-3 text-base font-medium hover:bg-slate-100 rounded-lg flex items-center gap-3 transition-all duration-200 touch-action-manipulation">
-                 <span class="text-lg">🖼️</span> 
-                 <span>Download as PNG</span>
-               </button>
 
-               <!-- Share PNG with Selection -->
+               <!-- Share Price Lists with Dropdown -->
                <div class="relative">
                  <button id="sharePNGBtn" class="w-full text-left px-4 py-3 text-base font-medium hover:bg-slate-100 rounded-lg flex items-center gap-3 transition-all duration-200 touch-action-manipulation">
-                   <span class="text-lg">📤</span> 
-                   <span>Share PNG Files</span>
-                   <span class="ml-auto text-sm">▼</span>
+                   <span class="text-lg">ðŸ“¤</span> 
+                   <span>Share Price Lists</span>
                  </button>
-                 
-                 <!-- PNG Selection Dropdown -->
-                 <div id="pngSelectionDropdown" class="hidden absolute top-full left-0 right-0 mt-1 bg-white border rounded-lg shadow-lg z-40 max-h-64 overflow-y-auto">
-                   <div class="p-3">
-                     <div class="flex items-center justify-between mb-3">
-                       <span class="text-sm font-medium text-gray-700">Select PNG Files:</span>
-                       <button id="selectAllPNGs" class="text-xs text-blue-600 hover:text-blue-800">Select All</button>
-                     </div>
-                     <div id="pngFilesList" class="space-y-2">
-                       <!-- PNG files will be populated here -->
-                     </div>
-                     <div class="mt-3 pt-3 border-t">
-                       <button id="shareSelectedPNGs" class="w-full px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm rounded-lg font-medium transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed" disabled>
-                         Share Selected Files
-                       </button>
-                     </div>
-                   </div>
+                 <div id="pngSelectionDropdown" class="hidden">
+                   <div id="pngFilesList"></div>
+                   <button id="shareSelectedPNGs" class="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg font-medium transition-colors duration-200 mt-3 flex items-center justify-center gap-2" disabled>
+                     <span class="text-lg">ðŸ“¤</span>
+                     Share Selected File
+                   </button>
                  </div>
                </div>
-
-               <button id="shareInvoiceImage" class="w-full text-left px-4 py-3 text-base font-medium hover:bg-slate-100 rounded-lg flex items-center gap-3 transition-all duration-200 touch-action-manipulation">
-                 <span class="text-lg">📋</span> 
-                 <span>Share Invoice Image</span>
-               </button>
 
              </div>
            </div>
@@ -1250,7 +248,7 @@
       (base) => `https://open.er-api.com/v6/latest/${base}`
     ];
     const SUPPORTED = ['INR','USD','EUR','GBP','AUD','SAR','NGN','AED','JPY'];
-    const SYMBOL = { INR:'₹', USD:'$', EUR:'€', GBP:'£', AUD:'A$', SAR:'SAR ', NGN:'₦', AED:'د.إ ', JPY:'¥' };
+    const SYMBOL = { INR:'â‚¹', USD:'$', EUR:'â‚¬', GBP:'Â£', AUD:'A$', SAR:'SAR ', NGN:'â‚¦', AED:'Ø¯.Ø¥ ', JPY:'Â¥' };
     const DEFAULT_RATES = { base:'INR',
       rates:{ INR:1, USD:0.0120, EUR:0.0110, GBP:0.0095, AUD:0.0180, SAR:0.0450, NGN:5.5000, AED:0.0440, JPY:1.8000 },
       updatedAt: null, mode:'auto'
@@ -1368,7 +366,7 @@
     const elCurrency = $('currency');
     const elCategory = $('category'); 
     const elProductDropdown = $('productDropdown'); const elDensityDropdown = $('densityDropdown'); const elColorDropdown = $('colorDropdown');
-    const elKgWrap = $('kgWrap'); const elKg = $('kgMode'); const elSelectAllWrap = $('selectAllWrap'); const elSelectAll = $('selectAll');
+    // Checkbox element declarations removed
     const elClearSegments = $('clearSegments'); const elSegmentsList = $('segmentsList');
     const elDownloadPDF = $('downloadPDF'); const elPageInfo = $('pageInfo');
 
@@ -1381,11 +379,12 @@
     }
     
     function getDropdownValues(dropdown) {
-      return Array.from(dropdown.querySelectorAll('.dropdown-option input:checked')).map(input => input.value);
+      // Checkbox functionality removed - returning empty array
+      return [];
     }
-    
+
     function setAllDropdownSelected(dropdown) {
-      dropdown.querySelectorAll('.dropdown-option input').forEach(input => input.checked = true);
+      // Checkbox functionality removed
       updateDropdownText(dropdown);
     }
     
@@ -1397,15 +396,14 @@
       const selectAllOption = arr.length > 0 ? `
         <div class="dropdown-option border-b border-gray-200 pb-1 mb-1">
           <button class="select-all-btn w-full text-left px-2 py-1 text-sm text-blue-600 hover:bg-blue-50 rounded" data-dropdown-id="${dropdown.id}">
-            ⚡ Select All
+            âš¡ Select All
           </button>
         </div>
       ` : '';
       
       list.innerHTML = selectAllOption + arr.map(v => `
         <div class="dropdown-option">
-          <input type="checkbox" value="${escapeHTML(v)}" id="${dropdown.id}_${escapeHTML(v)}">
-          <label for="${dropdown.id}_${escapeHTML(v)}">${escapeHTML(v)}</label>
+          <label>${escapeHTML(v)}</label>
         </div>
       `).join('');
       
@@ -1423,10 +421,7 @@
         });
       }
       
-      // Add event listeners for checkboxes
-      list.querySelectorAll('input').forEach(input => {
-        input.addEventListener('change', () => updateDropdownText(dropdown));
-      });
+      // Checkbox event listeners removed
       
       updateDropdownText(dropdown, placeholder);
     }
@@ -1439,15 +434,14 @@
       const selectAllOption = productArray.length > 0 ? `
         <div class="dropdown-option border-b border-gray-200 pb-1 mb-1">
           <button class="select-all-btn w-full text-left px-2 py-1 text-sm text-blue-600 hover:bg-blue-50 rounded" data-dropdown-id="${dropdown.id}">
-            ⚡ Select All
+            âš¡ Select All
           </button>
         </div>
       ` : '';
       
       list.innerHTML = selectAllOption + productArray.map(product => `
         <div class="dropdown-option">
-          <input type="checkbox" value="${escapeHTML(product.name)}" id="${dropdown.id}_${escapeHTML(product.name)}" data-price-list="${escapeHTML(product.priceList)}">
-          <label for="${dropdown.id}_${escapeHTML(product.name)}" class="flex justify-between items-center">
+          <label class="flex justify-between items-center">
             <span>${escapeHTML(product.name)}</span>
             <span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">[${escapeHTML(product.priceList)}]</span>
           </label>
@@ -1532,13 +526,19 @@
         'Closures': ['transparentlace.png', 'plucked.png', 'cuticle.png', 'color.png', 'durable.png', 'noshedding.png'],
         'Tapes': ['tapes.png', 'cuticle.png', 'color.png', 'durable.png', 'noshedding.png', 'cut.png'],
         'Tips': ['tips.png', 'cuticle.png', 'color.png', 'durable.png', 'noshedding.png', 'cut.png'],
-        'Genius': ['Genius.png', 'cuticle.png', 'color.png', 'durable.png', 'noshedding.png', 'cut.png'],
-        'Genius Weaves': ['Genius.png', 'cuticle.png', 'color.png', 'durable.png', 'noshedding.png', 'cut.png'],
+        'Genius': ['genius.png', 'cuticle.png', 'color.png', 'durable.png', 'noshedding.png', 'cut.png'],
+        'Genius Weaves': ['genius.png', 'cuticle.png', 'color.png', 'durable.png', 'noshedding.png', 'cut.png'],
         'DIY': ['diy.png', 'cuticle.png', 'color.png', 'measure.png', 'durable.png', 'cut.png'],
         'ClipOn': ['cuticle.png', 'color.png', 'measure.png', 'durable.png', 'noshedding.png', 'stitch.png']
       };
       const images = categoryFeatureMap[category] || [];
-      return images.map(img => `images/category-images/${category}/${img}`);
+      return images.map(img => {
+        // For genius.png, use the Products directory path
+        if (img === 'genius.png') {
+          return `images/Products/Genius.png`;
+        }
+        return `images/category-images/${category}/${img}`;
+      });
     }
 
 
@@ -1555,8 +555,8 @@
       // Only use filtered products (based on selected price list)
       const dataSource = state.filteredProducts;
       const hasKg = dataSource.some(i => i.Category===state.category && /y/i.test(i['Can Be Sold in KG?']||''));
-      elKgWrap.classList.toggle('hidden', !hasKg); if (!hasKg) elKg.checked=false;
-      elSelectAllWrap.classList.toggle('hidden', !state.category); elSelectAll.checked=false; state.selectAll=false;
+      // Removed elKgWrap and elKg references - checkboxes no longer exist
+      // Removed elSelectAllWrap and elSelectAll references - checkboxes no longer exist
 
       // Check if price list is selected
       if (state.filteredProducts.length === 0) {
@@ -1630,7 +630,7 @@
         const matches = pool.filter(i => i.Product===p && i.Density===d && i.Colors===c);
         if (matches.length && !set.has(key)) {
           set.add(key);
-          next.push({ title: `${p} - ${d} - ${c}`, category: state.category, product:p, density:d, color:c, kg: elKg.checked });
+          next.push({ title: `${p} - ${d} - ${c}`, category: state.category, product:p, density:d, color:c, kg: false });
         }
       })));
       // append
@@ -1643,7 +643,7 @@
     function renderSegmentsList(){
       elSegmentsList.innerHTML = state.segments.map((s,idx)=>`
         <span class="chip"><span class="font-semibold">${escapeHTML(s.title)}</span>
-          <button class="text-red-600" onclick="__remove(${idx})">✕</button>
+          <button class="text-red-600" onclick="__remove(${idx})">âœ•</button>
         </span>`).join('');
     }
     window.__remove = removeSegment;
@@ -1877,7 +877,7 @@
             <div class="flex items-center justify-center p-2">
                <div class="flex items-center justify-center gap-1 flex-nowrap mobile-feature-images" style="width: 458px; min-height: 91px; padding: 8px; overflow-x: auto;">
                  ${getCategoryFeatureImages(segment.category).map(imagePath => 
-                   `<img src="${imagePath}" alt="Feature" class="object-contain mobile-feature-img" style="height: 65px; width: auto; max-width: 75px; flex-shrink: 0;" onerror="this.style.display='none'">`
+                   `<img src="${imagePath}" alt="Feature" class="object-contain mobile-feature-img" style="height: 65px; width: auto; max-width: 75px; flex-shrink: 0;" onerror="this.style.display='none'">` 
                  ).join('')}
                </div>
             </div>
@@ -1940,26 +940,22 @@
               <div class="grid grid-cols-3 items-start mb-2" style="font-size: clamp(0.75rem, 2vw, 0.875rem);">
                 ${document.getElementById('priceListSelector').value === 'USA25' ? `
                 <div class="text-left text-gray-700">
-                  <div class="font-medium">8 SUMMIT CT</div>
-                  <div class="font-medium">HACKENSACK NJ 07601, USA</div>
+                  <div class="font-medium text-xs">8 SUMMIT CT, HACKENSACK NJ 07601, USA</div>
+                  <div class="font-medium text-xs">us@indiannaturalhair.com</div>
+                  <div class="font-medium text-xs">+1 (646) 919-2921</div>
                 </div>
-                <div class="flex justify-center items-center">
-                  <span class="font-bold text-3xl" style="color: #a37e55;">${SYMBOL[state.currency] || state.currency}</span>
-                </div>
-                <div class="text-right">
-                  <a href="mailto:us@indiannaturalhair.com" class="text-gray-700 font-semibold hover:text-gray-900 transition-colors">us@indiannaturalhair.com</a>
-                  <div class="text-gray-700 font-semibold">+1 (646) 919-2921</div>
+                <div class="flex-1"></div>
+                <div class="text-right flex justify-end items-center">
+                  <span class="font-bold text-4xl" style="color: #a37e55;">${SYMBOL[state.currency] || state.currency}</span>
                 </div>
                 ` : `
                 <div class="text-left text-gray-700">
-                  <div class="font-medium text-sm">WZ 81/1A, Guru Nanak Nagar</div>
-                  <div class="font-medium">New Delhi 110018, India</div>
+                  <div class="font-medium text-xs">WZ 81/1A, Guru Nanak Nagar, New Delhi 110018, India</div>
+                  <div class="font-medium text-xs">info@indiannaturalhair.com</div>
                 </div>
-                <div class="flex justify-center items-center">
-                  <span class="font-bold text-3xl" style="color: #a37e55;">${SYMBOL[state.currency] || state.currency}</span>
-                </div>
-                <div class="text-right" style="margin-right: 10px;">
-                  <a href="mailto:info@indiannaturalhair.com" class="text-gray-700 font-semibold hover:text-gray-900 transition-colors">info@indiannaturalhair.com</a>
+                <div class="flex-1"></div>
+                <div class="text-right flex justify-end items-center">
+                  <span class="font-bold text-4xl" style="color: #a37e55;">${SYMBOL[state.currency] || state.currency}</span>
                 </div>
                 `}
               </div>
@@ -2040,7 +1036,7 @@
               
               <!-- Brand Tagline Section -->
               <div class="border-t border-gray-400 pt-1">
-                <p class="text-gray-700 italic font-semibold" style="font-size: clamp(0.75rem, 2vw, 0.875rem);">Premium Quality Hair Products • Trusted Worldwide • ${getCurrentPriceFactor().toFixed(2)}x</p>
+                <p class="text-gray-700 italic font-semibold" style="font-size: clamp(0.75rem, 2vw, 0.875rem);">Premium Quality Hair Products â€¢ Trusted Worldwide â€¢ ${getCurrentPriceFactor().toFixed(2)}x</p>
               </div>
             </div>
           </div>
@@ -2239,7 +1235,7 @@
         // Fallback text if logos fail to load
         ctx.fillStyle='#6b7280';
         ctx.font='500 8px system-ui, -apple-system, Segoe UI, Roboto';
-        const fallbackText = isINR ? 'DHL • ARAMEX • FEDEX | VISA • MASTERCARD • AMEX • PAYTM • GOOGLE PAY' : 'DHL • ARAMEX • FEDEX | VISA • MASTERCARD • AMEX';
+        const fallbackText = isINR ? 'DHL â€¢ ARAMEX â€¢ FEDEX | VISA â€¢ MASTERCARD â€¢ AMEX â€¢ PAYTM â€¢ GOOGLE PAY' : 'DHL â€¢ ARAMEX â€¢ FEDEX | VISA â€¢ MASTERCARD â€¢ AMEX';
         ctx.fillText(fallbackText, W/2, logoY + 10);
       }
     }
@@ -2439,12 +1435,7 @@
         previewContainer.innerHTML = '<div class="text-center text-gray-500 p-8">No segments to display. Please select products and generate preview.</div>';
         document.getElementById('pageInfo').textContent = 'No pages to display';
         
-        // Hide PNG download button when no segments
-        const pngButton = document.getElementById('downloadPNG');
-        if (pngButton) {
-          pngButton.style.display = 'none';
-          pngButton.disabled = true;
-        }
+
         
         return;
       }
@@ -2485,7 +1476,7 @@
       // Show loading state with mobile-friendly feedback
       const downloadBtn = $('shareDownloadPDF');
       const originalText = downloadBtn.innerHTML;
-      downloadBtn.innerHTML = '<span>⏳</span> <span class="hidden sm:inline">Generating PDF...</span><span class="sm:hidden">Generating...</span>';
+      downloadBtn.innerHTML = '<span>â³</span> <span class="hidden sm:inline">Generating PDF...</span><span class="sm:hidden">Generating...</span>';
       downloadBtn.disabled = true;
       
       // Add mobile-specific loading indicator
@@ -2494,7 +1485,7 @@
       loadingOverlay.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
       loadingOverlay.innerHTML = `
         <div class="bg-white rounded-lg p-6 text-center max-w-xs mx-4">
-          <div class="text-2xl mb-2">⏳</div>
+          <div class="text-2xl mb-2">â³</div>
           <div class="font-medium">Generating PDF...</div>
           <div class="text-sm text-gray-600 mt-1">Please wait</div>
         </div>
@@ -2518,7 +1509,7 @@
         const contentHeight = measureContainer.scrollHeight;
         document.body.removeChild(measureContainer);
         
-        // Convert 20px margins to mm (1px ≈ 0.264583mm)
+        // Convert 20px margins to mm (1px â‰ˆ 0.264583mm)
         const marginMM = 20 * 0.264583;
         
         // Calculate page dimensions with 20px margins on all sides
@@ -2526,10 +1517,10 @@
         const pageHeightMM = (contentHeight * 0.264583) + (marginMM * 2);
         
         // Log dimensions for debugging
-        console.log('📏 Content Dimensions:');
+        console.log('ðŸ“ Content Dimensions:');
         console.log(`  Content Width: ${contentWidth}px`);
         console.log(`  Content Height: ${contentHeight}px`);
-        console.log('📄 PDF Page Dimensions:');
+        console.log('ðŸ“„ PDF Page Dimensions:');
         console.log(`  Page Width: ${pageWidthMM.toFixed(2)}mm (${(pageWidthMM / 0.264583).toFixed(0)}px equivalent)`);
         console.log(`  Page Height: ${pageHeightMM.toFixed(2)}mm (${(pageHeightMM / 0.264583).toFixed(0)}px equivalent)`);
         console.log(`  Margin: ${marginMM.toFixed(2)}mm (20px)`);
@@ -2639,7 +1630,7 @@
         successModal.innerHTML = `
           <div class="bg-white rounded-lg p-6 max-w-md w-full mx-auto">
             <div class="text-center mb-4">
-              <div class="text-3xl mb-2">✅</div>
+              <div class="text-3xl mb-2">âœ…</div>
               <h3 class="font-semibold text-lg">PDF Downloaded Successfully!</h3>
               <p class="text-gray-600 text-sm mt-1">Your file has been saved to your device</p>
             </div>
@@ -2649,7 +1640,7 @@
                 <div class="text-sm text-gray-600 truncate">${filename}</div>
               </div>
               <button onclick="openDownloadedFile('${filename}', 'pdf')" class="w-full px-4 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors touch-action-manipulation">
-                📄 Open PDF File
+                ðŸ“„ Open PDF File
               </button>
               <button onclick="this.parentElement.parentElement.parentElement.remove()" class="w-full px-4 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-medium transition-colors touch-action-manipulation">
                 Close
@@ -2681,7 +1672,7 @@
           errorMsg.className = 'fixed top-4 left-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg z-50';
           errorMsg.innerHTML = `
             <div class="flex items-center gap-2">
-              <span class="text-lg">❌</span>
+              <span class="text-lg">âŒ</span>
               <div>
                 <div class="font-medium">PDF Generation Failed</div>
                 <div class="text-sm">Please try again</div>
@@ -2707,7 +1698,7 @@
           instructions.innerHTML = `
             <div class="bg-white rounded-lg p-6 max-w-md w-full mx-auto">
               <div class="text-center mb-4">
-                <div class="text-2xl mb-2">📁</div>
+                <div class="text-2xl mb-2">ðŸ“</div>
                 <h3 class="font-semibold text-lg">Open Downloaded File</h3>
               </div>
               <div class="space-y-3 text-sm">
@@ -2729,7 +1720,7 @@
                   </div>
                 </div>
                 <div class="text-xs text-gray-500">
-                  💡 Tip: Press Ctrl+J (Windows) or Cmd+Shift+J (Mac) in your browser to see recent downloads
+                  ðŸ’¡ Tip: Press Ctrl+J (Windows) or Cmd+Shift+J (Mac) in your browser to see recent downloads
                 </div>
               </div>
               <button onclick="this.parentElement.parentElement.remove()" class="w-full mt-4 px-4 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors touch-action-manipulation">
@@ -2845,28 +1836,18 @@
         });
       });
 
-      elKg.addEventListener('change', ()=>{ 
-        state.kg = elKg.checked;
-        // Regenerate preview if segments exist
-        if (state.segments.length > 0) {
-          renderAllPagesToHTML();
-        }
-      });
-
-      elSelectAll.addEventListener('change', onSelectAllToggle);
+      // Checkbox event listeners removed
 
   
       elClearSegments.addEventListener('click', clearAllOptions);
       $('previewBtn').addEventListener('click', generatePreview);
-      $('shareDownloadPDF').addEventListener('click', downloadPNG);
 
-      $('downloadPNG').addEventListener('click', downloadPNG);
-      $('shareInvoiceImage').addEventListener('click', shareInvoiceImage);
+
+
       
-      // PNG sharing functionality
+      // Direct PNG sharing functionality
       $('sharePNGBtn').addEventListener('click', togglePNGSelectionDropdown);
-      $('selectAllPNGs').addEventListener('click', toggleSelectAllPNGs);
-      $('shareSelectedPNGs').addEventListener('click', shareSelectedPNGFiles);
+    $('shareSelectedPNGs').addEventListener('click', shareSelectedPNGFiles);
 
       
       // Page navigation event listeners removed - now using HTML preview
@@ -2886,9 +1867,10 @@
         if (!e.target.closest('#sharePopup')) {
           $('sharePopup').classList.add('hidden');
         }
+        
         // Close PNG dropdown when clicking outside
         if (!e.target.closest('#pngSelectionDropdown') && !e.target.closest('#sharePNGBtn')) {
-          const dropdown = $('pngSelectionDropdown');
+          const dropdown = document.getElementById('pngSelectionDropdown');
           if (dropdown && !dropdown.classList.contains('hidden')) {
             dropdown.classList.add('hidden');
           }
@@ -2915,7 +1897,7 @@
       // Show loading state
       const previewBtn = $('previewBtn');
       const originalText = previewBtn.innerHTML;
-      previewBtn.innerHTML = '<span>⏳</span> <span class="hidden sm:inline">Generating...</span><span class="sm:hidden">Loading...</span>';
+      previewBtn.innerHTML = '<span>â³</span> <span class="hidden sm:inline">Generating...</span><span class="sm:hidden">Loading...</span>';
       previewBtn.disabled = true;
       
       // Share PDF button removed - no longer needed
@@ -2957,7 +1939,7 @@
           // Show success feedback
           const successMsg = document.createElement('div');
           successMsg.className = 'fixed top-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg z-50 flex items-center gap-2';
-          successMsg.innerHTML = '<span class="text-lg">✅</span><span class="font-medium">Preview generated successfully!</span>';
+          successMsg.innerHTML = '<span class="text-lg">âœ…</span><span class="font-medium">Preview generated successfully!</span>';
           document.body.appendChild(successMsg);
           setTimeout(() => successMsg.remove(), 3000);
           
@@ -2979,8 +1961,7 @@
       state.selectAll = false;
       
       // Reset form elements but keep category
-      elSelectAll.checked = false;
-      elKg.checked = false;
+      // Removed elSelectAll and elKg references - checkboxes no longer exist
       
       // Clear segments list and preview
       renderSegmentsList();
@@ -3001,8 +1982,7 @@
       
       // Reset form elements
       elCategory.value = '';
-      elKg.checked = false;
-      elSelectAll.checked = false;
+      // Removed elKg and elSelectAll references - checkboxes no longer exist
       
       // Clear price factor input
       document.getElementById('priceFactor').value = '';
@@ -3016,8 +1996,7 @@
       lockDropdown(elColorDropdown, true);
       
       // Hide elements and reset layout
-      elSelectAllWrap.classList.add('hidden');
-      elKgWrap.classList.add('hidden');
+      // Removed elSelectAllWrap and elKgWrap references - elements no longer exist
       // sharePdfBtn removed - no longer needed
       
       // Reset button styling to original state
@@ -3049,13 +2028,27 @@
 
     // Share functionality
     async function shareNatively() {
-      console.log('shareNatively function called');
-      console.log('state.segments.length:', state.segments.length);
+      console.log('shareNatively called, segments:', state.segments.length, 'PNGs:', state.lastGeneratedPNGs?.length || 0);
       
       // Check if we have segments to share
       if (state.segments.length === 0) {
-        alert('Please generate a preview first before sharing.');
-        return;
+        // For Price List Calculator Module, try to generate preview automatically
+        if (state.category) {
+          console.log('No segments found, but category exists. Generating preview first...');
+          generatePreview();
+          // Wait a moment for preview generation to complete
+          setTimeout(() => {
+            if (state.segments.length > 0) {
+              shareNatively(); // Retry sharing
+            } else {
+              alert('Unable to generate preview. Please ensure you have selected products and try the Preview button first.');
+            }
+          }, 1000);
+          return;
+        } else {
+          alert('Please select a category and generate a preview first before sharing.');
+          return;
+        }
       }
       
       // Check if we have generated PNG images to share
@@ -3096,11 +2089,21 @@
     }
     
     function toggleSharePopup() {
+      console.log('toggleSharePopup called');
       const popup = $('sharePopup');
-      const isHidden = popup.classList.contains('hidden');
+      console.log('popup element:', popup);
       
-      popup.classList.toggle('hidden');
-      // sharePdfBtn removed - no longer needed for aria-expanded
+      if (popup.style.display === 'none' || popup.classList.contains('hidden')) {
+        popup.style.display = 'block';
+        popup.classList.remove('hidden');
+        console.log('Popup shown');
+      } else {
+        popup.style.display = 'none';
+        popup.classList.add('hidden');
+        console.log('Popup hidden');
+      }
+      console.log('popup classes after toggle:', popup.className);
+      console.log('popup display style:', popup.style.display);
     }
 
     async function downloadPNG() {
@@ -3111,7 +2114,7 @@
           errorMsg.className = 'fixed top-4 left-4 right-4 bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded-lg z-50';
           errorMsg.innerHTML = `
             <div class="flex items-center gap-2">
-              <span class="text-lg">⚠️</span>
+              <span class="text-lg">âš ï¸</span>
               <span class="font-medium">Please generate a preview first</span>
             </div>
           `;
@@ -3127,7 +2130,7 @@
         // Show loading state with mobile-friendly feedback
         const downloadBtn = $('downloadPNG');
         const originalText = downloadBtn.innerHTML;
-        downloadBtn.innerHTML = '<span>⏳</span> <span class="hidden sm:inline">Generating PNG...</span><span class="sm:hidden">Generating...</span>';
+        downloadBtn.innerHTML = '<span>â³</span> <span class="hidden sm:inline">Generating PNG...</span><span class="sm:hidden">Generating...</span>';
         downloadBtn.disabled = true;
         
         // Add mobile-specific loading indicator
@@ -3136,7 +2139,7 @@
         loadingOverlay.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
         loadingOverlay.innerHTML = `
           <div class="bg-white rounded-lg p-6 text-center max-w-xs mx-4">
-            <div class="text-2xl mb-2">🖼️</div>
+            <div class="text-2xl mb-2">ðŸ–¼ï¸</div>
             <div class="font-medium">Generating PNG Images...</div>
             <div class="text-sm text-gray-600 mt-1">Processing ${state.segments.length} price list${state.segments.length > 1 ? 's' : ''}</div>
           </div>
@@ -3197,7 +2200,67 @@
           document.body.removeChild(tempContainer);
         }
         
-        // Download all generated images
+        // Try to use Web Share API first, fallback to download
+        const shareFiles = generatedImages.map(imageData => 
+          new File([imageData.blob], imageData.filename, { type: 'image/png' })
+        );
+        
+        // Check if Web Share API is supported and can share files
+        if (navigator.share && navigator.canShare) {
+          const shareData = {
+            title: 'Price List Images',
+            text: `Sharing ${shareFiles.length} price list image${shareFiles.length > 1 ? 's' : ''}`,
+            files: shareFiles
+          };
+          
+          if (navigator.canShare(shareData)) {
+            try {
+              await navigator.share(shareData);
+              console.log('Images shared successfully via Web Share API');
+              
+              // Reset button state
+              downloadBtn.innerHTML = originalText;
+              downloadBtn.disabled = false;
+              
+              // Remove mobile loading overlay
+              const overlay = document.getElementById('pngLoadingOverlay');
+              if (overlay) overlay.remove();
+              
+              // Hide share popup
+              $('sharePopup').classList.add('hidden');
+              
+              // Show success message for sharing
+              const successModal = document.createElement('div');
+              successModal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
+              successModal.innerHTML = `
+                <div class="bg-white rounded-lg p-6 max-w-md w-full mx-auto">
+                  <div class="text-center">
+                    <div class="text-3xl mb-2">ðŸ“¤</div>
+                    <h3 class="font-semibold text-lg">Images Shared Successfully!</h3>
+                    <p class="text-gray-600 text-sm mt-1">${shareFiles.length} price list image${shareFiles.length > 1 ? 's' : ''} shared via device</p>
+                    <button onclick="this.parentElement.parentElement.parentElement.remove()" class="mt-4 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors touch-action-manipulation">
+                      Close
+                    </button>
+                  </div>
+                </div>
+              `;
+              document.body.appendChild(successModal);
+              
+              // Auto-close after 5 seconds
+              setTimeout(() => {
+                if (successModal.parentElement) {
+                  successModal.remove();
+                }
+              }, 5000);
+              
+              return; // Exit early if sharing was successful
+            } catch (error) {
+              console.log('Web Share API cancelled or failed, falling back to download:', error);
+            }
+          }
+        }
+        
+        // Fallback: Download all generated images
         for (const imageData of generatedImages) {
           const url = URL.createObjectURL(imageData.blob);
           const downloadLink = document.createElement('a');
@@ -3229,11 +2292,11 @@
         // Show enhanced success message
         const successModal = document.createElement('div');
         successModal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
-        const fileList = generatedImages.map(img => `<div class="text-sm text-gray-600 truncate">• ${img.filename}</div>`).join('');
+        const fileList = generatedImages.map(img => `<div class="text-sm text-gray-600 truncate">â€¢ ${img.filename}</div>`).join('');
         successModal.innerHTML = `
           <div class="bg-white rounded-lg p-6 max-w-md w-full mx-auto">
             <div class="text-center mb-4">
-              <div class="text-3xl mb-2">✅</div>
+              <div class="text-3xl mb-2">âœ…</div>
               <h3 class="font-semibold text-lg">PNG Images Downloaded Successfully!</h3>
               <p class="text-gray-600 text-sm mt-1">${generatedImages.length} image${generatedImages.length > 1 ? 's' : ''} saved to your device</p>
             </div>
@@ -3275,7 +2338,7 @@
           errorMsg.className = 'fixed top-4 left-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg z-50';
           errorMsg.innerHTML = `
             <div class="flex items-center gap-2">
-              <span class="text-lg">❌</span>
+              <span class="text-lg">âŒ</span>
               <div>
                 <div class="font-medium">PNG Generation Failed</div>
                 <div class="text-sm">Please try again</div>
@@ -3291,11 +2354,22 @@
     }
 
     // PNG Selection and Sharing Functions
-    function togglePNGSelectionDropdown() {
+    let isAutoCollapsing = false;
+    
+    async function togglePNGSelectionDropdown() {
       const dropdown = document.getElementById('pngSelectionDropdown');
       const isHidden = dropdown.classList.contains('hidden');
       
+      // Prevent reopening immediately after auto-collapse
+      if (isAutoCollapsing) {
+        return;
+      }
+      
       if (isHidden) {
+        // Check if PNG files exist, if not generate them first
+        if (!state.lastGeneratedPNGs || state.lastGeneratedPNGs.length === 0) {
+          await generateAllPNGFiles();
+        }
         // Populate the dropdown with available PNG files
         populatePNGFilesList();
         dropdown.classList.remove('hidden');
@@ -3318,16 +2392,29 @@
         return;
       }
       
-      // Create checkboxes for each PNG file
+      // Create radio buttons for each PNG file
       state.lastGeneratedPNGs.forEach((pngData, index) => {
-        const checkboxContainer = document.createElement('div');
-        checkboxContainer.className = 'flex items-center gap-2';
+        const radioContainer = document.createElement('div');
+        radioContainer.className = 'flex items-center gap-2';
         
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.id = `png-file-${index}`;
-        checkbox.className = 'png-file-checkbox';
-        checkbox.addEventListener('change', updateShareButtonState);
+        const radio = document.createElement('input');
+        radio.type = 'radio';
+        radio.name = 'png-file-selection';
+        radio.id = `png-file-${index}`;
+        radio.className = 'png-file-radio w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500 focus:ring-2';
+        radio.addEventListener('change', () => {
+          updateShareButtonState();
+          // Auto-collapse after selection for cleaner UX
+          isAutoCollapsing = true;
+          setTimeout(() => {
+            document.getElementById('pngSelectionDropdown').classList.add('hidden');
+            document.getElementById('sharePopup').classList.add('hidden');
+            // Reset flag after collapse to allow normal toggle behavior
+            setTimeout(() => {
+              isAutoCollapsing = false;
+            }, 500); // Brief delay to prevent immediate reopening
+          }, 1500); // 1.5 second delay to allow user to see selection
+        });
         
         const label = document.createElement('label');
         label.htmlFor = `png-file-${index}`;
@@ -3335,65 +2422,50 @@
         label.textContent = pngData.filename;
         label.title = pngData.filename; // Show full filename on hover
         
-        checkboxContainer.appendChild(checkbox);
-        checkboxContainer.appendChild(label);
-        filesList.appendChild(checkboxContainer);
+        radioContainer.appendChild(radio);
+        radioContainer.appendChild(label);
+        filesList.appendChild(radioContainer);
       });
       
       updateShareButtonState();
     }
 
-    function toggleSelectAllPNGs() {
-      const checkboxes = document.querySelectorAll('.png-file-checkbox');
-      const selectAllBtn = document.getElementById('selectAllPNGs');
-      const allChecked = Array.from(checkboxes).every(cb => cb.checked);
-      
-      checkboxes.forEach(checkbox => {
-        checkbox.checked = !allChecked;
-      });
-      
-      selectAllBtn.textContent = allChecked ? 'Select All' : 'Deselect All';
-      updateShareButtonState();
-    }
+    // Removed toggleSelectAllPNGs function since we're using radio buttons
 
     function updateShareButtonState() {
-      const checkboxes = document.querySelectorAll('.png-file-checkbox');
+      const radios = document.querySelectorAll('.png-file-radio');
       const shareBtn = document.getElementById('shareSelectedPNGs');
-      const selectAllBtn = document.getElementById('selectAllPNGs');
       
-      const checkedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
-      const allChecked = checkboxes.length > 0 && Array.from(checkboxes).every(cb => cb.checked);
+      const selectedRadio = Array.from(radios).find(radio => radio.checked);
       
       // Update share button
-      shareBtn.disabled = checkedCount === 0;
-      shareBtn.textContent = checkedCount === 0 ? 'Share Selected Files' : `Share ${checkedCount} File${checkedCount > 1 ? 's' : ''}`;
-      
-      // Update select all button
-      selectAllBtn.textContent = allChecked ? 'Deselect All' : 'Select All';
+      shareBtn.disabled = !selectedRadio;
+      shareBtn.textContent = selectedRadio ? 'Share Selected File' : 'Share Selected File';
     }
 
     async function shareSelectedPNGFiles() {
-      const checkboxes = document.querySelectorAll('.png-file-checkbox:checked');
+      const selectedRadio = document.querySelector('.png-file-radio:checked');
       
-      if (checkboxes.length === 0) {
-        alert('Please select at least one PNG file to share.');
+      if (!selectedRadio) {
+        alert('Please select a PNG file to share.');
         return;
       }
       
-      const selectedFiles = [];
-      checkboxes.forEach(checkbox => {
-        const index = parseInt(checkbox.id.split('-')[2]);
-        const pngData = state.lastGeneratedPNGs[index];
-        if (pngData) {
-          selectedFiles.push(new File([pngData.blob], pngData.filename, { type: 'image/png' }));
-        }
-      });
+      const index = parseInt(selectedRadio.id.split('-')[2]);
+      const pngData = state.lastGeneratedPNGs[index];
+      
+      if (!pngData) {
+        alert('Selected PNG file not found.');
+        return;
+      }
+      
+      const selectedFiles = [new File([pngData.blob], pngData.filename, { type: 'image/png' })];
       
       // Check if Web Share API is supported and can share files
       if (navigator.share && navigator.canShare) {
         const shareData = {
-          title: 'PNG Price Lists',
-          text: `Sharing ${selectedFiles.length} price list image${selectedFiles.length > 1 ? 's' : ''}`,
+          title: 'PNG Price List',
+          text: `Sharing price list image: ${pngData.filename}`,
           files: selectedFiles
         };
         
@@ -3401,8 +2473,12 @@
           try {
             await navigator.share(shareData);
             // Hide the dropdown and share popup on successful share
+            isAutoCollapsing = true;
             document.getElementById('pngSelectionDropdown').classList.add('hidden');
             document.getElementById('sharePopup').classList.add('hidden');
+            setTimeout(() => {
+              isAutoCollapsing = false;
+            }, 500);
             return;
           } catch (error) {
             console.log('Native sharing cancelled or failed:', error);
@@ -3427,15 +2503,19 @@
       const successMsg = document.createElement('div');
       successMsg.className = 'fixed top-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg z-50 flex items-center gap-2';
       successMsg.innerHTML = `
-        <span class="text-lg">✅</span>
-        <span>Downloaded ${selectedFiles.length} PNG file${selectedFiles.length > 1 ? 's' : ''}</span>
+        <span class="text-lg">âœ…</span>
+        <span>Downloaded PNG file: ${pngData.filename}</span>
       `;
       document.body.appendChild(successMsg);
       setTimeout(() => successMsg.remove(), 3000);
       
       // Hide the dropdown and share popup
+      isAutoCollapsing = true;
       document.getElementById('pngSelectionDropdown').classList.add('hidden');
       document.getElementById('sharePopup').classList.add('hidden');
+      setTimeout(() => {
+        isAutoCollapsing = false;
+      }, 500);
     }
 
     // Share Invoice Image functionality
@@ -3444,7 +2524,7 @@
         // Show loading state
         const shareBtn = $('shareInvoiceImage');
         const originalText = shareBtn.innerHTML;
-        shareBtn.innerHTML = '<span>⏳</span> <span>Generating...</span>';
+        shareBtn.innerHTML = '<span>â³</span> <span>Generating...</span>';
         shareBtn.disabled = true;
         
         // Create invoice-style layout
@@ -3486,7 +2566,7 @@
           ]);
           
           // Show success message
-          showSuccessMessage('Invoice image copied to clipboard! 📋✨');
+          showSuccessMessage('Invoice image copied to clipboard! ðŸ“‹âœ¨');
         } else {
           // Fallback: download the image
           const url = URL.createObjectURL(blob);
@@ -3516,7 +2596,7 @@
         
         // Reset button state
         const shareBtn = $('shareInvoiceImage');
-        shareBtn.innerHTML = '<span>📋</span> <span>Share Invoice Image</span>';
+        shareBtn.innerHTML = '<span>ðŸ“‹</span> <span>Share Invoice Image</span>';
         shareBtn.disabled = false;
       }
     }
@@ -3621,15 +2701,15 @@
     // Helper function to get currency symbol
     function getCurrencySymbol(currency) {
       const symbols = {
-        'INR': '₹',
+        'INR': 'â‚¹',
         'USD': '$',
-        'EUR': '€',
-        'GBP': '£',
+        'EUR': 'â‚¬',
+        'GBP': 'Â£',
         'AUD': 'A$',
         'SAR': 'SAR ',
-        'NGN': '₦',
-        'AED': 'د.إ ',
-        'JPY': '¥'
+        'NGN': 'â‚¦',
+        'AED': 'Ø¯.Ø¥ ',
+        'JPY': 'Â¥'
       };
       return symbols[currency] || currency;
     }
@@ -3640,7 +2720,7 @@
       successMsg.className = 'fixed top-4 left-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg z-50';
       successMsg.innerHTML = `
         <div class="flex items-center gap-2">
-          <span class="text-lg">✅</span>
+          <span class="text-lg">âœ…</span>
           <span class="font-medium">${message}</span>
         </div>
       `;
@@ -3654,12 +2734,344 @@
       errorMsg.className = 'fixed top-4 left-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg z-50';
       errorMsg.innerHTML = `
         <div class="flex items-center gap-2">
-          <span class="text-lg">❌</span>
+          <span class="text-lg">âŒ</span>
           <span class="font-medium">${message}</span>
         </div>
       `;
       document.body.appendChild(errorMsg);
       setTimeout(() => errorMsg.remove(), 4000);
+    }
+
+    // PNG Selection Dropdown Functions
+    function togglePNGSelectionDropdown() {
+      const dropdown = document.getElementById('pngSelectionDropdown');
+      const isHidden = dropdown.classList.contains('hidden');
+      
+      if (isHidden) {
+        // Auto-generate PNGs when dropdown is opened
+        generateAllPNGFiles();
+      }
+      
+      dropdown.classList.toggle('hidden');
+    }
+    
+    function toggleSelectAllPNGs() {
+      const checkboxes = document.querySelectorAll('#pngFilesList input[type="checkbox"]');
+      const selectAllBtn = document.getElementById('selectAllPNGs');
+      const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+      
+      checkboxes.forEach(cb => {
+        cb.checked = !allChecked;
+      });
+      
+      selectAllBtn.textContent = allChecked ? 'Select All' : 'Deselect All';
+      updateShareButton();
+    }
+    
+    function shareSelectedPNGFiles() {
+      const selectedCheckboxes = document.querySelectorAll('#pngFilesList input[type="checkbox"]:checked');
+      
+      if (selectedCheckboxes.length === 0) {
+        alert('Please select at least one PNG file to share.');
+        return;
+      }
+      
+      // Get the selected PNG data
+      const selectedPNGs = Array.from(selectedCheckboxes).map(cb => {
+        const filename = cb.getAttribute('data-filename');
+        const blob = cb.getAttribute('data-blob');
+        return { filename, blob };
+      });
+      
+      // For now, download each selected PNG
+      selectedPNGs.forEach(png => {
+        const url = png.blob;
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = png.filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      });
+      
+      // Close dropdown and show success message
+      document.getElementById('pngSelectionDropdown').classList.add('hidden');
+      
+      const successMsg = document.createElement('div');
+      successMsg.className = 'fixed top-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg z-50';
+      successMsg.innerHTML = `
+        <div class="flex items-center gap-2">
+          <span class="text-lg">âœ…</span>
+          <span class="font-medium">${selectedPNGs.length} PNG file(s) downloaded successfully!</span>
+        </div>
+      `;
+      document.body.appendChild(successMsg);
+      setTimeout(() => successMsg.remove(), 3000);
+    }
+    
+    async function generateAllPNGFiles() {
+      // Show loading indicator
+      const pngFilesList = document.getElementById('pngFilesList');
+      pngFilesList.innerHTML = '<div class="text-center py-4"><span class="text-lg">â³</span> Generating PNG files...</div>';
+      
+      if (state.segments.length === 0) {
+        pngFilesList.innerHTML = '<div class="text-center py-4 text-gray-500">No segments available. Please generate a preview first.</div>';
+        return;
+      }
+      
+      const htmlPreview = document.getElementById('htmlPreview');
+      const generatedPNGs = [];
+      
+      try {
+        // Generate PNG for each segment
+        for (let i = 0; i < state.segments.length; i++) {
+          const segment = state.segments[i];
+          
+          // Create a temporary container for this segment
+          const tempContainer = document.createElement('div');
+          tempContainer.innerHTML = createPageHTML(segment, i);
+          tempContainer.style.position = 'absolute';
+          tempContainer.style.left = '-9999px';
+          tempContainer.style.top = '0';
+          tempContainer.style.width = '800px';
+          document.body.appendChild(tempContainer);
+          
+          // Generate PNG using html2canvas
+          const canvas = await html2canvas(tempContainer, {
+            scale: 2,
+            useCORS: true,
+            allowTaint: true,
+            backgroundColor: '#ffffff'
+          });
+          
+          // Convert to blob
+          const blob = await new Promise(resolve => {
+            canvas.toBlob(resolve, 'image/png');
+          });
+          
+          const url = URL.createObjectURL(blob);
+          const filename = `${segment.category} - ${segment.product} - ${segment.density} - ${segment.color} - ${state.currency} - ${state.kg ? 'Per Kg' : 'Per Piece'}.png`;
+          
+          generatedPNGs.push({ filename, url, blob });
+          
+          // Clean up temporary container
+          document.body.removeChild(tempContainer);
+        }
+        
+        // Store the generated PNGs in state for sharing functionality
+        state.lastGeneratedPNGs = generatedPNGs;
+        
+        // Populate the PNG files list
+        populatePNGFilesList(generatedPNGs);
+        
+      } catch (error) {
+        console.error('Error generating PNG files:', error);
+        pngFilesList.innerHTML = '<div class="text-center py-4 text-red-500">Error generating PNG files. Please try again.</div>';
+      }
+    }
+
+    // Direct share all prices functionality for Share Prices button
+    async function shareAllPricesDirectly() {
+      if (state.segments.length === 0) {
+        alert('No segments available. Please generate a preview first.');
+        return;
+      }
+
+      // Show loading state on button
+      const shareBtn = document.getElementById('sharePricesBtn');
+      const originalHTML = shareBtn.innerHTML;
+      shareBtn.innerHTML = '<span>â³</span> <span>Generating...</span>';
+      shareBtn.disabled = true;
+
+      try {
+        const generatedFiles = [];
+        
+        // Generate PNG for each segment
+        for (let i = 0; i < state.segments.length; i++) {
+          const segment = state.segments[i];
+          
+          // Create a temporary container for this segment
+          const tempContainer = document.createElement('div');
+          tempContainer.innerHTML = createPageHTML(segment, i);
+          tempContainer.style.position = 'absolute';
+          tempContainer.style.left = '-9999px';
+          tempContainer.style.top = '0';
+          tempContainer.style.width = '800px';
+          document.body.appendChild(tempContainer);
+          
+          // Generate PNG using html2canvas
+          const canvas = await html2canvas(tempContainer, {
+            scale: 2,
+            useCORS: true,
+            allowTaint: true,
+            backgroundColor: '#ffffff'
+          });
+          
+          // Convert to blob
+          const blob = await new Promise(resolve => {
+            canvas.toBlob(resolve, 'image/png');
+          });
+          
+          const filename = `${segment.category} - ${segment.product} - ${segment.density} - ${segment.color} - ${state.currency} - ${state.kg ? 'Per Kg' : 'Per Piece'}.png`;
+          generatedFiles.push(new File([blob], filename, { type: 'image/png' }));
+          
+          // Clean up temporary container
+          document.body.removeChild(tempContainer);
+        }
+        
+        // Try Web Share API first
+        if (navigator.share && navigator.canShare) {
+          const shareData = {
+            title: 'PNG Price Lists',
+            text: `Sharing ${generatedFiles.length} price list image${generatedFiles.length > 1 ? 's' : ''}`,
+            files: generatedFiles
+          };
+          
+          if (navigator.canShare(shareData)) {
+            try {
+              await navigator.share(shareData);
+              // Show success message
+              const successMsg = document.createElement('div');
+              successMsg.className = 'fixed top-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg z-50 flex items-center gap-2';
+              successMsg.innerHTML = `
+                <span class="text-lg">âœ…</span>
+                <span>Shared ${generatedFiles.length} PNG file${generatedFiles.length > 1 ? 's' : ''} successfully!</span>
+              `;
+              document.body.appendChild(successMsg);
+              setTimeout(() => successMsg.remove(), 3000);
+              return;
+            } catch (error) {
+              console.log('Native sharing cancelled or failed:', error);
+            }
+          }
+        }
+        
+        // Fallback: Download all files
+        generatedFiles.forEach(file => {
+          const url = URL.createObjectURL(file);
+          const downloadLink = document.createElement('a');
+          downloadLink.href = url;
+          downloadLink.download = file.name;
+          downloadLink.style.display = 'none';
+          document.body.appendChild(downloadLink);
+          downloadLink.click();
+          document.body.removeChild(downloadLink);
+          URL.revokeObjectURL(url);
+        });
+        
+        // Show success message
+        const successMsg = document.createElement('div');
+        successMsg.className = 'fixed top-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg z-50 flex items-center gap-2';
+        successMsg.innerHTML = `
+          <span class="text-lg">âœ…</span>
+          <span>Downloaded ${generatedFiles.length} PNG file${generatedFiles.length > 1 ? 's' : ''} successfully!</span>
+        `;
+        document.body.appendChild(successMsg);
+        setTimeout(() => successMsg.remove(), 3000);
+        
+      } catch (error) {
+        console.error('Error generating/sharing PNG files:', error);
+        
+        // Show error message
+        const errorMsg = document.createElement('div');
+        errorMsg.className = 'fixed top-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg z-50 flex items-center gap-2';
+        errorMsg.innerHTML = `
+          <span class="text-lg">âŒ</span>
+          <span>Error generating PNG files. Please try again.</span>
+        `;
+        document.body.appendChild(errorMsg);
+        setTimeout(() => errorMsg.remove(), 4000);
+      } finally {
+        // Restore button state
+        shareBtn.innerHTML = originalHTML;
+        shareBtn.disabled = false;
+      }
+    }
+    
+    function populatePNGFilesList(pngFiles) {
+      const pngFilesList = document.getElementById('pngFilesList');
+      
+      if (pngFiles.length === 0) {
+        pngFilesList.innerHTML = '<div class="text-center py-4 text-gray-500">No PNG files generated.</div>';
+        return;
+      }
+      
+      const checkboxesHTML = pngFiles.map((png, index) => `
+        <label class="flex items-start gap-3 p-3 hover:bg-blue-50 rounded-lg cursor-pointer border border-transparent hover:border-blue-200 transition-all duration-200 ${index > 0 ? 'border-t border-gray-100' : ''}">
+          <input type="checkbox" 
+                 id="png-checkbox-${index}"
+                 data-filename="${png.filename}" 
+                 data-blob="${png.url}"
+                 class="png-file-checkbox w-5 h-5 text-blue-600 border-2 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 mt-1 flex-shrink-0"
+                 onchange="updateShareButtonState()">
+          <div class="flex-1 min-w-0">
+            <div class="flex items-start gap-3">
+              <div class="w-16 h-12 bg-gray-100 rounded border overflow-hidden flex-shrink-0">
+                <img src="${png.url}" alt="Preview" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                <div class="w-full h-full bg-gray-200 flex items-center justify-center text-gray-500 text-xs" style="display: none;">ðŸ“„</div>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="text-sm font-medium text-gray-900 mb-1 leading-tight">
+                  ${png.filename.split(' - ').slice(0, 2).join(' - ')}
+                </div>
+                <div class="text-xs text-gray-500 truncate" title="${png.filename}">
+                  ${png.filename.split(' - ').slice(2).join(' - ')}
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="flex-shrink-0 mt-1">
+            <div class="w-6 h-6 rounded-full border-2 border-gray-300 flex items-center justify-center transition-all duration-200 radio-indicator">
+              <div class="w-3 h-3 bg-blue-500 rounded-full opacity-0 scale-0 transition-all duration-200 radio-dot"></div>
+            </div>
+          </div>
+        </label>
+      `).join('');
+      
+      pngFilesList.innerHTML = checkboxesHTML;
+      
+      // Add CSS for enhanced checkbox styling
+      const style = document.createElement('style');
+      style.textContent = `
+        .png-file-radio:checked + div .radio-indicator {
+          border-color: #3b82f6;
+          background-color: #3b82f6;
+        }
+        .png-file-radio:checked + div .radio-indicator .radio-dot {
+          opacity: 1;
+          scale: 1;
+          background-color: white;
+        }
+        .png-file-radio:checked + div + div .radio-indicator {
+          border-color: #3b82f6;
+          background-color: #3b82f6;
+        }
+        .png-file-radio:checked + div + div .radio-indicator .radio-dot {
+          opacity: 1;
+          scale: 1;
+          background-color: white;
+        }
+        label:has(.png-file-radio:checked) {
+          background-color: #eff6ff !important;
+          border-color: #3b82f6 !important;
+        }
+      `;
+      document.head.appendChild(style);
+      
+      updateShareButtonState();
+    }
+    
+    function updateShareButton() {
+      const selectedCount = document.querySelectorAll('#pngFilesList input[type="checkbox"]:checked').length;
+      const shareBtn = document.getElementById('shareSelectedPNGs');
+      const selectAllBtn = document.getElementById('selectAllPNGs');
+      
+      shareBtn.disabled = selectedCount === 0;
+      shareBtn.textContent = selectedCount > 0 ? `Share ${selectedCount} File${selectedCount > 1 ? 's' : ''}` : 'Share Selected';
+      
+      const totalCheckboxes = document.querySelectorAll('#pngFilesList input[type="checkbox"]').length;
+      const allChecked = selectedCount === totalCheckboxes && totalCheckboxes > 0;
+      selectAllBtn.textContent = allChecked ? 'Deselect All' : 'Select All';
     }
 
     // WhatsApp PDF sharing functionality
@@ -3669,7 +3081,7 @@
 
 
 
-  </script>
+    </script>
       
       </div> <!-- End Price List Calculator Module -->
       
@@ -3703,7 +3115,7 @@
               <input type="number" id="valid-days" value="14" placeholder="Valid for (days)" class="w-full border-2 border-gray-300 rounded-lg px-3 py-1 focus:border-blue-500 focus:outline-none" />
             </div>
             <div class="md:col-span-2">
-              <textarea id="brief-preview" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none" rows="2" placeholder="Brief Preview (e.g., Clip-on set, 18–22 inch mix, 200g total)"></textarea>
+              <textarea id="brief-preview" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none" rows="2" placeholder="Brief Preview (e.g., Clip-on set, 18â€“22 inch mix, 200g total)"></textarea>
             </div>
           </div>
         </section>
@@ -3713,15 +3125,15 @@
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <select id="quote-currency" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
-                <option value="INR" selected>INR (₹) - Indian Rupee</option>
+                <option value="INR" selected>INR (â‚¹) - Indian Rupee</option>
                 <option value="USD">USD ($) - US Dollar</option>
-                <option value="EUR">EUR (€) - Euro</option>
-                <option value="GBP">GBP (£) - British Pound</option>
+                <option value="EUR">EUR (â‚¬) - Euro</option>
+                <option value="GBP">GBP (Â£) - British Pound</option>
                 <option value="AUD">AUD (A$) - Australian Dollar</option>
                 <option value="SAR">SAR - Saudi Riyal</option>
-                <option value="NGN">NGN (₦) - Nigerian Naira</option>
-                <option value="AED">AED (د.إ) - UAE Dirham</option>
-                <option value="JPY">JPY (¥) - Japanese Yen</option>
+                <option value="NGN">NGN (â‚¦) - Nigerian Naira</option>
+                <option value="AED">AED (Ø¯.Ø¥) - UAE Dirham</option>
+                <option value="JPY">JPY (Â¥) - Japanese Yen</option>
               </select>
             </div>
             <div>
@@ -3783,13 +3195,13 @@
                 <span class="text-sm font-medium text-blue-800">Calculated Rate:</span>
               </div>
               <div class="text-right">
-                <div id="rate-amount" class="text-lg font-bold text-blue-900">₹0.00</div>
+                <div id="rate-amount" class="text-lg font-bold text-blue-900">â‚¹0.00</div>
                 <div id="rate-details" class="text-xs text-blue-600">per unit</div>
               </div>
             </div>
             <div id="rate-breakdown" class="mt-2 text-xs text-blue-700 hidden">
               <div class="grid grid-cols-2 gap-2">
-                <span>Base Rate:</span><span id="base-rate-value">₹0.00</span>
+                <span>Base Rate:</span><span id="base-rate-value">â‚¹0.00</span>
                 <span>Currency:</span><span id="currency-rate-value">INR</span>
               </div>
             </div>
@@ -3849,13 +3261,13 @@
                   <th class="px-4 py-2 text-left text-xs font-bold text-gray-800 uppercase tracking-wider border-r border-gray-300">
                     <div class="flex items-center space-x-1">
                       <span>Variant</span>
-                      <span class="sort-indicator ml-1 text-gray-500 cursor-pointer hover:text-gray-700">↕</span>
+                      <span class="sort-indicator ml-1 text-gray-500 cursor-pointer hover:text-gray-700">â†•</span>
                     </div>
                   </th>
                   <th class="px-4 py-2 text-left text-xs font-bold text-gray-800 uppercase tracking-wider border-r border-gray-300">
                     <div class="flex items-center space-x-1">
                       <span>Length</span>
-                      <span class="sort-indicator ml-1 text-gray-500 cursor-pointer hover:text-gray-700">↕</span>
+                      <span class="sort-indicator ml-1 text-gray-500 cursor-pointer hover:text-gray-700">â†•</span>
                     </div>
                   </th>
                   <th class="px-4 py-2 text-left text-xs font-bold text-gray-800 uppercase tracking-wider border-r border-gray-300">
@@ -3908,7 +3320,7 @@
                       <span>Total Weight</span>
                     </div>
                   </td>
-                  <td id="grand-weight" class="px-4 py-3 text-sm font-bold text-gray-900 text-right bg-gray-200 rounded-l-lg">—</td>
+                  <td id="grand-weight" class="px-4 py-3 text-sm font-bold text-gray-900 text-right bg-gray-200 rounded-l-lg">â€”</td>
                   <td class="no-print"></td>
                 </tr>
                 <tr class="border-b border-gray-200 hover:bg-gray-50 transition-all duration-200">
@@ -3920,7 +3332,7 @@
                       <span>Subtotal</span>
                     </div>
                   </td>
-                  <td id="subtotal" class="px-4 py-3 text-sm font-medium text-gray-900 text-right">—</td>
+                  <td id="subtotal" class="px-4 py-3 text-sm font-medium text-gray-900 text-right">â€”</td>
                   <td class="no-print"></td>
                 </tr>
                 <tr class="border-b border-gray-200 hover:bg-gray-50 transition-all duration-200">
@@ -3932,7 +3344,7 @@
                       <span>Discount</span>
                     </div>
                   </td>
-                  <td id="discount" class="px-4 py-3 text-sm font-medium text-gray-900 text-right">—</td>
+                  <td id="discount" class="px-4 py-3 text-sm font-medium text-gray-900 text-right">â€”</td>
                   <td class="no-print"></td>
                 </tr>
                 <tr class="border-b border-gray-200 hover:bg-gray-50 transition-all duration-200">
@@ -3944,7 +3356,7 @@
                       <span>Tax</span>
                     </div>
                   </td>
-                  <td id="tax" class="px-4 py-3 text-sm font-medium text-gray-900 text-right">—</td>
+                  <td id="tax" class="px-4 py-3 text-sm font-medium text-gray-900 text-right">â€”</td>
                   <td class="no-print"></td>
                 </tr>
                 <tr class="border-b border-gray-200 hover:bg-gray-50 transition-all duration-200">
@@ -3956,7 +3368,7 @@
                       <span>Shipping</span>
                     </div>
                   </td>
-                  <td id="shipping-total" class="px-4 py-3 text-sm font-medium text-gray-900 text-right">—</td>
+                  <td id="shipping-total" class="px-4 py-3 text-sm font-medium text-gray-900 text-right">â€”</td>
                   <td class="no-print"></td>
                 </tr>
                 <tr class="border-t-2 border-gray-400 bg-gradient-to-r from-gray-100 to-gray-200 hover:from-gray-200 hover:to-gray-300 transition-all duration-200">
@@ -3968,7 +3380,7 @@
                       <span>Grand Total</span>
                     </div>
                   </td>
-                  <td id="grand-total-table" class="px-4 py-4 text-base font-bold text-gray-900 text-right bg-gray-300 rounded-l-lg border-l-4 border-gray-600">—</td>
+                  <td id="grand-total-table" class="px-4 py-4 text-base font-bold text-gray-900 text-right bg-gray-300 rounded-l-lg border-l-4 border-gray-600">â€”</td>
                   <td class="no-print"></td>
                 </tr>
               </tfoot>
@@ -3978,7 +3390,43 @@
           
           <!-- Quote Actions positioned at bottom-left -->
           <div class="flex gap-2 flex-wrap mt-3">
-            <button id="save-quote-btn" class="btn-primary px-4 py-1 rounded-lg">Save Quote</button>
+            <div class="relative">
+              <button onclick="toggleSaveQuoteMenu()" class="btn-primary px-4 py-1 rounded-lg flex items-center gap-2">
+                Save Quote
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+              </button>
+              <!-- Floating Save Quote Menu -->
+              <div id="saveQuoteMenu" class="absolute bottom-full left-0 mb-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50 hidden">
+                <div class="py-2">
+                  <button onclick="saveQuote()" class="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-2">
+                    <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    Save Quote
+                  </button>
+                  <button onclick="deleteQuote()" class="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-2 text-red-600">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                    Delete
+                  </button>
+                  <button onclick="convertToOrder()" class="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-2 text-blue-600">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    Convert to Order
+                  </button>
+                  <button onclick="shareQuote()" class="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-2 text-purple-600">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"></path>
+                    </svg>
+                    Share
+                  </button>
+                </div>
+              </div>
+            </div>
             <button id="clear-quote-btn" class="btn-secondary px-4 py-1 rounded-lg">Clear</button>
           </div>
         </section>
@@ -4135,7 +3583,7 @@
           <div class="grid grid-cols-1 gap-4 mb-6">
             <!-- Excel Data Management -->
             <div class="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-lg p-4 hover:shadow-md transition-all duration-200">
-              <div class="text-3xl mb-3">📊</div>
+              <div class="text-3xl mb-3">ðŸ“Š</div>
               <h3 class="text-lg font-semibold text-gray-800 mb-2">Data Management</h3>
               <p class="text-sm text-gray-600 mb-4">Load and manage Excel data, update product catalogs</p>
               <button onclick="openAdminPanel()" class="w-full px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-all duration-200 hover:transform hover:scale-105">
@@ -4169,8 +3617,8 @@
           <h4 class="font-medium text-gray-700 mb-2">Excel Data Loader</h4>
           <p class="text-sm text-gray-600 mb-3">Load and embed Excel data directly into the application</p>
           <button id="convertExcel" class="w-full px-4 py-3 sm:py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-all duration-200 hover:transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-300 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] touch-manipulation">
-            <span class="convert-text">📁 Load Excel Data</span>
-            <span class="convert-loading hidden">⏳ Loading...</span>
+            <span class="convert-text">ðŸ“ Load Excel Data</span>
+            <span class="convert-loading hidden">â³ Loading...</span>
           </button>
         </div>
         
@@ -4258,11 +3706,11 @@
         <div>${validation.stats.totalProducts} total</div>
         <div class="text-xs ${validation.isValid ? 'text-green-600' : 'text-red-600'}">
           ${validation.stats.validProducts} valid
-          ${validation.errors.length > 0 ? ` • ${validation.errors.length} errors` : ''}
-          ${validation.warnings.length > 0 ? ` • ${validation.warnings.length} warnings` : ''}
+          ${validation.errors.length > 0 ? ` â€¢ ${validation.errors.length} errors` : ''}
+          ${validation.warnings.length > 0 ? ` â€¢ ${validation.warnings.length} warnings` : ''}
         </div>
         <div class="text-xs text-gray-500">
-          ${validation.stats.categories.size} categories • ${validation.stats.priceLists.size} price lists
+          ${validation.stats.categories.size} categories â€¢ ${validation.stats.priceLists.size} price lists
         </div>
       `;
       
@@ -4306,7 +3754,7 @@
           throw new Error('Convert button not found');
         }
         
-        convertBtn.innerHTML = '⏳ Converting...';
+        convertBtn.innerHTML = 'â³ Converting...';
         convertBtn.disabled = true;
         
         showAdminMessage('Starting Excel conversion process...', 'info');
@@ -4369,7 +3817,7 @@
             }
             
             if (data.products.length === 0) {
-              showAdminMessage(`⚠️ No valid products found in ${file.name}`, 'warning');
+              showAdminMessage(`âš ï¸ No valid products found in ${file.name}`, 'warning');
               continue;
             }
             
@@ -4380,7 +3828,7 @@
             });
             
             if (validProducts.length !== data.products.length) {
-              showAdminMessage(`⚠️ ${file.name}: ${data.products.length - validProducts.length} invalid products filtered out`, 'warning');
+              showAdminMessage(`âš ï¸ ${file.name}: ${data.products.length - validProducts.length} invalid products filtered out`, 'warning');
             }
             
             allProcessedData = allProcessedData.concat(validProducts);
@@ -4392,11 +3840,11 @@
               }
             });
             
-            showAdminMessage(`✅ Processed ${file.name}: ${validProducts.length} valid products`, 'info');
+            showAdminMessage(`âœ… Processed ${file.name}: ${validProducts.length} valid products`, 'info');
             
           } catch (fileError) {
             console.error(`Error processing ${file.name}:`, fileError);
-            showAdminMessage(`❌ Error processing ${file.name}: ${fileError.message}`, 'error');
+            showAdminMessage(`âŒ Error processing ${file.name}: ${fileError.message}`, 'error');
             // Continue processing other files even if one fails
           }
         }
@@ -4406,7 +3854,7 @@
           const validation = validateProductData(allProcessedData);
           
           if (!validation.isValid) {
-            showAdminMessage(`❌ Data validation failed: ${validation.errors.slice(0, 3).join('; ')}`, 'error');
+            showAdminMessage(`âŒ Data validation failed: ${validation.errors.slice(0, 3).join('; ')}`, 'error');
             if (validation.errors.length > 3) {
               console.error('Additional validation errors:', validation.errors.slice(3));
             }
@@ -4414,7 +3862,7 @@
           }
           
           if (validation.warnings.length > 0) {
-            showAdminMessage(`⚠️ Data warnings: ${validation.warnings.slice(0, 2).join('; ')}`, 'warning');
+            showAdminMessage(`âš ï¸ Data warnings: ${validation.warnings.slice(0, 2).join('; ')}`, 'warning');
             if (validation.warnings.length > 2) {
               console.warn('Additional validation warnings:', validation.warnings.slice(2));
             }
@@ -4443,12 +3891,12 @@
           // Refresh the UI
           populateCategories();
           
-          const successMessage = `✅ Conversion completed! Processed ${cleanedData.length} unique records from ${selectedFiles.length} file(s). Added ${processedPriceLists.size} new price list(s). JSON generated and embedded in HTML.`;
+          const successMessage = `âœ… Conversion completed! Processed ${cleanedData.length} unique records from ${selectedFiles.length} file(s). Added ${processedPriceLists.size} new price list(s). JSON generated and embedded in HTML.`;
           showAdminMessage(successMessage, 'success');
           await updateAdminStatus();
           
         } else {
-          showAdminMessage('❌ No valid data found in the selected files. Please check file format and content.', 'error');
+          showAdminMessage('âŒ No valid data found in the selected files. Please check file format and content.', 'error');
         }
         
       } catch (error) {
@@ -4458,13 +3906,13 @@
         if (error.message === 'File selection cancelled' || error.message === 'No files selected') {
           showAdminMessage('File selection cancelled.', 'info');
         } else if (error.name === 'TypeError' || error.message.includes('Cannot read property')) {
-          showAdminMessage(`❌ Data structure error: ${error.message}. Please check file format.`, 'error');
+          showAdminMessage(`âŒ Data structure error: ${error.message}. Please check file format.`, 'error');
         } else if (error.message.includes('File too large') || error.message.includes('Invalid file type')) {
-          showAdminMessage(`❌ File validation error: ${error.message}`, 'error');
+          showAdminMessage(`âŒ File validation error: ${error.message}`, 'error');
         } else if (error.message.includes('Failed to parse')) {
-          showAdminMessage(`❌ Excel parsing error: ${error.message}. Please ensure the file is not corrupted.`, 'error');
+          showAdminMessage(`âŒ Excel parsing error: ${error.message}. Please ensure the file is not corrupted.`, 'error');
         } else {
-          showAdminMessage(`❌ Unexpected error during conversion: ${error.message}`, 'error');
+          showAdminMessage(`âŒ Unexpected error during conversion: ${error.message}`, 'error');
         }
         
         // Log full error details for debugging
@@ -4822,7 +4270,6 @@
     
     // Initialize price calculator salesman dropdown
     function initPriceCalculatorSalesmanDropdown() {
-      alert('Function called: initPriceCalculatorSalesmanDropdown');
       console.log('Initializing price calculator salesman dropdown...');
       
       const salesmanSelector = document.getElementById('price-calculator-salesman');
@@ -4836,8 +4283,8 @@
       console.log('Salesman selector visible:', window.getComputedStyle(salesmanSelector).display);
       console.log('Salesman selector offsetParent:', salesmanSelector.offsetParent);
       
-      // Temporary alert for debugging
-      alert('Dropdown found: ' + (salesmanSelector ? 'YES' : 'NO') + '\nVisible: ' + window.getComputedStyle(salesmanSelector).display);
+      // Debug logging for dropdown visibility
+      console.log('Dropdown found:', salesmanSelector ? 'YES' : 'NO', 'Visible:', window.getComputedStyle(salesmanSelector).display);
       
       // Clear existing options
       salesmanSelector.innerHTML = '<option value="">Select Salesman</option>';
@@ -5096,13 +4543,13 @@
           priceLists: priceLists
         });
         
-        showAdminMessage(`✅ Data processed: ${finalProductData.length} unique records (${productData.length - uniqueProducts.length} duplicates removed)`, 'success');
+        showAdminMessage(`âœ… Data processed: ${finalProductData.length} unique records (${productData.length - uniqueProducts.length} duplicates removed)`, 'success');
         
         return finalProductData; // Return the cleaned data
         
       } catch (error) {
         console.error('Error generating JSON:', error);
-        showAdminMessage(`❌ Error generating JSON: ${error.message}`, 'error');
+        showAdminMessage(`âŒ Error generating JSON: ${error.message}`, 'error');
         throw error;
       }
     }
@@ -5165,11 +4612,11 @@
         clearProducts();
         renderAllPagesToHTML();
         
-        showAdminMessage(`✅ Data successfully embedded and saved to HTML file! Loaded ${newProductData.length} products with fresh state.`, 'success');
+        showAdminMessage(`âœ… Data successfully embedded and saved to HTML file! Loaded ${newProductData.length} products with fresh state.`, 'success');
         
       } catch (error) {
         console.error('Error updating embedded data:', error);
-        showAdminMessage(`❌ Error updating embedded data: ${error.message}`, 'error');
+        showAdminMessage(`âŒ Error updating embedded data: ${error.message}`, 'error');
       }
     }
     
@@ -5237,6 +4684,20 @@
       
       // Initialize real-time synchronization
       initializeRealTimeSync();
+      
+      // Initialize share button event listener
+      const shareBtn = document.getElementById('shareBtn');
+      if (shareBtn) {
+        shareBtn.addEventListener('click', function(e) {
+          console.log('Share button clicked!');
+          console.log('Current state.segments:', state.segments);
+          console.log('Generated PNGs:', state.generatedPNGs);
+          toggleSharePopup();
+        });
+        console.log('Share button event listener attached');
+      } else {
+        console.error('Share button not found during initialization');
+      }
     });
     
     // Navigation functionality
@@ -5421,10 +4882,7 @@
         clearQuoteBtn.addEventListener('click', clearAllQuoteData);
       }
 
-      const shareBtn = document.getElementById('shareBtn');
-      if (shareBtn) {
-        shareBtn.addEventListener('click', shareNatively);
-      }
+      // shareBtn event listener moved to main DOMContentLoaded block
 
       // Add currency change event listener for quote maker
       const quoteCurrencySelector = document.getElementById('quote-currency');
@@ -5790,7 +5248,7 @@
         'Chocolate': '#4B5563'
       };
       
-      if (!colorName || colorName === '—') return '#E5E7EB'; // Default gray
+      if (!colorName || colorName === 'â€”') return '#E5E7EB'; // Default gray
       
       // Try exact match first
       if (colorMap[colorName]) return colorMap[colorName];
@@ -5859,7 +5317,7 @@
           </td>
           <td class="px-4 py-2 text-sm text-gray-700 border-r border-gray-100">
             <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-              ${item.density || '—'}
+              ${item.density || 'â€”'}
             </span>
           </td>
           <td class="px-4 py-2 text-sm text-gray-700 border-r border-gray-100">
@@ -5870,13 +5328,13 @@
           <td class="px-4 py-2 border-r border-gray-100">
             <div class="flex items-center space-x-2">
               <div class="w-4 h-4 rounded-full border-2 border-gray-300 shadow-sm" style="background-color: ${getColorCode(item.color)}"></div>
-              <span class="text-sm font-medium text-gray-900">${item.color || '—'}</span>
+              <span class="text-sm font-medium text-gray-900">${item.color || 'â€”'}</span>
               <span class="text-xs text-gray-500 ml-2">${item.colorDetail || ''}</span>
             </div>
           </td>
           <td class="px-4 py-2 text-xs text-gray-600 border-r border-gray-100">
             <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-              ${item.styles || '—'}
+              ${item.styles || 'â€”'}
             </span>
           </td>
           <td class="px-4 py-2 text-center border-r border-gray-100">
@@ -5910,7 +5368,7 @@
           <td class="px-4 py-2 text-right border-r border-gray-100">
             <div class="flex flex-col items-end">
               <span class="text-base font-bold text-gray-700">${formatQuoteCurrency(displayLineTotal)}</span>
-              <span class="text-xs text-gray-500">${item.quantity} × ${formatQuoteCurrency(displayUnitPrice)}</span>
+              <span class="text-xs text-gray-500">${item.quantity} Ã— ${formatQuoteCurrency(displayUnitPrice)}</span>
             </div>
           </td>
           <td class="px-4 py-2 text-center no-print">
@@ -5941,7 +5399,7 @@
         discountElement.textContent = `-${formatQuoteCurrency(financials.discountAmount)}`;
         discountElement.className = 'text-green-600 font-medium';
       } else {
-        discountElement.textContent = '—';
+        discountElement.textContent = 'â€”';
         discountElement.className = '';
       }
       
@@ -6171,7 +5629,6 @@
         quoteItem.className = 'quote-item bg-gray-50 border border-gray-200 rounded p-2 hover:bg-gray-100 transition-colors relative';
         quoteItem.innerHTML = `
           <div class="flex items-center space-x-3 text-sm">
-            <input type="checkbox" class="quote-checkbox" data-quote-index="${quote.originalIndex}">
             <span class="font-medium text-gray-900">${quote.quoteId}</span>
             <span class="text-gray-600">${quote.clientName || 'No client name'}</span>
             <span class="text-gray-500">${new Date(quote.savedAt).toLocaleDateString()}</span>
@@ -6179,16 +5636,7 @@
           </div>
         `;
         
-        // Add checkbox event listener
-        const checkbox = quoteItem.querySelector('.quote-checkbox');
-        checkbox.addEventListener('change', (e) => {
-          e.stopPropagation();
-          if (e.target.checked) {
-            showQuoteContextMenu(e.target, quote.originalIndex);
-          } else {
-            hideQuoteContextMenu();
-          }
-        });
+        // Checkbox functionality removed
         
         container.appendChild(quoteItem);
       });
@@ -6406,7 +5854,7 @@
          loadingMsg.className = 'fixed top-4 left-4 right-4 bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded-lg z-50';
          loadingMsg.innerHTML = `
            <div class="flex items-center gap-2">
-             <span class="text-lg">⏳</span>
+             <span class="text-lg">â³</span>
              <span class="font-medium">Generating quote image for ${quote.quoteId}...</span>
            </div>
          `;
@@ -6460,7 +5908,7 @@
              loadingMsg.remove();
              
              // Show success message
-             showSuccessMessage(`Quote ${quote.quoteId} shared successfully! 📤✨`);
+             showSuccessMessage(`Quote ${quote.quoteId} shared successfully! ðŸ“¤âœ¨`);
            } catch (shareError) {
              console.log('Share cancelled or failed:', shareError);
              
@@ -6474,7 +5922,7 @@
                    'image/png': blob
                  })
                ]);
-               showSuccessMessage(`Quote ${quote.quoteId} image copied to clipboard! 📋✨`);
+               showSuccessMessage(`Quote ${quote.quoteId} image copied to clipboard! ðŸ“‹âœ¨`);
              } else {
                // Final fallback: download the image
                const url = URL.createObjectURL(blob);
@@ -6485,7 +5933,7 @@
                a.click();
                document.body.removeChild(a);
                URL.revokeObjectURL(url);
-               showSuccessMessage(`Quote ${quote.quoteId} image downloaded! 💾`);
+               showSuccessMessage(`Quote ${quote.quoteId} image downloaded! ðŸ’¾`);
              }
            }
          } else {
@@ -6501,7 +5949,7 @@
              loadingMsg.remove();
              
              // Show success message
-             showSuccessMessage(`Quote ${quote.quoteId} image copied to clipboard! 📋✨`);
+             showSuccessMessage(`Quote ${quote.quoteId} image copied to clipboard! ðŸ“‹âœ¨`);
            } else {
              // Final fallback: download the image
              const url = URL.createObjectURL(blob);
@@ -6516,7 +5964,7 @@
               // Remove loading message
               loadingMsg.remove();
               
-              showSuccessMessage(`Quote ${quote.quoteId} image downloaded! 💾`);
+              showSuccessMessage(`Quote ${quote.quoteId} image downloaded! ðŸ’¾`);
             }
           }
          
@@ -6804,20 +6252,20 @@
       // Get current currency from quote-currency selector or state
       const currency = document.getElementById('quote-currency')?.value || state.currency || 'INR';
       const symbols = {
-        'INR': '₹',
+        'INR': 'â‚¹',
         'USD': '$',
-        'EUR': '€',
-        'GBP': '£',
+        'EUR': 'â‚¬',
+        'GBP': 'Â£',
         'AUD': 'A$',
         'SAR': 'SAR ',
-        'NGN': '₦',
-        'AED': 'د.إ ',
-        'JPY': '¥'
+        'NGN': 'â‚¦',
+        'AED': 'Ø¯.Ø¥ ',
+        'JPY': 'Â¥'
       };
       
       // Convert amount if currency is not INR (assuming amount is in the selected currency already)
       // Since we're now storing prices in the selected currency, just format with the right symbol
-      return `${symbols[currency] || '₹'}${amount.toFixed(2)}`;
+      return `${symbols[currency] || 'â‚¹'}${amount.toFixed(2)}`;
     }
 
     // Quote Maker Price List Selector Functions
@@ -7103,7 +6551,7 @@
          if (emptyElement) emptyElement.classList.add('hidden');
        
          productsGrid.innerHTML = products.map(([category, data]) => {
-        const imagePath = `/images/Products/${data.image}`;
+        const imagePath = `images/Products/${data.image}`;
         
         return `
           <div class="bg-white rounded-lg border border-gray-200 hover:shadow-lg transition-all duration-300 overflow-hidden group cursor-pointer" 
@@ -7389,10 +6837,10 @@
       const currencyPreview = document.getElementById('currency-preview');
       if (currencyPreview) {
         const symbols = { 
-          'INR': '₹', 'USD': '$', 'EUR': '€', 'GBP': '£', 
-          'AUD': 'A$', 'SAR': 'SR', 'NGN': '₦', 'AED': 'د.إ', 'JPY': '¥' 
+          'INR': 'â‚¹', 'USD': '$', 'EUR': 'â‚¬', 'GBP': 'Â£', 
+          'AUD': 'A$', 'SAR': 'SR', 'NGN': 'â‚¦', 'AED': 'Ø¯.Ø¥', 'JPY': 'Â¥' 
         };
-        currencyPreview.textContent = `${symbols[selectedCurrency] || '₹'} ${selectedCurrency}`;
+        currencyPreview.textContent = `${symbols[selectedCurrency] || 'â‚¹'} ${selectedCurrency}`;
       }
       
       // Sync with price list if needed
@@ -7430,7 +6878,7 @@
         if (discountPreview) {
           const value = parseFloat(discountFixed.value) || 0;
           const currency = state.currency || 'INR';
-          const symbols = { 'INR': '₹', 'USD': '$', 'EUR': '€', 'GBP': '£', 'AUD': 'A$', 'SAR': 'SAR ', 'NGN': '₦', 'AED': 'د.إ ', 'JPY': '¥' };
+          const symbols = { 'INR': 'â‚¹', 'USD': '$', 'EUR': 'â‚¬', 'GBP': 'Â£', 'AUD': 'A$', 'SAR': 'SAR ', 'NGN': 'â‚¦', 'AED': 'Ø¯.Ø¥ ', 'JPY': 'Â¥' };
           discountPreview.textContent = `${symbols[currency]}${value.toFixed(2)}`;
         }
       }
@@ -7519,7 +6967,7 @@
         taxRate.disabled = true;
         taxRate.value = '';
         if (taxPreview) {
-          taxPreview.textContent = 'Tax: ₹0.00';
+          taxPreview.textContent = 'Tax: â‚¹0.00';
         }
       } else {
         taxRate.disabled = false;
@@ -7535,7 +6983,7 @@
         shippingCost.disabled = true;
         shippingCost.value = '';
         if (shippingPreview) {
-          shippingPreview.textContent = 'Shipping: ₹0.00';
+          shippingPreview.textContent = 'Shipping: â‚¹0.00';
         }
       } else {
         shippingCost.disabled = false;
@@ -7631,7 +7079,7 @@
            discountPreview.textContent = discountValue;
          } else {
            const currency = state.currency || 'INR';
-           const symbols = { 'INR': '₹', 'USD': '$', 'EUR': '€', 'GBP': '£', 'AUD': 'A$', 'SAR': 'SAR ', 'NGN': '₦', 'AED': 'د.إ ', 'JPY': '¥' };
+           const symbols = { 'INR': 'â‚¹', 'USD': '$', 'EUR': 'â‚¬', 'GBP': 'Â£', 'AUD': 'A$', 'SAR': 'SAR ', 'NGN': 'â‚¦', 'AED': 'Ø¯.Ø¥ ', 'JPY': 'Â¥' };
            const value = parseFloat(discountValue) || 0;
            discountPreview.textContent = `${symbols[currency]}${value.toFixed(2)}`;
          }
@@ -7664,7 +7112,7 @@
              shippingPreview.textContent = 'Free Shipping';
            } else {
              const currency = state.currency || 'INR';
-             const symbols = { 'INR': '₹', 'USD': '$', 'EUR': '€', 'GBP': '£', 'AUD': 'A$', 'SAR': 'SAR ', 'NGN': '₦', 'AED': 'د.إ ', 'JPY': '¥' };
+             const symbols = { 'INR': 'â‚¹', 'USD': '$', 'EUR': 'â‚¬', 'GBP': 'Â£', 'AUD': 'A$', 'SAR': 'SAR ', 'NGN': 'â‚¦', 'AED': 'Ø¯.Ø¥ ', 'JPY': 'Â¥' };
              shippingPreview.textContent = `${symbols[currency]}${value.toFixed(2)}`;
            }
          } else {
@@ -7794,13 +7242,13 @@
      function updateSortIndicators(activeColumn, direction) {
        // Reset all indicators
        document.querySelectorAll('.sort-indicator').forEach(indicator => {
-         indicator.textContent = '↕';
+         indicator.textContent = 'â†•';
        });
        
        // Set active indicator
        const activeHeader = document.querySelector(`[data-sort="${activeColumn}"] .sort-indicator`);
        if (activeHeader) {
-         activeHeader.textContent = direction === 'asc' ? '↑' : '↓';
+         activeHeader.textContent = direction === 'asc' ? 'â†‘' : 'â†“';
        }
      }
 
@@ -8126,7 +7574,7 @@
        // Get current currency and convert if needed
        const selectedCurrency = document.getElementById('quote-currency')?.value || state.currency || 'INR';
        const exchangeRates = state.rates?.rates || {};
-       const currencySymbols = { 'INR': '₹', 'USD': '$', 'EUR': '€', 'GBP': '£', 'AUD': 'A$', 'SAR': 'SAR ', 'NGN': '₦', 'AED': 'د.إ ', 'JPY': '¥' };
+       const currencySymbols = { 'INR': 'â‚¹', 'USD': '$', 'EUR': 'â‚¬', 'GBP': 'Â£', 'AUD': 'A$', 'SAR': 'SAR ', 'NGN': 'â‚¦', 'AED': 'Ø¯.Ø¥ ', 'JPY': 'Â¥' };
        
        let displayRate = finalRate;
        if (selectedCurrency !== 'INR') {
@@ -8140,7 +7588,7 @@
        rateDetails.textContent = `per unit${quantity > 1 ? ` (Total: ${currencySymbols[selectedCurrency] || ''}${(displayRate * quantity).toFixed(2)})` : ''}`;
        
        // Update breakdown
-       baseRateValue.textContent = `₹${baseRate.toFixed(2)}`;
+       baseRateValue.textContent = `â‚¹${baseRate.toFixed(2)}`;
        currencyRateValue.textContent = selectedCurrency;
        
        if (overridePrice || selectedCurrency !== 'INR') {
@@ -8188,6 +7636,7 @@
          // Populate salesman dropdown with additional delay
          setTimeout(() => {
            initPriceCalculatorSalesmanDropdown();
+           populateSalesmanDropdown(); // For quote-maker module
          }, 1000);
          
          // Clear all quote data for fresh start
