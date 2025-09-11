@@ -950,7 +950,6 @@
     }
 
   </style>
-  <script src="main-functions.js"></script>
   <script src="quote-menu.js"></script>
   <script src="quote-radio-selector.js"></script>
 </head>
@@ -6575,7 +6574,7 @@
       
       quotesWithOriginalIndex.forEach((quote, displayIndex) => {
         const quoteItem = document.createElement('div');
-        quoteItem.className = 'quote-item bg-gray-50 border border-gray-200 rounded p-2 hover:bg-gray-100 transition-colors relative cursor-pointer';
+        quoteItem.className = 'quote-item bg-gray-50 border border-gray-200 rounded p-2 hover:bg-gray-100 transition-colors relative';
         quoteItem.innerHTML = `
           <div class="flex items-center space-x-3 text-sm">
             <input type="radio" name="selectedQuote" class="quote-radio mr-2" data-quote-index="${quote.originalIndex}" onchange="handleQuoteSelection(this, ${quote.originalIndex})">
@@ -6586,15 +6585,7 @@
           </div>
         `;
         
-        // Add click handler for entire row
-        quoteItem.addEventListener('click', function(e) {
-          // Don't trigger if clicking directly on the radio button
-          if (e.target.type !== 'radio') {
-            const radioButton = this.querySelector('.quote-radio');
-            radioButton.checked = true;
-            handleQuoteSelection(radioButton, quote.originalIndex);
-          }
-        });
+        // Radio button functionality integrated
         
         container.appendChild(quoteItem);
       });
@@ -6658,7 +6649,7 @@
           </svg>
           Convert to Order
         </button>
-        <button class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center" onclick="if(deleteQuote(${quoteIndex})) hideQuoteContextMenu();">
+        <button class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center" onclick="deleteQuote(${quoteIndex}); hideQuoteContextMenu();">
           <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
           </svg>
@@ -6673,7 +6664,7 @@
       
       // Set up click-outside behavior
       setTimeout(() => {
-        document.addEventListener('click', handleContextMenuClickOutsideRadio);
+        document.addEventListener('click', handleContextMenuClickOutside);
       }, 0);
     }
     
@@ -6681,7 +6672,7 @@
       const existingMenu = document.getElementById('quote-context-menu');
       if (existingMenu) {
         existingMenu.remove();
-        document.removeEventListener('click', handleContextMenuClickOutsideRadio);
+        document.removeEventListener('click', handleContextMenuClickOutside);
       }
       
       // Uncheck all radio buttons
@@ -6691,7 +6682,22 @@
       });
     }
     
-    // handleContextMenuClickOutsideRadio function is defined in quote-radio-selector.js
+    function handleContextMenuClickOutside(e) {
+      const contextMenu = document.getElementById('quote-context-menu');
+      const radioButtons = document.querySelectorAll('.quote-radio');
+      
+      // Check if click is outside the context menu and not on any radio button
+      let clickedOnRadio = false;
+      radioButtons.forEach(radio => {
+        if (radio.contains(e.target) || radio === e.target) {
+          clickedOnRadio = true;
+        }
+      });
+      
+      if (contextMenu && !contextMenu.contains(e.target) && !clickedOnRadio) {
+        hideQuoteContextMenu();
+      }
+    }
 
      function recallQuote(quoteIndex) {
        const savedQuotes = JSON.parse(localStorage.getItem('savedQuotes') || '[]');
@@ -7105,7 +7111,7 @@
        
        if (!quote) {
          alert('Quote not found!');
-         return false;
+         return;
        }
        
        const confirmed = confirm(`Are you sure you want to delete quote ${quote.quoteId}? This action cannot be undone.`);
@@ -7121,9 +7127,7 @@
          
          renderSavedQuotesList();
          alert(`Quote ${quote.quoteId} deleted successfully!`);
-         return true;
        }
-       return false;
      }
 
      function convertQuoteToOrder(quoteIndex) {
@@ -8599,32 +8603,11 @@
            populateSalesmanDropdown(); // For quote-maker module
          }, 1000);
          
+         // Clear all quote data for fresh start
+         clearAllQuoteData();
+         
          // Render saved quotes list
          renderSavedQuotesList();
-         
-         // Create a test quote if no saved quotes exist for testing context menu
-         const savedQuotes = JSON.parse(localStorage.getItem('savedQuotes') || '[]');
-         if (savedQuotes.length === 0) {
-           const testQuote = {
-             quoteId: 'INH-TEST-001',
-             clientName: 'Test Client',
-             savedAt: new Date().toISOString(),
-             items: [{
-               name: 'Test Product',
-               quantity: 1,
-               price: 100,
-               total: 100
-             }],
-             subtotal: 100,
-             total: 100
-           };
-           savedQuotes.push(testQuote);
-           localStorage.setItem('savedQuotes', JSON.stringify(savedQuotes));
-           renderSavedQuotesList();
-         }
-         
-         // Load saved quote data if available
-         loadQuoteFromStorage();
          
          // Set default values only if not loaded from storage
          const currencySelect = document.getElementById('currency-selector');

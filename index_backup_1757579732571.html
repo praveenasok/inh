@@ -8602,27 +8602,6 @@
          // Render saved quotes list
          renderSavedQuotesList();
          
-         // Create a test quote if no saved quotes exist for testing context menu
-         const savedQuotes = JSON.parse(localStorage.getItem('savedQuotes') || '[]');
-         if (savedQuotes.length === 0) {
-           const testQuote = {
-             quoteId: 'INH-TEST-001',
-             clientName: 'Test Client',
-             savedAt: new Date().toISOString(),
-             items: [{
-               name: 'Test Product',
-               quantity: 1,
-               price: 100,
-               total: 100
-             }],
-             subtotal: 100,
-             total: 100
-           };
-           savedQuotes.push(testQuote);
-           localStorage.setItem('savedQuotes', JSON.stringify(savedQuotes));
-           renderSavedQuotesList();
-         }
-         
          // Load saved quote data if available
          loadQuoteFromStorage();
          

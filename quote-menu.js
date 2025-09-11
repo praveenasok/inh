@@ -16,12 +16,13 @@ document.addEventListener('click', function(event) {
     }
 });
 
-function deleteQuote() {
-    const menu = document.getElementById('saveQuoteMenu');
-    if (menu) menu.classList.add('hidden');
-    
-    if (confirm('Are you sure you want to delete this quote?')) {
-        clearQuote();
+function deleteCurrentQuote() {
+    const confirmed = confirm('Are you sure you want to delete this quote?');
+    if (confirmed) {
+        const menu = document.getElementById('saveQuoteMenu');
+        if (menu) menu.classList.add('hidden');
+        
+        clearAllQuoteData();
         alert('Quote deleted successfully!');
     }
 }
@@ -32,13 +33,13 @@ function convertToOrder() {
     
     // Get quote data
     const quoteData = {
-        quoteName: document.getElementById('quote-name').value,
-        customerName: document.getElementById('customer-name').value,
+        quoteName: document.getElementById('quote-number').value,
+        customerName: document.getElementById('client-name').value,
         salesman: document.getElementById('salesman-name').value,
-        currency: document.getElementById('currency-selector').value,
-        priceList: document.getElementById('price-list-selector').value,
+        currency: document.getElementById('quote-currency').value,
+        priceList: document.getElementById('quote-price-list-selector').value,
         items: getQuoteItems(),
-        notes: document.getElementById('quote-notes').value
+        notes: document.getElementById('notes-terms').value
     };
     
     if (!quoteData.quoteName || !quoteData.customerName) {
@@ -60,12 +61,13 @@ function shareQuote() {
 
 function generateQuoteImage() {
     // Get quote data
-    const quoteName = document.getElementById('quote-name').value || 'Untitled Quote';
-    const customerName = document.getElementById('customer-name').value || 'N/A';
+    const quoteName = document.getElementById('quote-number').value || 'Untitled Quote';
+    const customerName = document.getElementById('client-name').value || 'N/A';
     const salesman = document.getElementById('salesman-name').value || 'N/A';
-    const currency = document.getElementById('currency-selector').value || 'INR';
-    const priceList = document.getElementById('price-list-selector').value || 'N/A';
-    const notes = document.getElementById('quote-notes').value || 'No additional notes';
+    const currency = document.getElementById('quote-currency').value || 'INR';
+    const priceList = document.getElementById('quote-price-list-selector').value || 'N/A';
+    
+    const notes = document.getElementById('notes-terms').value || 'No additional notes';
     const items = getQuoteItems();
     
     // Create canvas for image generation

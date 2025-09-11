@@ -1,4 +1,4 @@
-﻿    // Removed orphaned constants ADDRESS_LINES, CATEGORY_STAMPS, and LOGO_PATH (not used consistently)
+// Removed orphaned constants ADDRESS_LINES, CATEGORY_STAMPS, and LOGO_PATH (not used consistently)
 
     const FX_APIS = [
       (base) => `https://api.exchangerate-api.com/v4/latest/${base}`,
@@ -2834,246 +2834,68 @@
 
     // WhatsApp PDF sharing functionality
 
+    // Admin Panel Functionality
+    let availablePriceLists = new Set();
     
-
-
-
-
+    // Initialize admin panel
+    function initAdminPanel() {
+      const adminModal = document.getElementById('adminModal');
+      const closeAdmin = document.getElementById('closeAdmin');
+      const convertExcel = document.getElementById('convertExcel');
       
-      </div> <!-- End Price List Calculator Module -->
+      // Function to open admin panel with animation
+      window.openAdminPanel = async () => {
+        adminModal.classList.remove('hidden');
+        // Trigger animation
+        setTimeout(() => {
+          const modalContent = adminModal.querySelector('div > div');
+          modalContent.classList.remove('scale-95', 'opacity-0');
+          modalContent.classList.add('scale-100', 'opacity-100');
+        }, 10);
+        
+        // Load available price lists
+        await loadAvailablePriceLists();
+      };
       
-      <!-- Quote Maker Module -->
-      <div id="quote-maker-module" class="module-content">
-        <!-- Quote Details -->
-        <section class="bg-white rounded-xl shadow-soft p-4 sm:p-6 mb-4 mobile-padding" style="background: #eef2ff;">
-          <div class="flex items-center justify-between mb-2">
-            <h2 class="text-lg font-semibold text-gray-800">Quote Details</h2>
-            <span class="chip no-print" id="quote-chip">Draft</span>
-          </div>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-            <div>
-              <input type="text" id="quote-number" placeholder="Quote # (INH-#####-DDMMYY-###)" class="w-full border-2 border-gray-200 rounded-lg px-3 py-1 bg-gray-50 text-gray-700" />
-            </div>
-            <div>
-              <input type="date" id="quote-date" placeholder="Date" class="w-full border-2 border-gray-300 rounded-lg px-3 py-1 focus:border-blue-500 focus:outline-none" />
-            </div>
-            <div>
-              <input type="text" id="client-name" placeholder="Client Name" class="w-full border-2 border-gray-300 rounded-lg px-3 py-1 focus:border-blue-500 focus:outline-none" />
-            </div>
-            <div>
-              <input type="text" id="client-contact" placeholder="Client Contact" class="w-full border-2 border-gray-300 rounded-lg px-3 py-1 focus:border-blue-500 focus:outline-none" />
-            </div>
-            <div>
-              <select id="salesman-name" class="w-full border-2 border-gray-300 rounded-lg px-3 py-1 focus:border-blue-500 focus:outline-none bg-white">
-                <option value="">Select Sales Representative</option>
-              </select>
-            </div>
-            <div>
-              <input type="number" id="valid-days" value="14" placeholder="Valid for (days)" class="w-full border-2 border-gray-300 rounded-lg px-3 py-1 focus:border-blue-500 focus:outline-none" />
-            </div>
-            <div class="md:col-span-2">
-              <textarea id="brief-preview" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none" rows="2" placeholder="Brief Preview (e.g., Clip-on set, 18â€“22 inch mix, 200g total)"></textarea>
-            </div>
-          </div>
-        </section>
-
-        <!-- Currency and Price List Controls -->
-        <section class="bg-white rounded-xl shadow-soft p-4 sm:p-6 mb-4 mobile-padding" style="background: #f8fafc;">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <select id="quote-currency" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
-                <option value="INR" selected>INR (â‚¹) - Indian Rupee</option>
-                <option value="USD">USD ($) - US Dollar</option>
-                <option value="EUR">EUR (â‚¬) - Euro</option>
-                <option value="GBP">GBP (Â£) - British Pound</option>
-                <option value="AUD">AUD (A$) - Australian Dollar</option>
-                <option value="SAR">SAR - Saudi Riyal</option>
-                <option value="NGN">NGN (â‚¦) - Nigerian Naira</option>
-                <option value="AED">AED (Ø¯.Ø¥) - UAE Dirham</option>
-                <option value="JPY">JPY (Â¥) - Japanese Yen</option>
-              </select>
-            </div>
-            <div>
-              <select id="quote-price-list-selector" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
-              </select>
-            </div>
-          </div>
-        </section>
-
-        <!-- Catalog -->
-        <section class="bg-white rounded-xl shadow-soft p-4 sm:p-6 mb-4 mobile-padding" style="background: #ecfeff;">
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
-            <div>
-              <select id="new-item-category" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
-                <option value="">Select Category</option>
-              </select>
-            </div>
-            <div>
-              <select id="new-item-product" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none" disabled>
-                <option value="">Select Product</option>
-              </select>
-            </div>
-            <div>
-              <select id="new-item-density" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none" disabled>
-                <option value="">Select Density</option>
-              </select>
-            </div>
-            <div>
-              <select id="new-item-length" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
-                <option value="">Select Length</option>
-              </select>
-            </div>
-            <div>
-              <select id="new-item-color" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
-                <option value="">Select Color</option>
-              </select>
-            </div>
-            <div>
-              <input type="text" id="new-item-color-detail" placeholder="Color Detail" class="w-full border-2 border-gray-300 rounded-lg px-3 py-1 focus:border-blue-500 focus:outline-none" />
-            </div>
-            <div>
-              <input type="text" id="new-item-styles" placeholder="Styles" class="w-full border-2 border-gray-300 rounded-lg px-3 py-1 focus:border-blue-500 focus:outline-none" />
-            </div>
-            <div>
-              <input type="number" id="new-item-quantity" value="1" min="0.01" step="0.01" placeholder="Quantity" class="w-full border-2 border-gray-300 rounded-lg px-3 py-1 focus:border-blue-500 focus:outline-none" />
-            </div>
-            <div>
-              <input type="number" id="new-item-override-price" placeholder="Override Unit Price (Optional)" class="w-full border-2 border-gray-300 rounded-lg px-3 py-1 focus:border-blue-500 focus:outline-none" />
-            </div>
-          </div>
-          
-          <!-- Dynamic Rate Display -->
-          <div id="dynamic-rate-display" class="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-lg p-4 mt-3 mb-3 hidden">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center space-x-2">
-                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
-                </svg>
-                <span class="text-sm font-medium text-blue-800">Calculated Rate:</span>
-              </div>
-              <div class="text-right">
-                <div id="rate-amount" class="text-lg font-bold text-blue-900">â‚¹0.00</div>
-                <div id="rate-details" class="text-xs text-blue-600">per unit</div>
-              </div>
-            </div>
-            <div id="rate-breakdown" class="mt-2 text-xs text-blue-700 hidden">
-              <div class="grid grid-cols-2 gap-2">
-                <span>Base Rate:</span><span id="base-rate-value">â‚¹0.00</span>
-                <span>Currency:</span><span id="currency-rate-value">INR</span>
-              </div>
-            </div>
-          </div>
-          
-          <div class="flex items-center gap-2 mt-2">
-            <button id="add-item-btn" class="btn-primary px-3 py-1 rounded-lg">Add Item</button>
-            <span class="text-xs text-gray-600">Override converts back to INR using current FX.</span>
-          </div>
-        </section>
-
-        <!-- Financial Controls -->
-        <section class="bg-white rounded-xl shadow-soft p-2 mb-2 mobile-padding" style="background: #f0f9ff;">
-          
-          <!-- Discount Controls -->
-          <div class="grid grid-cols-1 gap-2 mb-2">
-            <div>
-              <input type="text" id="discount-input" placeholder="Discount (e.g., 10% or 50)" class="w-full border-2 border-gray-300 rounded-lg px-2 py-1 focus:border-blue-500 focus:outline-none" />
-            </div>
-          </div>
-          
-          <!-- Tax Controls -->
-          <div class="grid grid-cols-1 gap-2 mb-2">
-            <div>
-              <input type="text" id="tax-input" placeholder="Tax (e.g., 10%)" class="w-full border-2 border-gray-300 rounded-lg px-2 py-1 focus:border-blue-500 focus:outline-none" />
-            </div>
-          </div>
-          
-          <!-- Shipping Controls -->
-          <div class="grid grid-cols-1 gap-2">
-            <div>
-              <input type="text" id="shipping-input" placeholder="Shipping (e.g., 25 or 0 for free)" class="w-full border-2 border-gray-300 rounded-lg px-2 py-1 focus:border-blue-500 focus:outline-none" />
-            </div>
-          </div>
-        </section>
-
-        <!-- Items Table -->
-        <section class="bg-white rounded-xl shadow-soft p-2 mb-2 mobile-padding">
-          <h2 class="text-lg font-semibold text-gray-800 mb-3">Items</h2>
-          <div class="table-container table-responsive overflow-x-auto bg-white rounded-lg border border-gray-200">
-            <table id="items-table" class="w-full border-collapse min-w-full">
-              <thead>
-                <tr class="bg-gradient-to-r from-gray-50 via-gray-100 to-gray-150 border-b-2 border-gray-300">
-                  <th class="px-4 py-2 text-center text-xs font-bold text-gray-800 uppercase tracking-wider border-r border-gray-300">
-                    <div class="flex items-center justify-center">
-                      <span class="w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 font-bold text-xs">#</span>
-                    </div>
-                  </th>
-                  <th class="px-4 py-2 text-left text-xs font-bold text-gray-800 uppercase tracking-wider border-r border-gray-300 bg-gray-100">
-                    <div class="flex items-center space-x-2">
-                      <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
-                      </svg>
-                      <span>Product Details</span>
-                    </div>
-                  </th>
-                  <th class="px-4 py-2 text-left text-xs font-bold text-gray-800 uppercase tracking-wider border-r border-gray-300">
-                    <div class="flex items-center space-x-1">
-                      <span>Variant</span>
-                      <span class="sort-indicator ml-1 text-gray-500 cursor-pointer hover:text-gray-700">â†•</span>
-                    </div>
-                  </th>
-                  <th class="px-4 py-2 text-left text-xs font-bold text-gray-800 uppercase tracking-wider border-r border-gray-300">
-                    <div class="flex items-center space-x-1">
-                      <span>Length</span>
-                      <span class="sort-indicator ml-1 text-gray-500 cursor-pointer hover:text-gray-700">â†•</span>
-                    </div>
-                  </th>
-                  <th class="px-4 py-2 text-left text-xs font-bold text-gray-800 uppercase tracking-wider border-r border-gray-300">
-                    <span>Color</span>
-                  </th>
-                  <th class="px-4 py-2 text-left text-xs font-bold text-gray-800 uppercase tracking-wider border-r border-gray-300">
-                    <span>Styles</span>
-                  </th>
-                  <th class="px-4 py-2 text-center text-xs font-bold text-gray-800 uppercase tracking-wider border-r border-gray-300 bg-gray-100">
-                    <div class="flex items-center justify-center space-x-1">
-                      <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"></path>
-                      </svg>
-                      <span>Qty</span>
-                    </div>
-                  </th>
-                  <th class="px-4 py-2 text-right text-xs font-bold text-gray-800 uppercase tracking-wider border-r border-gray-300 bg-gray-100">
-                    <div class="flex items-center justify-end space-x-1">
-                      <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
-                      </svg>
-                      <span>Unit Price</span>
-                    </div>
-                  </th>
-                  <th class="px-4 py-2 text-right text-xs font-bold text-gray-800 uppercase tracking-wider border-r border-gray-300 bg-gray-100">
-                    <div class="flex items-center justify-end space-x-1">
-                      <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
-                      </svg>
-                      <span>Line Total</span>
-                    </div>
-                  </th>
-                  <th class="px-4 py-2 text-center text-xs font-bold text-gray-800 uppercase tracking-wider no-print">
-                    <div class="flex items-center justify-center">
-                      <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                      </svg>
-                    </div>
-                  </th>
-                </tr>
-              </thead>
-              <tbody class="bg-white divide-y divide-gray-200"></tbody>
-              <tfoot class="bg-gradient-to-r from-gray-50 to-gray-100 border-t-2 border-gray-300">
-                <tr class="border-b border-gray-200 bg-gradient-to-r from-gray-100 to-gray-150 hover:from-gray-150 hover:to-gray-200 transition-all duration-200">
-                  <td colspan="8" class="font-semibold px-4 py-3 text-sm text-gray-800">
-                    <div class="flex items-center space-x-2">
-                      <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16l3-1m-3 1l-3-1"></path>
-                      </svg>
+      // Function to close admin panel
+      const closeAdminPanel = () => {
+        const modalContent = adminModal.querySelector('div > div');
+        modalContent.classList.remove('scale-100', 'opacity-100');
+        modalContent.classList.add('scale-95', 'opacity-0');
+        setTimeout(() => {
+          adminModal.classList.add('hidden');
+        }, 200);
+      };
+      
+      // Event listeners
+      closeAdmin.addEventListener('click', closeAdminPanel);
+      
+      // Close on backdrop click
+      adminModal.addEventListener('click', (e) => {
+        if (e.target === adminModal) {
+          closeAdminPanel();
+        }
+      });
+    }
+    
+    // Load available price lists function
+    async function loadAvailablePriceLists() {
+      try {
+        const response = await fetch('/api/price-lists');
+        if (response.ok) {
+          const priceLists = await response.json();
+          availablePriceLists.clear();
+          priceLists.forEach(list => availablePriceLists.add(list));
+        }
+      } catch (error) {
+        console.error('Error loading price lists:', error);
+      }
+    }
+    
+    // Initialize the admin panel when DOM is loaded
+    document.addEventListener('DOMContentLoaded', initAdminPanel);
+    
+    // End of main-functions.js
                       <span>Total Weight</span>
                     </div>
                   </td>
@@ -3163,7 +2985,7 @@
                     </svg>
                     Save Quote
                   </button>
-                  <button onclick="deleteQuote()" class="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-2 text-red-600">
+                  <button onclick="deleteCurrentQuote()" class="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-2 text-red-600">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                     </svg>
@@ -4635,7 +4457,12 @@
 
       const clearQuoteBtn = document.getElementById('clear-quote-btn');
       if (clearQuoteBtn) {
-        clearQuoteBtn.addEventListener('click', clearAllQuoteData);
+        clearQuoteBtn.addEventListener('click', function() {
+          const confirmed = confirm('Are you sure you want to clear all quote data? This action cannot be undone.');
+          if (confirmed) {
+            clearAllQuoteData();
+          }
+        });
       }
 
       // shareBtn event listener moved to main DOMContentLoaded block
@@ -5456,7 +5283,7 @@
           </svg>
           Convert to Order
         </button>
-        <button class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center" onclick="deleteQuote(${quoteIndex}); hideQuoteContextMenu();">
+        <button class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center" onclick="if(deleteQuote(${quoteIndex})) hideQuoteContextMenu();">
           <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
           </svg>
@@ -5903,7 +5730,7 @@
        
        if (!quote) {
          alert('Quote not found!');
-         return;
+         return false;
        }
        
        const confirmed = confirm(`Are you sure you want to delete quote ${quote.quoteId}? This action cannot be undone.`);
@@ -5919,7 +5746,9 @@
          
          renderSavedQuotesList();
          alert(`Quote ${quote.quoteId} deleted successfully!`);
+         return true;
        }
+       return false;
      }
 
      function convertQuoteToOrder(quoteIndex) {
