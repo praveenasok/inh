@@ -2422,7 +2422,7 @@
 
 
     async function downloadPDF(){
-      console.log('downloadPDF called');
+      // PDF download initiated
       
       if (state.segments.length === 0) {
         alert('Please generate a preview first. Select a category, products, densities, and colors, then click "Generate Preview".');
@@ -2473,13 +2473,7 @@
         const pageHeightMM = (contentHeight * 0.264583) + (marginMM * 2);
         
         // Log dimensions for debugging
-        console.log('📏 Content Dimensions:');
-        console.log(`  Content Width: ${contentWidth}px`);
-        console.log(`  Content Height: ${contentHeight}px`);
-        console.log('📄 PDF Page Dimensions:');
-        console.log(`  Page Width: ${pageWidthMM.toFixed(2)}mm (${(pageWidthMM / 0.264583).toFixed(0)}px equivalent)`);
-        console.log(`  Page Height: ${pageHeightMM.toFixed(2)}mm (${(pageHeightMM / 0.264583).toFixed(0)}px equivalent)`);
-        console.log(`  Margin: ${marginMM.toFixed(2)}mm (20px)`);
+        // PDF dimensions calculated
         
         // Process each segment as a separate PNG image
         const generatedImages = [];
@@ -2561,7 +2555,7 @@
           URL.revokeObjectURL(url);
         }
         
-        console.log(`Generated ${generatedImages.length} PNG images successfully`);
+        // PNG images generated successfully
         
         // Store the generated images for sharing
         state.lastGeneratedImages = {
@@ -2699,26 +2693,19 @@
 
     /* Init */
     async function init(){
-      console.log('Starting init function...');
       try {
         // Try to load data from embedded script first
         const embeddedElement = document.getElementById('EMBEDDED_DATA');
         if (embeddedElement && embeddedElement.textContent.trim()) {
-          console.log('Loading data from embedded script...');
           productData = JSON.parse(embeddedElement.textContent);
-          console.log('Loaded', productData.length, 'products from embedded data');
         } else {
           // Try to load from localStorage as fallback
           const storedData = localStorage.getItem('productData');
           if (storedData) {
-            console.log('Loading data from localStorage...');
             productData = JSON.parse(storedData);
-            console.log('Loaded', productData.length, 'products from localStorage');
           } else {
             // Initialize with empty data - users can upload their own Excel files
-            console.log('No existing data found, initializing with empty data...');
             productData = [];
-            console.log('Initialized with empty data - ready for Excel upload');
           }
         }
       } catch(e){ 
@@ -2729,7 +2716,7 @@
       // Initialize product arrays for filtering
       state.allProducts = [...productData];
       state.filteredProducts = []; // Start empty - will be populated when price list is selected
-      console.log('State initialized with', state.allProducts.length, 'products');
+      // State initialized with products
       
       // Price list dropdown will be initialized in DOMContentLoaded event
       
@@ -2984,13 +2971,13 @@
 
     // Share functionality
     async function shareNatively() {
-      console.log('shareNatively called, segments:', state.segments.length, 'PNGs:', state.lastGeneratedPNGs?.length || 0);
+      // Native sharing initiated
       
       // Check if we have segments to share
       if (state.segments.length === 0) {
         // For Price List Calculator Module, try to generate preview automatically
         if (state.category) {
-          console.log('No segments found, but category exists. Generating preview first...');
+          // No segments found, generating preview first
           generatePreview();
           // Wait a moment for preview generation to complete
           setTimeout(() => {
@@ -4666,6 +4653,14 @@
       // Get sales representatives count
       try {
         const response = await fetch('/data.json');
+        
+        // Check if response is JSON (API available) or HTML (static server)
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          // API not available (using static server), use fallback
+          throw new Error('API not available');
+        }
+        
         const data = await response.json();
         const salesmenCount = data.salesmen ? data.salesmen.length : 0;
         salesRepCount.innerHTML = `
@@ -4726,7 +4721,9 @@
           };
           
           fileInput.oncancel = () => {
-            reject(new Error('File selection cancelled'));
+            console.log('File selection cancelled by user');
+            showAdminMessage('File selection cancelled', 'warning');
+            reject(new Error('CANCELLED'));
           };
         });
         
@@ -4734,7 +4731,18 @@
         fileInput.click();
         
         // Wait for file selection
-        const selectedFiles = await fileSelectionPromise;
+        let selectedFiles;
+        try {
+          selectedFiles = await fileSelectionPromise;
+        } catch (error) {
+          if (error.message === 'CANCELLED') {
+            // User cancelled file selection, restore button and return
+            convertBtn.innerHTML = '📊 Convert Excel to JSON';
+            convertBtn.disabled = false;
+            return;
+          }
+          throw error; // Re-throw other errors
+        }
         
         showAdminMessage(`Processing ${selectedFiles.length} Excel file(s)...`, 'info');
         
@@ -4849,19 +4857,24 @@
         }
         
       } catch (error) {
-        console.error('Excel conversion error:', error);
-        
         // Categorize different types of errors
-        if (error.message === 'File selection cancelled' || error.message === 'No files selected') {
+        if (error.message === 'CANCELLED' || error.message === 'File selection cancelled' || error.message === 'No files selected') {
           showAdminMessage('File selection cancelled.', 'info');
-        } else if (error.name === 'TypeError' || error.message.includes('Cannot read property')) {
-          showAdminMessage(`❌ Data structure error: ${error.message}. Please check file format.`, 'error');
-        } else if (error.message.includes('File too large') || error.message.includes('Invalid file type')) {
-          showAdminMessage(`❌ File validation error: ${error.message}`, 'error');
-        } else if (error.message.includes('Failed to parse')) {
-          showAdminMessage(`❌ Excel parsing error: ${error.message}. Please ensure the file is not corrupted.`, 'error');
+          // Don't log cancellation as an error
+          console.log('User cancelled file selection');
         } else {
-          showAdminMessage(`❌ Unexpected error during conversion: ${error.message}`, 'error');
+          // Log actual errors (not cancellations) to console
+          console.error('Excel conversion error:', error);
+          
+          if (error.name === 'TypeError' || error.message.includes('Cannot read property')) {
+            showAdminMessage(`❌ Data structure error: ${error.message}. Please check file format.`, 'error');
+          } else if (error.message.includes('File too large') || error.message.includes('Invalid file type')) {
+            showAdminMessage(`❌ File validation error: ${error.message}`, 'error');
+          } else if (error.message.includes('Failed to parse')) {
+            showAdminMessage(`❌ Excel parsing error: ${error.message}. Please ensure the file is not corrupted.`, 'error');
+          } else {
+            showAdminMessage(`❌ Unexpected error during conversion: ${error.message}`, 'error');
+          }
         }
         
         // Log full error details for debugging
@@ -4898,16 +4911,27 @@
             const firstSheetName = workbook.SheetNames[0];
             const worksheet = workbook.Sheets[firstSheetName];
             
-            // Convert to JSON
-            const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+            // Convert to JSON with error handling
+            let jsonData;
+            try {
+              jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+            } catch (parseError) {
+              reject(new Error(`Failed to parse Excel worksheet: ${parseError.message}`));
+              return;
+            }
             
-            if (jsonData.length < 2) {
+            if (!jsonData || !Array.isArray(jsonData) || jsonData.length < 2) {
               reject(new Error('Excel file must contain at least a header row and one data row'));
               return;
             }
             
-            // Parse the data
+            // Parse the data with validation
             const headers = jsonData[0];
+            if (!headers || !Array.isArray(headers) || headers.length === 0) {
+              reject(new Error('Invalid or empty header row in Excel file'));
+              return;
+            }
+            
             const products = [];
             
             // Map common header variations to standard field names
@@ -5147,24 +5171,30 @@
       });
       
       // Check for duplicate products with enhanced key
-      const productKeys = new Set();
+      const productKeyMap = new Map();
       const duplicateGroups = new Map();
       
       products.forEach((product, index) => {
         const key = `${product.Category || ''}-${product.Product || ''}-${product.Density || ''}-${product.Colors || ''}-${product.Length || ''}-${product.PriceList || ''}`;
         
-        if (productKeys.has(key)) {
+        if (productKeyMap.has(key)) {
+          // This is a duplicate
           if (!duplicateGroups.has(key)) {
-            duplicateGroups.set(key, []);
+            // First time seeing this duplicate, add the original row
+            duplicateGroups.set(key, [productKeyMap.get(key)]);
           }
+          // Add the current duplicate row
           duplicateGroups.get(key).push(index + 1);
+        } else {
+          // First occurrence of this key
+          productKeyMap.set(key, index + 1);
         }
-        productKeys.add(key);
       });
       
-      // Report duplicates
+      // Report duplicates with helpful guidance
       duplicateGroups.forEach((rows, key) => {
-        validationResults.warnings.push(`Duplicate products found in rows: ${rows.join(', ')} (${key.split('-').slice(0, 3).join(' - ')})`);
+        const productInfo = key.split('-').slice(0, 3).join(' - ');
+        validationResults.warnings.push(`Duplicate products found in rows: ${rows.join(', ')} (${productInfo}). Please review and remove duplicate entries or ensure they have different specifications.`);
       });
       
       // Additional validation checks
@@ -5186,27 +5216,23 @@
     
     // Initialize price list dropdown
     function initPriceListDropdown() {
-      console.log('Initializing price list dropdown...');
-      console.log('state.allProducts length:', state.allProducts.length);
+      // Validate state.allProducts exists and is an array
+      if (!state.allProducts || !Array.isArray(state.allProducts)) {
+        console.error('Invalid product data in state.allProducts');
+        return;
+      }
       
       // Clear existing price lists to ensure fresh data
       availablePriceLists.clear();
       
       // Extract unique price lists from existing data
       state.allProducts.forEach(product => {
-        if (product.PriceList) {
+        if (product && product.PriceList) {
           availablePriceLists.add(product.PriceList);
         }
       });
       
-      console.log('Available price lists:', Array.from(availablePriceLists));
-      
       updatePriceListDropdown();
-      
-      // Do not show products until a price list is selected
-      if (state.filteredProducts.length === 0 && state.allProducts.length > 0) {
-        console.log('No price list selected - products will be empty until price list is chosen');
-      }
       
       // Add event listener for price list selection
       const priceListSelector = document.getElementById('priceListSelector');
@@ -5215,6 +5241,27 @@
       } else {
         console.error('Price list selector element not found!');
       }
+    }
+    
+    // Helper function to populate salesman options
+    function populateSalesmanOptions(salesmenData) {
+      const salesmanSelector = document.getElementById('salesman-name');
+      if (!salesmanSelector) return;
+      
+      // Clear existing options except the first one
+      while (salesmanSelector.children.length > 1) {
+        salesmanSelector.removeChild(salesmanSelector.lastChild);
+      }
+      
+      // Populate dropdown with salesmen
+      salesmenData.forEach(salesman => {
+        const option = document.createElement('option');
+        // Handle both string format and object format
+        const salesmanName = typeof salesman === 'string' ? salesman : salesman.name;
+        option.value = salesmanName;
+        option.textContent = salesmanName;
+        salesmanSelector.appendChild(option);
+      });
     }
     
     // Initialize price calculator salesman dropdown
@@ -5227,44 +5274,42 @@
         return;
       }
       
-      console.log('Found salesman selector:', salesmanSelector);
-      console.log('Salesman selector parent:', salesmanSelector.parentElement);
-      console.log('Salesman selector visible:', window.getComputedStyle(salesmanSelector).display);
-      console.log('Salesman selector offsetParent:', salesmanSelector.offsetParent);
-      
-      // Debug logging for dropdown visibility
-      console.log('Dropdown found:', salesmanSelector ? 'YES' : 'NO', 'Visible:', window.getComputedStyle(salesmanSelector).display);
+      // Salesman selector found and validated
       
       // Clear existing options
       salesmanSelector.innerHTML = '<option value="">Select Salesman</option>';
       
-      // Load salesmen data from server API
+      // Load salesmen data from server API with caching
+      if (window.cachedSalesmenData && window.cachedSalesmenTimestamp && 
+          (Date.now() - window.cachedSalesmenTimestamp) < 300000) { // 5 minute cache
+        // Use cached data
+        populateSalesmanOptions(window.cachedSalesmenData);
+        return;
+      }
+      
       fetch('/api/get-data')
         .then(response => {
-          console.log('API response status:', response.status);
+          // Check if response is JSON (API available) or HTML (static server)
+          const contentType = response.headers.get('content-type');
+          if (!contentType || !contentType.includes('application/json')) {
+            // API not available (using static server), skip data fetch
+            throw new Error('API not available');
+          }
+          
           return response.json();
         })
         .then(data => {
-          console.log('API response data:', data);
           if (!data.success || !data.salesmen) {
             throw new Error('No salesmen data found in API response');
           }
           
           const salesmenData = data.salesmen;
-          console.log('Salesmen data:', salesmenData);
           
-          // Populate dropdown with salesmen
-          salesmenData.forEach(salesman => {
-            const option = document.createElement('option');
-            // Handle both string format and object format
-            const salesmanName = typeof salesman === 'string' ? salesman : salesman.name;
-            option.value = salesmanName;
-            option.textContent = salesmanName;
-            salesmanSelector.appendChild(option);
-            console.log('Added salesman option:', salesmanName);
-          });
+          // Cache the data
+          window.cachedSalesmenData = salesmenData;
+          window.cachedSalesmenTimestamp = Date.now();
           
-          console.log('Final dropdown options count:', salesmanSelector.options.length);
+          populateSalesmanOptions(salesmenData);
           
           // Restore previously selected salesman from localStorage
           const savedSalesman = localStorage.getItem('priceCalculatorSelectedSalesman');
@@ -5404,6 +5449,14 @@
     async function checkForSyncUpdates() {
       try {
         const response = await fetch('/api/sync-status');
+        
+        // Check if response is JSON (API available) or HTML (static server)
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          // API not available (using static server), skip sync checks
+          return;
+        }
+        
         const data = await response.json();
         
         if (data.success && data.syncData) {
@@ -5623,7 +5676,7 @@
       setTimeout(() => {
         const testBtn = document.getElementById('nav-quote-maker');
         if (testBtn) {
-          console.log('Test button found:', testBtn.id);
+          // Test button found
           const navStatus = document.getElementById('nav-status');
           if (navStatus) navStatus.textContent += ' - Ready for testing';
         } else {
@@ -5638,12 +5691,10 @@
       const shareBtn = document.getElementById('shareBtn');
       if (shareBtn) {
         shareBtn.addEventListener('click', function(e) {
-          console.log('Share button clicked!');
-          console.log('Current state.segments:', state.segments);
-          console.log('Generated PNGs:', state.generatedPNGs);
+          // Share button clicked
           toggleSharePopup();
         });
-        console.log('Share button event listener attached');
+        // Share button event listener attached
       } else {
         console.error('Share button not found during initialization');
       }
@@ -5651,15 +5702,10 @@
     
     // Navigation functionality
     function initNavigation() {
-      console.log('Initializing navigation...');
-      
-
-      
       // Set Price List Calculator as default active
       const defaultModule = document.getElementById('price-calculator-module');
       if (defaultModule) {
         defaultModule.classList.add('active');
-        console.log('Default module activated:', defaultModule.id);
       } else {
         console.error('Default module not found!');
       }
@@ -5667,20 +5713,12 @@
       // Add click handlers for navigation buttons
       const navButtons = document.querySelectorAll('.nav-btn');
       
-
-      console.log('Found navigation buttons:', navButtons.length);
-      
       navButtons.forEach(btn => {
-        console.log('Adding click handler to button:', btn.id);
         btn.addEventListener('click', function(e) {
           e.preventDefault();
-          console.log('Navigation button clicked:', this.id);
-          
-
           
           // Handle both desktop and mobile button IDs
           let moduleId = this.id.replace('nav-', '').replace('-mobile', '') + '-module';
-          console.log('Target module ID:', moduleId);
           switchModule(moduleId, this);
         });
       });
@@ -5694,7 +5732,7 @@
       console.log('Found modules to hide:', allModules.length);
       allModules.forEach(module => {
         module.classList.remove('active');
-        console.log('Hiding module:', module.id);
+        // Hide module
       });
       
       // Remove active class from all nav buttons
@@ -5706,7 +5744,7 @@
       const targetModule = document.getElementById(moduleId);
       if (targetModule) {
         targetModule.classList.add('active');
-        console.log('Showing module:', targetModule.id);
+        // Module shown
       } else {
         console.error('Target module not found:', moduleId);
       }
@@ -6058,15 +6096,31 @@
     }
 
     function addQuoteItem() {
-      const category = document.getElementById('new-item-category').value;
-      const density = document.getElementById('new-item-density').value;
-      const productName = document.getElementById('new-item-product').value;
-      const length = document.getElementById('new-item-length').value;
-      const quantity = parseFloat(document.getElementById('new-item-quantity').value) || 1;
-      const overridePrice = parseFloat(document.getElementById('new-item-override-price').value);
-      const color = document.getElementById('new-item-color').value;
-      const colorDetail = document.getElementById('new-item-color-detail').value;
-      const styles = document.getElementById('new-item-styles').value;
+      // Validate all required DOM elements exist
+      const categoryEl = document.getElementById('new-item-category');
+      const densityEl = document.getElementById('new-item-density');
+      const productEl = document.getElementById('new-item-product');
+      const lengthEl = document.getElementById('new-item-length');
+      const quantityEl = document.getElementById('new-item-quantity');
+      const overridePriceEl = document.getElementById('new-item-override-price');
+      const colorEl = document.getElementById('new-item-color');
+      const colorDetailEl = document.getElementById('new-item-color-detail');
+      const stylesEl = document.getElementById('new-item-styles');
+      
+      if (!categoryEl || !productEl || !quantityEl) {
+        console.error('Required form elements not found');
+        return;
+      }
+      
+      const category = categoryEl.value;
+      const density = densityEl ? densityEl.value : '';
+      const productName = productEl.value;
+      const length = lengthEl ? lengthEl.value : '';
+      const quantity = parseFloat(quantityEl.value) || 1;
+      const overridePrice = overridePriceEl ? parseFloat(overridePriceEl.value) : NaN;
+      const color = colorEl ? colorEl.value : '';
+      const colorDetail = colorDetailEl ? colorDetailEl.value : '';
+      const styles = stylesEl ? stylesEl.value : '';
 
       if (!category || !productName) {
         alert('Please select category and product');
@@ -6783,11 +6837,8 @@
      }
 
      async function shareQuoteFromContext(quoteIndex) {
-       console.log('shareQuoteFromContext called with index:', quoteIndex);
        const savedQuotes = JSON.parse(localStorage.getItem('savedQuotes') || '[]');
-       console.log('Saved quotes:', savedQuotes);
-       const quote = savedQuotes[quoteIndex];
-       console.log('Selected quote:', quote);
+      const quote = savedQuotes[quoteIndex];
        
        if (!quote) {
          console.error('Quote not found at index:', quoteIndex);
@@ -7100,16 +7151,22 @@
      }
 
      function deleteQuote(quoteIndex) {
+       console.log('deleteQuote called with index:', quoteIndex);
        const savedQuotes = JSON.parse(localStorage.getItem('savedQuotes') || '[]');
        const quote = savedQuotes[quoteIndex];
        
        if (!quote) {
+         // Quote not found at index
          alert('Quote not found!');
          return false;
        }
        
+       console.log('About to show confirmation for quote:', quote.quoteId);
        const confirmed = confirm(`Are you sure you want to delete quote ${quote.quoteId}? This action cannot be undone.`);
+       console.log('User confirmation result:', confirmed);
+       
        if (confirmed) {
+         console.log('Deleting quote:', quote.quoteId);
          savedQuotes.splice(quoteIndex, 1);
          localStorage.setItem('savedQuotes', JSON.stringify(savedQuotes));
          
@@ -7123,6 +7180,7 @@
          alert(`Quote ${quote.quoteId} deleted successfully!`);
          return true;
        }
+       console.log('User cancelled deletion');
        return false;
      }
 
@@ -8379,41 +8437,47 @@
 
      // Function to populate salesman dropdown
      async function populateSalesmanDropdown() {
-       console.log('populateSalesmanDropdown called');
        try {
+         // Use cached data if available
+         if (window.cachedSalesmenData && window.cachedSalesmenTimestamp && 
+             (Date.now() - window.cachedSalesmenTimestamp) < 300000) { // 5 minute cache
+           populateSalesmanOptions(window.cachedSalesmenData);
+           return;
+         }
+         
          const response = await fetch('/api/get-data');
+         
+         // Check if response is JSON (API available) or HTML (static server)
+         const contentType = response.headers.get('content-type');
+         if (!contentType || !contentType.includes('application/json')) {
+           // API not available (using static server), use fallback data
+           throw new Error('API not available');
+         }
+         
          const result = await response.json();
-         console.log('API response:', result);
          
          if (result.success && result.salesmen) {
            const salesmenData = result.salesmen;
            
-           const salesmanSelect = document.getElementById('salesman-name');
-           if (salesmanSelect && salesmenData.length > 0) {
-             // Clear existing options except the first one
-             salesmanSelect.innerHTML = '<option value="">Select Sales Representative</option>';
-             
-             // Add salesmen options
-             salesmenData.forEach(salesman => {
-               const option = document.createElement('option');
-               option.value = salesman;
-               option.textContent = salesman;
-               salesmanSelect.appendChild(option);
-             });
-             
-             // Try to restore previously selected salesman from localStorage
+           // Cache the data
+           window.cachedSalesmenData = salesmenData;
+           window.cachedSalesmenTimestamp = Date.now();
+           
+           populateSalesmanOptions(salesmenData);
+            
+            // Try to restore previously selected salesman from localStorage
+            const salesmanSelect = document.getElementById('salesman-name');
+            if (salesmanSelect) {
               const savedSalesman = localStorage.getItem('selectedSalesman');
               if (savedSalesman && salesmanSelect.querySelector(`option[value="${savedSalesman}"]`)) {
                 salesmanSelect.value = savedSalesman;
               }
-           }
-         }
+            }
+          }
        } catch (error) {
          console.error('Error loading salesmen data:', error);
          // Fallback: add enhanced default salesmen if API fails
-         console.log('Using fallback salesmen data');
          const salesmanSelect = document.getElementById('salesman-name');
-         console.log('Salesman select element:', salesmanSelect);
          if (salesmanSelect) {
            const defaultSalesmen = [
              'John Smith - Senior Sales Manager',

@@ -13,9 +13,18 @@ const QUOTE_MAKER_FILE_PATH = path.join(__dirname, 'quotemaker', 'index.html');
 
 // In-memory data storage
 let currentProductData = null;
+let cachedSalesmenData = null;
+let salesmenCacheTimestamp = null;
+const SALESMEN_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes cache
 
-// Function to read salesmen data from Excel file
+// Function to read salesmen data from Excel file with caching
 function getSalesmenFromExcel() {
+  // Check if we have valid cached data
+  if (cachedSalesmenData && salesmenCacheTimestamp && 
+      (Date.now() - salesmenCacheTimestamp) < SALESMEN_CACHE_DURATION) {
+    return cachedSalesmenData;
+  }
+  
   try {
     if (fs.existsSync(EXCEL_FILE_PATH)) {
       const workbook = XLSX.readFile(EXCEL_FILE_PATH);
@@ -29,7 +38,11 @@ function getSalesmenFromExcel() {
           .filter(name => name && name.trim()) // Filter out empty values
           .map(name => name.trim()); // Trim whitespace
         
-        console.log(`Loaded ${salesmen.length} salesmen from Excel:`, salesmen);
+        // Cache the result
+        cachedSalesmenData = salesmen;
+        salesmenCacheTimestamp = Date.now();
+        
+        console.log(`Loaded ${salesmen.length} salesmen from Excel (cached for 5 minutes):`, salesmen);
         return salesmen;
       }
     }
@@ -38,7 +51,7 @@ function getSalesmenFromExcel() {
   }
   
   // Fallback to default salesmen if Excel reading fails
-  return [
+  const fallbackSalesmen = [
     "John Smith",
     "Sarah Johnson", 
     "Michael Brown",
@@ -48,6 +61,12 @@ function getSalesmenFromExcel() {
     "Robert Taylor",
     "Jennifer Martinez"
   ];
+  
+  // Cache the fallback data too
+  cachedSalesmenData = fallbackSalesmen;
+  salesmenCacheTimestamp = Date.now();
+  
+  return fallbackSalesmen;
 }
 
 // MIME types for different file extensions

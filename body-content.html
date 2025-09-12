@@ -3406,7 +3406,7 @@
                     </svg>
                     Save Quote
                   </button>
-                  <button onclick="deleteQuote()" class="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-2 text-red-600">
+                  <button onclick="deleteCurrentQuote()" class="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-2 text-red-600">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                     </svg>
@@ -3777,7 +3777,9 @@
           };
           
           fileInput.oncancel = () => {
-            reject(new Error('File selection cancelled'));
+            console.log('File selection cancelled by user');
+            showAdminMessage('File selection cancelled', 'warning');
+            reject(new Error('CANCELLED'));
           };
         });
         
@@ -3785,7 +3787,18 @@
         fileInput.click();
         
         // Wait for file selection
-        const selectedFiles = await fileSelectionPromise;
+        let selectedFiles;
+        try {
+          selectedFiles = await fileSelectionPromise;
+        } catch (error) {
+          if (error.message === 'CANCELLED') {
+            // User cancelled file selection, restore button and return
+            convertBtn.innerHTML = '📊 Convert Excel to JSON';
+            convertBtn.disabled = false;
+            return;
+          }
+          throw error; // Re-throw other errors
+        }
         
         showAdminMessage(`Processing ${selectedFiles.length} Excel file(s)...`, 'info');
         
@@ -3900,11 +3913,11 @@
         }
         
       } catch (error) {
-        console.error('Excel conversion error:', error);
-        
         // Categorize different types of errors
-        if (error.message === 'File selection cancelled' || error.message === 'No files selected') {
+        if (error.message === 'CANCELLED' || error.message === 'File selection cancelled' || error.message === 'No files selected') {
           showAdminMessage('File selection cancelled.', 'info');
+          // Don't log cancellation as an error
+          console.log('User cancelled file selection');
         } else if (error.name === 'TypeError' || error.message.includes('Cannot read property')) {
           showAdminMessage(`âŒ Data structure error: ${error.message}. Please check file format.`, 'error');
         } else if (error.message.includes('File too large') || error.message.includes('Invalid file type')) {
@@ -4198,24 +4211,30 @@
       });
       
       // Check for duplicate products with enhanced key
-      const productKeys = new Set();
+      const productKeyMap = new Map();
       const duplicateGroups = new Map();
       
       products.forEach((product, index) => {
         const key = `${product.Category || ''}-${product.Product || ''}-${product.Density || ''}-${product.Colors || ''}-${product.Length || ''}-${product.PriceList || ''}`;
         
-        if (productKeys.has(key)) {
+        if (productKeyMap.has(key)) {
+          // This is a duplicate
           if (!duplicateGroups.has(key)) {
-            duplicateGroups.set(key, []);
+            // First time seeing this duplicate, add the original row
+            duplicateGroups.set(key, [productKeyMap.get(key)]);
           }
+          // Add the current duplicate row
           duplicateGroups.get(key).push(index + 1);
+        } else {
+          // First occurrence of this key
+          productKeyMap.set(key, index + 1);
         }
-        productKeys.add(key);
       });
       
-      // Report duplicates
+      // Report duplicates with helpful guidance
       duplicateGroups.forEach((rows, key) => {
-        validationResults.warnings.push(`Duplicate products found in rows: ${rows.join(', ')} (${key.split('-').slice(0, 3).join(' - ')})`);
+        const productInfo = key.split('-').slice(0, 3).join(' - ');
+        validationResults.warnings.push(`Duplicate products found in rows: ${rows.join(', ')} (${productInfo}). Please review and remove duplicate entries or ensure they have different specifications.`);
       });
       
       // Additional validation checks
@@ -4455,6 +4474,14 @@
     async function checkForSyncUpdates() {
       try {
         const response = await fetch('/api/sync-status');
+        
+        // Check if response is JSON (API available) or HTML (static server)
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          // API not available (using static server), skip sync checks
+          return;
+        }
+        
         const data = await response.json();
         
         if (data.success && data.syncData) {
@@ -6142,16 +6169,22 @@
      }
 
      function deleteQuote(quoteIndex) {
+       console.log('deleteQuote called with index:', quoteIndex);
        const savedQuotes = JSON.parse(localStorage.getItem('savedQuotes') || '[]');
        const quote = savedQuotes[quoteIndex];
        
        if (!quote) {
+         console.log('Quote not found at index:', quoteIndex);
          alert('Quote not found!');
-         return;
+         return false;
        }
        
+       console.log('About to show confirmation for quote:', quote.quoteId);
        const confirmed = confirm(`Are you sure you want to delete quote ${quote.quoteId}? This action cannot be undone.`);
+       console.log('User confirmation result:', confirmed);
+       
        if (confirmed) {
+         console.log('Deleting quote:', quote.quoteId);
          savedQuotes.splice(quoteIndex, 1);
          localStorage.setItem('savedQuotes', JSON.stringify(savedQuotes));
          
@@ -6163,7 +6196,10 @@
          
          renderSavedQuotesList();
          alert(`Quote ${quote.quoteId} deleted successfully!`);
+         return true;
        }
+       console.log('User cancelled deletion');
+       return false;
      }
 
      function convertQuoteToOrder(quoteIndex) {
@@ -7422,6 +7458,15 @@
        console.log('populateSalesmanDropdown called');
        try {
          const response = await fetch('/api/get-data');
+         
+         // Check if response is JSON (API available) or HTML (static server)
+         const contentType = response.headers.get('content-type');
+         if (!contentType || !contentType.includes('application/json')) {
+           // API not available (using static server), use fallback data
+           console.log('API not available, using fallback salesmen data');
+           throw new Error('API not available');
+         }
+         
          const result = await response.json();
          console.log('API response:', result);
          

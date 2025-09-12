@@ -1,1178 +1,695 @@
-﻿    /* Base responsive styles */
-    .shadow-soft { box-shadow: 0 10px 25px rgba(0,0,0,0.08); }
-    
-    /* Touch-friendly interactive elements */
-    select, button, input[type="text"], input[type="number"] { 
-      min-height: 48px; 
-      font-size: 16px; /* Prevents zoom on iOS */
-      border-radius: 8px;
-      transition: all 0.2s ease;
-    }
-    
-    /* Enhanced visual feedback for form elements */
-    input[type="number"], input[type="text"], select {
-      transition: all 0.2s ease;
-    }
-    
-    input[type="number"]:focus, input[type="text"]:focus, select:focus {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
-    }
-    
-    input[type="number"]:hover, input[type="text"]:hover, select:hover {
-      border-color: #9ca3af;
-    }
-    
-    /* Loading spinner animation */
-    @keyframes spin {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
-    }
-    
-    .loading-spinner {
-      animation: spin 1s linear infinite;
-    }
-    
-    /* Pulse animation for loading states */
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
-    }
-    
-    .pulse {
-      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-    }
-    
-    /* Success/Error state indicators */
-    .success-glow {
-      box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2);
-      border-color: #22c55e;
-    }
-    
-    .error-glow {
-      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
-      border-color: #ef4444;
-    }
-    
-    /* Enhanced button styles with better touch targets */
-    button {
-      min-height: 48px;
-      padding: 12px 16px;
-      font-weight: 500;
-      cursor: pointer;
-      touch-action: manipulation;
-    }
-    
-    button:focus { 
-      outline: 3px solid #3b82f6; 
-      outline-offset: 2px; 
-    }
-    
-    button:disabled { 
-      cursor: not-allowed; 
-      opacity: 0.6;
-    }
-    
-    /* Button variants */
-    .btn-primary { 
-      background: #081249; 
-      color: white; 
-      border: 2px solid #081249;
-      box-shadow: 0 4px 12px rgba(8, 18, 73, 0.3);
-    }
-    .btn-primary:hover:not(:disabled) { 
-      background: #0a1555; 
-      border-color: #0a1555;
-      transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(8, 18, 73, 0.4);
-    }
-    
-    .btn-secondary { 
-      background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%); 
-      color: #475569; 
-      border: 2px solid #e2e8f0;
-      box-shadow: 0 4px 12px rgba(71, 85, 105, 0.15);
-    }
-    .btn-secondary:hover:not(:disabled) { 
-      background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%); 
-      border-color: #cbd5e1;
-      transform: translateY(-1px);
-      box-shadow: 0 6px 16px rgba(71, 85, 105, 0.2);
-    }
-    
-    .btn-info { 
-      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); 
-      color: white; 
-      border: 2px solid #2563eb;
-      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
-    }
-    .btn-info:hover:not(:disabled) { 
-      background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%); 
-      border-color: #1d4ed8;
-      transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
-    }
-    
-    /* Responsive typography */
-    .chip { 
-      display: inline-flex; 
-      align-items: center; 
-      gap: 0.5rem; 
-      padding: 0.5rem 0.75rem; 
-      border-radius: 9999px; 
-      background: #f1f5f9; 
-      color: #334155; 
-      font-size: 0.875rem;
-      min-height: 36px;
-      transition: all 0.2s ease;
-      cursor: pointer;
-    }
-    
-    .chip:hover {
-      background: #e2e8f0;
-      transform: translateY(-1px);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    }
-    
-    .chip:active {
-      transform: translateY(0);
-      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
-    }
-    
-    /* Responsive grid system */
-    .grid-col { 
-      display: grid; 
-      grid-template-columns: 1fr; 
-      gap: 1rem; 
-    }
-    
-    @media (min-width: 480px) { 
-      .grid-col { 
-        grid-template-columns: repeat(2, minmax(0, 1fr)); 
-        gap: 0.75rem;
-      }
-    }
-    
-    @media (min-width: 768px) { 
-      .grid-col { 
-        grid-template-columns: repeat(3, minmax(0, 1fr)); 
-        gap: 0.5rem;
-      }
-    }
-    
-    /* Fluid typography system */
-     html {
-       font-size: clamp(14px, 2.5vw, 16px);
-     }
-     
-     body {
-       font-size: 1rem;
-       line-height: 1.6;
-       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-     }
-     
-     /* Responsive heading scales */
-     h1 {
-       font-size: clamp(1.5rem, 4vw, 2.5rem);
-       line-height: 1.2;
-       font-weight: 700;
-       color: #081249;
-     }
-     
-     h2 {
-       font-size: clamp(1.25rem, 3vw, 2rem);
-       line-height: 1.3;
-       font-weight: 600;
-       color: #081249;
-     }
-     
-     h3 {
-       font-size: clamp(1.125rem, 2.5vw, 1.5rem);
-       line-height: 1.4;
-       font-weight: 600;
-       color: #081249;
-     }
-     
-     /* Responsive text sizes */
-     .text-xs { font-size: clamp(0.75rem, 1.5vw, 0.875rem); }
-     .text-sm { font-size: clamp(0.875rem, 2vw, 1rem); }
-     .text-base { font-size: clamp(1rem, 2.5vw, 1.125rem); }
-     .text-lg { font-size: clamp(1.125rem, 3vw, 1.25rem); }
-     .text-xl { font-size: clamp(1.25rem, 3.5vw, 1.5rem); }
-     
-     /* Enhanced readability */
-     p, span, div {
-       line-height: 1.6;
-     }
-     
-     label {
-       font-weight: 500;
-       line-height: 1.4;
-     }
-     
-     /* Mobile-first responsive breakpoints */
-     @media (max-width: 640px) { 
-       .stack-mobile { 
-         flex-direction: column; 
-         gap: 1rem;
-       }
-       
-       /* Enhanced mobile typography */
-       body {
-         font-size: 16px; /* Prevents zoom on iOS */
-         line-height: 1.7;
-       }
-       
-       /* Better spacing on mobile */
-       .mobile-padding {
-         padding: 1rem;
-       }
-       
-       /* Full-width elements on mobile */
-       .mobile-full {
-         width: 100%;
-       }
-       
-       /* Hide less important elements on very small screens */
-       .mobile-hide {
-         display: none;
-       }
-       
-       /* Improved mobile text spacing */
-       p, div, span {
-         line-height: 1.7;
-       }
-       
-       /* Better button text on mobile */
-       button {
-         font-size: 16px;
-         line-height: 1.4;
-         letter-spacing: 0.025em;
-       }
-       
-       /* Make icons 2x bigger on mobile */
-       .md\:hidden button span:first-child,
-       .mobile-full span[aria-hidden="true"],
-       button span.text-base,
-       button span.text-lg {
-         font-size: 2em !important;
-         line-height: 1;
-       }
-     }
-    
-    @media (max-width: 480px) {
-      /* Extra small screens */
-      .container {
-        padding-left: 0.75rem;
-        padding-right: 0.75rem;
-      }
-      
-      /* Smaller buttons on very small screens but still touch-friendly */
-      button {
-        min-height: 44px;
-        padding: 10px 12px;
-        font-size: 14px;
-      }
-      
-      /* Compact grid on very small screens */
-      .grid-cols-2 {
-        grid-template-columns: 1fr;
-      }
-      
-      /* Admin modal adjustments for very small screens */
-      #adminModal .bg-white {
-        margin: 1rem;
-        max-height: calc(100vh - 2rem);
-      }
-      
-      /* Ensure dropdowns don't overflow on small screens */
-      .dropdown-list {
-        max-height: 150px;
-      }
-      
-      /* Better spacing for form elements */
-      .space-y-4 > * + * {
-        margin-top: 1rem;
-      }
-      
-      /* Ensure icons remain 2x bigger on smaller mobile screens */
-      .md\:hidden button span:first-child,
-      .mobile-full span[aria-hidden="true"],
-      button span.text-base,
-      button span.text-lg {
-        font-size: 2em !important;
-        line-height: 1;
-      }
-    }
-    
-    /* Consistent spacing utilities */
-    .section-spacing {
-      margin-bottom: 1.5rem;
-    }
-    
-    @media (max-width: 640px) {
-      .section-spacing {
-        margin-bottom: 1rem;
-      }
-    }
-    
-    /* Responsive form elements */
-    .form-input {
-      width: 100%;
-      padding: 0.75rem;
-      border: 2px solid #e5e7eb;
-      border-radius: 0.5rem;
-      font-size: 1rem;
-      transition: all 0.2s ease;
-    }
-    
-    .form-input:focus {
-      outline: none;
-      border-color: #3b82f6;
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-    }
-    
-    @media (max-width: 480px) {
-      .form-input {
-        padding: 0.625rem;
-        font-size: 0.875rem;
-      }
-    }
-    
-    /* Responsive card layouts */
-    .card-responsive {
-      background: white;
-      border-radius: 0.75rem;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-      padding: 1.5rem;
-      margin-bottom: 1.5rem;
-    }
-    
-    @media (max-width: 640px) {
-      .card-responsive {
-        padding: 1rem;
-        margin-bottom: 1rem;
-        border-radius: 0.5rem;
-      }
-    }
-    
-    @media (max-width: 480px) {
-      .card-responsive {
-        padding: 0.75rem;
-        margin-bottom: 0.75rem;
-      }
-    }
-    /* Enhanced dropdown styles for mobile */
-    .custom-dropdown { 
-      position: relative; 
-      width: 100%; 
-    }
-    
-    .dropdown-btn { 
-      display: flex; 
-      justify-content: space-between; 
-      align-items: center;
-      cursor: pointer;
-      padding: 12px 16px;
-      border: 2px solid #d1d5db;
-      border-radius: 8px;
-      background: white;
-      min-height: 48px;
-      width: 100%;
-      box-sizing: border-box;
-      font-size: 16px;
-      transition: all 0.2s ease;
-      touch-action: manipulation;
-    }
-    
-    .dropdown-btn:hover:not(:disabled) {
-      border-color: #9ca3af;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      transform: translateY(-1px);
-    }
-    
-    .dropdown-btn:focus {
-      outline: 3px solid #3b82f6;
-      outline-offset: 2px;
-      border-color: #3b82f6;
-    }
-    
-    .dropdown-btn:active {
-      transform: translateY(0);
-    }
-    
-    .dropdown-btn:disabled { 
-      cursor: not-allowed;
-      background-color: #f9fafb;
-      color: #6b7280;
-      opacity: 0.6;
-    }
-    
-    .dropdown-btn::after {
-      content: 'â–¼';
-      font-size: 14px;
-      color: #6b7280;
-      transition: transform 0.2s ease;
-    }
-    
-    .dropdown-btn.open::after {
-      transform: rotate(180deg);
-    }
-    
-    .dropdown-list {
-      position: absolute;
-      top: 100%;
-      left: 0;
-      right: 0;
-      background: white;
-      border: 2px solid #d1d5db;
-      border-radius: 8px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-      max-height: 240px;
-      overflow-y: auto;
-      z-index: 1000;
-      margin-top: 4px;
-      width: 100%;
-      box-sizing: border-box;
-    }
-    
-    .dropdown-list.hidden {
-      display: none;
-    }
-    
-    .dropdown-option {
-      padding: 12px 16px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      border-bottom: 1px solid #f3f4f6;
-      font-size: 16px;
-      min-height: 48px;
-      transition: background-color 0.2s ease;
-      touch-action: manipulation;
-    }
-    
-    .dropdown-option:last-child {
-      border-bottom: none;
-    }
-    
-    .dropdown-option:hover {
-      background-color: #f1f5f9;
-    }
-    
-    .dropdown-option:active {
-      background-color: #e2e8f0;
-    }
-    
-    /* Checkbox styles removed */
-    
-    .dropdown-option label {
-      cursor: pointer;
-      flex: 1;
-      font-weight: 400;
-      line-height: 1.4;
-    }
-    
-    /* Mobile-specific dropdown optimizations */
-    @media (max-width: 640px) {
-      .dropdown-list {
-        max-height: 200px;
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-      }
-      
-      .dropdown-option {
-        padding: 14px 16px;
-        min-height: 52px;
-      }
-      
-      /* Better mobile header layout */
-      .header-mobile {
-        flex-wrap: wrap;
-        justify-content: center;
-      }
-      
-      /* Improved mobile controls layout */
-      .grid.grid-cols-1.sm\:grid-cols-2.lg\:grid-cols-3 {
-        grid-template-columns: 1fr;
-        gap: 1rem;
-      }
-      
-      /* Enhanced mobile layout */
-      .container {
-        padding-left: 1rem;
-        padding-right: 1rem;
-      }
-      
-      /* Better mobile grid spacing */
-      .grid {
-        gap: 0.75rem;
-      }
-      
-      /* Mobile-optimized preview section */
-      .preview-container {
-        margin: 0 -1rem;
-        border-radius: 0;
-      }
-      
-      /* Improved mobile header */
-      .header-mobile {
-        flex-direction: column;
-        gap: 1rem;
-        text-align: center;
-      }
-      
-      /* Better mobile form layout */
-      .form-row {
-        flex-direction: column;
-        gap: 1rem;
-      }
-      
-      /* Enhanced mobile buttons */
-      .mobile-button-stack {
-        flex-direction: column;
-        width: 100%;
-      }
-      
-      .mobile-button-stack button {
-        width: 100%;
-        margin-bottom: 0.5rem;
-      }
-      
-      /* Mobile-friendly feature images */
-      .feature-images-mobile {
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 0.5rem;
-      }
-      
-      .mobile-feature-section {
-        padding: 0.5rem !important;
-      }
-      
-      .mobile-feature-images {
-        width: 100% !important;
-        max-width: 100% !important;
-        gap: 0.25rem !important;
-        padding: 4px !important;
-        justify-content: center;
-      }
-      
-      .mobile-feature-img {
-        height: 45px !important;
-        max-width: 55px !important;
-        flex-shrink: 0;
-      }
-      
-      /* Better mobile typography */
-      .mobile-text-adjust {
-        font-size: 14px;
-        line-height: 1.5;
-      }
-    }
-      
-      /* Checkbox styles removed */
-    
-    /* Navigation Menu Styles */
-    .nav-btn {
-      background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
-      color: #475569;
-      border: 2px solid #e2e8f0;
-      box-shadow: 0 2px 8px rgba(71, 85, 105, 0.1);
-      min-height: 48px;
-      cursor: pointer;
-      touch-action: manipulation;
-    }
-    
-    .nav-btn:hover {
-      background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
-      border-color: #cbd5e1;
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(71, 85, 105, 0.15);
-    }
-    
-    .nav-btn-active {
-      background: linear-gradient(135deg, #081249 0%, #0a1555 100%);
-      color: white;
-      border-color: #081249;
-      box-shadow: 0 4px 12px rgba(8, 18, 73, 0.3);
-    }
-    
-    .nav-btn-active:hover {
-      background: linear-gradient(135deg, #0a1555 0%, #0c1a66 100%);
-      border-color: #0a1555;
-      transform: translateY(-1px);
-      box-shadow: 0 6px 16px rgba(8, 18, 73, 0.4);
-    }
-    
-    /* Module Content Styles */
-    .module-content {
-      display: none;
-    }
-    
-    .module-content.active {
-      display: block;
-    }
-    
-    /* Responsive navigation */
-    @media (max-width: 640px) {
-      .nav-btn span:last-child {
-        display: none;
-      }
-      
-      .nav-btn {
-        min-width: 60px;
-        justify-content: center;
-      }
-    }
-    
-    /* Mobile-friendly table styles */
-    @media (max-width: 768px) {
-      .table-container {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-      }
-      
-      table {
-        min-width: 600px;
-      }
-      
-      th, td {
-        white-space: nowrap;
-        min-width: 80px;
-      }
-      
-      th:first-child, td:first-child {
-        position: sticky;
-        left: 0;
-        background: inherit;
-        z-index: 1;
-      }
-      
-      th:first-child {
-        background: #f8fafc;
-      }
-    }
-    
-    /* Enhanced table responsiveness */
-    .table-responsive {
-      border-radius: 8px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    }
-    
-    /* Touch-friendly table cells */
-    td input, td select {
-      width: 100%;
-      min-width: 60px;
-    }
+/* Global Styles */
+* {
+  box-sizing: border-box;
+}
 
-    /* Saved Quotes List Styles - Slim Design */
-    .saved-quotes-container {
-      margin-top: 12px;
-      padding: 8px;
-      background-color: #f8f9fa;
-      border-radius: 4px;
-      border: 1px solid #dee2e6;
-    }
-    
-    /* Enhanced Checkbox Styling */
-    .quote-checkbox {
-      appearance: none;
-      -webkit-appearance: none;
-      -moz-appearance: none;
-      width: 1rem;
-      height: 1rem;
-      border: 2px solid #d1d5db;
-      border-radius: 0.25rem;
-      background-color: #f9fafb;
-      cursor: pointer;
-      position: relative;
-      transition: all 0.2s ease;
-    }
-    
-    .quote-checkbox:checked {
-      background-color: #1e3a8a;
-      border-color: #1e3a8a;
-    }
-    
-    .quote-checkbox:checked::after {
-      content: 'âœ“';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      color: white;
-      font-size: 0.75rem;
-      font-weight: bold;
-      line-height: 1;
-    }
-    
-    .quote-checkbox:hover {
-      border-color: #3b82f6;
-    }
-    
-    .quote-checkbox:focus {
-      outline: none;
-      ring: 2px;
-      ring-color: #3b82f6;
-      ring-opacity: 0.5;
-    }
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #f8fafc;
+  color: #334155;
+  line-height: 1.6;
+}
 
-    .saved-quotes-list {
-      max-height: 190px;
-      overflow-y: auto;
-      margin-top: 6px;
-    }
+/* Utility Classes */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
 
-    .quote-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 4px 6px;
-      margin-bottom: 2px;
-      background-color: white;
-      border: 1px solid #e9ecef;
-      border-radius: 2px;
-      cursor: pointer;
-      transition: all 0.15s ease;
-    }
+.card-responsive {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
 
-    .quote-item:hover {
-      background-color: #e3f2fd;
-      border-color: #2196f3;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.08);
-    }
+.section-spacing {
+  margin-bottom: 2rem;
+}
 
-    .quote-info {
-      flex: 1;
-      line-height: 1.2;
-    }
+/* Button Styles */
+.btn-primary {
+  background-color: #10b981;
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
 
-    .quote-id {
-      font-weight: 600;
-      color: #2c3e50;
-      font-size: 11px;
-    }
+.btn-primary:hover {
+  background-color: #059669;
+}
 
-    .quote-details {
-      font-size: 10px;
-      color: #6c757d;
-      margin-top: 1px;
-    }
+.btn-secondary {
+  background-color: #e2e8f0;
+  color: #475569;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
 
-    .quote-actions-btn {
-      background: #007bff;
-      color: white;
-      border: none;
-      padding: 3px 6px;
-      border-radius: 2px;
-      font-size: 10px;
-      cursor: pointer;
-      transition: background-color 0.15s;
-    }
+.btn-secondary:hover {
+  background-color: #cbd5e1;
+}
 
-    .quote-actions-btn:hover {
-      background: #0056b3;
-    }
+/* Navigation Styles */
+.nav-btn {
+  background-color: #f1f5f9;
+  color: #64748b;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
 
-    .quote-actions-dropdown {
-      position: absolute;
-      background: white;
-      border: 1px solid #ccc;
-      border-radius: 3px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.12);
-      z-index: 1000;
-      min-width: 120px;
-      overflow: hidden;
-    }
+.nav-btn:hover {
+  background-color: #e2e8f0;
+  color: #475569;
+}
 
-    .quote-actions-dropdown button {
-      display: block;
-      width: 100%;
-      padding: 6px 10px;
-      border: none;
-      background: white;
-      text-align: left;
-      cursor: pointer;
-      font-size: 11px;
-      transition: background-color 0.15s;
-    }
+.nav-btn-active {
+  background-color: #10b981;
+  color: white;
+}
 
-    .quote-actions-dropdown button:hover {
-      background-color: #f8f9fa;
-    }
+/* Form Elements */
+select, input {
+  font-family: inherit;
+  font-size: 0.875rem;
+}
 
-    .quote-actions-dropdown button.recall {
-      color: #28a745;
-    }
+select:focus, input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
 
-    .quote-actions-dropdown button.convert {
-      color: #007bff;
-    }
+/* Custom Dropdown Styles */
+.custom-dropdown {
+  position: relative;
+}
 
-    .quote-actions-dropdown button.delete {
-      color: #dc3545;
-    }
+.dropdown-btn {
+  background: white;
+  border: 1px solid #d1d5db;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
 
-    .no-quotes-message {
-      text-align: center;
-      color: #6c757d;
-      font-style: italic;
-      padding: 12px;
-      font-size: 11px;
-    }
+.dropdown-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
 
-    /* Custom background colors for table headers - Monochromatic */
-    .bg-gray-25 {
-      background-color: rgba(107, 114, 128, 0.05);
-    }
-    
-    .bg-gray-100 {
-      background-color: rgba(243, 244, 246, 1);
-    }
-    
-    .bg-gray-150 {
-      background-color: rgba(229, 231, 235, 1);
-    }
-    
-    .bg-gray-200 {
-      background-color: rgba(209, 213, 219, 1);
-    }
-    
-    .bg-gray-300 {
-      background-color: rgba(156, 163, 175, 1);
-    }
-    
-    /* Enhanced hover effects for table rows - Monochromatic */
-    .hover\:from-gray-150:hover {
-      background-image: linear-gradient(to right, rgba(229, 231, 235, 1), rgba(209, 213, 219, 1));
-    }
-    
-    .hover\:to-gray-200:hover {
-      background-image: linear-gradient(to right, rgba(229, 231, 235, 1), rgba(209, 213, 219, 1));
-    }
-    
-    .hover\:from-gray-200:hover {
-      background-image: linear-gradient(to right, rgba(209, 213, 219, 1), rgba(156, 163, 175, 1));
-    }
-    
-    .hover\:to-gray-300:hover {
-      background-image: linear-gradient(to right, rgba(209, 213, 219, 1), rgba(156, 163, 175, 1));
-    }
+.dropdown-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  max-height: 200px;
+  overflow-y: auto;
+}
 
-    /* Column visibility controls */
-    .column-toggle {
-      transition: all 0.2s ease;
-    }
-    
-    .column-toggle:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    }
+.dropdown-list.hidden {
+  display: none;
+}
 
-    /* PNG Selection Dropdown Styles */
-     #pngSelectionDropdown {
-       position: absolute;
-       top: 100%;
-       left: 0;
-       right: 0;
-       background: white;
-       border: 2px solid #d1d5db;
-       border-radius: 8px;
-       box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-       max-height: 300px;
-       overflow-y: auto;
-       z-index: 1000;
-       margin-top: 4px;
-       width: 100%;
-       box-sizing: border-box;
-     }
+/* Preview Container */
+.preview-container {
+  min-height: 300px;
+}
 
-     #pngSelectionDropdown.hidden {
-       display: none;
-     }
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .mobile-padding {
+    padding: 1rem;
+  }
+  
+  .mobile-text-adjust {
+    font-size: 0.875rem;
+  }
+  
+  .mobile-full {
+    width: 100%;
+  }
+  
+  .mobile-button-stack {
+    flex-direction: column;
+  }
+  
+  .mobile-hide {
+    display: none;
+  }
+}
 
-     #pngSelectionDropdown .select-all-btn {
-       padding: 12px 16px;
-       background: #f8fafc;
-       border-bottom: 1px solid #e2e8f0;
-       font-weight: 500;
-       color: #3b82f6;
-       cursor: pointer;
-       transition: background-color 0.2s ease;
-     }
+/* Grid Utilities */
+.grid {
+  display: grid;
+}
 
-     #pngSelectionDropdown .select-all-btn:hover {
-       background: #e0f2fe;
-     }
+.grid-cols-1 {
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+}
 
-     #pngFilesList .png-file-option {
-       padding: 12px 16px;
-       cursor: pointer;
-       display: flex;
-       align-items: center;
-       gap: 12px;
-       border-bottom: 1px solid #f3f4f6;
-       font-size: 14px;
-       transition: background-color 0.2s ease;
-     }
+.grid-cols-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
 
-     #pngFilesList .png-file-option:last-child {
-       border-bottom: none;
-     }
+.grid-cols-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
 
-     #pngFilesList .png-file-option:hover {
-       background-color: #f1f5f9;
-     }
+.grid-cols-4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
 
-    /* Checkbox styles removed */
+.gap-1 {
+  gap: 0.25rem;
+}
 
-    #pngFilesList .png-file-option label {
-      cursor: pointer;
-      flex: 1;
-      font-weight: 400;
-      line-height: 1.4;
-    }
+.gap-2 {
+  gap: 0.5rem;
+}
 
-  <script src="quote-menu.js"></script>
- </head>
-<body class="bg-slate-100 min-h-screen text-slate-800">
+.gap-4 {
+  gap: 1rem;
+}
 
-  <!-- Top Menu Bar -->
-  <header class="bg-white shadow-soft mb-4">
-    <div class="max-w-4xl mx-auto px-3 sm:px-6">
-      <!-- Header with InstaQuote flush left and logo flush right -->
-      <div class="flex items-center justify-between py-3">
-        <!-- InstaQuote heading flush left -->
-        <h1 class="text-xl sm:text-2xl lg:text-3xl font-bold" style="line-height: 0.7;">
-          <span style="color: #081249;">Insta</span><span style="color: #9b7952;">Q</span><span style="color: #081249;">uote</span>
-        </h1>
-        
-        <!-- Logo flush right -->
-        <div class="flex-shrink-0">
-          <img src="images/logo.png" alt="Company Logo" class="h-12 sm:h-16 w-auto opacity-75 hover:opacity-100 transition-opacity duration-200">
-        </div>
-      </div>
-      
-      <!-- Navigation Menu below header -->
-      <div class="pb-3">
-        <nav class="hidden md:flex gap-2 justify-center">
-          <button id="nav-price-calculator" class="nav-btn nav-btn-active btn-primary px-4 py-2 rounded-lg font-medium hover:bg-emerald-700 transition-all duration-200 flex items-center gap-2">
-            <span>ðŸ“Š</span>
-            <span>PriceLists</span>
-          </button>
-          <button id="nav-quote-maker" class="nav-btn px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2">
-            <span class="text-lg">ðŸ“‹</span>
-            <span>Quote Maker</span>
-          </button>
-          <button id="nav-product-catalog" class="nav-btn px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2">
-            <span class="text-lg">ðŸ“¦</span>
-            <span>Product Catalog</span>
-          </button>
-          <button id="nav-admin-panel" class="nav-btn px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2">
-            <span class="text-lg">âš™ï¸</span>
-            <span>Admin Panel</span>
-          </button>
-        </nav>
-      </div>
-      
-      <!-- Mobile Navigation Menu -->
-      <nav class="md:hidden pb-3">
-        <div class="flex flex-wrap justify-center gap-2">
-          <button id="nav-price-calculator-mobile" class="nav-btn nav-btn-active btn-primary px-3 py-2 rounded-lg font-medium hover:bg-emerald-700 transition-all duration-200 flex items-center gap-1 text-sm">
-            <span>ðŸ“Š</span>
-            <span>PriceLists</span>
-          </button>
-          <button id="nav-quote-maker-mobile" class="nav-btn px-3 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-1 text-sm">
-            <span>ðŸ“‹</span>
-            <span>Quote</span>
-          </button>
-          <button id="nav-product-catalog-mobile" class="nav-btn px-3 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-1 text-sm">
-            <span>ðŸ“¦</span>
-            <span>Catalog</span>
-          </button>
-          <button id="nav-admin-panel-mobile" class="nav-btn px-3 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-1 text-sm">
-            <span>âš™ï¸</span>
-            <span>Admin</span>
-          </button>
-        </div>
-      </nav>
-    </div>
-  </header>
+/* Flexbox Utilities */
+.flex {
+  display: flex;
+}
 
-  <div class="max-w-4xl mx-auto p-3 sm:p-6 container">
+.flex-col {
+  flex-direction: column;
+}
 
-    <!-- Module Content Container -->
-    <div id="module-container">
-      
-      <!-- Price List Calculator Module -->
-      <div id="price-calculator-module" class="module-content">
-        <!-- Controls Section -->
-        <div class="card-responsive section-spacing">
-          <!-- First Row: Price List, Currency, Factor, Salesman -->
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-            <!-- Price List Selector -->
-            <div>
-              <select id="priceListSelector" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
-                <option value="">Select Price List</option>
-              </select>
-            </div>
-            
-            <!-- Currency Selector -->
-            <div>
-              <select id="currency" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
-                <option value="INR">â‚¹ INR - Indian Rupee</option>
-                <option value="USD">$ USD - US Dollar</option>
-                <option value="EUR">â‚¬ EUR - Euro</option>
-                <option value="GBP">Â£ GBP - British Pound</option>
-                <option value="AUD">A$ AUD - Australian Dollar</option>
-                <option value="SAR">SAR - Saudi Riyal</option>
-                <option value="NGN">â‚¦ NGN - Nigerian Naira</option>
-                <option value="AED">Ø¯.Ø¥ AED - UAE Dirham</option>
-                <option value="JPY">Â¥ JPY - Japanese Yen</option>
-              </select>
-            </div>
-            
-            <!-- Factor Input -->
-            <div>
-              <input type="number" id="priceFactor" value="" min="-100" max="1000" step="0.1" 
-                     class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none" 
-                     placeholder="Price Factor (%)"
-                     title="Price adjustment percentage: empty = no change, 10 = 10% increase, -10 = 10% decrease">
-            </div>
-            
-            <!-- Salesman Selector -->
-            <div>
-              <select id="price-calculator-salesman" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
-                <option value="">Select Salesman</option>
-              </select>
-            </div>
-          </div>
-          
-          <!-- Second Row: Category and Related Controls -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <!-- Category Selector -->
-            <div>
-              <select id="category" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
-                <option value="">Select Category</option>
-              </select>
-            </div>
-            
-            <!-- Control Options -->
-            <div>
-              <div class="flex flex-wrap gap-4">
-                <!-- Checkbox elements removed -->
-              </div>
-            </div>
-          </div>
-      
-      <!-- Products, Densities, and Colors -->
-      <div class="grid grid-cols-3 gap-1 mt-1">
-        <!-- Products -->
-        <div>
-          <div class="custom-dropdown" id="productDropdown">
-            <button class="dropdown-btn w-full border rounded-lg px-2 py-1 text-left bg-white disabled:opacity-60 text-sm" disabled>
-              <span class="dropdown-text">Select products...</span>
-            </button>
-            <div class="dropdown-list hidden absolute z-10 w-full bg-white border rounded-lg shadow-lg max-h-32 overflow-y-auto">
-              <!-- Options will be populated here -->
-            </div>
-          </div>
-        </div>
+.flex-row {
+  flex-direction: row;
+}
 
-        <!-- Densities -->
-        <div>
-          <div class="custom-dropdown" id="densityDropdown">
-            <button class="dropdown-btn w-full border rounded-lg px-2 py-1 text-left bg-white disabled:opacity-60 text-sm" disabled>
-              <span class="dropdown-text">Select densities...</span>
-            </button>
-            <div class="dropdown-list hidden absolute z-10 w-full bg-white border rounded-lg shadow-lg max-h-32 overflow-y-auto">
-              <!-- Options will be populated here -->
-            </div>
-          </div>
-        </div>
+.flex-wrap {
+  flex-wrap: wrap;
+}
 
-        <!-- Colors -->
-        <div>
-          <div class="custom-dropdown" id="colorDropdown">
-            <button class="dropdown-btn w-full border rounded-lg px-2 py-1 text-left bg-white disabled:opacity-60 text-sm" disabled>
-              <span class="dropdown-text">Select colors...</span>
-            </button>
-            <div class="dropdown-list hidden absolute z-10 w-full bg-white border rounded-lg shadow-lg max-h-32 overflow-y-auto">
-              <!-- Options will be populated here -->
-            </div>
-          </div>
-        </div>
-      </div>
+.items-center {
+  align-items: center;
+}
 
-      <!-- Second Row -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1 mt-1">
+.items-start {
+  align-items: flex-start;
+}
 
-        <!-- Actions -->
-        <div class="relative" style="margin-top: 20px;">
-          <div class="flex flex-col sm:flex-row gap-1 mobile-button-stack" id="actionButtonsContainer">
-            <button id="clearSegments" class="btn-secondary px-2 py-0 rounded-lg text-sm font-medium hover:bg-slate-300 transition-all duration-200 flex items-center justify-center gap-1 mobile-full" aria-label="Clear all selections" title="Clear all selections">
-              <span class="text-base" aria-hidden="true">ðŸ—‘ï¸</span>
-              <span>Clear</span>
-            </button>
-            <button id="previewBtn" class="btn-primary px-4 py-1 rounded-lg text-sm font-medium hover:bg-emerald-700 transition-all duration-200 flex items-center justify-center gap-1 mobile-full" aria-label="Generate preview" title="Generate preview">
-              <span class="text-base" aria-hidden="true">ðŸ‘ï¸</span>
-              <span>Preview</span>
-            </button>
-            <button id="shareBtn" class="btn-primary px-4 py-1 rounded-lg text-sm font-medium hover:bg-emerald-700 transition-all duration-200 flex items-center justify-center gap-1 mobile-full" aria-label="Share Quote" title="Share quote as image to clipboard">
-              <span class="text-base" aria-hidden="true">ðŸ“¤</span>
-              <span>Share</span>
-            </button>
-          </div>
-           
-           <!-- Enhanced Share Popup for Mobile -->
-           <div id="sharePopup" class="hidden absolute z-50 mt-2 w-full sm:w-64 bg-white border-2 rounded-xl shadow-xl p-3" style="top: 100%; left: 0; display: none;">
-             <div class="space-y-2">
+.justify-center {
+  justify-content: center;
+}
 
+.justify-between {
+  justify-content: space-between;
+}
 
-               <!-- Share Price Lists with Dropdown -->
-               <div class="relative">
-                 <button id="sharePNGBtn" class="w-full text-left px-4 py-3 text-base font-medium hover:bg-slate-100 rounded-lg flex items-center gap-3 transition-all duration-200 touch-action-manipulation">
-                   <span class="text-lg">ðŸ“¤</span> 
-                   <span>Share Price Lists</span>
-                 </button>
-                 <div id="pngSelectionDropdown" class="hidden">
-                   <div id="pngFilesList"></div>
-                   <button id="shareSelectedPNGs" class="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg font-medium transition-colors duration-200 mt-3 flex items-center justify-center gap-2" disabled>
-                     <span class="text-lg">ðŸ“¤</span>
-                     Share Selected File
-                   </button>
-                 </div>
-               </div>
+/* Spacing Utilities */
+.p-2 {
+  padding: 0.5rem;
+}
 
-             </div>
-           </div>
-         </div>
+.p-3 {
+  padding: 0.75rem;
+}
 
-        <!-- Segments (Hidden) -->
-        <div>
-          <div id="segmentsList" class="flex flex-wrap gap-2" style="display: none;"></div>
-        </div>
-      </div>
-    </div>
+.p-4 {
+  padding: 1rem;
+}
 
-    <!-- Preview Section -->
-    <div class="bg-white rounded-xl shadow-soft p-4 sm:p-6 mobile-padding preview-container">
-      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-2 form-row">
-        <h3 class="text-lg sm:text-xl font-semibold mobile-text-adjust">Preview</h3>
-        <div id="pageInfo" class="text-center text-sm text-slate-500 min-w-[120px] bg-slate-50 px-3 py-1 rounded-full mobile-text-adjust" role="status" aria-live="polite"></div>
-      </div>
-      <div class="w-full overflow-auto border-2 border-slate-200 rounded-lg">
-        <div id="htmlPreview" class="w-full bg-white min-h-[200px] p-2 sm:p-4 flex justify-center">
-          <div class="w-full max-w-[515px] mx-auto" style="min-width: 320px;">
-            <!-- HTML preview content will be generated here -->
-          </div>
-        </div>
-      </div>
-    </div>
+.p-6 {
+  padding: 1.5rem;
+}
 
-    <footer class="text-center text-xs text-slate-500 mt-6 mobile-hide">
-      Assets in <code>/images</code>: <code>logo.png</code>, <code>geniusstamps.png</code>, <code>lacestamps.png</code>, <code>tapesstamps.png</code>, <code>tipsstamps.png</code>, <code>generalstamps.png</code>.
-    </footer>
-  </div>
+.px-2 {
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
+.px-3 {
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+}
+
+.px-4 {
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+.py-1 {
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+}
+
+.py-2 {
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+.py-3 {
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+}
+
+.mb-4 {
+  margin-bottom: 1rem;
+}
+
+.mt-1 {
+  margin-top: 0.25rem;
+}
+
+.mt-6 {
+  margin-top: 1.5rem;
+}
+
+/* Text Utilities */
+.text-sm {
+  font-size: 0.875rem;
+}
+
+.text-lg {
+  font-size: 1.125rem;
+}
+
+.text-xl {
+  font-size: 1.25rem;
+}
+
+.text-2xl {
+  font-size: 1.5rem;
+}
+
+.text-3xl {
+  font-size: 1.875rem;
+}
+
+.font-medium {
+  font-weight: 500;
+}
+
+.font-semibold {
+  font-weight: 600;
+}
+
+.font-bold {
+  font-weight: 700;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-left {
+  text-align: left;
+}
+
+/* Color Utilities */
+.text-slate-500 {
+  color: #64748b;
+}
+
+.text-slate-800 {
+  color: #1e293b;
+}
+
+.bg-white {
+  background-color: white;
+}
+
+.bg-slate-50 {
+  background-color: #f8fafc;
+}
+
+.bg-slate-100 {
+  background-color: #f1f5f9;
+}
+
+/* Border Utilities */
+.border {
+  border-width: 1px;
+}
+
+.border-2 {
+  border-width: 2px;
+}
+
+.border-gray-300 {
+  border-color: #d1d5db;
+}
+
+.border-slate-200 {
+  border-color: #e2e8f0;
+}
+
+.rounded-lg {
+  border-radius: 0.5rem;
+}
+
+.rounded-xl {
+  border-radius: 0.75rem;
+}
+
+.rounded-full {
+  border-radius: 9999px;
+}
+
+/* Shadow Utilities */
+.shadow-soft {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.shadow-lg {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.shadow-xl {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+/* Width Utilities */
+.w-full {
+  width: 100%;
+}
+
+.w-auto {
+  width: auto;
+}
+
+.max-w-4xl {
+  max-width: 56rem;
+}
+
+.min-w-120 {
+  min-width: 120px;
+}
+
+.max-w-515 {
+  max-width: 515px;
+}
+
+/* Height Utilities */
+.h-12 {
+  height: 3rem;
+}
+
+.h-16 {
+  height: 4rem;
+}
+
+.min-h-screen {
+  min-height: 100vh;
+}
+
+.min-h-200 {
+  min-height: 200px;
+}
+
+.max-h-32 {
+  max-height: 8rem;
+}
+
+/* Position Utilities */
+.relative {
+  position: relative;
+}
+
+.absolute {
+  position: absolute;
+}
+
+.hidden {
+  display: none;
+}
+
+/* Z-index Utilities */
+.z-10 {
+  z-index: 10;
+}
+
+.z-50 {
+  z-index: 50;
+}
+
+/* Overflow Utilities */
+.overflow-auto {
+  overflow: auto;
+}
+
+.overflow-y-auto {
+  overflow-y: auto;
+}
+
+/* Transition Utilities */
+.transition-all {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+.transition-colors {
+  transition-property: color, background-color, border-color;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+.transition-opacity {
+  transition-property: opacity;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+.duration-200 {
+  transition-duration: 200ms;
+}
+
+/* Opacity Utilities */
+.opacity-60 {
+  opacity: 0.6;
+}
+
+.opacity-75 {
+  opacity: 0.75;
+}
+
+/* Hover States */
+.hover-opacity-100:hover {
+  opacity: 1;
+}
+
+.hover-bg-emerald-700:hover {
+  background-color: #047857;
+}
+
+.hover-bg-slate-100:hover {
+  background-color: #f1f5f9;
+}
+
+.hover-bg-slate-300:hover {
+  background-color: #cbd5e1;
+}
+
+.hover-bg-gray-100:hover {
+  background-color: #f3f4f6;
+}
+
+.hover-bg-blue-50:hover {
+  background-color: #eff6ff;
+}
+
+.hover-bg-green-50:hover {
+  background-color: #f0fdf4;
+}
+
+.hover-bg-red-50:hover {
+  background-color: #fef2f2;
+}
+
+.hover-bg-green-700:hover {
+  background-color: #15803d;
+}
+
+/* Focus States */
+.focus-border-blue-500:focus {
+  border-color: #3b82f6;
+}
+
+.focus-outline-none:focus {
+  outline: none;
+}
+
+/* Responsive Design */
+@media (min-width: 640px) {
+  .sm\:px-6 {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+  
+  .sm\:p-6 {
+    padding: 1.5rem;
+  }
+  
+  .sm\:p-4 {
+    padding: 1rem;
+  }
+  
+  .sm\:text-2xl {
+    font-size: 1.5rem;
+  }
+  
+  .sm\:h-16 {
+    height: 4rem;
+  }
+  
+  .sm\:flex-row {
+    flex-direction: row;
+  }
+  
+  .sm\:items-center {
+    align-items: center;
+  }
+  
+  .sm\:w-64 {
+    width: 16rem;
+  }
+  
+  .sm\:grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 768px) {
+  .md\:flex {
+    display: flex;
+  }
+  
+  .md\:hidden {
+    display: none;
+  }
+  
+  .md\:grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .lg\:text-3xl {
+    font-size: 1.875rem;
+  }
+  
+  .lg\:grid-cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  
+  .lg\:grid-cols-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* Module Content */
+.module-content {
+  display: block;
+}
+
+.module-content.hidden {
+  display: none;
+}
+
+/* Form Row */
+.form-row {
+  margin-bottom: 1rem;
+}
+
+/* Flex Shrink */
+.flex-shrink-0 {
+  flex-shrink: 0;
+}
+
+/* Space Y */
+.space-y-2 > * + * {
+  margin-top: 0.5rem;
+}
+
+/* Touch Action */
+.touch-action-manipulation {
+  touch-action: manipulation;
+}
+
+/* Text Colors */
+.text-gray-500 {
+  color: #6b7280;
+}
+
+.text-gray-700 {
+  color: #374151;
+}
+
+.text-blue-600 {
+  color: #2563eb;
+}
+
+.text-green-600 {
+  color: #16a34a;
+}
+
+.text-red-600 {
+  color: #dc2626;
+}
+
+.text-white {
+  color: white;
+}
+
+/* Background Colors */
+.bg-green-600 {
+  background-color: #16a34a;
+}
+
+/* PNG Files List Styles */
+#pngFilesList {
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+  margin: 0.5rem 0;
+}
+
+#pngFilesList .png-file-option {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+  margin-bottom: 0.25rem;
+  transition: background-color 0.2s;
+}
+
+#pngFilesList .png-file-option:hover {
+  background-color: #f9fafb;
+}
+
+#pngFilesList .png-file-option input[type="checkbox"] {
+  margin-right: 0.5rem;
+}
+
+#pngFilesList .png-file-option label {
+  cursor: pointer;
+  flex: 1;
+  font-weight: 400;
+  line-height: 1.4;
+}
 
