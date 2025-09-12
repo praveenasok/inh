@@ -169,6 +169,53 @@ function writeJsonFile(data) {
   }
 }
 
+// Embed data into HTML file for production
+function embedDataIntoHTML(data) {
+  log('Embedding data into HTML for production...');
+  
+  const htmlFilePath = path.join(__dirname, 'index.html');
+  
+  try {
+    let htmlContent = fs.readFileSync(htmlFilePath, 'utf8');
+    
+    // Create backup
+    const timestamp = Date.now();
+    const backupPath = path.join(__dirname, `index_backup_${timestamp}.html`);
+    fs.writeFileSync(backupPath, htmlContent, 'utf8');
+    log(`HTML backup created: ${backupPath}`);
+    
+    // Create the embedded data script
+    const embeddedDataScript = `<script type="application/json" id="EMBEDDED_DATA">${JSON.stringify(data, null, 2)}</script>`;
+    
+    // Check if EMBEDDED_DATA script already exists
+    const embeddedDataRegex = /<script[^>]*id=["']EMBEDDED_DATA["'][^>]*>[\s\S]*?<\/script>/;
+    
+    if (embeddedDataRegex.test(htmlContent)) {
+      // Replace existing embedded data
+      htmlContent = htmlContent.replace(embeddedDataRegex, embeddedDataScript);
+      log('Updated existing embedded data');
+    } else {
+      // Add embedded data script before the closing </head> tag
+      const headCloseRegex = /<\/head>/;
+      if (headCloseRegex.test(htmlContent)) {
+        htmlContent = htmlContent.replace(headCloseRegex, `  ${embeddedDataScript}\n</head>`);
+        log('Added new embedded data script');
+      } else {
+        throw new Error('Could not find </head> tag to insert embedded data');
+      }
+    }
+    
+    // Write updated HTML
+    fs.writeFileSync(htmlFilePath, htmlContent, 'utf8');
+    
+    const stats = fs.statSync(htmlFilePath);
+    log(`HTML file updated: ${(stats.size / 1024).toFixed(2)} KB`, 'success');
+    
+  } catch (error) {
+    throw new Error(`Failed to embed data into HTML: ${error.message}`);
+  }
+}
+
 // Git operations
 function commitChanges() {
   log('Committing changes to Git...');
@@ -233,10 +280,13 @@ async function deploy() {
     // Step 4: Write JSON file
     writeJsonFile(jsonData);
     
-    // Step 5: Commit changes
+    // Step 5: Embed data into HTML for production
+    embedDataIntoHTML(jsonData);
+    
+    // Step 6: Commit changes
     const hasChanges = commitChanges();
     
-    // Step 6: Deploy to Firebase
+    // Step 7: Deploy to Firebase
     if (hasChanges) {
       deployToFirebase();
     } else {
@@ -282,4 +332,4 @@ if (require.main === module) {
   }
 }
 
-module.exports = { deploy, validateExcelFile, convertExcelToJson, backupExistingJson, writeJsonFile };
+module.exports = { deploy, validateExcelFile, convertExcelToJson, backupExistingJson, writeJsonFile, embedDataIntoHTML };
