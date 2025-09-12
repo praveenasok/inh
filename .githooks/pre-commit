@@ -1,0 +1,57 @@
+#!/bin/sh
+#
+# Pre-commit hook to validate Excel file and update JSON data
+# This ensures data consistency before commits
+
+echo "🔍 Running pre-commit validation..."
+
+# Check if Excel file exists
+if [ ! -f "PriceLists/productData.xlsx" ]; then
+    echo "❌ Error: Excel file PriceLists/productData.xlsx not found!"
+    echo "   Please ensure the Excel file is in the correct location."
+    exit 1
+fi
+
+# Validate Excel file
+echo "📊 Validating Excel file..."
+if ! npm run validate-excel > /dev/null 2>&1; then
+    echo "❌ Error: Excel file validation failed!"
+    echo "   Please check the Excel file format and try again."
+    exit 1
+fi
+
+# Check if data.json needs updating
+if [ -f "data.json" ]; then
+    # Get modification times
+    EXCEL_TIME=$(stat -f "%m" "PriceLists/productData.xlsx" 2>/dev/null || stat -c "%Y" "PriceLists/productData.xlsx" 2>/dev/null)
+    JSON_TIME=$(stat -f "%m" "data.json" 2>/dev/null || stat -c "%Y" "data.json" 2>/dev/null)
+    
+    if [ "$EXCEL_TIME" -gt "$JSON_TIME" ]; then
+        echo "📝 Excel file is newer than JSON, updating data.json..."
+        
+        # Convert Excel to JSON
+        if node deploy.js --convert-only; then
+            echo "✅ data.json updated successfully"
+            git add data.json
+        else
+            echo "❌ Error: Failed to update data.json from Excel"
+            exit 1
+        fi
+    else
+        echo "✅ data.json is up to date"
+    fi
+else
+    echo "📝 Creating data.json from Excel file..."
+    
+    # Convert Excel to JSON
+    if node deploy.js --convert-only; then
+        echo "✅ data.json created successfully"
+        git add data.json
+    else
+        echo "❌ Error: Failed to create data.json from Excel"
+        exit 1
+    fi
+fi
+
+echo "✅ Pre-commit validation passed!"
+exit 0

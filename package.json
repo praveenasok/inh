@@ -7,7 +7,13 @@
     "start": "node server.js",
     "dev": "node server.js",
     "python-server": "python3 -m http.server 8000",
-    "node-server": "node server.js"
+    "node-server": "node server.js",
+    "deploy": "node deploy.js",
+    "validate-excel": "node -e \"require('./deploy.js').validateExcelFile()\"",
+    "convert-excel": "node -e \"console.log(JSON.stringify(require('./deploy.js').convertExcelToJson(), null, 2))\"",
+    "deploy-quick": "npm run validate-excel && npm run deploy",
+    "setup-deployment": "node setup-deployment.js",
+    "postinstall": "node setup-deployment.js"
   },
   "keywords": [
     "price-list",
