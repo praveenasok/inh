@@ -10165,7 +10165,20 @@
         // Try to load data from embedded script first
         const embeddedElement = document.getElementById('EMBEDDED_DATA');
         if (embeddedElement && embeddedElement.textContent.trim()) {
-          productData = JSON.parse(embeddedElement.textContent);
+          const embeddedData = JSON.parse(embeddedElement.textContent);
+          // Handle both old format (array) and new format (object with products)
+          if (Array.isArray(embeddedData)) {
+            productData = embeddedData;
+          } else if (embeddedData && embeddedData.products && Array.isArray(embeddedData.products)) {
+            productData = embeddedData.products;
+            // Also store salesmen data if available
+            if (embeddedData.salesmen) {
+              window.embeddedSalesmenData = embeddedData.salesmen;
+            }
+          } else {
+            console.warn('Invalid embedded data format, falling back to localStorage');
+            productData = [];
+          }
         } else {
           // Try to load from localStorage as fallback
           const storedData = localStorage.getItem('productData');
