@@ -1,9 +1,9 @@
 {
   "projects": {
-    "default": "quotemaker-app"
+    "default": "inhpricelistgenerator"
   },
   "targets": {
-    "quotemaker-app": {
+    "inhpricelistgenerator": {
       "hosting": {
         "inhpricelistgenerator": [
           "inhpricelistgenerator"
