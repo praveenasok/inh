@@ -1,0 +1,43 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow read/write access to all users for now
+    // In production, implement proper authentication and authorization
+    match /{document=**} {
+      allow read, write: if true;
+    }
+    
+    // Client data collection
+    match /clients/{clientId} {
+      allow read, write: if true;
+      // Future: allow read, write: if request.auth != null;
+    }
+    
+    // Product data collection
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if true;
+      // Future: allow write: if request.auth != null && request.auth.token.admin == true;
+    }
+    
+    // Quotes collection
+    match /quotes/{quoteId} {
+      allow read, write: if true;
+      // Future: allow read, write: if request.auth != null;
+    }
+    
+    // Salesmen data collection
+    match /salesmen/{salesmanId} {
+      allow read: if true;
+      allow write: if true;
+      // Future: allow write: if request.auth != null && request.auth.token.admin == true;
+    }
+    
+    // System configuration
+    match /config/{configId} {
+      allow read: if true;
+      allow write: if true;
+      // Future: allow write: if request.auth != null && request.auth.token.admin == true;
+    }
+  }
+}

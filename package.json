@@ -13,6 +13,11 @@
     "convert-excel": "node -e \"console.log(JSON.stringify(require('./deploy.js').convertExcelToJson(), null, 2))\"",
     "deploy-quick": "npm run validate-excel && npm run deploy",
     "setup-deployment": "node setup-deployment.js",
+    "setup-firebase": "node setup-firebase.js",
+    "firebase-login": "firebase login",
+    "firebase-deploy": "firebase deploy",
+    "firebase-rules": "firebase deploy --only firestore,storage",
+    "firebase-hosting": "firebase deploy --only hosting",
     "postinstall": "node setup-deployment.js"
   },
   "keywords": [

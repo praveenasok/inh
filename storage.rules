@@ -1,0 +1,43 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Allow read/write access to all users for now
+    // In production, implement proper authentication and authorization
+    match /{allPaths=**} {
+      allow read, write: if true;
+    }
+    
+    // Product images
+    match /products/{productId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if true;
+      // Future: allow write: if request.auth != null && request.auth.token.admin == true;
+    }
+    
+    // Client documents and files
+    match /clients/{clientId}/{allPaths=**} {
+      allow read, write: if true;
+      // Future: allow read, write: if request.auth != null;
+    }
+    
+    // Quote exports and documents
+    match /quotes/{quoteId}/{allPaths=**} {
+      allow read, write: if true;
+      // Future: allow read, write: if request.auth != null;
+    }
+    
+    // Excel files and data imports
+    match /imports/{fileName} {
+      allow read: if true;
+      allow write: if true;
+      // Future: allow write: if request.auth != null && request.auth.token.admin == true;
+    }
+    
+    // Backup files
+    match /backups/{fileName} {
+      allow read: if true;
+      allow write: if true;
+      // Future: allow write: if request.auth != null && request.auth.token.admin == true;
+    }
+  }
+}
