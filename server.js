@@ -48,25 +48,12 @@ function getSalesmenFromExcel() {
     }
   } catch (error) {
     console.error('Error reading salesmen from Excel:', error);
+    // Return empty array if Excel reading fails - embedded data should be used
+    return [];
   }
   
-  // Fallback to default salesmen if Excel reading fails
-  const fallbackSalesmen = [
-    "John Smith",
-    "Sarah Johnson", 
-    "Michael Brown",
-    "Emily Davis",
-    "David Wilson",
-    "Lisa Anderson",
-    "Robert Taylor",
-    "Jennifer Martinez"
-  ];
-  
-  // Cache the fallback data too
-  cachedSalesmenData = fallbackSalesmen;
-  salesmenCacheTimestamp = Date.now();
-  
-  return fallbackSalesmen;
+  // If no salesmen sheet found, return empty array
+  return [];
 }
 
 // MIME types for different file extensions
