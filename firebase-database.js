@@ -201,7 +201,8 @@ class FirebaseDatabase {
       const docRef = await this.db.collection('quotes').add({
         ...quoteData,
         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        status: quoteData.status || 'draft'
       });
       
       console.log('Quote saved with ID:', docRef.id);
@@ -211,6 +212,184 @@ class FirebaseDatabase {
       console.error('Error saving quote:', error);
       throw error;
     }
+  }
+
+  // Order Management Operations
+  async saveOrder(orderData) {
+    if (!this.isAvailable()) {
+      throw new Error('Firebase not available');
+    }
+
+    try {
+      const docRef = await this.db.collection('orders').add({
+        ...orderData,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        status: orderData.status || 'pending',
+        googleSheetSynced: false
+      });
+      
+      console.log('Order saved with ID:', docRef.id);
+      
+      // Sync to Google Sheets
+      try {
+        await this.syncOrderToGoogleSheets({ id: docRef.id, ...orderData });
+        await this.db.collection('orders').doc(docRef.id).update({
+          googleSheetSynced: true,
+          googleSheetSyncedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      } catch (sheetError) {
+        console.warn('Google Sheets sync failed:', sheetError);
+        // Order is still saved to Firebase even if Google Sheets sync fails
+      }
+      
+      return { id: docRef.id, ...orderData };
+      
+    } catch (error) {
+      console.error('Error saving order:', error);
+      throw error;
+    }
+  }
+
+  // Convert Quote to Order
+  async convertQuoteToOrder(quoteId, additionalOrderData = {}) {
+    if (!this.isAvailable()) {
+      throw new Error('Firebase not available');
+    }
+
+    try {
+      // Get the quote data
+      const quoteDoc = await this.db.collection('quotes').doc(quoteId).get();
+      if (!quoteDoc.exists) {
+        throw new Error('Quote not found');
+      }
+
+      const quoteData = quoteDoc.data();
+      
+      // Create order data from quote
+      const orderData = {
+        ...quoteData,
+        ...additionalOrderData,
+        originalQuoteId: quoteId,
+        orderNumber: this.generateOrderNumber(),
+        status: 'pending',
+        orderType: 'converted_from_quote'
+      };
+
+      // Remove quote-specific fields
+      delete orderData.quoteId;
+      delete orderData.quoteNumber;
+      
+      // Save the order
+      const savedOrder = await this.saveOrder(orderData);
+      
+      // Update quote status
+      await this.db.collection('quotes').doc(quoteId).update({
+        status: 'converted_to_order',
+        convertedToOrderId: savedOrder.id,
+        convertedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      
+      return savedOrder;
+      
+    } catch (error) {
+      console.error('Error converting quote to order:', error);
+      throw error;
+    }
+  }
+
+  // Generate Order Number
+  generateOrderNumber() {
+    const now = new Date();
+    const dateStr = now.getFullYear().toString() + 
+                   (now.getMonth() + 1).toString().padStart(2, '0') + 
+                   now.getDate().toString().padStart(2, '0');
+    const timeStr = now.getHours().toString().padStart(2, '0') + 
+                   now.getMinutes().toString().padStart(2, '0');
+    return `ORD-${dateStr}-${timeStr}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
+  }
+
+  // Google Sheets Integration
+  async syncOrderToGoogleSheets(orderData) {
+    try {
+      // Use the Google Sheets integration class if available
+      if (window.googleSheetsFetch) {
+        const result = await window.googleSheetsFetch.appendOrderData(orderData);
+        console.log('Order synced to Google Sheets via fetch API');
+        return result;
+      } else if (window.googleSheets && window.googleSheets.isAvailable()) {
+        const result = await window.googleSheets.appendOrderData(orderData);
+        console.log('Order synced to Google Sheets via gapi');
+        return result;
+      } else {
+        // Fallback to direct fetch implementation
+        return await this.fallbackGoogleSheetsSync(orderData);
+      }
+    } catch (error) {
+      console.error('Error syncing to Google Sheets:', error);
+      throw error;
+    }
+  }
+
+  // Fallback Google Sheets sync implementation
+  async fallbackGoogleSheetsSync(orderData) {
+    const GOOGLE_SHEET_ID = '199EnMjmbc6idiOLnaEs8diG8h9vNHhkSH3xK4cyPrsU';
+    const API_KEY = process.env.GOOGLE_SHEETS_API_KEY || 'YOUR_GOOGLE_SHEETS_API_KEY';
+    
+    if (API_KEY === 'YOUR_GOOGLE_SHEETS_API_KEY') {
+      console.warn('Google Sheets API key not configured');
+      throw new Error('Google Sheets API key not configured');
+    }
+    
+    try {
+      const sheetData = this.formatOrderForGoogleSheets(orderData);
+      
+      const response = await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SHEET_ID}/values/Orders:append?valueInputOption=RAW&key=${API_KEY}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            values: [sheetData]
+          })
+        }
+      );
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Google Sheets API error: ${response.status} - ${errorText}`);
+      }
+      
+      console.log('Order synced to Google Sheets successfully (fallback)');
+      return await response.json();
+      
+    } catch (error) {
+      console.error('Error in fallback Google Sheets sync:', error);
+      throw error;
+    }
+  }
+
+  // Format order data for Google Sheets
+  formatOrderForGoogleSheets(orderData) {
+    const now = new Date();
+    return [
+      orderData.orderNumber || orderData.id,
+      now.toISOString(),
+      orderData.clientName || '',
+      orderData.clientContact || '',
+      orderData.salesman || '',
+      orderData.items ? orderData.items.length : 0,
+      orderData.items ? orderData.items.map(item => `${item.product} (${item.quantity})`).join('; ') : '',
+      orderData.subtotal || 0,
+      orderData.tax || 0,
+      orderData.shipping || 0,
+      orderData.total || 0,
+      orderData.currency || 'INR',
+      orderData.status || 'pending',
+      orderData.notes || ''
+    ];
   }
 
   async getQuotes(filters = {}) {
@@ -325,6 +504,216 @@ class FirebaseDatabase {
     }
   }
 
+  // Complete Data Persistence System (Replaces localStorage)
+  async saveAllData(dataType, data, options = {}) {
+    if (!this.isAvailable()) {
+      throw new Error('Firebase not available');
+    }
+
+    try {
+      const collection = this.getCollectionName(dataType);
+      const docRef = await this.db.collection(collection).add({
+        ...data,
+        dataType: dataType,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        deviceId: options.deviceId || this.getDeviceId(),
+        sessionId: options.sessionId || this.getSessionId()
+      });
+      
+      console.log(`${dataType} saved with ID:`, docRef.id);
+      
+      // Trigger real-time sync if enabled
+      if (this.isRealTimeSyncActive()) {
+        this.notifyDataChange(dataType, 'create', { id: docRef.id, ...data });
+      }
+      
+      return { id: docRef.id, ...data };
+      
+    } catch (error) {
+      console.error(`Error saving ${dataType}:`, error);
+      throw error;
+    }
+  }
+
+  async getAllData(dataType, filters = {}) {
+    if (!this.isAvailable()) {
+      throw new Error('Firebase not available');
+    }
+
+    try {
+      const collection = this.getCollectionName(dataType);
+      let query = this.db.collection(collection);
+      
+      // Apply filters
+      Object.keys(filters).forEach(key => {
+        if (filters[key] !== undefined && filters[key] !== null) {
+          query = query.where(key, '==', filters[key]);
+        }
+      });
+      
+      // Order by creation date
+      query = query.orderBy('createdAt', 'desc');
+      
+      const snapshot = await query.get();
+      const data = [];
+      
+      snapshot.forEach(doc => {
+        data.push({ id: doc.id, ...doc.data() });
+      });
+      
+      console.log(`Retrieved ${data.length} ${dataType} records`);
+      return data;
+      
+    } catch (error) {
+      console.error(`Error getting ${dataType}:`, error);
+      throw error;
+    }
+  }
+
+  async updateAllData(dataType, id, updateData) {
+    if (!this.isAvailable()) {
+      throw new Error('Firebase not available');
+    }
+
+    try {
+      const collection = this.getCollectionName(dataType);
+      await this.db.collection(collection).doc(id).update({
+        ...updateData,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      
+      console.log(`${dataType} updated:`, id);
+      
+      // Trigger real-time sync if enabled
+      if (this.isRealTimeSyncActive()) {
+        this.notifyDataChange(dataType, 'update', { id, ...updateData });
+      }
+      
+      return { id, ...updateData };
+      
+    } catch (error) {
+      console.error(`Error updating ${dataType}:`, error);
+      throw error;
+    }
+  }
+
+  async deleteAllData(dataType, id) {
+    if (!this.isAvailable()) {
+      throw new Error('Firebase not available');
+    }
+
+    try {
+      const collection = this.getCollectionName(dataType);
+      await this.db.collection(collection).doc(id).delete();
+      
+      console.log(`${dataType} deleted:`, id);
+      
+      // Trigger real-time sync if enabled
+      if (this.isRealTimeSyncActive()) {
+        this.notifyDataChange(dataType, 'delete', { id });
+      }
+      
+    } catch (error) {
+      console.error(`Error deleting ${dataType}:`, error);
+      throw error;
+    }
+  }
+
+  // Helper methods for data persistence
+  getCollectionName(dataType) {
+    const collectionMap = {
+      'clients': 'clients',
+      'quotes': 'quotes',
+      'orders': 'orders',
+      'products': 'products',
+      'salesmen': 'config',
+      'settings': 'config',
+      'cache': 'cache'
+    };
+    return collectionMap[dataType] || 'general_data';
+  }
+
+  getDeviceId() {
+    let deviceId = localStorage.getItem('deviceId');
+    if (!deviceId) {
+      deviceId = 'device_' + Math.random().toString(36).substr(2, 9);
+      localStorage.setItem('deviceId', deviceId);
+    }
+    return deviceId;
+  }
+
+  getSessionId() {
+    if (!this.sessionId) {
+      this.sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    }
+    return this.sessionId;
+  }
+
+  notifyDataChange(dataType, operation, data) {
+    // Emit custom events for real-time updates
+    const event = new CustomEvent('firebaseDataChange', {
+      detail: { dataType, operation, data }
+    });
+    document.dispatchEvent(event);
+  }
+
+  compareDataItems(item1, item2) {
+    // Simple comparison - can be enhanced based on needs
+    try {
+      return JSON.stringify(item1) === JSON.stringify(item2);
+    } catch (error) {
+      return false;
+    }
+  }
+
+  // Data validation and consistency checks
+  async validateDataConsistency(dataType, localData) {
+    try {
+      const firebaseData = await this.getAllData(dataType);
+      const inconsistencies = [];
+      
+      // Check for missing data in Firebase
+      localData.forEach(localItem => {
+        const firebaseItem = firebaseData.find(fbItem => 
+          fbItem.id === localItem.id || 
+          this.compareDataItems(localItem, fbItem)
+        );
+        
+        if (!firebaseItem) {
+          inconsistencies.push({
+            type: 'missing_in_firebase',
+            data: localItem
+          });
+        }
+      });
+      
+      // Check for data conflicts
+      firebaseData.forEach(firebaseItem => {
+        const localItem = localData.find(localItem => 
+          localItem.id === firebaseItem.id
+        );
+        
+        if (localItem && !this.compareDataItems(localItem, firebaseItem)) {
+          inconsistencies.push({
+            type: 'data_conflict',
+            local: localItem,
+            firebase: firebaseItem
+          });
+        }
+      });
+      
+      return {
+        isConsistent: inconsistencies.length === 0,
+        inconsistencies: inconsistencies
+      };
+      
+    } catch (error) {
+      console.error('Error validating data consistency:', error);
+      throw error;
+    }
+  }
+
   // Data Synchronization
   async syncLocalToCloud(localData) {
     if (!this.isAvailable()) {
@@ -333,28 +722,55 @@ class FirebaseDatabase {
 
     try {
       const batch = this.db.batch();
+      const syncResults = {
+        clients: { success: 0, failed: 0 },
+        quotes: { success: 0, failed: 0 },
+        orders: { success: 0, failed: 0 }
+      };
       
       // Sync clients
-      if (localData.clients) {
-        localData.clients.forEach(client => {
-          const docRef = this.db.collection('clients').doc(client.id || this.db.collection('clients').doc().id);
-          batch.set(docRef, client, { merge: true });
-        });
+      if (localData.clients && localData.clients.length > 0) {
+        for (const client of localData.clients) {
+          try {
+            const docRef = this.db.collection('clients').doc();
+            batch.set(docRef, {
+              ...client,
+              syncedAt: firebase.firestore.FieldValue.serverTimestamp(),
+              syncSource: 'local_to_cloud'
+            });
+            syncResults.clients.success++;
+          } catch (error) {
+            console.error('Error syncing client:', error);
+            syncResults.clients.failed++;
+          }
+        }
       }
       
       // Sync quotes
-      if (localData.quotes) {
-        localData.quotes.forEach(quote => {
-          const docRef = this.db.collection('quotes').doc(quote.id || this.db.collection('quotes').doc().id);
-          batch.set(docRef, quote, { merge: true });
-        });
+      if (localData.quotes && localData.quotes.length > 0) {
+        for (const quote of localData.quotes) {
+          try {
+            const docRef = this.db.collection('quotes').doc();
+            batch.set(docRef, {
+              ...quote,
+              syncedAt: firebase.firestore.FieldValue.serverTimestamp(),
+              syncSource: 'local_to_cloud'
+            });
+            syncResults.quotes.success++;
+          } catch (error) {
+            console.error('Error syncing quote:', error);
+            syncResults.quotes.failed++;
+          }
+        }
       }
       
       await batch.commit();
-      console.log('Local data synced to cloud successfully');
+      console.log('Local data synced to cloud successfully:', syncResults);
+      
+      return syncResults;
       
     } catch (error) {
-      console.error('Error syncing data to cloud:', error);
+      console.error('Error syncing local data to cloud:', error);
       throw error;
     }
   }

@@ -27,29 +27,226 @@ function deleteCurrentQuote() {
     }
 }
 
-function convertToOrder() {
+async function convertToOrder() {
     const menu = document.getElementById('saveQuoteMenu');
     if (menu) menu.classList.add('hidden');
     
-    // Get quote data
-    const quoteData = {
-        quoteName: document.getElementById('quote-number').value,
-        customerName: document.getElementById('client-name').value,
-        salesman: document.getElementById('salesman-name').value,
-        currency: document.getElementById('quote-currency').value,
-        priceList: document.getElementById('quote-price-list-selector').value,
-        items: getQuoteItems(),
-        notes: document.getElementById('notes-terms').value
-    };
+    try {
+        // Get current quote data
+        const quoteData = {
+            quoteName: document.getElementById('quote-number').value,
+            customerName: document.getElementById('client-name').value,
+            clientContact: document.getElementById('client-contact').value,
+            salesman: document.getElementById('salesman-name').value,
+            currency: document.getElementById('quote-currency').value,
+            priceList: document.getElementById('quote-price-list-selector').value,
+            items: getQuoteItems(),
+            notes: document.getElementById('notes-terms').value,
+            discount: getDiscountData(),
+            tax: getTaxData(),
+            shipping: getShippingData(),
+            subtotal: calculateSubtotal(),
+            total: calculateTotal()
+        };
+        
+        if (!quoteData.quoteName || !quoteData.customerName) {
+            alert('Please fill in quote name and customer name before converting to order.');
+            return;
+        }
+        
+        if (!quoteData.items || quoteData.items.length === 0) {
+            alert('Please add items to the quote before converting to order.');
+            return;
+        }
+        
+        // Show loading state
+        const loadingMessage = showLoadingMessage('Converting quote to order...');
+        
+        // Check if Firebase is available
+        if (!window.firebaseDB || !window.firebaseDB.isAvailable()) {
+            hideLoadingMessage(loadingMessage);
+            alert('Firebase is not available. Please check your connection and try again.');
+            return;
+        }
+        
+        // First save the quote if it hasn't been saved
+        let quoteId = quoteData.quoteId;
+        if (!quoteId) {
+            const savedQuote = await window.firebaseDB.saveQuote(quoteData);
+            quoteId = savedQuote.id;
+        }
+        
+        // Convert quote to order
+        const orderData = await window.firebaseDB.convertQuoteToOrder(quoteId, {
+            orderDate: new Date().toISOString(),
+            orderSource: 'quote_conversion',
+            priority: 'normal'
+        });
+        
+        hideLoadingMessage(loadingMessage);
+        
+        // Show success message with order details
+        const orderNumber = orderData.orderNumber;
+        const successMessage = `Quote converted to order successfully!\n\nOrder Number: ${orderNumber}\nCustomer: ${quoteData.customerName}\nTotal: ${quoteData.currency} ${quoteData.total}\n\nThe order has been saved to Firebase and synced to Google Sheets.`;
+        
+        alert(successMessage);
+        
+        // Clear the current quote form
+        if (confirm('Would you like to clear the current quote form to start a new quote?')) {
+            clearAllQuoteData();
+        }
+        
+        // Log the conversion for debugging
+        console.log('Quote converted to order:', {
+            quoteId: quoteId,
+            orderId: orderData.id,
+            orderNumber: orderNumber
+        });
+        
+    } catch (error) {
+        console.error('Error converting quote to order:', error);
+        hideLoadingMessage();
+        
+        let errorMessage = 'Failed to convert quote to order. ';
+        if (error.message.includes('Firebase not available')) {
+            errorMessage += 'Please check your internet connection and try again.';
+        } else if (error.message.includes('Google Sheets')) {
+            errorMessage += 'Order was saved to Firebase but Google Sheets sync failed. The order is still valid.';
+        } else {
+            errorMessage += 'Please try again or contact support if the problem persists.';
+        }
+        
+        alert(errorMessage);
+    }
+}
+
+// Helper functions for quote-to-order conversion
+function getDiscountData() {
+    const discountInput = document.getElementById('discount-input');
+    if (discountInput && discountInput.value.trim()) {
+        return {
+            type: discountInput.value.includes('%') ? 'percentage' : 'fixed',
+            value: parseFloat(discountInput.value.replace('%', '')) || 0
+        };
+    }
+    return { type: 'none', value: 0 };
+}
+
+function getTaxData() {
+    const taxInput = document.getElementById('tax-input');
+    if (taxInput && taxInput.value.trim()) {
+        return {
+            type: 'taxable',
+            rate: parseFloat(taxInput.value.replace('%', '')) || 0
+        };
+    }
+    return { type: 'tax-free', rate: 0 };
+}
+
+function getShippingData() {
+    const shippingInput = document.getElementById('shipping-input');
+    if (shippingInput && shippingInput.value.trim()) {
+        return {
+            type: 'paid',
+            cost: parseFloat(shippingInput.value) || 0
+        };
+    }
+    return { type: 'free', cost: 0 };
+}
+
+function calculateSubtotal() {
+    const items = getQuoteItems();
+    return items.reduce((total, item) => total + (item.price * item.quantity), 0);
+}
+
+function calculateTotal() {
+    const subtotal = calculateSubtotal();
+    const discount = getDiscountData();
+    const tax = getTaxData();
+    const shipping = getShippingData();
     
-    if (!quoteData.quoteName || !quoteData.customerName) {
-        alert('Please fill in quote name and customer name before converting to order.');
-        return;
+    let total = subtotal;
+    
+    // Apply discount
+    if (discount.type === 'percentage') {
+        total -= (total * discount.value / 100);
+    } else if (discount.type === 'fixed') {
+        total -= discount.value;
     }
     
-    // Convert to order (placeholder - implement actual order conversion logic)
-    alert('Quote converted to order successfully! Order ID: ORD-' + Date.now());
-    console.log('Order created from quote:', quoteData);
+    // Apply tax
+    if (tax.type === 'taxable') {
+        total += (total * tax.rate / 100);
+    }
+    
+    // Add shipping
+    total += shipping.cost;
+    
+    return Math.round(total * 100) / 100; // Round to 2 decimal places
+}
+
+function showLoadingMessage(message) {
+    const loadingDiv = document.createElement('div');
+    loadingDiv.id = 'loading-message';
+    loadingDiv.style.cssText = `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 20px;
+        border-radius: 8px;
+        z-index: 10000;
+        text-align: center;
+    `;
+    loadingDiv.innerHTML = `
+        <div style="margin-bottom: 10px;">${message}</div>
+        <div style="font-size: 12px;">Please wait...</div>
+    `;
+    document.body.appendChild(loadingDiv);
+    return loadingDiv;
+}
+
+function hideLoadingMessage(loadingElement) {
+    if (loadingElement && loadingElement.parentNode) {
+        loadingElement.parentNode.removeChild(loadingElement);
+    } else {
+        const existingLoading = document.getElementById('loading-message');
+        if (existingLoading) {
+            existingLoading.parentNode.removeChild(existingLoading);
+        }
+    }
+}
+
+function clearAllQuoteData() {
+    // Clear all form fields
+    const fields = [
+        'quote-number', 'client-name', 'client-contact', 'salesman-name',
+        'quote-currency', 'quote-price-list-selector', 'notes-terms',
+        'discount-input', 'tax-input', 'shipping-input'
+    ];
+    
+    fields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.value = '';
+        }
+    });
+    
+    // Clear quote items
+    const quoteItemsContainer = document.getElementById('quote-items');
+    if (quoteItemsContainer) {
+        quoteItemsContainer.innerHTML = '';
+    }
+    
+    // Reset any calculated totals
+    const totalElements = document.querySelectorAll('.quote-total, .quote-subtotal');
+    totalElements.forEach(element => {
+        element.textContent = '0.00';
+    });
+    
+    console.log('Quote form cleared');
 }
 
 function shareQuote() {

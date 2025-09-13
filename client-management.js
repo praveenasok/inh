@@ -3,8 +3,30 @@
 
 class ClientManager {
   constructor() {
-    this.clients = this.loadClients();
+    this.clients = [];
     this.deviceId = this.getOrCreateDeviceId();
+    this.initialized = false;
+    this.initializeAsync();
+  }
+
+  // Async initialization
+  async initializeAsync() {
+    try {
+      this.clients = await this.loadClients();
+      this.initialized = true;
+      console.log('ClientManager initialized with', this.clients.length, 'clients');
+    } catch (error) {
+      console.error('Error initializing ClientManager:', error);
+      this.clients = [];
+      this.initialized = true;
+    }
+  }
+
+  // Ensure initialization is complete
+  async ensureInitialized() {
+    if (!this.initialized) {
+      await this.initializeAsync();
+    }
   }
 
   // Generate unique device ID
@@ -57,8 +79,9 @@ class ClientManager {
   }
 
   // Add new client
-  addClient(clientData, salespersonName) {
+  async addClient(clientData, salespersonName) {
     try {
+      await this.ensureInitialized();
       this.validateClientData(clientData);
       
       const client = {
@@ -70,7 +93,7 @@ class ClientManager {
       };
 
       this.clients.push(client);
-      this.saveClients();
+      await this.saveClients();
       
       return client;
     } catch (error) {
@@ -79,8 +102,9 @@ class ClientManager {
   }
 
   // Update existing client
-  updateClient(clientId, clientData) {
+  async updateClient(clientId, clientData) {
     try {
+      await this.ensureInitialized();
       this.validateClientData(clientData);
       
       const index = this.clients.findIndex(c => c.id === clientId);
@@ -94,7 +118,7 @@ class ClientManager {
         updatedAt: new Date().toISOString()
       };
       
-      this.saveClients();
+      await this.saveClients();
       return this.clients[index];
     } catch (error) {
       throw new Error(`Failed to update client: ${error.message}`);
@@ -102,14 +126,15 @@ class ClientManager {
   }
 
   // Delete client
-  deleteClient(clientId) {
+  async deleteClient(clientId) {
+    await this.ensureInitialized();
     const index = this.clients.findIndex(c => c.id === clientId);
     if (index === -1) {
       throw new Error('Client not found');
     }
 
     const deletedClient = this.clients.splice(index, 1)[0];
-    this.saveClients();
+    await this.saveClients();
     return deletedClient;
   }
 
@@ -134,25 +159,70 @@ class ClientManager {
     );
   }
 
-  // Load clients from localStorage
-  loadClients() {
+  // Load clients from Firebase (with localStorage fallback)
+  async loadClients() {
     try {
+      // Try to load from Firebase first
+      if (window.firebaseStorage) {
+        const firebaseClients = await window.firebaseStorage.getItem('clientData');
+        if (firebaseClients && Array.isArray(firebaseClients)) {
+          console.log('Loaded clients from Firebase:', firebaseClients.length);
+          return firebaseClients;
+        }
+      }
+      
+      // Fallback to localStorage for migration
       const stored = localStorage.getItem('clientData');
-      return stored ? JSON.parse(stored) : [];
+      const localClients = stored ? JSON.parse(stored) : [];
+      
+      // Migrate to Firebase if we have local data
+      if (localClients.length > 0 && window.firebaseStorage) {
+        await window.firebaseStorage.setItem('clientData', localClients);
+        console.log('Migrated clients to Firebase:', localClients.length);
+      }
+      
+      return localClients;
     } catch (error) {
       console.error('Error loading clients:', error);
-      return [];
+      // Final fallback to localStorage
+      try {
+        const stored = localStorage.getItem('clientData');
+        return stored ? JSON.parse(stored) : [];
+      } catch (fallbackError) {
+        console.error('Fallback loading failed:', fallbackError);
+        return [];
+      }
     }
   }
 
-  // Save clients to localStorage
-  saveClients() {
+  // Save clients to Firebase (with localStorage backup)
+  async saveClients() {
     try {
+      const timestamp = Date.now().toString();
+      
+      // Save to Firebase first
+      if (window.firebaseStorage) {
+        await window.firebaseStorage.setItem('clientData', this.clients);
+        await window.firebaseStorage.setItem('clientDataTimestamp', timestamp);
+        console.log('Clients saved to Firebase:', this.clients.length);
+      }
+      
+      // Also save to localStorage as backup
       localStorage.setItem('clientData', JSON.stringify(this.clients));
-      localStorage.setItem('clientDataTimestamp', Date.now().toString());
+      localStorage.setItem('clientDataTimestamp', timestamp);
+      
     } catch (error) {
-      console.error('Error saving clients:', error);
-      throw new Error('Failed to save client data');
+      console.error('Error saving clients to Firebase:', error);
+      
+      // Fallback to localStorage only
+      try {
+        localStorage.setItem('clientData', JSON.stringify(this.clients));
+        localStorage.setItem('clientDataTimestamp', Date.now().toString());
+        console.warn('Saved to localStorage as fallback');
+      } catch (fallbackError) {
+        console.error('Fallback saving failed:', fallbackError);
+        throw new Error('Failed to save client data');
+      }
     }
   }
 
