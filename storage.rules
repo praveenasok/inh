@@ -1,43 +1,75 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
-    // Allow read/write access to all users for now
-    // In production, implement proper authentication and authorization
-    match /{allPaths=**} {
-      allow read, write: if true;
+    // Helper functions for authentication
+    function isAuthenticated() {
+      return request.auth != null;
     }
     
-    // Product images
-    match /products/{productId}/{allPaths=**} {
+    function isAdmin() {
+      return isAuthenticated() && 
+             (request.auth.token.email == 'info@indiannaturalhair.com' ||
+              request.auth.token.admin == true);
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isValidExcelFile() {
+      return resource.contentType.matches('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') ||
+             resource.contentType.matches('application/vnd.ms-excel') ||
+             request.resource.name.matches('.*\\.(xlsx|xls)$');
+    }
+    
+    function isValidImageFile() {
+      return resource.contentType.matches('image/.*') ||
+             request.resource.name.matches('.*\\.(jpg|jpeg|png|gif|webp|svg)$');
+    }
+    
+    // Public read access for product images
+    match /products/{productId}/{fileName} {
       allow read: if true;
-      allow write: if true;
-      // Future: allow write: if request.auth != null && request.auth.token.admin == true;
+      allow write: if isAdmin() && isValidImageFile();
     }
     
-    // Client documents and files
-    match /clients/{clientId}/{allPaths=**} {
-      allow read, write: if true;
-      // Future: allow read, write: if request.auth != null;
+    // User-specific client documents
+    match /clients/{clientId}/{fileName} {
+      allow read, write: if isAuthenticated();
     }
     
-    // Quote exports and documents
-    match /quotes/{quoteId}/{allPaths=**} {
-      allow read, write: if true;
-      // Future: allow read, write: if request.auth != null;
+    // User-specific quote exports
+    match /quotes/{quoteId}/{fileName} {
+      allow read, write: if isAuthenticated();
     }
     
-    // Excel files and data imports
+    // Admin-only Excel imports with validation
     match /imports/{fileName} {
-      allow read: if true;
-      allow write: if true;
-      // Future: allow write: if request.auth != null && request.auth.token.admin == true;
+      allow read: if isAdmin();
+      allow write: if isAdmin() && isValidExcelFile() && 
+                      request.resource.size < 50 * 1024 * 1024; // 50MB limit
     }
     
-    // Backup files
+    // Admin-only backup files
     match /backups/{fileName} {
+      allow read, write: if isAdmin();
+    }
+    
+    // Admin-only upload staging area
+    match /uploads/{uploadId}/{fileName} {
+      allow read, write: if isAdmin() && isValidExcelFile() &&
+                          request.resource.size < 50 * 1024 * 1024; // 50MB limit
+    }
+    
+    // User profile images
+    match /users/{userId}/profile/{fileName} {
       allow read: if true;
-      allow write: if true;
-      // Future: allow write: if request.auth != null && request.auth.token.admin == true;
+      allow write: if (isOwner(userId) || isAdmin()) && isValidImageFile();
+    }
+    
+    // Default deny for all other paths
+    match /{allPaths=**} {
+      allow read, write: if false;
     }
   }
 }

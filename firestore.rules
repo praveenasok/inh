@@ -1,43 +1,68 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Allow read/write access to all users for now
-    // In production, implement proper authentication and authorization
-    match /{document=**} {
-      allow read, write: if true;
+    // Helper functions for authentication
+    function isAuthenticated() {
+      return request.auth != null;
     }
     
-    // Client data collection
-    match /clients/{clientId} {
-      allow read, write: if true;
-      // Future: allow read, write: if request.auth != null;
+    function isAdmin() {
+      return isAuthenticated() && 
+             (request.auth.token.email == 'info@indiannaturalhair.com' ||
+              request.auth.token.admin == true);
     }
     
-    // Product data collection
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Public read access for products and config (for unauthenticated users)
     match /products/{productId} {
       allow read: if true;
-      allow write: if true;
-      // Future: allow write: if request.auth != null && request.auth.token.admin == true;
+      allow write: if isAdmin();
     }
     
-    // Quotes collection
-    match /quotes/{quoteId} {
-      allow read, write: if true;
-      // Future: allow read, write: if request.auth != null;
-    }
-    
-    // Salesmen data collection
-    match /salesmen/{salesmanId} {
-      allow read: if true;
-      allow write: if true;
-      // Future: allow write: if request.auth != null && request.auth.token.admin == true;
-    }
-    
-    // System configuration
     match /config/{configId} {
       allow read: if true;
-      allow write: if true;
-      // Future: allow write: if request.auth != null && request.auth.token.admin == true;
+      allow write: if isAdmin();
+    }
+    
+    // Admin-only collections for data management
+    match /admin/{document=**} {
+      allow read, write: if isAdmin();
+    }
+    
+    match /uploads/{uploadId} {
+      allow read, write: if isAdmin();
+    }
+    
+    match /audit_logs/{logId} {
+      allow read, write: if isAdmin();
+    }
+    
+    // User-specific collections
+    match /clients/{clientId} {
+      allow read, write: if isAuthenticated();
+    }
+    
+    match /quotes/{quoteId} {
+      allow read, write: if isAuthenticated();
+    }
+    
+    // Salesmen data - read for all authenticated, write for admin
+    match /salesmen/{salesmanId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
+    // User profiles
+    match /users/{userId} {
+      allow read, write: if isOwner(userId) || isAdmin();
+    }
+    
+    // Default deny for all other documents
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }

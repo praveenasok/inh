@@ -421,6 +421,180 @@ class FirebaseDatabase {
         console.error('Error listening to quotes:', error);
       });
   }
+  
+  // Real-time Products Synchronization
+  onProductsChange(callback) {
+    if (!this.isAvailable()) {
+      throw new Error('Firebase not available');
+    }
+
+    try {
+      console.log('🔄 Setting up real-time products listener...');
+      return this.db.collection('products')
+        .onSnapshot(snapshot => {
+          const products = [];
+          snapshot.forEach(doc => {
+            const data = doc.data();
+            // Remove Firebase-specific fields for compatibility
+            const { uploadId, createdAt, updatedAt, ...productData } = data;
+            products.push({
+              id: doc.id,
+              ...productData
+            });
+          });
+          
+          console.log(`🔄 Products updated: ${products.length} items`);
+          callback(products);
+        }, error => {
+          console.error('❌ Products listener error:', error);
+        });
+      
+    } catch (error) {
+      console.error('Error setting up products listener:', error);
+      throw error;
+    }
+  }
+  
+  // Real-time Salesmen Synchronization
+  onSalesmenChange(callback) {
+    if (!this.isAvailable()) {
+      throw new Error('Firebase not available');
+    }
+
+    try {
+      console.log('🔄 Setting up real-time salesmen listener...');
+      return this.db.collection('config').doc('salesmen')
+        .onSnapshot(doc => {
+          if (doc.exists) {
+            const data = doc.data();
+            const salesmen = data.list || [];
+            console.log(`🔄 Salesmen updated: ${salesmen.length} items`);
+            callback(salesmen);
+          } else {
+            console.warn('🔄 Salesmen document does not exist');
+            callback([]);
+          }
+        }, error => {
+          console.error('❌ Salesmen listener error:', error);
+        });
+      
+    } catch (error) {
+      console.error('Error setting up salesmen listener:', error);
+      throw error;
+    }
+  }
+  
+  // Enable Real-time Synchronization
+  enableRealTimeSync() {
+    if (!this.isAvailable()) {
+      console.warn('🔄 Firebase not available, real-time sync disabled');
+      return;
+    }
+    
+    console.log('🔄 Enabling real-time synchronization...');
+    
+    // Set up products listener
+    this.productsUnsubscribe = this.onProductsChange((products) => {
+      try {
+        // Update global state
+        if (typeof state !== 'undefined') {
+          state.allProducts = products;
+          
+          // Update price lists
+          if (typeof availablePriceLists !== 'undefined') {
+            availablePriceLists.clear();
+            products.forEach(product => {
+              if (product && (product.PriceList || product['Price List Name'])) {
+                const priceListName = product.PriceList || product['Price List Name'];
+                availablePriceLists.add(priceListName);
+              }
+            });
+            
+            // Update UI if functions are available
+            if (typeof updatePriceListDropdown === 'function') {
+              updatePriceListDropdown();
+            }
+          }
+          
+          // Update categories if function is available
+          if (typeof populateCategories === 'function') {
+            populateCategories();
+          }
+          
+          // Update admin status if function is available
+          if (typeof updateAdminStatus === 'function') {
+            updateAdminStatus();
+          }
+          
+          // Cache data locally
+          const firebaseData = {
+            products,
+            salesmen: window.embeddedSalesmenData || [],
+            source: 'Firebase-RealTime',
+            loadedAt: new Date().toISOString()
+          };
+          localStorage.setItem('firebaseProductData', JSON.stringify(firebaseData));
+          localStorage.setItem('firebaseDataTimestamp', Date.now().toString());
+          
+          console.log('✅ Products synchronized and UI updated');
+        }
+      } catch (error) {
+        console.error('❌ Error updating products in real-time:', error);
+      }
+    });
+    
+    // Set up salesmen listener
+    this.salesmenUnsubscribe = this.onSalesmenChange((salesmen) => {
+      try {
+        // Update global salesmen data
+        window.embeddedSalesmenData = salesmen;
+        window.cachedSalesmenData = salesmen;
+        
+        // Update salesmen dropdowns if functions are available
+        if (typeof populateSalesmanOptions === 'function') {
+          populateSalesmanOptions(salesmen);
+        }
+        
+        console.log('✅ Salesmen synchronized and UI updated');
+      } catch (error) {
+        console.error('❌ Error updating salesmen in real-time:', error);
+      }
+    });
+    
+    console.log('✅ Real-time synchronization enabled');
+  }
+  
+  // Disable Real-time Synchronization
+  disableRealTimeSync() {
+    console.log('🔄 Disabling real-time synchronization...');
+    
+    if (this.productsUnsubscribe) {
+      this.productsUnsubscribe();
+      this.productsUnsubscribe = null;
+    }
+    
+    if (this.salesmenUnsubscribe) {
+      this.salesmenUnsubscribe();
+      this.salesmenUnsubscribe = null;
+    }
+    
+    if (this.clientsUnsubscribe) {
+      this.clientsUnsubscribe();
+      this.clientsUnsubscribe = null;
+    }
+    
+    if (this.quotesUnsubscribe) {
+      this.quotesUnsubscribe();
+      this.quotesUnsubscribe = null;
+    }
+    
+    console.log('✅ Real-time synchronization disabled');
+  }
+  
+  // Check if real-time sync is active
+  isRealTimeSyncActive() {
+    return !!(this.productsUnsubscribe || this.salesmenUnsubscribe);
+  }
 }
 
 // Global Firebase Database instance

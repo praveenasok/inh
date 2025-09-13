@@ -3,14 +3,14 @@
 
 const firebaseConfig = {
   // Firebase project configuration for inhpricelistgenerator
-  // Get actual values from Firebase Console > Project Settings > General > Your apps
-  apiKey: "AIzaSyBvOiE9rTXHiOsNjGfnK8gHQRLCgKOgAbc",
+  // Actual values from Firebase Console
+  apiKey: "AIzaSyCW3FsY_QwFuqZiQaWg4jmmmjlSUR9DxNA",
   authDomain: "inhpricelistgenerator.firebaseapp.com",
   projectId: "inhpricelistgenerator",
-  storageBucket: "inhpricelistgenerator.appspot.com",
+  storageBucket: "inhpricelistgenerator.firebasestorage.app",
   messagingSenderId: "263357798472",
-  appId: "1:263357798472:web:abc123def456ghi789",
-  measurementId: "G-XXXXXXXXXX"
+  appId: "1:263357798472:web:e03f4a7264a19fe4bfe07d",
+  // measurementId: "G-XXXXXXXXXX" // Enable when Google Analytics is configured
 };
 
 // Note: Replace the above values with your actual Firebase configuration
@@ -21,10 +21,10 @@ try {
   if (typeof firebase !== 'undefined') {
     firebase.initializeApp(firebaseConfig);
     
-    // Initialize Analytics (optional)
-    if (typeof firebase.analytics !== 'undefined') {
-      firebase.analytics();
-    }
+    // Initialize Analytics (optional) - Disabled until Google Analytics is configured
+    // if (typeof firebase.analytics !== 'undefined') {
+    //   firebase.analytics();
+    // }
     
     console.log('Firebase initialized successfully');
   } else {
