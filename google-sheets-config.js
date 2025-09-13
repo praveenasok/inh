@@ -14,7 +14,11 @@ class GoogleSheetsIntegration {
   getApiKey() {
     // In production, this should be loaded from a secure configuration
     // For now, we'll use a placeholder that needs to be configured
-    return process.env.GOOGLE_SHEETS_API_KEY || 'YOUR_GOOGLE_SHEETS_API_KEY';
+    if (typeof process !== 'undefined' && process.env) {
+      return process.env.GOOGLE_SHEETS_API_KEY || 'YOUR_GOOGLE_SHEETS_API_KEY';
+    }
+    // Browser fallback - API key should be configured here or loaded from a config service
+    return window.GOOGLE_SHEETS_API_KEY || 'YOUR_GOOGLE_SHEETS_API_KEY';
   }
 
   // Initialize Google Sheets API
@@ -257,7 +261,10 @@ class GoogleSheetsFetchAPI {
   }
 
   getApiKey() {
-    return process.env.GOOGLE_SHEETS_API_KEY || 'YOUR_GOOGLE_SHEETS_API_KEY';
+    if (typeof process !== 'undefined' && process.env) {
+      return process.env.GOOGLE_SHEETS_API_KEY || 'YOUR_GOOGLE_SHEETS_API_KEY';
+    }
+    return window.GOOGLE_SHEETS_API_KEY || 'YOUR_GOOGLE_SHEETS_API_KEY';
   }
 
   async appendOrderData(orderData) {

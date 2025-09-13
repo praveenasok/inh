@@ -334,7 +334,9 @@ class FirebaseDatabase {
   // Fallback Google Sheets sync implementation
   async fallbackGoogleSheetsSync(orderData) {
     const GOOGLE_SHEET_ID = '199EnMjmbc6idiOLnaEs8diG8h9vNHhkSH3xK4cyPrsU';
-    const API_KEY = process.env.GOOGLE_SHEETS_API_KEY || 'YOUR_GOOGLE_SHEETS_API_KEY';
+    const API_KEY = (typeof process !== 'undefined' && process.env) ? 
+                    process.env.GOOGLE_SHEETS_API_KEY || 'YOUR_GOOGLE_SHEETS_API_KEY' :
+                    window.GOOGLE_SHEETS_API_KEY || 'YOUR_GOOGLE_SHEETS_API_KEY';
     
     if (API_KEY === 'YOUR_GOOGLE_SHEETS_API_KEY') {
       console.warn('Google Sheets API key not configured');
