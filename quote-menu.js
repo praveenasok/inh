@@ -49,6 +49,7 @@ async function convertToOrder() {
             total: calculateTotal()
         };
         
+        // Enhanced validation
         if (!quoteData.quoteName || !quoteData.customerName) {
             alert('Please fill in quote name and customer name before converting to order.');
             return;
@@ -58,6 +59,18 @@ async function convertToOrder() {
             alert('Please add items to the quote before converting to order.');
             return;
         }
+        
+        if (!quoteData.salesman) {
+            alert('Please select a salesman before converting to order.');
+            return;
+        }
+        
+        if (!quoteData.total || quoteData.total <= 0) {
+            alert('Quote total must be greater than zero.');
+            return;
+        }
+        
+        console.log('Quote validation passed:', quoteData);
         
         // Show loading state
         const loadingMessage = showLoadingMessage('Converting quote to order...');
@@ -69,12 +82,11 @@ async function convertToOrder() {
             return;
         }
         
-        // First save the quote if it hasn't been saved
-        let quoteId = quoteData.quoteId;
-        if (!quoteId) {
-            const savedQuote = await window.firebaseDB.saveQuote(quoteData);
-            quoteId = savedQuote.id;
-        }
+        // First save the quote to get a valid quote ID
+        console.log('Saving quote before conversion:', quoteData);
+        const savedQuote = await window.firebaseDB.saveQuote(quoteData);
+        const quoteId = savedQuote.id;
+        console.log('Quote saved with ID:', quoteId);
         
         // Convert quote to order
         const orderData = await window.firebaseDB.convertQuoteToOrder(quoteId, {
@@ -105,6 +117,11 @@ async function convertToOrder() {
         
     } catch (error) {
         console.error('Error converting quote to order:', error);
+        console.error('Error details:', {
+            message: error.message,
+            stack: error.stack,
+            quoteData: quoteData
+        });
         hideLoadingMessage();
         
         let errorMessage = 'Failed to convert quote to order. ';
@@ -112,8 +129,12 @@ async function convertToOrder() {
             errorMessage += 'Please check your internet connection and try again.';
         } else if (error.message.includes('Google Sheets')) {
             errorMessage += 'Order was saved to Firebase but Google Sheets sync failed. The order is still valid.';
+        } else if (error.message.includes('Quote not found')) {
+            errorMessage += 'The quote could not be found. Please try saving the quote first.';
+        } else if (error.message.includes('saveQuote')) {
+            errorMessage += 'Failed to save the quote. Please check your data and try again.';
         } else {
-            errorMessage += 'Please try again or contact support if the problem persists.';
+            errorMessage += `Error: ${error.message}. Please try again or contact support if the problem persists.`;
         }
         
         alert(errorMessage);
