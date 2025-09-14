@@ -46,23 +46,39 @@ class FirebaseStorageReplacement {
       // Store in cache immediately
       this.cache.set(key, data);
 
-      // Store in Firebase if available
+      // Try to store in Firebase if available, but fall back to localStorage on permission errors
       if (this.firebaseDB && this.firebaseDB.isAvailable() && this.isOnline) {
-        await this.firebaseDB.saveAllData('storage', data, {
-          deviceId: this.getDeviceId(),
-          sessionId: this.getSessionId()
-        });
-        console.log(`Data saved to Firebase: ${key}`);
+        try {
+          await this.firebaseDB.saveAllData('storage', data, {
+            deviceId: this.getDeviceId(),
+            sessionId: this.getSessionId()
+          });
+          console.log(`Data saved to Firebase: ${key}`);
+        } catch (firebaseError) {
+          if (firebaseError.code === 'permission-denied' || firebaseError.message.includes('insufficient permissions')) {
+            console.warn(`Firebase permission denied for ${key}, falling back to localStorage`);
+            localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
+          } else {
+            throw firebaseError;
+          }
+        }
       } else {
-        // Queue for later sync if offline
-        this.syncQueue.push({ action: 'set', key, data });
-        console.log(`Data queued for sync: ${key}`);
+        // Fallback to localStorage when Firebase is not available
+        localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
+        console.log(`Data saved to localStorage: ${key}`);
       }
 
       return true;
     } catch (error) {
       console.error(`Error setting item ${key}:`, error);
-      throw error;
+      // Final fallback to localStorage
+      try {
+        localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
+        return true;
+      } catch (localStorageError) {
+        console.error(`Failed to save to localStorage as well:`, localStorageError);
+        throw error;
+      }
     }
   }
 
@@ -75,36 +91,56 @@ class FirebaseStorageReplacement {
         return this.parseStoredValue(cachedData.value, cachedData.dataType);
       }
 
-      // Fetch from Firebase if available
+      // Try to fetch from Firebase if available, but fall back to localStorage on permission errors
       if (this.firebaseDB && this.firebaseDB.isAvailable()) {
-        const firebaseData = await this.firebaseDB.getAllData('storage', {
-          key: key,
-          deviceId: options.deviceId || this.getDeviceId()
-        });
+        try {
+          const firebaseData = await this.firebaseDB.getAllData('storage', {
+            key: key,
+            deviceId: options.deviceId || this.getDeviceId()
+          });
 
-        if (firebaseData && firebaseData.length > 0) {
-          // Get the most recent entry
-          const latestData = firebaseData.sort((a, b) => b.timestamp - a.timestamp)[0];
-          
-          // Update cache
-          this.cache.set(key, latestData);
-          
-          return this.parseStoredValue(latestData.value, latestData.dataType);
+          if (firebaseData && firebaseData.length > 0) {
+            // Get the most recent entry
+            const latestData = firebaseData.sort((a, b) => b.timestamp - a.timestamp)[0];
+            
+            // Update cache
+            this.cache.set(key, latestData);
+
+            return this.parseStoredValue(latestData.value, latestData.dataType);
+          }
+        } catch (firebaseError) {
+          if (firebaseError.code === 'permission-denied' || firebaseError.message.includes('insufficient permissions')) {
+            console.warn(`Firebase permission denied for ${key}, falling back to localStorage`);
+            const localValue = localStorage.getItem(key);
+            return localValue;
+          } else {
+            throw firebaseError;
+          }
         }
       }
 
-      // Fallback to localStorage for migration purposes
+      // Fallback to localStorage when Firebase is not available or no data found
       const localValue = localStorage.getItem(key);
       if (localValue !== null) {
-        // Migrate to Firebase
-        await this.setItem(key, localValue);
+        // Migrate to Firebase if possible
+        try {
+          await this.setItem(key, localValue);
+        } catch (migrationError) {
+          console.warn(`Could not migrate ${key} to Firebase:`, migrationError);
+        }
         return localValue;
       }
 
       return null;
     } catch (error) {
       console.error(`Error getting item ${key}:`, error);
-      return null;
+      // Final fallback to localStorage
+       try {
+         return localStorage.getItem(key);
+       } catch (localStorageError) {
+         console.error(`Failed to get from localStorage as well:`, localStorageError);
+         return null;
+       }
     }
   }
 

@@ -182,16 +182,16 @@ Firestore Database
 │   
 ├── products/
 │   ├── {productId}
-│   │   ├── Length: number
-│   │   ├── PriceListName: string
-│   │   ├── Currency: string
-│   │   ├── Category: string
-│   │   ├── Density: string
-│   │   ├── Product: string
-│   │   ├── Colors: string
-│   │   ├── StandardWeight: number
-│   │   ├── Rate: number
-│   │   ├── CanBeSoldInKG: string
+│   │   ├── Length: number                    // Column 1: Length of the product (numeric value)
+│   │   ├── PriceListName: string             // Column 2: Name of the pricelist (text)
+│   │   ├── Currency: string                  // Column 3: Currency for listed prices (3-letter currency code)
+│   │   ├── Category: string                  // Column 4: Category of the products (text)
+│   │   ├── Density: string                   // Column 5: Density (numeric value with units)
+│   │   ├── Product: string                   // Column 6: Product name/identifier (text)
+│   │   ├── Colors: string                    // Column 7: Available colors (comma-separated list)
+│   │   ├── StandardWeight: number            // Column 8: Standard Available Weight (numeric value with units)
+│   │   ├── Rate: number                      // Column 9: Rate/price (numeric value)
+│   │   ├── BundledSalesKG: boolean           // Column 10: Bundled sales indicator (boolean flag for kg-based bundled sales)
 │   │   └── updatedAt: timestamp
 │   
 ├── quotes/

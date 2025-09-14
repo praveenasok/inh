@@ -1,14 +1,7 @@
 // Main Functions for Price List Generator
 // This file contains all the core functionality for the application
 
-// Admin panel initialization function
-function initAdminPanel() {
-  console.log('Admin panel initialized');
-  // Add any admin panel initialization logic here
-}
 
-// Initialize the admin panel when DOM is loaded
-document.addEventListener('DOMContentLoaded', initAdminPanel);
 
 // Additional functions for quote image download
 function downloadQuoteAsImage() {

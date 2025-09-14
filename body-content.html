@@ -13,7 +13,6 @@
         <!-- Logo flush right -->
         <div class="flex-shrink-0">
           <img src="images/logo.png" alt="Company Logo" class="h-12 sm:h-16 w-auto opacity-75 hover:opacity-100 transition-opacity duration-200">
-        </div>
       </div>
       
       <!-- Navigation Menu below header -->
@@ -22,19 +21,15 @@
           <button id="nav-price-calculator" class="nav-btn nav-btn-active btn-primary px-4 py-2 rounded-lg font-medium hover:bg-emerald-700 transition-all duration-200 flex items-center gap-2">
             <span>ðŸ“Š</span>
             <span>PriceLists</span>
-          </button>
           <button id="nav-quote-maker" class="nav-btn px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2">
             <span class="text-lg">ðŸ“‹</span>
             <span>Quote Maker</span>
-          </button>
           <button id="nav-product-catalog" class="nav-btn px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2">
             <span class="text-lg">ðŸ“¦</span>
             <span>Product Catalog</span>
-          </button>
-          <button id="nav-admin-panel" class="nav-btn px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2">
-            <span class="text-lg">âš™ï¸</span>
+          <button id="nav-admin-panel" class="nav-btn px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2" onclick="window.location.href='admin-sync-interface.html'">
+            <span class="text-lg">âš™ï¸</span>
             <span>Admin Panel</span>
-          </button>
         </nav>
       </div>
       
@@ -44,20 +39,15 @@
           <button id="nav-price-calculator-mobile" class="nav-btn nav-btn-active btn-primary px-3 py-2 rounded-lg font-medium hover:bg-emerald-700 transition-all duration-200 flex items-center gap-1 text-sm">
             <span>ðŸ“Š</span>
             <span>PriceLists</span>
-          </button>
           <button id="nav-quote-maker-mobile" class="nav-btn px-3 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-1 text-sm">
             <span>ðŸ“‹</span>
             <span>Quote</span>
-          </button>
           <button id="nav-product-catalog-mobile" class="nav-btn px-3 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-1 text-sm">
             <span>ðŸ“¦</span>
             <span>Catalog</span>
-          </button>
-          <button id="nav-admin-panel-mobile" class="nav-btn px-3 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-1 text-sm">
-            <span>âš™ï¸</span>
+          <button id="nav-admin-panel-mobile" class="nav-btn px-3 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-1 text-sm" onclick="window.location.href='admin-sync-interface.html'">
+            <span>âš™ï¸</span>
             <span>Admin</span>
-          </button>
-        </div>
       </nav>
     </div>
   </header>
@@ -140,7 +130,6 @@
               <!-- Options will be populated here -->
             </div>
           </div>
-        </div>
 
         <!-- Densities -->
         <div>
@@ -152,7 +141,6 @@
               <!-- Options will be populated here -->
             </div>
           </div>
-        </div>
 
         <!-- Colors -->
         <div>
@@ -164,7 +152,6 @@
               <!-- Options will be populated here -->
             </div>
           </div>
-        </div>
       </div>
 
       <!-- Second Row -->
@@ -214,7 +201,6 @@
         <!-- Segments (Hidden) -->
         <div>
           <div id="segmentsList" class="flex flex-wrap gap-2" style="display: none;"></div>
-        </div>
       </div>
     </div>
 
@@ -229,7 +215,6 @@
           <div class="w-full max-w-[515px] mx-auto" style="min-width: 320px;">
             <!-- HTML preview content will be generated here -->
           </div>
-        </div>
       </div>
     </div>
 
@@ -397,14 +382,11 @@
         <div class="dropdown-option border-b border-gray-200 pb-1 mb-1">
           <button class="select-all-btn w-full text-left px-2 py-1 text-sm text-blue-600 hover:bg-blue-50 rounded" data-dropdown-id="${dropdown.id}">
             âš¡ Select All
-          </button>
-        </div>
       ` : '';
       
       list.innerHTML = selectAllOption + arr.map(v => `
         <div class="dropdown-option">
           <label>${escapeHTML(v)}</label>
-        </div>
       `).join('');
       
       btn.disabled = arr.length === 0;
@@ -435,8 +417,6 @@
         <div class="dropdown-option border-b border-gray-200 pb-1 mb-1">
           <button class="select-all-btn w-full text-left px-2 py-1 text-sm text-blue-600 hover:bg-blue-50 rounded" data-dropdown-id="${dropdown.id}">
             âš¡ Select All
-          </button>
-        </div>
       ` : '';
       
       list.innerHTML = selectAllOption + productArray.map(product => `
@@ -445,7 +425,6 @@
             <span>${escapeHTML(product.name)}</span>
             <span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">[${escapeHTML(product.priceList)}]</span>
           </label>
-        </div>
       `).join('');
       
       btn.disabled = productArray.length === 0;
@@ -1040,7 +1019,6 @@
               </div>
             </div>
           </div>
-        </div>
       `;
     }
 
@@ -1488,7 +1466,6 @@
           <div class="text-2xl mb-2">â³</div>
           <div class="font-medium">Generating PDF...</div>
           <div class="text-sm text-gray-600 mt-1">Please wait</div>
-        </div>
       `;
       document.body.appendChild(loadingOverlay);
       
@@ -2694,7 +2671,6 @@
             <p>Thank you for choosing Indian Natural Hair Pvt Ltd</p>
             <p>For inquiries, please contact us at info@indiannaturalhair.com</p>
           </div>
-        </div>
       `;
     }
     
@@ -2722,7 +2698,6 @@
         <div class="flex items-center gap-2">
           <span class="text-lg">âœ…</span>
           <span class="font-medium">${message}</span>
-        </div>
       `;
       document.body.appendChild(successMsg);
       setTimeout(() => successMsg.remove(), 4000);
@@ -2736,7 +2711,6 @@
         <div class="flex items-center gap-2">
           <span class="text-lg">âŒ</span>
           <span class="font-medium">${message}</span>
-        </div>
       `;
       document.body.appendChild(errorMsg);
       setTimeout(() => errorMsg.remove(), 4000);
@@ -2803,7 +2777,6 @@
         <div class="flex items-center gap-2">
           <span class="text-lg">âœ…</span>
           <span class="font-medium">${selectedPNGs.length} PNG file(s) downloaded successfully!</span>
-        </div>
       `;
       document.body.appendChild(successMsg);
       setTimeout(() => successMsg.remove(), 3000);
@@ -3451,7 +3424,6 @@
         <!-- Enhanced Catalog Header -->
         <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-6 mb-6 text-white">
           <p class="text-blue-100">Discover our premium hair extension collection</p>
-        </div>
         
         <!-- Modern Catalog Filters -->
         <section class="bg-white rounded-xl shadow-lg border border-gray-100 p-6 mb-6">
@@ -3574,19 +3546,10 @@
         </section>
       </div>
       
-      <!-- Admin Panel Module -->
-      <div id="admin-panel-module" class="module-content">
-        <div class="bg-white rounded-xl shadow-soft p-4 sm:p-6 mobile-padding">
-          <h2 class="text-xl font-semibold mb-4 text-gray-800">Admin Panel</h2>
-          
-          <!-- Admin Functions Grid -->
-          <div class="grid grid-cols-1 gap-4 mb-6">
-            <!-- Excel Data Management -->
-            <div class="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-lg p-4 hover:shadow-md transition-all duration-200">
-              <div class="text-3xl mb-3">ðŸ“Š</div>
+“Š</div>
               <h3 class="text-lg font-semibold text-gray-800 mb-2">Data Management</h3>
               <p class="text-sm text-gray-600 mb-4">Load and manage Excel data, update product catalogs</p>
-              <button onclick="openAdminPanel()" class="w-full px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-all duration-200 hover:transform hover:scale-105">
+              <button onclick="window.location.href='admin-sync-interface.html'" class="w-full px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-all duration-200 hover:transform hover:scale-105">
                 Open Data Manager
               </button>
             </div>
@@ -3595,1102 +3558,32 @@
           </div>
           
 
-        </div>
       </div>
       
     </div> <!-- End Module Container -->
 
-  <!-- Admin Panel Modal -->
-  <div id="adminModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden transition-opacity duration-300">
-    <div class="bg-white rounded-lg p-4 sm:p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto transform transition-all duration-300 scale-95 opacity-0">
-      <div class="flex items-center justify-between mb-4">
-        <h3 class="text-lg font-semibold text-gray-800">Admin Panel</h3>
-        <button id="closeAdmin" class="text-gray-500 hover:text-gray-700 transition-colors duration-200 p-1 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-300">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-          </svg>
-        </button>
-      </div>
+
+
+
+
       
-      <div class="space-y-4">
-        <div class="border rounded-lg p-4">
-          <h4 class="font-medium text-gray-700 mb-2">Excel Data Loader</h4>
-          <p class="text-sm text-gray-600 mb-3">Load and embed Excel data directly into the application</p>
-          <button id="convertExcel" class="w-full px-4 py-3 sm:py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-all duration-200 hover:transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-300 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] touch-manipulation">
-            <span class="convert-text">ðŸ“ Load Excel Data</span>
-            <span class="convert-loading hidden">â³ Loading...</span>
-          </button>
-        </div>
-        
+
+
+
+
 
         
-        <div class="border rounded-lg p-4">
-          <h4 class="font-medium text-gray-700 mb-2">Database Status</h4>
-          <div id="dbStatus" class="text-sm text-gray-600">
-            <div>Current records: <span id="recordCount">Loading...</span></div>
-            <div>Sales representatives: <span id="salesRepCount">Loading...</span></div>
-            <div>Last updated: <span id="lastUpdated">Loading...</span></div>
-          </div>
-        </div>
-        
-        <div id="adminMessages" class="hidden">
-          <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
-            <div id="adminMessageText" class="text-sm text-blue-800"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+
+
+
 
   <script>
-    // Admin Panel Functionality
-    let availablePriceLists = new Set();
-    
-    // Initialize admin panel
-    function initAdminPanel() {
-      const adminModal = document.getElementById('adminModal');
-      const closeAdmin = document.getElementById('closeAdmin');
-      const convertExcel = document.getElementById('convertExcel');
-      
-      // Function to open admin panel with animation
-      window.openAdminPanel = async () => {
-        adminModal.classList.remove('hidden');
-        // Trigger animation
-        setTimeout(() => {
-          const modalContent = adminModal.querySelector('div > div');
-          modalContent.classList.remove('scale-95', 'opacity-0');
-          modalContent.classList.add('scale-100', 'opacity-100');
-        }, 10);
-        await updateAdminStatus();
-      };
-      
-      // Close admin panel with animation
-      closeAdmin.addEventListener('click', () => {
-        const modalContent = adminModal.querySelector('div > div');
-        modalContent.classList.remove('scale-100', 'opacity-100');
-        modalContent.classList.add('scale-95', 'opacity-0');
-        setTimeout(() => {
-          adminModal.classList.add('hidden');
-        }, 300);
-      });
-      
-      // Close on backdrop click with animation
-      adminModal.addEventListener('click', (e) => {
-        if (e.target === adminModal) {
-          const modalContent = adminModal.querySelector('div > div');
-          modalContent.classList.remove('scale-100', 'opacity-100');
-          modalContent.classList.add('scale-95', 'opacity-0');
-          setTimeout(() => {
-            adminModal.classList.add('hidden');
-          }, 300);
-        }
-      });
-      
-      // Convert Excel functionality
-      convertExcel.addEventListener('click', handleExcelConversion);
-      
-      // Remove INR25 functionality
-
-    }
-    
-    // Update admin status display with validation
-    async function updateAdminStatus() {
-      const recordCount = document.getElementById('recordCount');
-      const salesRepCount = document.getElementById('salesRepCount');
-      const lastUpdated = document.getElementById('lastUpdated');
-      
-      // Validate current data
-      const validation = validateProductData(state.allProducts);
-      
-      recordCount.innerHTML = `
-        <div>${validation.stats.totalProducts} total</div>
-        <div class="text-xs ${validation.isValid ? 'text-green-600' : 'text-red-600'}">
-          ${validation.stats.validProducts} valid
-          ${validation.errors.length > 0 ? ` â€¢ ${validation.errors.length} errors` : ''}
-          ${validation.warnings.length > 0 ? ` â€¢ ${validation.warnings.length} warnings` : ''}
-        </div>
-        <div class="text-xs text-gray-500">
-          ${validation.stats.categories.size} categories â€¢ ${validation.stats.priceLists.size} price lists
-        </div>
-      `;
-      
-      // Get sales representatives count
-      try {
-        const response = await fetch('/data.json');
-        const data = await response.json();
-        const salesmenCount = data.salesmen ? data.salesmen.length : 0;
-        salesRepCount.innerHTML = `
-          <div>${salesmenCount} active</div>
-          <div class="text-xs text-gray-500">personnel</div>
-        `;
-      } catch (error) {
-        console.error('Error fetching salesmen data:', error);
-        salesRepCount.innerHTML = `
-          <div>0 active</div>
-          <div class="text-xs text-red-500">error loading</div>
-        `;
-      }
-      
-      lastUpdated.textContent = new Date().toLocaleString();
-      
-      // Show validation summary if there are issues
-      if (!validation.isValid || validation.warnings.length > 0) {
-        const issues = [...validation.errors, ...validation.warnings.slice(0, 3)];
-        if (validation.warnings.length > 3) {
-          issues.push(`... and ${validation.warnings.length - 3} more warnings`);
-        }
-        showAdminMessage(`Data validation: ${issues.join('; ')}`, validation.isValid ? 'warning' : 'error');
-      }
-    }
-    
-    // Enhanced Excel to JSON conversion with better error handling
-    async function handleExcelConversion() {
-      const convertBtn = document.getElementById('convertExcel');
-      const originalText = convertBtn.innerHTML;
-      
-      try {
-        // Validate button exists
-        if (!convertBtn) {
-          throw new Error('Convert button not found');
-        }
-        
-        convertBtn.innerHTML = 'â³ Converting...';
-        convertBtn.disabled = true;
-        
-        showAdminMessage('Starting Excel conversion process...', 'info');
-        
-        // Create file input for Excel file selection
-        const fileInput = document.createElement('input');
-        fileInput.type = 'file';
-        fileInput.accept = '.xlsx,.xls';
-        fileInput.multiple = true;
-        
-        // Promise to handle file selection
-        const fileSelectionPromise = new Promise((resolve, reject) => {
-          fileInput.onchange = (e) => {
-            const files = Array.from(e.target.files);
-            if (files.length === 0) {
-              reject(new Error('No files selected'));
-              return;
-            }
-            resolve(files);
-          };
-          
-          fileInput.oncancel = () => {
-            console.log('File selection cancelled by user');
-            showAdminMessage('File selection cancelled', 'warning');
-            reject(new Error('CANCELLED'));
-          };
-        });
-        
-        // Trigger file selection
-        fileInput.click();
-        
-        // Wait for file selection
-        let selectedFiles;
-        try {
-          selectedFiles = await fileSelectionPromise;
-        } catch (error) {
-          if (error.message === 'CANCELLED') {
-            // User cancelled file selection, restore button and return
-            convertBtn.innerHTML = '📊 Convert Excel to JSON';
-            convertBtn.disabled = false;
-            return;
-          }
-          throw error; // Re-throw other errors
-        }
-        
-        showAdminMessage(`Processing ${selectedFiles.length} Excel file(s)...`, 'info');
-        
-        let allProcessedData = [];
-        let processedPriceLists = new Set();
-        
-        // Process each selected Excel file with enhanced validation
-        for (const file of selectedFiles) {
-          try {
-            // Validate file size (max 10MB)
-            if (file.size > 10 * 1024 * 1024) {
-              throw new Error(`File too large: ${(file.size / 1024 / 1024).toFixed(1)}MB (max 10MB)`);
-            }
-            
-            // Validate file type
-            const validTypes = ['.xlsx', '.xls'];
-            const fileExtension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
-            if (!validTypes.includes(fileExtension)) {
-              throw new Error(`Invalid file type: ${fileExtension}. Only .xlsx and .xls files are supported.`);
-            }
-            
-            showAdminMessage(`Processing ${file.name} (${(file.size / 1024).toFixed(1)}KB)...`, 'info');
-            
-            const data = await parseExcelFile(file);
-            
-            // Validate parsed data
-            if (!data || !data.products || !Array.isArray(data.products)) {
-              throw new Error('Invalid data structure returned from Excel parser');
-            }
-            
-            if (data.products.length === 0) {
-              showAdminMessage(`âš ï¸ No valid products found in ${file.name}`, 'warning');
-              continue;
-            }
-            
-            // Validate each product before adding
-            const validProducts = data.products.filter(product => {
-              return product && typeof product === 'object' && 
-                     product.Category && product.Product && product.Rate;
-            });
-            
-            if (validProducts.length !== data.products.length) {
-              showAdminMessage(`âš ï¸ ${file.name}: ${data.products.length - validProducts.length} invalid products filtered out`, 'warning');
-            }
-            
-            allProcessedData = allProcessedData.concat(validProducts);
-            
-            // Extract price list names from the PriceList field in products
-            validProducts.forEach(product => {
-              if (product.PriceList && product.PriceList.trim()) {
-                processedPriceLists.add(product.PriceList.trim());
-              }
-            });
-            
-            showAdminMessage(`âœ… Processed ${file.name}: ${validProducts.length} valid products`, 'info');
-            
-          } catch (fileError) {
-            console.error(`Error processing ${file.name}:`, fileError);
-            showAdminMessage(`âŒ Error processing ${file.name}: ${fileError.message}`, 'error');
-            // Continue processing other files even if one fails
-          }
-        }
-        
-        if (allProcessedData.length > 0) {
-          // Validate processed data before proceeding
-          const validation = validateProductData(allProcessedData);
-          
-          if (!validation.isValid) {
-            showAdminMessage(`âŒ Data validation failed: ${validation.errors.slice(0, 3).join('; ')}`, 'error');
-            if (validation.errors.length > 3) {
-              console.error('Additional validation errors:', validation.errors.slice(3));
-            }
-            return;
-          }
-          
-          if (validation.warnings.length > 0) {
-            showAdminMessage(`âš ï¸ Data warnings: ${validation.warnings.slice(0, 2).join('; ')}`, 'warning');
-            if (validation.warnings.length > 2) {
-              console.warn('Additional validation warnings:', validation.warnings.slice(2));
-            }
-          }
-          
-          // Generate and save JSON with duplicate removal
-          const cleanedData = await generateAndSaveJSON(allProcessedData, Array.from(processedPriceLists));
-          
-          // Validate cleaned data
-          if (!cleanedData || cleanedData.length === 0) {
-            throw new Error('No data remained after cleaning and validation');
-          }
-          
-          // Update the application data with cleaned data
-          state.allProducts = cleanedData;
-          state.filteredProducts = [...cleanedData];
-          productData = cleanedData;
-          
-          // Update embedded data in HTML with cleaned data
-          updateEmbeddedData(cleanedData);
-          
-          // Update price lists
-          processedPriceLists.forEach(pl => availablePriceLists.add(pl));
-          updatePriceListDropdown();
-          
-          // Refresh the UI
-          populateCategories();
-          
-          const successMessage = `âœ… Conversion completed! Processed ${cleanedData.length} unique records from ${selectedFiles.length} file(s). Added ${processedPriceLists.size} new price list(s). JSON generated and embedded in HTML.`;
-          showAdminMessage(successMessage, 'success');
-          await updateAdminStatus();
-          
-        } else {
-          showAdminMessage('âŒ No valid data found in the selected files. Please check file format and content.', 'error');
-        }
-        
-      } catch (error) {
-        // Categorize different types of errors
-        if (error.message === 'CANCELLED' || error.message === 'File selection cancelled' || error.message === 'No files selected') {
-          showAdminMessage('File selection cancelled.', 'info');
-          // Don't log cancellation as an error
-          console.log('User cancelled file selection');
-        } else if (error.name === 'TypeError' || error.message.includes('Cannot read property')) {
-          showAdminMessage(`âŒ Data structure error: ${error.message}. Please check file format.`, 'error');
-        } else if (error.message.includes('File too large') || error.message.includes('Invalid file type')) {
-          showAdminMessage(`âŒ File validation error: ${error.message}`, 'error');
-        } else if (error.message.includes('Failed to parse')) {
-          showAdminMessage(`âŒ Excel parsing error: ${error.message}. Please ensure the file is not corrupted.`, 'error');
-        } else {
-          showAdminMessage(`âŒ Unexpected error during conversion: ${error.message}`, 'error');
-        }
-        
-        // Log full error details for debugging
-        console.error('Full error details:', {
-          name: error.name,
-          message: error.message,
-          stack: error.stack
-        });
-        
-      } finally {
-        // Ensure button is always restored
-        try {
-          if (convertBtn) {
-            convertBtn.innerHTML = originalText;
-            convertBtn.disabled = false;
-          }
-        } catch (restoreError) {
-          console.error('Error restoring button state:', restoreError);
-        }
-      }
-    }
-    
-    // Parse Excel file using SheetJS
-    async function parseExcelFile(file) {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        
-        reader.onload = (e) => {
-          try {
-            const data = new Uint8Array(e.target.result);
-            const workbook = XLSX.read(data, { type: 'array' });
-            
-            // Get the first worksheet
-            const firstSheetName = workbook.SheetNames[0];
-            const worksheet = workbook.Sheets[firstSheetName];
-            
-            // Convert to JSON
-            const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-            
-            if (jsonData.length < 2) {
-              reject(new Error('Excel file must contain at least a header row and one data row'));
-              return;
-            }
-            
-            // Parse the data
-            const headers = jsonData[0];
-            const products = [];
-            
-            // Map common header variations to standard field names
-            const headerMap = {
-              'category': ['category', 'catagory', 'cat', 'type'],
-              'product': ['product', 'prod', 'name', 'product name'],
-              'density': ['density', 'dens', 'thickness'],
-              'colors': ['colors', 'color', 'colour', 'colours'],
-              'length': ['length', 'len', 'size'],
-              'rate': ['rate', 'price', 'cost', 'amount'],
-              'canBeSoldInKG': ['can be sold in kg?', 'kg', 'kilogram', 'can be sold in kg'],
-              'standardWeight': ['standard weight', 'weight', 'std weight', 'wt'],
-              'priceListName': ['price list name', 'pricelist name', 'pricelistname', 'price list', 'pricelist']
-            };
-            
-            // Find column indices for each field
-            const columnIndices = {};
-            Object.keys(headerMap).forEach(field => {
-              const variations = headerMap[field];
-              for (let i = 0; i < headers.length; i++) {
-                const header = (headers[i] || '').toString().toLowerCase().trim();
-                if (variations.includes(header)) {
-                  columnIndices[field] = i;
-                  break;
-                }
-              }
-            });
-            
-            // Process data rows
-            for (let i = 1; i < jsonData.length; i++) {
-              const row = jsonData[i];
-              if (!row || row.length === 0) continue;
-              
-              const product = {
-                Category: row[columnIndices.category] || '',
-                Product: row[columnIndices.product] || '',
-                Density: row[columnIndices.density] || '',
-                Colors: row[columnIndices.colors] || '',
-                Length: row[columnIndices.length] || '',
-                Rate: row[columnIndices.rate] || '',
-                'Can Be Sold in KG?': row[columnIndices.canBeSoldInKG] || '',
-                'Standard Weight': row[columnIndices.standardWeight] || '',
-                PriceList: row[columnIndices.priceListName] || ''
-              };
-              
-              // Only add products with required fields
-              if (product.Category && product.Product && product.Rate) {
-                products.push(product);
-              }
-            }
-            
-            resolve({
-              products: products,
-              totalRows: jsonData.length - 1,
-              headers: headers
-            });
-            
-          } catch (parseError) {
-            reject(new Error(`Failed to parse Excel file: ${parseError.message}`));
-          }
-        };
-        
-        reader.onerror = () => {
-          reject(new Error('Failed to read the Excel file'));
-        };
-        
-        reader.readAsArrayBuffer(file);
-      });
-    }
-    
-    // Enhanced admin message system with error logging
-    function showAdminMessage(message, type = 'info', persistent = false) {
-      try {
-        const messagesDiv = document.getElementById('adminMessages');
-        const messageText = document.getElementById('adminMessageText');
-        
-        if (!messagesDiv || !messageText) {
-          console.error('Admin message elements not found');
-          // Fallback to console and alert
-          console.log(`[${type.toUpperCase()}] ${message}`);
-          if (type === 'error') {
-            alert(`Error: ${message}`);
-          }
-          return;
-        }
-        
-        messagesDiv.classList.remove('hidden');
-        messageText.textContent = message;
-        
-        // Log to console for debugging
-        console.log(`[ADMIN ${type.toUpperCase()}] ${message}`);
-        
-        // Update styling based on type
-        messagesDiv.className = 'border rounded-lg p-3';
-        if (type === 'success') {
-          messagesDiv.className += ' bg-green-50 border-green-200';
-          messageText.className = 'text-sm text-green-800';
-        } else if (type === 'error') {
-          messagesDiv.className += ' bg-red-50 border-red-200';
-          messageText.className = 'text-sm text-red-800';
-          // Log errors to console for debugging
-          console.error('Admin Error:', message);
-        } else if (type === 'warning') {
-          messagesDiv.className += ' bg-yellow-50 border-yellow-200';
-          messageText.className = 'text-sm text-yellow-800';
-          console.warn('Admin Warning:', message);
-        } else {
-          messagesDiv.className += ' bg-blue-50 border-blue-200';
-          messageText.className = 'text-sm text-blue-800';
-        }
-        
-        // Clear any existing timeout
-        if (window.adminMessageTimeout) {
-          clearTimeout(window.adminMessageTimeout);
-        }
-        
-        // Auto-hide after specified time (longer for errors, persistent for critical messages)
-        if (!persistent) {
-          const hideDelay = type === 'error' ? 8000 : type === 'warning' ? 6000 : 5000;
-          window.adminMessageTimeout = setTimeout(() => {
-            if (messagesDiv) {
-              messagesDiv.classList.add('hidden');
-            }
-          }, hideDelay);
-        }
-        
-      } catch (error) {
-        console.error('Error showing admin message:', error);
-        // Ultimate fallback
-        alert(`${type.toUpperCase()}: ${message}`);
-      }
-    }
-    
-    // Enhanced INR25 product removal with validation and loading states
-
-    
-    // Enhanced data integrity validation
-    function validateProductData(products) {
-      const validationResults = {
-        isValid: true,
-        errors: [],
-        warnings: [],
-        stats: {
-          totalProducts: products.length,
-          validProducts: 0,
-          categories: new Set(),
-          priceLists: new Set()
-        }
-      };
-      
-      if (!Array.isArray(products)) {
-        validationResults.errors.push('Product data is not an array');
-        validationResults.isValid = false;
-        return validationResults;
-      }
-      
-      if (products.length === 0) {
-        validationResults.warnings.push('No products found in dataset');
-        return validationResults;
-      }
-      
-      const requiredFields = ['Category', 'Product', 'Rate'];
-      const numericFields = ['Rate', 'Length'];
-      const validCategories = new Set();
-      const validPriceLists = new Set();
-      
-      products.forEach((product, index) => {
-        let isProductValid = true;
-        
-        // Check if product is an object
-        if (!product || typeof product !== 'object') {
-          validationResults.errors.push(`Row ${index + 1}: Invalid product data structure`);
-          return;
-        }
-        
-        // Check required fields
-        requiredFields.forEach(field => {
-          if (!product[field] || product[field].toString().trim() === '') {
-            validationResults.errors.push(`Row ${index + 1}: Missing required field '${field}'`);
-            isProductValid = false;
-          }
-        });
-        
-        // Validate numeric fields
-        numericFields.forEach(field => {
-          if (product[field] && product[field] !== '') {
-            const numValue = parseFloat(product[field]);
-            if (isNaN(numValue)) {
-              validationResults.warnings.push(`Row ${index + 1}: Field '${field}' value '${product[field]}' is not a valid number`);
-            } else if (field === 'Rate' && numValue <= 0) {
-              validationResults.warnings.push(`Row ${index + 1}: Rate must be greater than 0, found: ${numValue}`);
-            } else if (field === 'Length' && numValue <= 0) {
-              validationResults.warnings.push(`Row ${index + 1}: Length must be greater than 0, found: ${numValue}`);
-            }
-          }
-        });
-        
-        // Validate category format
-        if (product.Category) {
-          const category = product.Category.toString().trim();
-          if (category.length > 50) {
-            validationResults.warnings.push(`Row ${index + 1}: Category name too long (${category.length} chars)`);
-          }
-          validCategories.add(category);
-          validationResults.stats.categories.add(category);
-        }
-        
-        // Validate product name
-        if (product.Product) {
-          const productName = product.Product.toString().trim();
-          if (productName.length > 100) {
-            validationResults.warnings.push(`Row ${index + 1}: Product name too long (${productName.length} chars)`);
-          }
-        }
-        
-        // Validate price list
-        if (product.PriceList) {
-          const priceList = product.PriceList.toString().trim();
-          if (priceList.length > 20) {
-            validationResults.warnings.push(`Row ${index + 1}: Price list name too long (${priceList.length} chars)`);
-          }
-          validPriceLists.add(priceList);
-          validationResults.stats.priceLists.add(priceList);
-        }
-        
-        // Validate KG field
-        if (product['Can Be Sold in KG?']) {
-          const kgValue = product['Can Be Sold in KG?'].toString().toLowerCase();
-          if (!['y', 'n', 'yes', 'no', 'true', 'false'].includes(kgValue)) {
-            validationResults.warnings.push(`Row ${index + 1}: Invalid 'Can Be Sold in KG?' value: ${product['Can Be Sold in KG?']}`);
-          }
-        }
-        
-        if (isProductValid) {
-          validationResults.stats.validProducts++;
-        }
-      });
-      
-      // Check for duplicate products with enhanced key
-      const productKeyMap = new Map();
-      const duplicateGroups = new Map();
-      
-      products.forEach((product, index) => {
-        const key = `${product.Category || ''}-${product.Product || ''}-${product.Density || ''}-${product.Colors || ''}-${product.Length || ''}-${product.PriceList || ''}`;
-        
-        if (productKeyMap.has(key)) {
-          // This is a duplicate
-          if (!duplicateGroups.has(key)) {
-            // First time seeing this duplicate, add the original row
-            duplicateGroups.set(key, [productKeyMap.get(key)]);
-          }
-          // Add the current duplicate row
-          duplicateGroups.get(key).push(index + 1);
-        } else {
-          // First occurrence of this key
-          productKeyMap.set(key, index + 1);
-        }
-      });
-      
-      // Report duplicates with helpful guidance
-      duplicateGroups.forEach((rows, key) => {
-        const productInfo = key.split('-').slice(0, 3).join(' - ');
-        validationResults.warnings.push(`Duplicate products found in rows: ${rows.join(', ')} (${productInfo}). Please review and remove duplicate entries or ensure they have different specifications.`);
-      });
-      
-      // Additional validation checks
-      if (validCategories.size === 0) {
-        validationResults.errors.push('No valid categories found');
-      }
-      
-      if (validCategories.size > 50) {
-        validationResults.warnings.push(`Large number of categories detected: ${validCategories.size}`);
-      }
-      
-      if (validPriceLists.size > 20) {
-        validationResults.warnings.push(`Large number of price lists detected: ${validPriceLists.size}`);
-      }
-      
-      validationResults.isValid = validationResults.errors.length === 0;
-      return validationResults;
-    }
-    
-    // Initialize price list dropdown
-    function initPriceListDropdown() {
-      console.log('Initializing price list dropdown...');
-      console.log('state.allProducts length:', state.allProducts.length);
-      
-      // Clear existing price lists to ensure fresh data
-      availablePriceLists.clear();
-      
-      // Extract unique price lists from existing data
-      state.allProducts.forEach(product => {
-        if (product.PriceList) {
-          availablePriceLists.add(product.PriceList);
-        }
-      });
-      
-      console.log('Available price lists:', Array.from(availablePriceLists));
-      
-      updatePriceListDropdown();
-      
-      // Do not show products until a price list is selected
-      if (state.filteredProducts.length === 0 && state.allProducts.length > 0) {
-        console.log('No price list selected - products will be empty until price list is chosen');
-      }
-      
-      // Add event listener for price list selection
-      const priceListSelector = document.getElementById('priceListSelector');
-      if (priceListSelector) {
-        priceListSelector.addEventListener('change', handlePriceListChange);
-      } else {
-        console.error('Price list selector element not found!');
-      }
-    }
-    
-    // Initialize price calculator salesman dropdown
-    function initPriceCalculatorSalesmanDropdown() {
-      console.log('Initializing price calculator salesman dropdown...');
-      
-      const salesmanSelector = document.getElementById('price-calculator-salesman');
-      if (!salesmanSelector) {
-        console.error('Price calculator salesman selector not found!');
-        return;
-      }
-      
-      console.log('Found salesman selector:', salesmanSelector);
-      console.log('Salesman selector parent:', salesmanSelector.parentElement);
-      console.log('Salesman selector visible:', window.getComputedStyle(salesmanSelector).display);
-      console.log('Salesman selector offsetParent:', salesmanSelector.offsetParent);
-      
-      // Debug logging for dropdown visibility
-      console.log('Dropdown found:', salesmanSelector ? 'YES' : 'NO', 'Visible:', window.getComputedStyle(salesmanSelector).display);
-      
-      // Clear existing options
-      salesmanSelector.innerHTML = '<option value="">Select Salesman</option>';
-      
-      // Load salesmen data from server API
-      fetch('/api/get-data')
-        .then(response => {
-          console.log('API response status:', response.status);
-          return response.json();
-        })
-        .then(data => {
-          console.log('API response data:', data);
-          if (!data.success || !data.salesmen) {
-            throw new Error('No salesmen data found in API response');
-          }
-          
-          const salesmenData = data.salesmen;
-          console.log('Salesmen data:', salesmenData);
-          
-          // Populate dropdown with salesmen
-          salesmenData.forEach(salesman => {
-            const option = document.createElement('option');
-            // Handle both string format and object format
-            const salesmanName = typeof salesman === 'string' ? salesman : salesman.name;
-            option.value = salesmanName;
-            option.textContent = salesmanName;
-            salesmanSelector.appendChild(option);
-            console.log('Added salesman option:', salesmanName);
-          });
-          
-          console.log('Final dropdown options count:', salesmanSelector.options.length);
-          
-          // Restore previously selected salesman from localStorage
-          const savedSalesman = localStorage.getItem('priceCalculatorSelectedSalesman');
-          if (savedSalesman && salesmanSelector.querySelector(`option[value="${savedSalesman}"]`)) {
-            salesmanSelector.value = savedSalesman;
-          }
-          
-          console.log('Price calculator salesman dropdown initialized with', salesmenData.length, 'salesmen');
-        })
-        .catch(error => {
-          console.error('Error loading salesmen data:', error);
-          
-          // Add fallback salesmen
-          const fallbackSalesmen = [
-            'John Smith',
-            'Sarah Johnson',
-            'Mike Wilson'
-          ];
-          
-          fallbackSalesmen.forEach(salesman => {
-            const option = document.createElement('option');
-            option.value = salesman;
-            option.textContent = salesman;
-            salesmanSelector.appendChild(option);
-          });
-          
-          console.log('Using fallback salesmen data');
-        });
-      
-      // Add event listener to save selection
-      salesmanSelector.addEventListener('change', function() {
-        localStorage.setItem('priceCalculatorSelectedSalesman', this.value);
-        console.log('Saved selected salesman:', this.value);
-      });
-    }
-    
-    // Update price list dropdown options
-    function updatePriceListDropdown() {
-      const priceListSelector = document.getElementById('priceListSelector');
-      
-      // Clear existing options
-      priceListSelector.innerHTML = '';
-      
-      // Add price list options
-      const sortedPriceLists = Array.from(availablePriceLists).sort();
-      sortedPriceLists.forEach(priceList => {
-        const option = document.createElement('option');
-        option.value = priceList;
-        option.textContent = priceList;
-        priceListSelector.appendChild(option);
-      });
-      
-      // Auto-select the first price list if available
-      if (sortedPriceLists.length > 0) {
-        priceListSelector.value = sortedPriceLists[0];
-        // Trigger the change event to filter products
-        handlePriceListChange();
-      }
-    }
-    
-    // Clear product selections
-    function clearProducts() {
-      const productSelect = document.getElementById('new-item-product');
-      if (productSelect) {
-        productSelect.innerHTML = '<option value="">Select Product</option>';
-        productSelect.disabled = true;
-      }
-      
-      // Clear any product-related state
-      state.selectedProduct = '';
-    }
-    
-    // Handle price list selection change
-    function handlePriceListChange() {
-      const selectedPriceList = document.getElementById('priceListSelector').value;
-      
-      if (selectedPriceList) {
-        // Filter products by selected price list
-        state.filteredProducts = state.allProducts.filter(product => 
-          product.PriceList === selectedPriceList
-        );
-        showAdminMessage(`Filtered to ${state.filteredProducts.length} products from price list: ${selectedPriceList}`, 'info');
-        
-        // Auto-select USD currency for USA25 price list
-        if (selectedPriceList === 'USA25') {
-          const currencySelect = document.getElementById('currency');
-          currencySelect.value = 'USD';
-          state.currency = 'USD';
-          renderAllPagesToHTML(); // Update preview to reflect currency change
-        }
-      } else {
-        // No price list selected - keep products empty
-        state.filteredProducts = [];
-      }
-      
-      // Update categories and products based on filtered data
-      populateCategories();
-      
-      // Update catalog filters to reflect filtered products
-      populateCatalogFilters();
-      
-      // Clear current selections
-      state.category = '';
-      $('category').value = '';
-      clearProducts();
-      renderAllPagesToHTML();
-      
-      // Notify other modules about price list change
-      notifyPriceListChange();
-    }
-    
-    // --------- Real-time Synchronization Functions ---------
-    
-    // Notify other modules when price lists are updated
-    async function notifyPriceListChange() {
-      try {
-        const currentPriceLists = Array.from(availablePriceLists);
-        const response = await fetch('/api/sync-price-lists', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: 'price_list_updated',
-            priceLists: currentPriceLists,
-            sourceModule: 'priceListGenerator'
-          })
-        });
-        
-        if (response.ok) {
-          console.log('Price list change notification sent successfully');
-        }
-      } catch (error) {
-        console.error('Failed to notify price list change:', error);
-      }
-    }
-    
-    // Check for updates from other modules
-    async function checkForSyncUpdates() {
-      try {
-        const response = await fetch('/api/sync-status');
-        
-        // Check if response is JSON (API available) or HTML (static server)
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-          // API not available (using static server), skip sync checks
-          return;
-        }
-        
-        const data = await response.json();
-        
-        if (data.success && data.syncData) {
-          const lastUpdate = localStorage.getItem('priceListGenerator_lastSync') || '0';
-          
-          if (data.syncData.timestamp > parseInt(lastUpdate)) {
-            // Update available price lists from sync data
-            const syncedPriceLists = data.syncData.priceLists || [];
-            
-            // Check if price lists have changed
-            const currentPriceLists = Array.from(availablePriceLists).sort();
-            const newPriceLists = syncedPriceLists.sort();
-            
-            if (JSON.stringify(currentPriceLists) !== JSON.stringify(newPriceLists)) {
-              console.log('Price lists updated from other modules:', newPriceLists);
-              
-              // Update local price lists
-              availablePriceLists.clear();
-              newPriceLists.forEach(pl => availablePriceLists.add(pl));
-              
-              // Update dropdown
-              updatePriceListDropdown();
-              
-              showAdminMessage('Price lists synchronized from other modules', 'info');
-            }
-            
-            // Update last sync timestamp
-            localStorage.setItem('priceListGenerator_lastSync', data.syncData.timestamp.toString());
-          }
-        }
-      } catch (error) {
-        console.error('Failed to check for sync updates:', error);
-      }
-    }
-    
-    // Initialize real-time synchronization
-    function initializeRealTimeSync() {
-      // Check for updates every 5 seconds
-      setInterval(checkForSyncUpdates, 5000);
-      
-      // Initial check
-      checkForSyncUpdates();
-      
-      console.log('Real-time synchronization initialized for Price List Generator');
-    }
-    
-
-    
-    // Generate and save JSON file
-    async function generateAndSaveJSON(productData, priceLists) {
-      try {
-        // Remove duplicates based on a combination of key fields
-        const uniqueProducts = [];
-        const seen = new Set();
-        
-        productData.forEach(product => {
-          // Create a unique key based on important fields
-          const key = `${product.Category || ''}_${product.Product || ''}_${product.Density || ''}_${product.Length || ''}_${product.Colors || ''}_${product.PriceList || ''}`;
-          
-          if (!seen.has(key)) {
-            seen.add(key);
-            uniqueProducts.push(product);
-          }
-        });
-        
-        // Use unique products for further processing
-        const finalProductData = uniqueProducts.length > 0 ? uniqueProducts : productData;
-        
-        const jsonData = {
-          metadata: {
-            generatedAt: new Date().toISOString(),
-            totalRecords: finalProductData.length,
-            uniqueRecords: uniqueProducts.length,
-            duplicatesRemoved: productData.length - uniqueProducts.length,
-            priceLists: priceLists,
-            version: '1.0'
-          },
-          products: finalProductData
-        };
-        
-        // Log the data processing results
-        console.log('Data processed:', {
-          totalRecords: finalProductData.length,
-          uniqueRecords: uniqueProducts.length,
-          duplicatesRemoved: productData.length - uniqueProducts.length,
-          priceLists: priceLists
-        });
-        
-        showAdminMessage(`âœ… Data processed: ${finalProductData.length} unique records (${productData.length - uniqueProducts.length} duplicates removed)`, 'success');
-        
-        return finalProductData; // Return the cleaned data
-        
-      } catch (error) {
-        console.error('Error generating JSON:', error);
-        showAdminMessage(`âŒ Error generating JSON: ${error.message}`, 'error');
-        throw error;
-      }
-    }
-    
-    // Update embedded data in HTML and permanently save to file
-    async function updateEmbeddedData(newProductData) {
-      try {
-        // Clear existing application state
-        state.allProducts = [];
-        state.filteredProducts = [];
-        state.category = '';
-        state.selProducts = [];
-        state.selDensities = [];
-        state.selColors = [];
-        
-        // Clear localStorage
-        localStorage.removeItem('productData');
-        localStorage.removeItem('productDataTimestamp');
-        
-        // Update the global productData variable
-        window.productData = newProductData;
-        
-        // Find the EMBEDDED_DATA script element
-        let embeddedElement = document.getElementById('EMBEDDED_DATA');
-        
-        if (embeddedElement) {
-          // Remove existing embedded data
-          embeddedElement.remove();
-        }
-        
-        // Create new script element with updated data
-        const newScript = document.createElement('script');
-        newScript.id = 'EMBEDDED_DATA';
-        newScript.type = 'application/json';
-        newScript.textContent = JSON.stringify(newProductData);
-        
-        // Insert the new script element before the main script tag
-        const mainScript = document.querySelector('script:not([id="EMBEDDED_DATA"])');
-        if (mainScript) {
-          mainScript.parentNode.insertBefore(newScript, mainScript);
-        } else {
-          // Fallback: append to head
-          document.head.appendChild(newScript);
-        }
-        
-        // Note: JSON data is now embedded in the page and stored in localStorage
-        console.log('Product data successfully embedded and ready for use');
-        
-        // Update application state with new data
-        state.allProducts = [...newProductData];
-        state.filteredProducts = [...newProductData];
-        
-        // Store in localStorage for persistence
-        localStorage.setItem('productData', JSON.stringify(newProductData));
-        localStorage.setItem('productDataTimestamp', new Date().toISOString());
-        
-        // Refresh UI components
-        initPriceListDropdown();
-        populateCategories();
-        clearProducts();
-        renderAllPagesToHTML();
-        
-        showAdminMessage(`âœ… Data successfully embedded and saved to HTML file! Loaded ${newProductData.length} products with fresh state.`, 'success');
-        
-      } catch (error) {
-        console.error('Error updating embedded data:', error);
-        showAdminMessage(`âŒ Error updating embedded data: ${error.message}`, 'error');
-      }
-    }
-    
-    
-    // Load data from localStorage on page load
-    function loadStoredData() {
-      try {
-        const storedData = localStorage.getItem('productData');
-        const timestamp = localStorage.getItem('productDataTimestamp');
-        
-        if (storedData && timestamp) {
-          const parsedData = JSON.parse(storedData);
-          if (parsedData && parsedData.length > 0) {
-            // Update application data
-            state.allProducts = parsedData;
-            state.filteredProducts = [...parsedData];
-            window.productData = parsedData;
-            
-            console.log(`Loaded ${parsedData.length} products from localStorage (updated: ${timestamp})`);
-            
-            // Debug: Check first product structure
-            if (parsedData[0]) {
-              console.log('First product structure:', Object.keys(parsedData[0]));
-              console.log('First product PriceList field:', parsedData[0].PriceList);
-              console.log('First product Price List field:', parsedData[0]['Price List']);
-            }
-            
-            return true;
-          }
-        }
-      } catch (error) {
-        console.error('Error loading stored data:', error);
-      }
-      return false;
-    }
-    
-    // Initialize admin functionality when page loads
-    document.addEventListener('DOMContentLoaded', async () => {
-      console.log('DOM Content Loaded - starting initialization...');
-      initAdminPanel();
-      
+    (async function() {
       // Load data from embedded script or localStorage
       await init();
       
       console.log('Final state.allProducts length:', state.allProducts.length);
       initPriceListDropdown();
-      await updateAdminStatus();
       
       // Initialize navigation
       console.log('About to initialize navigation...');
@@ -4725,13 +3618,11 @@
       } else {
         console.error('Share button not found during initialization');
       }
-    });
-    
+    })();
+
     // Navigation functionality
     function initNavigation() {
       console.log('Initializing navigation...');
-      
-
       
       // Set Price List Calculator as default active
       const defaultModule = document.getElementById('price-calculator-module');
@@ -4923,6 +3814,10 @@
           updateQuoteTotals();
         });
       }
+      
+      // Loading saved quotes when the quote maker is initialized
+        console.log('🚀 initQuoteMaker: About to call renderSavedQuotesList');
+        renderSavedQuotesList();
       
       quoteMakerInitialized = true;
     }
@@ -5543,100 +4438,296 @@
       calculateFinancialTotals(subtotal);
     }
 
-    function saveQuote() {
-      if (quoteItems.length === 0) {
-        alert('Please add items to the quote before saving.');
-        return;
-      }
-
-      const now = new Date();
-      const dateStr = now.getFullYear().toString() + 
-                     (now.getMonth() + 1).toString().padStart(2, '0') + 
-                     now.getDate().toString().padStart(2, '0');
-      
-      const deviceId = getDeviceIdentifier();
-      
-      // Get existing quotes to determine auto number
-      const savedQuotes = JSON.parse(localStorage.getItem('savedQuotes') || '[]');
-      const todayQuotes = savedQuotes.filter(q => q.quoteId && q.quoteId.includes(`INH-${deviceId}-${dateStr}`));
-      const autoNumber = (todayQuotes.length + 1).toString().padStart(3, '0');
-      
-      const quoteId = `INH-${deviceId}-${dateStr}-${autoNumber}`;
-      
-      const quoteData = {
-        quoteId: quoteId,
-        quoteNumber: document.getElementById('quote-number').value,
-        date: document.getElementById('quote-date').value,
-        clientName: document.getElementById('client-name').value,
-        clientContact: document.getElementById('client-contact').value,
-        salesman: document.getElementById('salesman-name').value,
-        validDays: document.getElementById('valid-days').value,
-        briefPreview: document.getElementById('brief-preview').value,
-        items: [...quoteItems],
-        notes: document.getElementById('notes-terms').value,
-        discount: {
-          type: (() => {
-            const discountInput = document.getElementById('discount-input');
-            if (discountInput && discountInput.value.trim()) {
-              return discountInput.value.includes('%') ? 'percentage' : 'fixed';
-            }
-            return 'none';
-          })(),
-          value: (() => {
-            const discountInput = document.getElementById('discount-input');
-            if (discountInput && discountInput.value.trim()) {
-              return discountInput.value.replace('%', '');
-            }
-            return '0';
-          })()
-        },
-        shipping: {
-          type: (() => {
-            const shippingInput = document.getElementById('shipping-input');
-            if (shippingInput && shippingInput.value.trim() && parseFloat(shippingInput.value.trim()) > 0) {
-              return 'paid';
-            }
-            return 'free';
-          })(),
-          cost: document.getElementById('shipping-input')?.value || '0'
-        },
-        tax: {
-          type: (() => {
-            const taxInput = document.getElementById('tax-input');
-            if (taxInput && taxInput.value.trim()) {
-              return 'taxable';
-            }
-            return 'tax-free';
-          })(),
-          rate: (() => {
-            const taxInput = document.getElementById('tax-input');
-            if (taxInput && taxInput.value.trim()) {
-              return taxInput.value.replace('%', '');
-            }
-            return '0';
-          })()
-        },
-        savedAt: now.toISOString()
-      };
-
-      savedQuotes.push(quoteData);
-      localStorage.setItem('savedQuotes', JSON.stringify(savedQuotes));
-      
-      alert(`Quote saved successfully as ${quoteId}!`);
-      renderSavedQuotesList();
+    // Generate UUID for unique quote identifiers
+    function generateUUID() {
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        const r = Math.random() * 16 | 0;
+        const v = c == 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+      });
     }
 
-    function renderSavedQuotesList() {
+    // Show toast notification
+    function showToast(message, type = 'success') {
+      const toast = document.createElement('div');
+      toast.className = `fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg text-white transition-all duration-300 transform translate-x-full ${
+        type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500'
+      }`;
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      
+      // Animate in
+      setTimeout(() => {
+        toast.classList.remove('translate-x-full');
+      }, 100);
+      
+      // Animate out and remove
+      setTimeout(() => {
+        toast.classList.add('translate-x-full');
+        setTimeout(() => {
+          if (toast.parentNode) {
+            toast.parentNode.removeChild(toast);
+          }
+        }, 300);
+      }, 3000);
+    }
+
+    // Parse quote content into line items array
+    function parseQuoteLines() {
+      const lines = [];
+      
+      // Add header information
+      const quoteNumber = document.getElementById('quote-number').value;
+      const clientName = document.getElementById('client-name').value;
+      const date = document.getElementById('quote-date').value;
+      
+      if (quoteNumber) lines.push(`Quote Number: ${quoteNumber}`);
+      if (clientName) lines.push(`Client: ${clientName}`);
+      if (date) lines.push(`Date: ${date}`);
+      
+      // Add items
+      quoteItems.forEach((item, index) => {
+        lines.push(`${index + 1}. ${item.productName} - ${item.category} - ${item.color}`);
+        lines.push(`   Quantity: ${item.quantity} | Unit Price: ${item.unitPrice} | Total: ${item.totalPrice}`);
+        if (item.notes) {
+          lines.push(`   Notes: ${item.notes}`);
+        }
+      });
+      
+      // Add totals
+      const subtotal = calculateSubtotal();
+      const total = calculateTotal();
+      lines.push(`Subtotal: ${subtotal}`);
+      lines.push(`Total: ${total}`);
+      
+      // Add notes if any
+      const notes = document.getElementById('notes-terms').value;
+      if (notes) {
+        lines.push(`Notes: ${notes}`);
+      }
+      
+      return lines;
+    }
+
+    async function saveQuote() {
+      try {
+        // Validation
+        if (quoteItems.length === 0) {
+          showToast('Please add items to the quote before saving.', 'error');
+          return;
+        }
+
+        const clientName = document.getElementById('client-name').value;
+        if (!clientName || clientName.trim() === '') {
+          showToast('Please enter a client name before saving.', 'error');
+          return;
+        }
+
+        // Show loading state
+        const saveButton = document.querySelector('button[onclick="saveQuote()"]');
+        const originalText = saveButton ? saveButton.textContent : '';
+        if (saveButton) {
+          saveButton.textContent = 'Saving...';
+          saveButton.disabled = true;
+        }
+
+        const now = new Date();
+        const uuid = generateUUID();
+        const timestamp = now.getTime();
+        
+        // Generate unique quote identifier
+        const dateStr = now.getFullYear().toString() + 
+                       (now.getMonth() + 1).toString().padStart(2, '0') + 
+                       now.getDate().toString().padStart(2, '0');
+        
+        const deviceId = getDeviceIdentifier();
+        const quoteId = `INH-${deviceId}-${dateStr}-${uuid.substring(0, 8)}`;
+        
+        // Parse quote content into lines
+        const lines = parseQuoteLines();
+        
+        // Prepare quote data with consistent schema
+        const quoteData = {
+          quoteId: quoteId,
+          lines: lines,
+          quoteNumber: document.getElementById('quote-number').value,
+          date: document.getElementById('quote-date').value,
+          clientName: clientName,
+          clientContact: document.getElementById('client-contact').value,
+          salesman: document.getElementById('salesman-name').value,
+          validDays: document.getElementById('valid-days').value,
+          briefPreview: document.getElementById('brief-preview').value,
+          items: [...quoteItems],
+          notes: document.getElementById('notes-terms').value,
+          discount: {
+            type: (() => {
+              const discountInput = document.getElementById('discount-input');
+              if (discountInput && discountInput.value.trim()) {
+                return discountInput.value.includes('%') ? 'percentage' : 'fixed';
+              }
+              return 'none';
+            })(),
+            value: (() => {
+              const discountInput = document.getElementById('discount-input');
+              if (discountInput && discountInput.value.trim()) {
+                return discountInput.value.replace('%', '');
+              }
+              return '0';
+            })()
+          },
+          shipping: {
+            type: (() => {
+              const shippingInput = document.getElementById('shipping-input');
+              if (shippingInput && shippingInput.value.trim() && parseFloat(shippingInput.value.trim()) > 0) {
+                return 'paid';
+              }
+              return 'free';
+            })(),
+            cost: document.getElementById('shipping-input')?.value || '0'
+          },
+          tax: {
+             type: (() => {
+               const taxInput = document.getElementById('tax-input');
+               if (taxInput && taxInput.value.trim()) {
+                 return 'taxable';
+               }
+               return 'tax-free';
+             })(),
+             rate: (() => {
+               const taxInput = document.getElementById('tax-input');
+               if (taxInput && taxInput.value.trim()) {
+                 return taxInput.value.replace('%', '');
+               }
+               return '0';
+             })()
+           },
+           createdAt: now.toISOString(),
+           lastModified: now.toISOString(),
+           savedAt: now.toISOString(),
+           subtotal: calculateSubtotal(),
+           total: calculateTotal()
+         };
+
+         // Try Firebase first, fallback to localStorage
+         let savedQuote = null;
+         let saveMethod = 'localStorage';
+         
+         if (window.firebaseDB && window.firebaseDB.isAvailable()) {
+           try {
+             savedQuote = await window.firebaseDB.saveQuote(quoteData);
+             saveMethod = 'Firebase';
+             console.log('Quote saved to Firebase:', savedQuote);
+           } catch (firebaseError) {
+             console.warn('Firebase save failed, falling back to localStorage:', firebaseError);
+             
+             // Handle specific Firebase errors
+             if (firebaseError.code === 'permission-denied') {
+               showToast('Permission denied. Please check your Firebase access.', 'error');
+             } else if (firebaseError.code === 'unavailable') {
+               showToast('Firebase service unavailable. Saving locally.', 'info');
+             } else {
+               showToast('Network error. Saving locally.', 'info');
+             }
+             
+             // Fallback to localStorage
+             const savedQuotes = JSON.parse(localStorage.getItem('savedQuotes') || '[]');
+             savedQuotes.push(quoteData);
+             localStorage.setItem('savedQuotes', JSON.stringify(savedQuotes));
+             savedQuote = quoteData;
+           }
+         } else {
+           // Firebase not available, use localStorage
+           const savedQuotes = JSON.parse(localStorage.getItem('savedQuotes') || '[]');
+           savedQuotes.push(quoteData);
+           localStorage.setItem('savedQuotes', JSON.stringify(savedQuotes));
+           savedQuote = quoteData;
+           console.log('Quote saved to localStorage (Firebase not available)');
+         }
+
+         // Update UI immediately
+         renderSavedQuotesList();
+         
+         // Show success notification with highlight animation
+         showToast(`Quote saved successfully as ${quoteId} (${saveMethod})!`, 'success');
+         
+         // Add highlight animation to the newly saved quote
+         setTimeout(() => {
+           const quoteItems = document.querySelectorAll('.quote-item');
+           if (quoteItems.length > 0) {
+             const latestQuote = quoteItems[0]; // Assuming newest is first
+             latestQuote.classList.add('bg-green-100', 'border-green-300');
+             setTimeout(() => {
+               latestQuote.classList.remove('bg-green-100', 'border-green-300');
+               latestQuote.classList.add('bg-gray-50', 'border-gray-200');
+             }, 2000);
+           }
+         }, 500);
+         
+       } catch (error) {
+         console.error('Error saving quote:', error);
+         
+         // Handle different types of errors
+         if (error.name === 'ValidationError') {
+           showToast('Quote validation failed. Please check all required fields.', 'error');
+         } else if (error.message.includes('network') || error.message.includes('fetch')) {
+           showToast('Network error. Please check your connection and try again.', 'error');
+         } else {
+           showToast('Failed to save quote. Please try again.', 'error');
+         }
+         
+       } finally {
+         // Restore button state
+         const saveButton = document.querySelector('button[onclick="saveQuote()"]');
+         if (saveButton) {
+           saveButton.textContent = 'Save Quote';
+           saveButton.disabled = false;
+         }
+       }
+     }
+
+    async function renderSavedQuotesList() {
+      console.log('🔄 renderSavedQuotesList called');
       const container = document.getElementById('saved-quotes-container');
       const noQuotesMessage = document.getElementById('no-quotes-message');
-      const savedQuotes = JSON.parse(localStorage.getItem('savedQuotes') || '[]');
+      
+      console.log('📋 Container element:', container);
+      console.log('📋 No quotes message element:', noQuotesMessage);
+      
+      let savedQuotes = [];
+      
+      // Try to get quotes from Firebase first, fallback to localStorage
+      if (window.firebaseDB && window.firebaseDB.isAvailable()) {
+        try {
+          console.log('🔥 Trying Firebase...');
+          const firebaseQuotes = await window.firebaseDB.getQuotes();
+          savedQuotes = firebaseQuotes || [];
+          console.log('✅ Loaded quotes from Firebase:', savedQuotes.length);
+        } catch (error) {
+          console.warn('⚠️ Failed to load quotes from Firebase, using localStorage:', error);
+          savedQuotes = JSON.parse(localStorage.getItem('savedQuotes') || '[]');
+        }
+      } else {
+        console.log('💾 Using localStorage fallback');
+        const localStorageData = localStorage.getItem('savedQuotes');
+        console.log('💾 Raw localStorage data:', localStorageData);
+        savedQuotes = JSON.parse(localStorageData || '[]');
+        console.log('💾 Parsed quotes from localStorage:', savedQuotes.length);
+      }
+      
+      console.log('📊 Total quotes found:', savedQuotes.length);
       
       if (savedQuotes.length === 0) {
-        noQuotesMessage.style.display = 'block';
+        console.log('❌ No quotes found, showing no quotes message');
+        if (noQuotesMessage) {
+          noQuotesMessage.style.display = 'block';
+        }
         return;
       }
       
-      noQuotesMessage.style.display = 'none';
+      console.log('✅ Quotes found, hiding no quotes message');
+      if (noQuotesMessage) {
+        noQuotesMessage.style.display = 'none';
+      }
       
       // Create array with original indices before sorting
       const quotesWithOriginalIndex = savedQuotes.map((quote, originalIndex) => ({
@@ -5645,7 +4736,11 @@
       }));
       
       // Sort quotes by date (newest first)
-      quotesWithOriginalIndex.sort((a, b) => new Date(b.savedAt) - new Date(a.savedAt));
+      quotesWithOriginalIndex.sort((a, b) => {
+        const dateA = new Date(a.savedAt || a.createdAt || 0);
+        const dateB = new Date(b.savedAt || b.createdAt || 0);
+        return dateB - dateA;
+      });
       
       // Clear existing quotes except the no-quotes message
       const existingQuotes = container.querySelectorAll('.quote-item');
@@ -5653,23 +4748,34 @@
       
       quotesWithOriginalIndex.forEach((quote, displayIndex) => {
         const quoteItem = document.createElement('div');
-        quoteItem.className = 'quote-item bg-gray-50 border border-gray-200 rounded p-2 hover:bg-gray-100 transition-colors relative';
+        quoteItem.className = 'quote-item bg-gray-50 border border-gray-200 rounded p-2 hover:bg-gray-100 transition-colors relative cursor-pointer';
         quoteItem.innerHTML = `
-          <div class="flex items-center space-x-3 text-sm">
-            <span class="font-medium text-gray-900">${quote.quoteId}</span>
-            <span class="text-gray-600">${quote.clientName || 'No client name'}</span>
-            <span class="text-gray-500">${new Date(quote.savedAt).toLocaleDateString()}</span>
-            <span class="text-xs text-gray-400">(${quote.items.length} items)</span>
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3 text-sm">
+              <input type="checkbox" class="quote-checkbox" data-quote-index="${quote.originalIndex}" onchange="toggleQuoteSelection(this, ${quote.originalIndex})">
+              <span class="font-medium text-gray-900">${quote.quoteId}</span>
+              <span class="text-gray-600">${quote.clientName || 'No client name'}</span>
+              <span class="text-gray-500">${new Date(quote.savedAt || quote.createdAt).toLocaleDateString()}</span>
+              <span class="text-xs text-gray-400">(${quote.lines ? quote.lines.length : (quote.items ? quote.items.length : 0)} items)</span>
+            </div>
+            <button class="context-menu-btn text-gray-400 hover:text-gray-600 p-1" onclick="showQuoteContextMenu(this, ${quote.originalIndex}, '${quote.quoteId}')">
+              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"></path>
+              </svg>
+            </button>
           </div>
         `;
-        
-        // Checkbox functionality removed
         
         container.appendChild(quoteItem);
       });
     }
 
-    function showQuoteContextMenu(checkboxElement, quoteIndex) {
+    function toggleQuoteSelection(checkbox, quoteIndex) {
+      // Handle quote selection logic if needed
+      console.log('Quote selection toggled:', quoteIndex, checkbox.checked);
+    }
+
+    function showQuoteContextMenu(buttonElement, quoteIndex, quoteId) {
       // Remove any existing context menu
       hideQuoteContextMenu();
       
@@ -5677,10 +4783,40 @@
       contextMenu.className = 'quote-context-menu fixed bg-white border border-gray-200 rounded-lg shadow-lg z-50 py-1 min-w-48';
       contextMenu.id = 'quote-context-menu';
       
+      // Create menu items
+      contextMenu.innerHTML = `
+        <button class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2" onclick="viewQuoteDetails('${quoteId}')">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+          </svg>
+          <span>View Details</span>
+        </button>
+        <button class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2" onclick="editQuote('${quoteId}')">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+          </svg>
+          <span>Edit Quote</span>
+        </button>
+        <button class="w-full text-left px-4 py-2 text-sm text-blue-700 hover:bg-blue-50 flex items-center space-x-2" onclick="convertQuoteToOrder('${quoteId}')">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+          </svg>
+          <span>Convert to Order</span>
+        </button>
+        <hr class="my-1">
+        <button class="w-full text-left px-4 py-2 text-sm text-red-700 hover:bg-red-50 flex items-center space-x-2" onclick="deleteQuote('${quoteId}')">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+          </svg>
+          <span>Delete Quote</span>
+        </button>
+      `;
+      
       // Position the menu with viewport boundary checking
-      const rect = checkboxElement.getBoundingClientRect();
+      const rect = buttonElement.getBoundingClientRect();
       const menuWidth = 192; // min-w-48 = 12rem = 192px
-      const menuHeight = 120; // Approximate height for 3 buttons
+      const menuHeight = 200; // Approximate height for menu items
       
       let left = rect.right + 10;
       let top = rect.top;
@@ -5708,42 +4844,133 @@
       contextMenu.style.left = left + 'px';
       contextMenu.style.top = top + 'px';
       
-      contextMenu.innerHTML = `
-        <button class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center" onclick="recallQuote(${quoteIndex}); hideQuoteContextMenu();">
-          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
-          </svg>
-          Recall Quote
-        </button>
-        <button class="w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 flex items-center" onclick="shareQuoteFromContext(${quoteIndex}); hideQuoteContextMenu();">
-          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"></path>
-          </svg>
-          Share Quote
-        </button>
-        <button class="w-full text-left px-4 py-2 text-sm text-green-600 hover:bg-green-50 flex items-center" onclick="convertQuoteToOrder(${quoteIndex}); hideQuoteContextMenu();">
-          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-          </svg>
-          Convert to Order
-        </button>
-        <button class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center" onclick="if(deleteQuote(${quoteIndex})) hideQuoteContextMenu();">
-          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-          </svg>
-          Delete Quote
-        </button>
-      `;
-      
       document.body.appendChild(contextMenu);
       
-      // Store the current quote index for reference
-      contextMenu.dataset.quoteIndex = quoteIndex;
-      
-      // Set up click-outside behavior
+      // Close menu when clicking outside
       setTimeout(() => {
-        document.addEventListener('click', handleContextMenuClickOutside);
+        document.addEventListener('click', hideQuoteContextMenu, { once: true });
       }, 0);
+    }
+    
+    function hideQuoteContextMenu() {
+      const existingMenu = document.getElementById('quote-context-menu');
+      if (existingMenu) {
+        existingMenu.remove();
+      }
+    }
+    
+    function viewQuoteDetails(quoteId) {
+      hideQuoteContextMenu();
+      showToast('Quote details view not implemented yet', 'info');
+    }
+    
+    function editQuote(quoteId) {
+      hideQuoteContextMenu();
+      showToast('Quote editing not implemented yet', 'info');
+    }
+    
+    async function convertQuoteToOrder(quoteId) {
+      hideQuoteContextMenu();
+      
+      try {
+        // Show loading state
+        showToast('Converting quote to order...', 'info');
+        
+        // Get the quote data
+        let quote = null;
+        if (window.firebaseDB && window.firebaseDB.isAvailable()) {
+          const quotes = await window.firebaseDB.getQuotes();
+          quote = quotes.find(q => q.quoteId === quoteId);
+        } else {
+          const savedQuotes = JSON.parse(localStorage.getItem('savedQuotes') || '[]');
+          quote = savedQuotes.find(q => q.quoteId === quoteId);
+        }
+        
+        if (!quote) {
+          showToast('Quote not found', 'error');
+          return;
+        }
+        
+        // Generate auto-incremented order number
+        let orderNumber = 1;
+        if (window.firebaseDB && window.firebaseDB.isAvailable()) {
+          try {
+            const orders = await window.firebaseDB.getOrders();
+            if (orders && orders.length > 0) {
+              const maxOrderNum = Math.max(...orders.map(o => parseInt(o.orderNumber) || 0));
+              orderNumber = maxOrderNum + 1;
+            }
+          } catch (error) {
+            console.warn('Failed to get existing orders, using default order number:', error);
+          }
+        }
+        
+        // Create order object with all quote data preserved
+        const orderData = {
+          orderId: generateUUID(),
+          orderNumber: orderNumber.toString().padStart(4, '0'),
+          quoteId: quote.quoteId, // Reference to original quote
+          lines: [...quote.lines], // Copy all line items
+          items: quote.items ? [...quote.items] : [], // Preserve items if they exist
+          clientName: quote.clientName || '',
+          clientEmail: quote.clientEmail || '',
+          clientPhone: quote.clientPhone || '',
+          notes: quote.notes || '',
+          discount: quote.discount || 0,
+          shipping: quote.shipping || 0,
+          tax: quote.tax || 0,
+          subtotal: quote.subtotal || 0,
+          total: quote.total || 0,
+          createdAt: new Date().toISOString(),
+          lastModified: new Date().toISOString(),
+          status: 'pending',
+          convertedFromQuote: true
+        };
+        
+        // Save to Firebase orders collection
+        if (window.firebaseDB && window.firebaseDB.isAvailable()) {
+          await window.firebaseDB.saveOrder(orderData);
+          showToast(`Quote successfully converted to Order #${orderData.orderNumber}`, 'success');
+        } else {
+          // Fallback to localStorage
+          const savedOrders = JSON.parse(localStorage.getItem('savedOrders') || '[]');
+          savedOrders.push(orderData);
+          localStorage.setItem('savedOrders', JSON.stringify(savedOrders));
+          showToast(`Quote converted to Order #${orderData.orderNumber} (saved locally)`, 'success');
+        }
+        
+      } catch (error) {
+        console.error('Error converting quote to order:', error);
+        showToast('Failed to convert quote to order', 'error');
+      }
+    }
+    
+    async function deleteQuote(quoteId) {
+      hideQuoteContextMenu();
+      
+      if (!confirm('Are you sure you want to delete this quote?')) {
+        return;
+      }
+      
+      try {
+        if (window.firebaseDB && window.firebaseDB.isAvailable()) {
+          await window.firebaseDB.deleteQuote(quoteId);
+          showToast('Quote deleted successfully', 'success');
+        } else {
+          // Fallback to localStorage
+          const savedQuotes = JSON.parse(localStorage.getItem('savedQuotes') || '[]');
+          const updatedQuotes = savedQuotes.filter(q => q.quoteId !== quoteId);
+          localStorage.setItem('savedQuotes', JSON.stringify(updatedQuotes));
+          showToast('Quote deleted successfully', 'success');
+        }
+        
+        // Refresh the quotes list
+        await renderSavedQuotesList();
+        
+      } catch (error) {
+        console.error('Error deleting quote:', error);
+        showToast('Failed to delete quote', 'error');
+      }
     }
     
     function hideQuoteContextMenu() {
@@ -6305,46 +5532,144 @@
     }
 
     // Quote Maker Price List Selector Functions
-    function initQuoteMakerPriceListSelector() {
-      console.log('Initializing Quote Maker price list selector...');
+    async function initQuoteMakerPriceListSelector() {
+      console.log('🔄 Initializing Quote Maker price list selector with Firebase...');
       
-      // Clear existing price lists to ensure fresh data
       const quotePriceListSelector = document.getElementById('quote-price-list-selector');
       if (!quotePriceListSelector) {
         console.error('Quote price list selector element not found!');
         return;
       }
       
-      // Extract unique price lists from existing data
-      const quotePriceLists = new Set();
-      state.allProducts.forEach(product => {
-        if (product.PriceList) {
-          quotePriceLists.add(product.PriceList);
+      try {
+        // Load products from Firebase to get available price lists
+        if (window.firebaseDB && window.firebaseDB.isAvailable()) {
+          const products = await window.firebaseDB.getProducts();
+          console.log(`📊 Loaded ${products ? products.length : 0} products from Firebase for Quote Maker`);
+          
+          if (products && products.length > 0) {
+            // Update global state
+            state.allProducts = products;
+            
+            // Extract unique price lists from Firebase data
+            const quotePriceLists = new Set();
+            products.forEach(product => {
+              if (product && (product.PriceListName || product.PriceList || product['Price List Name'])) {
+                const priceListName = product.PriceListName || product.PriceList || product['Price List Name'];
+                if (priceListName && priceListName !== 'N/A' && priceListName.trim() !== '') {
+                  quotePriceLists.add(priceListName);
+                }
+              }
+            });
+            
+            console.log(`📋 Found price lists for Quote Maker: ${Array.from(quotePriceLists).join(', ')}`);
+            
+            // Update dropdown options
+            quotePriceListSelector.innerHTML = '<option value="">Select Price List</option>';
+            const sortedQuotePriceLists = Array.from(quotePriceLists).sort();
+            
+            if (sortedQuotePriceLists.length === 0) {
+              console.warn('No price lists found in Firebase data');
+              const option = document.createElement('option');
+              option.value = '';
+              option.textContent = 'No price lists available';
+              option.disabled = true;
+              quotePriceListSelector.appendChild(option);
+              return;
+            }
+            
+            sortedQuotePriceLists.forEach(priceList => {
+              const option = document.createElement('option');
+              option.value = priceList;
+              option.textContent = priceList;
+              quotePriceListSelector.appendChild(option);
+            });
+            
+            // Auto-select the first price list if available
+            if (sortedQuotePriceLists.length > 0) {
+              quotePriceListSelector.value = sortedQuotePriceLists[0];
+              // Trigger the change event to filter products
+              const event = new Event('change');
+              quotePriceListSelector.dispatchEvent(event);
+            }
+            
+            // Add event listener for price list selection
+            quotePriceListSelector.addEventListener('change', handleQuoteMakerPriceListChange);
+            
+            return; // Successfully loaded from Firebase
+          }
         }
-      });
-      
-      console.log('Available price lists for Quote Maker:', Array.from(quotePriceLists));
-      
-      // Update dropdown options
-      quotePriceListSelector.innerHTML = '';
-      const sortedQuotePriceLists = Array.from(quotePriceLists).sort();
-      sortedQuotePriceLists.forEach(priceList => {
-        const option = document.createElement('option');
-        option.value = priceList;
-        option.textContent = priceList;
-        quotePriceListSelector.appendChild(option);
-      });
-      
-      // Auto-select the first price list if available
-      if (sortedQuotePriceLists.length > 0) {
-        quotePriceListSelector.value = sortedQuotePriceLists[0];
-        // Trigger the change event to filter products
-        const event = new Event('change');
-        quotePriceListSelector.dispatchEvent(event);
+        
+        console.log('⚠️ Firebase not available or no products found, using fallback for Quote Maker...');
+        
+        // Fallback: use existing state.allProducts if available
+        if (state.allProducts && Array.isArray(state.allProducts) && state.allProducts.length > 0) {
+          console.log('📦 Using existing product data as fallback for Quote Maker');
+          
+          // Extract unique price lists from existing data
+          const quotePriceLists = new Set();
+          state.allProducts.forEach(product => {
+            if (product && (product.PriceListName || product.PriceList || product['Price List Name'])) {
+              const priceListName = product.PriceListName || product.PriceList || product['Price List Name'];
+              if (priceListName && priceListName !== 'N/A' && priceListName.trim() !== '') {
+                quotePriceLists.add(priceListName);
+              }
+            }
+          });
+          
+          // Update dropdown options
+          quotePriceListSelector.innerHTML = '<option value="">Select Price List</option>';
+          const sortedQuotePriceLists = Array.from(quotePriceLists).sort();
+          sortedQuotePriceLists.forEach(priceList => {
+            const option = document.createElement('option');
+            option.value = priceList;
+            option.textContent = priceList;
+            quotePriceListSelector.appendChild(option);
+          });
+          
+          if (sortedQuotePriceLists.length > 0) {
+            quotePriceListSelector.value = sortedQuotePriceLists[0];
+            const event = new Event('change');
+            quotePriceListSelector.dispatchEvent(event);
+          }
+          
+          quotePriceListSelector.addEventListener('change', handleQuoteMakerPriceListChange);
+        } else {
+          console.error('No product data available for Quote Maker price list initialization');
+        }
+        
+      } catch (error) {
+        console.error('Error initializing Quote Maker price list dropdown:', error);
+        // Try fallback even on error
+        if (state.allProducts && Array.isArray(state.allProducts)) {
+          const quotePriceLists = new Set();
+          state.allProducts.forEach(product => {
+            if (product && (product.PriceListName || product.PriceList || product['Price List Name'])) {
+              const priceListName = product.PriceListName || product.PriceList || product['Price List Name'];
+              if (priceListName && priceListName !== 'N/A' && priceListName.trim() !== '') {
+                quotePriceLists.add(priceListName);
+              }
+            }
+          });
+          
+          quotePriceListSelector.innerHTML = '<option value="">Select Price List</option>';
+          const sortedQuotePriceLists = Array.from(quotePriceLists).sort();
+          sortedQuotePriceLists.forEach(priceList => {
+            const option = document.createElement('option');
+            option.value = priceList;
+            option.textContent = priceList;
+            quotePriceListSelector.appendChild(option);
+          });
+          
+          if (sortedQuotePriceLists.length > 0) {
+            quotePriceListSelector.value = sortedQuotePriceLists[0];
+            const event = new Event('change');
+            quotePriceListSelector.dispatchEvent(event);
+          }
+          
+          quotePriceListSelector.addEventListener('change', handleQuoteMakerPriceListChange);
+        }
       }
-      
-      // Add event listener for price list selection
-      quotePriceListSelector.addEventListener('change', handleQuoteMakerPriceListChange);
     }
     
     function handleQuoteMakerPriceListChange() {
@@ -6352,9 +5677,10 @@
       
       if (selectedPriceList) {
         // Filter products based on selected price list to prevent cross-contamination
-        state.filteredProducts = state.allProducts.filter(product =>
-          product.PriceList === selectedPriceList
-        );
+        state.filteredProducts = state.allProducts.filter(product => {
+          const productPriceList = product.PriceListName || product.PriceList || product['Price List Name'];
+          return productPriceList === selectedPriceList;
+        });
         
         console.log(`Quote Maker filtered to ${state.filteredProducts.length} products from price list: ${selectedPriceList}`);
         
@@ -6768,7 +6094,6 @@
               </div>
             </div>
           </div>
-        </div>
       `;
       
       document.body.appendChild(modal);

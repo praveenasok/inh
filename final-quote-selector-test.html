@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Final Quote Selector Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 3px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Final Quote Selector Test</h1>
+    <div id="test-results"></div>
+
+    <script>
+        function log(message, type = 'info') {
+            const resultsDiv = document.getElementById('test-results');
+            const div = document.createElement('div');
+            div.className = `test-section ${type}`;
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong>: ${message}`;
+            resultsDiv.appendChild(div);
+            console.log(message);
+        }
+
+        function runTests() {
+            log('Starting comprehensive quote selector tests...', 'info');
+            
+            // Test 1: Check if quote selector element exists
+            const quoteSelector = document.getElementById('quote-price-list-selector');
+            if (quoteSelector) {
+                log('✓ Quote price list selector element found', 'success');
+                log(`Current options count: ${quoteSelector.options.length}`);
+                
+                // Display current options
+                if (quoteSelector.options.length > 0) {
+                    const options = Array.from(quoteSelector.options).map(opt => opt.value).join(', ');
+                    log(`Available options: ${options}`, 'success');
+                } else {
+                    log('⚠ No options found in selector', 'error');
+                }
+            } else {
+                log('✗ Quote price list selector element NOT found', 'error');
+            }
+
+            // Test 2: Check if initialization function exists
+            if (typeof window.initQuoteMakerPriceListSelector === 'function') {
+                log('✓ initQuoteMakerPriceListSelector function found', 'success');
+                
+                // Test 3: Try to call the function
+                try {
+                    window.initQuoteMakerPriceListSelector();
+                    log('✓ Successfully called initQuoteMakerPriceListSelector', 'success');
+                    
+                    // Check options after initialization
+                    setTimeout(() => {
+                        const updatedSelector = document.getElementById('quote-price-list-selector');
+                        if (updatedSelector && updatedSelector.options.length > 0) {
+                            log(`✓ After initialization: ${updatedSelector.options.length} options available`, 'success');
+                            const options = Array.from(updatedSelector.options).map(opt => `${opt.value} (${opt.text})`).join(', ');
+                            log(`Options: ${options}`, 'success');
+                        } else {
+                            log('⚠ Still no options after initialization', 'error');
+                        }
+                    }, 500);
+                } catch (error) {
+                    log(`✗ Error calling initQuoteMakerPriceListSelector: ${error.message}`, 'error');
+                }
+            } else {
+                log('✗ initQuoteMakerPriceListSelector function NOT found', 'error');
+            }
+
+            // Test 4: Check state data
+            if (typeof window.state !== 'undefined') {
+                log('✓ Global state object found', 'success');
+                log(`Products in state.allProducts: ${window.state.allProducts ? window.state.allProducts.length : 'undefined'}`);
+                log(`Products in state.filteredProducts: ${window.state.filteredProducts ? window.state.filteredProducts.length : 'undefined'}`);
+                
+                if (window.state.allProducts && window.state.allProducts.length > 0) {
+                    // Check price list properties
+                    const sampleProduct = window.state.allProducts[0];
+                    const priceListProps = [];
+                    if (sampleProduct['Price List Name']) priceListProps.push('Price List Name');
+                    if (sampleProduct.PriceListName) priceListProps.push('PriceListName');
+                    if (sampleProduct.PriceList) priceListProps.push('PriceList');
+                    if (sampleProduct['Price List']) priceListProps.push('Price List');
+                    
+                    log(`Price list properties found: ${priceListProps.join(', ')}`, 'success');
+                    
+                    // Extract unique price lists
+                    const priceLists = [...new Set(window.state.allProducts.map(product => 
+                        product['Price List Name'] || product.PriceListName || product.PriceList || product['Price List']
+                    ))].filter(pl => pl);
+                    
+                    log(`Unique price lists in data: ${priceLists.join(', ')}`, 'success');
+                }
+            } else {
+                log('✗ Global state object NOT found', 'error');
+            }
+
+            // Test 5: Check dependent dropdowns
+            const categorySelect = document.getElementById('new-item-category');
+            const productSelect = document.getElementById('new-item-product');
+            
+            if (categorySelect) {
+                log(`✓ Category dropdown found with ${categorySelect.options.length} options`, 'success');
+            } else {
+                log('⚠ Category dropdown not found', 'error');
+            }
+            
+            if (productSelect) {
+                log(`✓ Product dropdown found with ${productSelect.options.length} options`, 'success');
+            } else {
+                log('⚠ Product dropdown not found', 'error');
+            }
+
+            // Test 6: Test price list change functionality
+            if (quoteSelector && quoteSelector.options.length > 1) {
+                log('Testing price list change functionality...', 'info');
+                
+                // Select the second option (first is usually "Select Price List")
+                quoteSelector.selectedIndex = 1;
+                
+                // Trigger change event
+                const changeEvent = new Event('change', { bubbles: true });
+                quoteSelector.dispatchEvent(changeEvent);
+                
+                setTimeout(() => {
+                    if (window.state && window.state.filteredProducts) {
+                        log(`✓ After price list change: ${window.state.filteredProducts.length} filtered products`, 'success');
+                    }
+                    
+                    if (categorySelect) {
+                        log(`Category dropdown now has ${categorySelect.options.length} options`, 'info');
+                    }
+                }, 1000);
+            }
+        }
+
+        // Wait for the main page to load, then run tests
+        setTimeout(() => {
+            log('Starting tests after 3-second delay...', 'info');
+            runTests();
+        }, 3000);
+    </script>
+</body>
+</html>

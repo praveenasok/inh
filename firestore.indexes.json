@@ -33,11 +33,25 @@
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "PriceList",
+          "fieldPath": "PriceListName",
           "order": "ASCENDING"
         },
         {
           "fieldPath": "Rate",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "products",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "BundledSalesKG",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "Category",
           "order": "ASCENDING"
         }
       ]

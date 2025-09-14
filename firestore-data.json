@@ -1,0 +1,35 @@
+{
+  "products": {
+    "_placeholder": {
+      "name": "Placeholder Product",
+      "price": 0,
+      "category": "placeholder",
+      "createdAt": "2025-01-14T05:30:00.000Z",
+      "isPlaceholder": true
+    }
+  },
+  "sync_logs": {
+    "_placeholder": {
+      "type": "initialization",
+      "status": "success",
+      "message": "Collections initialized",
+      "timestamp": "2025-01-14T05:30:00.000Z",
+      "isPlaceholder": true
+    }
+  },
+  "config": {
+    "salesmen": {
+      "salesmen": [],
+      "lastUpdated": "2025-01-14T05:30:00.000Z",
+      "initialized": true
+    }
+  },
+  "clients": {
+    "_placeholder": {
+      "name": "Placeholder Client",
+      "email": "placeholder@example.com",
+      "createdAt": "2025-01-14T05:30:00.000Z",
+      "isPlaceholder": true
+    }
+  }
+}

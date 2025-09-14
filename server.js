@@ -3,6 +3,8 @@ const fs = require('fs');
 const path = require('path');
 const url = require('url');
 const XLSX = require('xlsx');
+const SyncScheduler = require('./sync-scheduler');
+const FirebaseSyncService = require('./firebase-sync-service');
 
 const PORT = 3000;
 const HTML_FILE_PATH = path.join(__dirname, 'index.html');
@@ -16,6 +18,32 @@ let currentProductData = null;
 let cachedSalesmenData = null;
 let salesmenCacheTimestamp = null;
 const SALESMEN_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes cache
+
+// Initialize sync services
+let syncScheduler = null;
+let syncService = null;
+
+// Initialize sync services
+async function initializeSyncServices() {
+  try {
+    syncScheduler = new SyncScheduler();
+    syncService = new FirebaseSyncService();
+    
+    await syncScheduler.initialize();
+    await syncService.initialize();
+    
+    // Start the scheduler automatically
+    syncScheduler.startScheduler();
+    
+    console.log('Sync services initialized successfully');
+    
+    // Make scheduler globally available for graceful shutdown
+    global.syncScheduler = syncScheduler;
+  } catch (error) {
+    console.error('Failed to initialize sync services:', error.message);
+    console.log('Sync services will be disabled. Please check your service account configuration.');
+  }
+}
 
 // Function to read salesmen data from Excel file with caching
 function getSalesmenFromExcel() {
@@ -69,7 +97,7 @@ const mimeTypes = {
   '.ico': 'image/x-icon'
 };
 
-const server = http.createServer((req, res) => {
+const server = http.createServer(async (req, res) => {
   const parsedUrl = url.parse(req.url, true);
   const pathname = parsedUrl.pathname;
 
@@ -415,6 +443,217 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // Google Sheets Sync API Endpoints
+  if (pathname === '/api/sync/manual' && req.method === 'POST') {
+    try {
+      if (!syncService) {
+        await initializeSyncServices();
+      }
+      if (!syncScheduler) {
+        // Return error if sync scheduler is not available
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ 
+          success: false, 
+          error: 'Sync service not available. Please configure service account credentials.' 
+        }));
+        return;
+      }
+      const result = await syncScheduler.triggerManualSync();
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, result }));
+    } catch (error) {
+      // Check if it's a credential-related error
+      const credentialErrorPatterns = [
+        'Failed to parse private key',
+        'Invalid PEM formatted message',
+        'service account key file not found',
+        'placeholder values',
+        'invalid json format',
+        'missing required fields',
+        'invalid credential type',
+        'invalid service account email',
+        'google sheets synchronization is not available'
+      ];
+      
+      const isCredentialError = credentialErrorPatterns.some(pattern => 
+        error.message.toLowerCase().includes(pattern.toLowerCase())
+      );
+      
+      if (isCredentialError) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ 
+          success: false, 
+          error: 'Google Sheets synchronization is not available. Please configure valid Google Sheets credentials to enable sync functionality.',
+          details: error.message,
+          setupGuide: 'See GOOGLE_SHEETS_CREDENTIALS_SETUP.md for detailed setup instructions.'
+        }));
+      } else {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: false, error: error.message }));
+      }
+    }
+    return;
+  }
+
+  // Salesmen-specific sync endpoint
+  if (pathname === '/api/sync/salesmen' && req.method === 'POST') {
+    try {
+      if (!syncService) {
+        await initializeSyncServices();
+      }
+      if (!syncScheduler) {
+        // Return error if sync scheduler is not available
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ 
+          success: false, 
+          error: 'Google Sheets synchronization is not available. Please configure valid Google Sheets credentials to enable sync functionality.',
+          details: 'Sync service not available. Please configure service account credentials.',
+          setupGuide: 'See GOOGLE_SHEETS_CREDENTIALS_SETUP.md for detailed setup instructions.'
+        }));
+        return;
+      }
+      
+      // Trigger salesmen-only sync
+      const result = await syncScheduler.triggerManualSync({ syncProducts: false, syncSalesmen: true });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ 
+        success: true, 
+        result,
+        totalSalesmen: result.salesmanResult ? result.salesmanResult.totalSalesmen : 0
+      }));
+    } catch (error) {
+      // Check if it's a credential-related error
+      const credentialErrorPatterns = [
+        'Failed to parse private key',
+        'Invalid PEM formatted message',
+        'service account key file not found',
+        'placeholder values',
+        'invalid json format',
+        'missing required fields',
+        'invalid credential type',
+        'invalid service account email',
+        'google sheets synchronization is not available'
+      ];
+      
+      const isCredentialError = credentialErrorPatterns.some(pattern => 
+        error.message.toLowerCase().includes(pattern.toLowerCase())
+      );
+      
+      if (isCredentialError) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ 
+          success: false, 
+          error: 'Google Sheets synchronization is not available. Please configure valid Google Sheets credentials to enable sync functionality.',
+          details: error.message,
+          setupGuide: 'See GOOGLE_SHEETS_CREDENTIALS_SETUP.md for detailed setup instructions.'
+        }));
+      } else {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: false, error: error.message }));
+      }
+    }
+    return;
+  }
+
+  if (pathname === '/api/sync/status' && req.method === 'GET') {
+    try {
+      if (!syncService) {
+        // Return mock status if sync service is not available
+        const mockStatus = {
+          isRunning: false,
+          lastSync: null,
+          lastError: 'Service account credentials not configured',
+          totalSynced: 0,
+          schedulerRunning: false,
+          nextSync: null,
+          productsCount: 0,
+          salesmenCount: 0
+        };
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, status: mockStatus }));
+        return;
+      }
+      const status = await syncService.getSyncStatus();
+      
+      // Add scheduler information if available
+      if (syncScheduler) {
+        const schedulerStatus = syncScheduler.getSchedulerStatus();
+        status.schedulerRunning = schedulerStatus.isRunning;
+        status.nextRun = schedulerStatus.nextRun;
+      }
+      
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, status }));
+    } catch (error) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: false, error: error.message }));
+    }
+    return;
+  }
+
+  if (pathname === '/api/sync/logs' && req.method === 'GET') {
+    try {
+      if (!syncService) {
+        // Return mock logs if sync service is not available
+        const mockLogs = [
+          {
+            id: 'mock-1',
+            timestamp: new Date(),
+            level: 'info',
+            message: 'Google Sheets sync system ready for configuration',
+            details: 'Please set up service account credentials to enable synchronization'
+          },
+          {
+            id: 'mock-2',
+            timestamp: new Date(Date.now() - 60000),
+            level: 'warning',
+            message: 'Service account credentials not found',
+            details: 'Create service-account-key.json file to enable Google Sheets integration'
+          }
+        ];
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, logs: mockLogs }));
+        return;
+      }
+      const logs = await syncService.getSyncLogs();
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, logs }));
+    } catch (error) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: false, error: error.message }));
+    }
+    return;
+  }
+
+  if (pathname === '/api/sync/scheduler/start' && req.method === 'POST') {
+    try {
+      if (!syncScheduler) {
+        await initializeSyncServices();
+      }
+      syncScheduler.start();
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, message: 'Scheduler started' }));
+    } catch (error) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: false, error: error.message }));
+    }
+    return;
+  }
+
+  if (pathname === '/api/sync/scheduler/stop' && req.method === 'POST') {
+    try {
+      if (syncScheduler) {
+        syncScheduler.stop();
+      }
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, message: 'Scheduler stopped' }));
+    } catch (error) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: false, error: error.message }));
+    }
+    return;
+  }
+
   // Determine file path based on request
   let filePath;
   if (pathname === '/quotemaker') {
@@ -525,8 +764,20 @@ function embedDataIntoFile(filePath, data, type) {
     // Return early since we're not modifying the HTML file
     return;
   } else if (type === 'main-app') {
-    // For main app, replace productData, products arrays, and productCatalog
-    // First replace productData for price list generator
+    // For main app, replace EMBEDDED_DATA script tag first
+    const embeddedDataRegex = /(<script[^>]*id=["']EMBEDDED_DATA["'][^>]*>)[\s\S]*?(<\/script>)/;
+    if (embeddedDataRegex.test(htmlContent)) {
+      const embeddedDataContent = {
+        products: productsArray,
+        salesmen: []
+      };
+      htmlContent = htmlContent.replace(
+        embeddedDataRegex,
+        `$1${JSON.stringify(embeddedDataContent, null, 2)}$2`
+      );
+    }
+    
+    // Then replace productData for price list generator
     const productDataRegex = /(const|let)\s+productData\s*=\s*\[\s*\];/;
     if (productDataRegex.test(htmlContent)) {
       htmlContent = htmlContent.replace(
@@ -610,7 +861,7 @@ if (fs.existsSync(DATA_FILE_PATH)) {
   }
 }
 
-server.listen(PORT, () => {
+server.listen(PORT, async () => {
   console.log(`Server running at http://localhost:${PORT}`);
   console.log('This server supports:');
   console.log('- Static file serving');
@@ -621,8 +872,21 @@ server.listen(PORT, () => {
   console.log('  - GET /api/get-data - Retrieve product data');
   console.log('  - POST /api/embed-data - Embed data into HTML files');
   console.log('  - POST /api/clear-data - Clear all data');
+  console.log('  - POST /api/sync/manual - Manual sync trigger');
+  console.log('  - GET /api/sync/status - Get sync status');
+  console.log('  - GET /api/sync/logs - Get sync logs');
+  console.log('  - POST /api/sync/scheduler/start - Start scheduler');
+  console.log('  - POST /api/sync/scheduler/stop - Stop scheduler');
   console.log('- POST /save-html endpoint for permanent JSON embedding');
   console.log('- Automatic HTML file backups');
+  
+  // Initialize sync services
+  try {
+    await initializeSyncServices();
+    console.log('Google Sheets sync services initialized successfully');
+  } catch (error) {
+    console.error('Failed to initialize sync services:', error.message);
+  }
 });
 
 module.exports = server;

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Quote Selector Fix</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+    </style>
+</head>
+<body>
+    <h1>Quote Selector Fix Test</h1>
+    <div id="test-results"></div>
+    
+    <script>
+        function addResult(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.textContent = message;
+            document.getElementById('test-results').appendChild(div);
+        }
+        
+        // Wait for page to load, then test
+        setTimeout(() => {
+            addResult('Starting test...', 'info');
+            
+            // Test if we can access the main window
+            try {
+                // Check if selector exists
+                const selector = document.getElementById('quote-price-list-selector');
+                if (selector) {
+                    addResult('✅ Quote selector element found', 'success');
+                    addResult(`Current options: ${selector.options.length}`, 'info');
+                } else {
+                    addResult('❌ Quote selector element not found', 'error');
+                }
+                
+                // Check if function exists
+                if (typeof initQuoteMakerPriceListSelector === 'function') {
+                    addResult('✅ initQuoteMakerPriceListSelector function found', 'success');
+                    
+                    // Try to call it
+                    try {
+                        initQuoteMakerPriceListSelector();
+                        addResult('✅ Function called successfully', 'success');
+                        
+                        // Check options again
+                        setTimeout(() => {
+                            if (selector) {
+                                addResult(`Options after function call: ${selector.options.length}`, 'info');
+                                for (let i = 0; i < selector.options.length; i++) {
+                                    addResult(`Option ${i}: ${selector.options[i].value} - ${selector.options[i].text}`, 'info');
+                                }
+                            }
+                        }, 1000);
+                        
+                    } catch (error) {
+                        addResult(`❌ Error calling function: ${error.message}`, 'error');
+                    }
+                } else {
+                    addResult('❌ initQuoteMakerPriceListSelector function not found', 'error');
+                }
+                
+                // Check state data
+                if (typeof state !== 'undefined' && state.allProducts) {
+                    addResult(`✅ State data found: ${state.allProducts.length} products`, 'success');
+                    
+                    // Check first product structure
+                    if (state.allProducts.length > 0) {
+                        const firstProduct = state.allProducts[0];
+                        const priceListName = firstProduct['Price List Name'] || firstProduct.PriceListName || firstProduct.PriceList;
+                        addResult(`Sample product price list: ${priceListName}`, 'info');
+                    }
+                } else {
+                    addResult('❌ State data not found', 'error');
+                }
+                
+            } catch (error) {
+                addResult(`❌ Test error: ${error.message}`, 'error');
+            }
+        }, 2000);
+    </script>
+</body>
+</html>

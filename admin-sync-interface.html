@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Data Synchronization</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Firebase Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    
+    <!-- Firebase Configuration -->
+    <script src="firebase-config.js"></script>
+    
+    <!-- Firebase Database Helper -->
+    <script src="firebase-database.js"></script>
+    <style>
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        .status-success { background-color: #10b981; }
+        .status-error { background-color: #ef4444; }
+        .status-warning { background-color: #f59e0b; }
+        .status-info { background-color: #3b82f6; }
+        .status-running { 
+            background-color: #3b82f6;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .log-entry {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <!-- Admin Dashboard Header -->
+    <div class="bg-white shadow-sm border-b">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex justify-between items-center">
+                <h1 class="text-2xl font-bold text-gray-800">Admin Dashboard</h1>
+                <div class="flex space-x-4">
+                    <button onclick="showTab('sync')" id="sync-tab" class="px-4 py-2 rounded-lg bg-blue-600 text-white">Data Sync</button>
+                    <button onclick="showTab('clients')" id="clients-tab" class="px-4 py-2 rounded-lg bg-gray-200 text-gray-700">Client Management</button>
+                    <button onclick="showTab('salesmen')" id="salesmen-tab" class="px-4 py-2 rounded-lg bg-gray-200 text-gray-700">Salesman Management</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Synchronization Tab -->
+    <div id="sync-content" class="container mx-auto p-6">
+        <!-- Sync Status Overview -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Synchronization Status</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Scheduler Status -->
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <div class="flex items-center mb-2">
+                        <span id="scheduler-status-indicator" class="status-indicator status-info"></span>
+                        <span class="text-blue-600 font-medium">Automated Sync</span>
+                    </div>
+                    <div class="text-sm text-gray-600" id="scheduler-status">Checking...</div>
+                    <div class="text-xs text-gray-500 mt-1" id="next-sync">Next sync: --</div>
+                </div>
+                
+                <!-- Last Sync Status -->
+                <div class="bg-green-50 p-4 rounded-lg">
+                    <div class="flex items-center mb-2">
+                        <span id="last-sync-indicator" class="status-indicator status-success"></span>
+                        <span class="text-green-600 font-medium">Last Sync</span>
+                    </div>
+                    <div class="text-sm text-gray-600" id="last-sync-time">Never</div>
+                    <div class="text-xs text-gray-500 mt-1" id="last-sync-result">--</div>
+                </div>
+                
+                <!-- Data Status -->
+                <div class="bg-purple-50 p-4 rounded-lg">
+                    <div class="flex items-center mb-2">
+                        <span id="data-status-indicator" class="status-indicator status-info"></span>
+                        <span class="text-purple-600 font-medium">Data Status</span>
+                    </div>
+                    <div class="text-sm text-gray-600" id="products-count">Products: --</div>
+                    <div class="text-xs text-gray-500 mt-1" id="salesmen-count">Salesmen: --</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Manual Sync Controls -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Manual Synchronization</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Product Sync -->
+                <div class="border rounded-lg p-4">
+                    <h3 class="font-semibold text-gray-700 mb-2">Product Data Sync</h3>
+                    <p class="text-sm text-gray-600 mb-4">Sync product data from Google Sheets to Firebase</p>
+                    <button onclick="triggerProductSync()" id="product-sync-btn" 
+                            class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                        </svg>
+                        Sync Products
+                    </button>
+                </div>
+                
+                <!-- Salesman Sync -->
+                <div class="border rounded-lg p-4">
+                    <h3 class="font-semibold text-gray-700 mb-2">Salesman Data Sync</h3>
+                    <p class="text-sm text-gray-600 mb-4">Sync salesman data from Google Sheets to Firebase</p>
+                    <button onclick="triggerSalesmanSync()" id="salesman-sync-btn" 
+                            class="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                        </svg>
+                        Sync Salesmen
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Full Sync Button -->
+            <div class="mt-4">
+                <button onclick="triggerFullSync()" id="full-sync-btn" 
+                        class="w-full bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg flex items-center justify-center font-semibold">
+                    <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                    Full Synchronization
+                </button>
+            </div>
+        </div>
+
+        <!-- Scheduler Controls -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Scheduler Controls</h2>
+            <div class="flex flex-col md:flex-row gap-4">
+                <button onclick="startScheduler()" id="start-scheduler-btn" 
+                        class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h1m4 0h1m6-10V4a2 2 0 00-2-2H5a2 2 0 00-2 2v16l3-2 3 2 3-2 3 2V4z"></path>
+                    </svg>
+                    Start Scheduler
+                </button>
+                <button onclick="stopScheduler()" id="stop-scheduler-btn" 
+                        class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10h6v4H9z"></path>
+                    </svg>
+                    Stop Scheduler
+                </button>
+                <button onclick="refreshStatus()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                    Refresh Status
+                </button>
+            </div>
+        </div>
+
+        <!-- Sync Logs -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold text-gray-800">Synchronization Logs</h2>
+                <button onclick="clearLogs()" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-sm">
+                    Clear Logs
+                </button>
+            </div>
+            <div id="sync-logs" class="bg-gray-50 rounded-lg p-4 h-64 overflow-y-auto">
+                <div class="text-gray-500 text-center">Loading logs...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Client Management Tab -->
+    <div id="clients-content" class="hidden">
+        <!-- Include existing client management interface -->
+        <div class="container mx-auto p-6">
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">Client Management</h2>
+                <p class="text-gray-600">Client management interface will be integrated here.</p>
+                <!-- The existing client-admin-ui.html content would be included here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Salesman Management Tab -->
+    <div id="salesmen-content" class="hidden">
+        <div class="container mx-auto p-6">
+            <!-- Salesman Management Interface -->
+            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold text-gray-800">Salesman Management</h2>
+                    <button onclick="showAddSalesmanModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                        Add Salesman
+                    </button>
+                </div>
+                
+                <!-- Salesmen Table -->
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Territory</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="salesmen-table-body" class="bg-white divide-y divide-gray-200">
+                            <!-- Salesman rows will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Salesman Modal -->
+    <div id="salesman-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-1/2 shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <h3 class="text-lg font-medium text-gray-900 mb-4" id="salesman-modal-title">Add New Salesman</h3>
+                <form id="salesman-form">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+                            <input type="text" id="salesman-name" required class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+                            <input type="email" id="salesman-email" required class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                            <input type="tel" id="salesman-phone" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Territory</label>
+                            <input type="text" id="salesman-territory" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Commission Rate (%)</label>
+                        <input type="number" id="salesman-commission" min="0" max="100" step="0.1" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
+                    </div>
+                    <div class="flex justify-end space-x-3 mt-6">
+                        <button type="button" onclick="closeSalesmanModal()" class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-lg">
+                            Cancel
+                        </button>
+                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+                            Save Salesman
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab Management
+        function showTab(tabName) {
+            // Hide all content
+            document.getElementById('sync-content').classList.add('hidden');
+            document.getElementById('clients-content').classList.add('hidden');
+            document.getElementById('salesmen-content').classList.add('hidden');
+            
+            // Reset all tab buttons
+            document.getElementById('sync-tab').className = 'px-4 py-2 rounded-lg bg-gray-200 text-gray-700';
+            document.getElementById('clients-tab').className = 'px-4 py-2 rounded-lg bg-gray-200 text-gray-700';
+            document.getElementById('salesmen-tab').className = 'px-4 py-2 rounded-lg bg-gray-200 text-gray-700';
+            
+            // Show selected content and highlight tab
+            document.getElementById(tabName + '-content').classList.remove('hidden');
+            document.getElementById(tabName + '-tab').className = 'px-4 py-2 rounded-lg bg-blue-600 text-white';
+        }
+
+        // Sync Management Functions
+        let syncLogs = [];
+        let syncStatus = {
+            schedulerRunning: false,
+            lastSync: null,
+            isRunning: false
+        };
+
+        function addLog(message, type = 'info') {
+            const timestamp = new Date().toLocaleString();
+            const logEntry = {
+                timestamp,
+                message,
+                type
+            };
+            syncLogs.unshift(logEntry);
+            
+            // Keep only last 100 logs
+            if (syncLogs.length > 100) {
+                syncLogs = syncLogs.slice(0, 100);
+            }
+            
+            updateLogsDisplay();
+        }
+
+        function updateLogsDisplay() {
+            const logsContainer = document.getElementById('sync-logs');
+            if (syncLogs.length === 0) {
+                logsContainer.innerHTML = '<div class="text-gray-500 text-center">No logs available</div>';
+                return;
+            }
+            
+            const logsHtml = syncLogs.map(log => {
+                const statusClass = {
+                    'info': 'text-blue-600',
+                    'success': 'text-green-600',
+                    'error': 'text-red-600',
+                    'warning': 'text-yellow-600'
+                }[log.type] || 'text-gray-600';
+                
+                return `
+                    <div class="log-entry mb-2 p-2 border-l-4 border-${log.type === 'error' ? 'red' : log.type === 'success' ? 'green' : log.type === 'warning' ? 'yellow' : 'blue'}-400 bg-gray-50">
+                        <div class="flex justify-between items-start">
+                            <span class="${statusClass} font-medium">${log.message}</span>
+                            <span class="text-xs text-gray-500">${log.timestamp}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            logsContainer.innerHTML = logsHtml;
+        }
+
+        function clearLogs() {
+            syncLogs = [];
+            updateLogsDisplay();
+            addLog('Logs cleared', 'info');
+        }
+
+        async function triggerProductSync() {
+            const btn = document.getElementById('product-sync-btn');
+            btn.disabled = true;
+            btn.innerHTML = '<svg class="w-5 h-5 mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>Syncing...';
+            
+            try {
+                addLog('Starting product synchronization...', 'info');
+                
+                const response = await fetch('/api/sync/products', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    addLog(`Product sync completed: ${result.totalOperations} operations`, 'success');
+                    updateSyncStatus();
+                } else {
+                    addLog(`Product sync failed: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                addLog(`Product sync error: ${error.message}`, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>Sync Products';
+            }
+        }
+
+        async function triggerSalesmanSync() {
+            const btn = document.getElementById('salesman-sync-btn');
+            btn.disabled = true;
+            btn.innerHTML = '<svg class="w-5 h-5 mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>Syncing...';
+            
+            try {
+                addLog('Starting salesman synchronization...', 'info');
+                
+                const response = await fetch('/api/sync/salesmen', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    addLog(`Salesman sync completed: ${result.totalSalesmen} salesmen`, 'success');
+                    updateSyncStatus();
+                } else {
+                    addLog(`Salesman sync failed: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                addLog(`Salesman sync error: ${error.message}`, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>Sync Salesmen';
+            }
+        }
+
+        async function triggerFullSync() {
+            const btn = document.getElementById('full-sync-btn');
+            btn.disabled = true;
+            btn.innerHTML = '<svg class="w-6 h-6 mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>Syncing...';
+            
+            try {
+                addLog('Starting full synchronization...', 'info');
+                
+                const response = await fetch('/api/sync/manual', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    addLog('Full synchronization completed successfully', 'success');
+                    updateSyncStatus();
+                } else {
+                    addLog(`Full sync failed: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                addLog(`Full sync error: ${error.message}`, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>Full Synchronization';
+            }
+        }
+
+        async function startScheduler() {
+            try {
+                const response = await fetch('/api/scheduler/start', { method: 'POST' });
+                const result = await response.json();
+                
+                if (result.success) {
+                    addLog('Scheduler started successfully', 'success');
+                    updateSyncStatus();
+                } else {
+                    addLog(`Failed to start scheduler: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                addLog(`Scheduler start error: ${error.message}`, 'error');
+            }
+        }
+
+        async function stopScheduler() {
+            try {
+                const response = await fetch('/api/scheduler/stop', { method: 'POST' });
+                const result = await response.json();
+                
+                if (result.success) {
+                    addLog('Scheduler stopped successfully', 'warning');
+                    updateSyncStatus();
+                } else {
+                    addLog(`Failed to stop scheduler: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                addLog(`Scheduler stop error: ${error.message}`, 'error');
+            }
+        }
+
+        async function updateSyncStatus() {
+            try {
+                const response = await fetch('/api/sync/status');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const result = await response.json();
+                const status = result.status || result;
+                
+                // Update scheduler status
+                const schedulerIndicator = document.getElementById('scheduler-status-indicator');
+                const schedulerStatus = document.getElementById('scheduler-status');
+                const nextSync = document.getElementById('next-sync');
+                
+                if (status.schedulerRunning) {
+                    schedulerIndicator.className = 'status-indicator status-success';
+                    schedulerStatus.textContent = 'Running';
+                    nextSync.textContent = `Next sync: ${status.nextRun || 'Calculating...'}`;
+                } else {
+                    schedulerIndicator.className = 'status-indicator status-error';
+                    schedulerStatus.textContent = 'Stopped';
+                    nextSync.textContent = 'Scheduler not running';
+                }
+                
+                // Update last sync status
+                const lastSyncIndicator = document.getElementById('last-sync-indicator');
+                const lastSyncTime = document.getElementById('last-sync-time');
+                const lastSyncResult = document.getElementById('last-sync-result');
+                
+                if (status.lastSync) {
+                    lastSyncIndicator.className = 'status-indicator status-success';
+                    lastSyncTime.textContent = new Date(status.lastSync).toLocaleString();
+                    lastSyncResult.textContent = `${status.totalSynced || 0} items synced`;
+                } else {
+                    lastSyncIndicator.className = 'status-indicator status-warning';
+                    lastSyncTime.textContent = 'Never';
+                    lastSyncResult.textContent = 'No sync performed yet';
+                }
+                
+                // Update data counts
+                document.getElementById('products-count').textContent = `Products: ${status.productsCount || 0}`;
+                document.getElementById('salesmen-count').textContent = `Salesmen: ${status.salesmenCount || 0}`;
+                
+            } catch (error) {
+                console.error('Failed to update sync status:', error);
+            }
+        }
+
+        function refreshStatus() {
+            addLog('Refreshing status...', 'info');
+            updateSyncStatus();
+        }
+
+        // Client Management Functions
+        let clients = [];
+        
+        async function loadClients() {
+            try {
+                if (window.firebaseDB && window.firebaseDB.isAvailable()) {
+                    clients = await window.firebaseDB.getClients();
+                } else if (window.clientManager) {
+                    clients = window.clientManager.getAllClients();
+                } else {
+                    // Fallback to localStorage
+                    const stored = localStorage.getItem('clientData');
+                    clients = stored ? JSON.parse(stored) : [];
+                }
+                renderClientsTable();
+            } catch (error) {
+                console.error('Error loading clients:', error);
+                addLog(`Error loading clients: ${error.message}`, 'error');
+            }
+        }
+        
+        function renderClientsTable() {
+            const tbody = document.getElementById('clients-table-body');
+            if (!tbody) return;
+            
+            if (clients.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-4 text-center text-gray-500">No clients found</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = clients.map(client => `
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${client.clientName || ''}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${client.companyName || ''}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${client.email || ''}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${client.phone1 || ''}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${client.salesperson || ''}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button onclick="editClient('${client.id}')" class="text-blue-600 hover:text-blue-900 mr-3">Edit</button>
+                        <button onclick="deleteClient('${client.id}')" class="text-red-600 hover:text-red-900">Delete</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        function showAddClientModal() {
+            document.getElementById('client-modal').classList.remove('hidden');
+            document.getElementById('client-form').reset();
+            document.getElementById('client-modal-title').textContent = 'Add New Client';
+            document.getElementById('client-form').dataset.mode = 'add';
+        }
+        
+        function closeClientModal() {
+            document.getElementById('client-modal').classList.add('hidden');
+        }
+        
+        async function saveClient(event) {
+            event.preventDefault();
+            
+            const formData = new FormData(event.target);
+            const clientData = {
+                clientName: formData.get('clientName'),
+                companyName: formData.get('companyName'),
+                email: formData.get('email'),
+                phone1: formData.get('phone1'),
+                phone2: formData.get('phone2'),
+                contactPerson: formData.get('contactPerson'),
+                address: formData.get('address'),
+                postalCode: formData.get('postalCode'),
+                taxId: formData.get('taxId'),
+                salesperson: formData.get('salesperson')
+            };
+            
+            try {
+                const mode = event.target.dataset.mode;
+                
+                if (mode === 'edit') {
+                    const clientId = event.target.dataset.clientId;
+                    if (window.firebaseDB && window.firebaseDB.isAvailable()) {
+                        await window.firebaseDB.updateClient(clientId, clientData);
+                    } else if (window.clientManager) {
+                        window.clientManager.updateClient(clientId, clientData);
+                    }
+                    addLog(`Client updated: ${clientData.clientName}`, 'success');
+                } else {
+                    if (window.firebaseDB && window.firebaseDB.isAvailable()) {
+                        await window.firebaseDB.saveClient(clientData);
+                    } else if (window.clientManager) {
+                        window.clientManager.addClient(clientData, clientData.salesperson);
+                    }
+                    addLog(`Client added: ${clientData.clientName}`, 'success');
+                }
+                
+                closeClientModal();
+                await loadClients();
+            } catch (error) {
+                console.error('Error saving client:', error);
+                addLog(`Error saving client: ${error.message}`, 'error');
+            }
+        }
+        
+        async function editClient(clientId) {
+            const client = clients.find(c => c.id === clientId);
+            if (!client) return;
+            
+            // Populate form
+            document.getElementById('client-name').value = client.clientName || '';
+            document.getElementById('company-name').value = client.companyName || '';
+            document.getElementById('client-email').value = client.email || '';
+            document.getElementById('client-phone1').value = client.phone1 || '';
+            document.getElementById('client-phone2').value = client.phone2 || '';
+            document.getElementById('contact-person').value = client.contactPerson || '';
+            document.getElementById('client-address').value = client.address || '';
+            document.getElementById('postal-code').value = client.postalCode || '';
+            document.getElementById('tax-id').value = client.taxId || '';
+            document.getElementById('client-salesperson').value = client.salesperson || '';
+            
+            // Set modal to edit mode
+            document.getElementById('client-modal-title').textContent = 'Edit Client';
+            document.getElementById('client-form').dataset.mode = 'edit';
+            document.getElementById('client-form').dataset.clientId = clientId;
+            
+            document.getElementById('client-modal').classList.remove('hidden');
+        }
+        
+        async function deleteClient(clientId) {
+            if (!confirm('Are you sure you want to delete this client?')) return;
+            
+            try {
+                if (window.firebaseDB && window.firebaseDB.isAvailable()) {
+                    await window.firebaseDB.deleteClient(clientId);
+                } else if (window.clientManager) {
+                    window.clientManager.deleteClient(clientId);
+                }
+                
+                addLog('Client deleted successfully', 'warning');
+                await loadClients();
+            } catch (error) {
+                console.error('Error deleting client:', error);
+                addLog(`Error deleting client: ${error.message}`, 'error');
+            }
+        }
+        
+        function searchClients() {
+            const query = document.getElementById('client-search').value.toLowerCase();
+            const filteredClients = clients.filter(client => 
+                (client.clientName || '').toLowerCase().includes(query) ||
+                (client.companyName || '').toLowerCase().includes(query) ||
+                (client.email || '').toLowerCase().includes(query) ||
+                (client.phone1 || '').toLowerCase().includes(query)
+            );
+            
+            const tbody = document.getElementById('clients-table-body');
+            if (filteredClients.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-4 text-center text-gray-500">No clients found</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = filteredClients.map(client => `
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${client.clientName || ''}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${client.companyName || ''}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${client.email || ''}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${client.phone1 || ''}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${client.salesperson || ''}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button onclick="editClient('${client.id}')" class="text-blue-600 hover:text-blue-900 mr-3">Edit</button>
+                        <button onclick="deleteClient('${client.id}')" class="text-red-600 hover:text-red-900">Delete</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        function clearClientSearch() {
+            document.getElementById('client-search').value = '';
+            renderClientsTable();
+        }
+        
+        function exportClients() {
+            const exportData = {
+                exportedAt: new Date().toISOString(),
+                totalClients: clients.length,
+                clients: clients
+            };
+            
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `clients-export-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            addLog('Clients exported successfully', 'success');
+        }
+
+        // Salesman Management Functions
+        function showAddSalesmanModal() {
+            document.getElementById('salesman-modal').classList.remove('hidden');
+            document.getElementById('salesman-form').reset();
+        }
+
+        function closeSalesmanModal() {
+            document.getElementById('salesman-modal').classList.add('hidden');
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            addLog('Admin dashboard initialized', 'info');
+            updateSyncStatus();
+            loadClients();
+            
+            // Update status every 30 seconds
+            setInterval(updateSyncStatus, 30000);
+        });
+    </script>
+</body>
+</html>

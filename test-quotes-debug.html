@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Saved Quotes</title>
+</head>
+<body>
+    <h1>Debug Saved Quotes</h1>
+    <div id="debug-output"></div>
+    <button onclick="testQuotes()">Test Quotes Loading</button>
+    <button onclick="testFirebase()">Test Firebase Connection</button>
+    <button onclick="testLocalStorage()">Test LocalStorage</button>
+
+    <!-- Firebase Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="firebase-database.js"></script>
+
+    <script>
+        function log(message) {
+            const output = document.getElementById('debug-output');
+            output.innerHTML += '<p>' + message + '</p>';
+            console.log(message);
+        }
+
+        async function testFirebase() {
+            log('Testing Firebase connection...');
+            try {
+                if (typeof window.firebaseDB !== 'undefined') {
+                    log('✅ Firebase DB object exists');
+                    if (typeof window.firebaseDB.getQuotes === 'function') {
+                        log('✅ getQuotes function exists');
+                        const quotes = await window.firebaseDB.getQuotes();
+                        log('📋 Firebase quotes count: ' + (quotes ? quotes.length : 0));
+                        if (quotes && quotes.length > 0) {
+                            log('📋 First quote: ' + JSON.stringify(quotes[0], null, 2));
+                        }
+                    } else {
+                        log('❌ getQuotes function not found');
+                    }
+                } else {
+                    log('❌ Firebase DB object not found');
+                }
+            } catch (error) {
+                log('❌ Firebase error: ' + error.message);
+            }
+        }
+
+        function testLocalStorage() {
+            log('Testing LocalStorage...');
+            try {
+                const savedQuotes = localStorage.getItem('savedQuotes');
+                if (savedQuotes) {
+                    const quotes = JSON.parse(savedQuotes);
+                    log('📋 LocalStorage quotes count: ' + quotes.length);
+                    if (quotes.length > 0) {
+                        log('📋 First quote: ' + JSON.stringify(quotes[0], null, 2));
+                    }
+                } else {
+                    log('📋 No quotes in LocalStorage');
+                }
+            } catch (error) {
+                log('❌ LocalStorage error: ' + error.message);
+            }
+        }
+
+        async function testQuotes() {
+            log('=== Starting Quote Debug Test ===');
+            await testFirebase();
+            testLocalStorage();
+            log('=== Test Complete ===');
+        }
+
+        // Auto-run test when page loads
+        window.addEventListener('load', () => {
+            setTimeout(testQuotes, 1000); // Wait for Firebase to initialize
+        });
+    </script>
+</body>
+</html>

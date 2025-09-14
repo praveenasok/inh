@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Quote Selector Debug</title>
+</head>
+<body>
+    <h1>Quote Selector Debug Results</h1>
+    <div id="debug-output"></div>
+    
+    <script>
+        // Wait for the main page to load, then run debug
+        setTimeout(() => {
+            const output = document.getElementById('debug-output');
+            let debugLog = '';
+            
+            function log(message) {
+                debugLog += message + '<br>';
+                output.innerHTML = debugLog;
+                console.log(message);
+            }
+            
+            log('=== Quote Maker Price List Selector Debug ===');
+            
+            // Try to access the main window if this is in an iframe
+            let targetWindow = window;
+            if (window.parent && window.parent !== window) {
+                targetWindow = window.parent;
+            }
+            
+            // Check if element exists
+            const selector = targetWindow.document.getElementById('quote-price-list-selector');
+            log('Quote selector element: ' + (selector ? 'Found' : 'Not found'));
+            log('Quote selector options count: ' + (selector ? selector.options.length : 'Element not found'));
+            
+            // Check if function exists
+            log('initQuoteMakerPriceListSelector function exists: ' + (typeof targetWindow.initQuoteMakerPriceListSelector));
+            
+            // Check state data
+            const state = targetWindow.state;
+            log('state.allProducts length: ' + (state?.allProducts?.length || 'No state.allProducts'));
+            
+            // Check if data is loaded
+            if (state?.allProducts?.length > 0) {
+                log('Sample product: ' + JSON.stringify(state.allProducts[0]));
+                
+                // Extract price lists manually
+                const priceLists = new Set();
+                state.allProducts.forEach(product => {
+                    if (product.priceList) {
+                        priceLists.add(product.priceList);
+                    }
+                });
+                log('Available price lists: ' + Array.from(priceLists).join(', '));
+            } else {
+                log('No product data available');
+            }
+            
+            // Try to manually call the function
+            if (typeof targetWindow.initQuoteMakerPriceListSelector === 'function') {
+                log('Attempting to call initQuoteMakerPriceListSelector...');
+                try {
+                    targetWindow.initQuoteMakerPriceListSelector();
+                    log('Function called successfully');
+                    log('Quote selector options after call: ' + (selector ? selector.options.length : 'Element not found'));
+                } catch (error) {
+                    log('Error calling function: ' + error.message);
+                }
+            } else {
+                log('Function not available');
+            }
+            
+            log('=== End Debug ===');
+        }, 3000);
+    </script>
+</body>
+</html>

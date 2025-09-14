@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Navigation to Quote Maker</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+        .log { background: #f5f5f5; padding: 10px; margin: 10px 0; font-family: monospace; white-space: pre-wrap; }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+    </style>
+</head>
+<body>
+    <h1>Test Navigation to Quote Maker</h1>
+    
+    <div class="test-section">
+        <h3>Navigation Test</h3>
+        <button onclick="testNavigation()">Test Quote Maker Navigation</button>
+        <button onclick="addTestQuoteAndNavigate()">Add Test Quote & Navigate</button>
+        <button onclick="clearAndTest()">Clear localStorage & Test</button>
+        <div id="nav-log" class="log"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Direct Links</h3>
+        <a href="http://localhost:3000" target="_blank">Open Main App</a> |
+        <a href="http://localhost:3000#quote-maker" target="_blank">Direct Link to Quote Maker</a>
+    </div>
+    
+    <script>
+        function log(message, type = 'info') {
+            const element = document.getElementById('nav-log');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'success' ? 'success' : type === 'error' ? 'error' : 'info';
+            element.innerHTML += `<span class="${className}">${timestamp}: ${message}</span>\n`;
+            console.log(message);
+        }
+        
+        function addTestQuoteAndNavigate() {
+            document.getElementById('nav-log').innerHTML = '';
+            
+            // Add test quote to localStorage
+            const testQuote = {
+                id: 'test-nav-' + Date.now(),
+                date: new Date().toISOString(),
+                lines: [
+                    { description: 'Navigation Test Product', quantity: 1, price: 100 }
+                ],
+                total: 100,
+                clientName: 'Test Client',
+                salesperson: 'Test Sales'
+            };
+            
+            let quotes = [];
+            const existing = localStorage.getItem('savedQuotes');
+            if (existing) {
+                quotes = JSON.parse(existing);
+            }
+            
+            quotes.push(testQuote);
+            localStorage.setItem('savedQuotes', JSON.stringify(quotes));
+            
+            log('✅ Test quote added to localStorage', 'success');
+            log(`📊 Total quotes in localStorage: ${quotes.length}`, 'info');
+            
+            // Open main app and navigate to quote maker
+            setTimeout(() => {
+                window.open('http://localhost:3000#quote-maker', '_blank');
+                log('🔗 Opened main app with quote maker hash', 'info');
+            }, 500);
+        }
+        
+        function testNavigation() {
+            document.getElementById('nav-log').innerHTML = '';
+            
+            // Check localStorage first
+            const quotes = localStorage.getItem('savedQuotes');
+            if (quotes) {
+                const parsedQuotes = JSON.parse(quotes);
+                log(`📊 Found ${parsedQuotes.length} quotes in localStorage`, 'success');
+            } else {
+                log('❌ No quotes found in localStorage', 'error');
+            }
+            
+            // Open main app
+            window.open('http://localhost:3000', '_blank');
+            log('🔗 Opened main app in new tab', 'info');
+            log('👆 Please manually navigate to Quote Maker and check browser console', 'info');
+        }
+        
+        function clearAndTest() {
+            document.getElementById('nav-log').innerHTML = '';
+            
+            // Clear localStorage
+            localStorage.removeItem('savedQuotes');
+            log('🗑️ Cleared localStorage', 'info');
+            
+            // Add a fresh test quote
+            const testQuote = {
+                id: 'fresh-test-' + Date.now(),
+                date: new Date().toISOString(),
+                lines: [
+                    { description: 'Fresh Test Product', quantity: 2, price: 75 }
+                ],
+                total: 150,
+                clientName: 'Fresh Test Client',
+                salesperson: 'Fresh Test Sales'
+            };
+            
+            localStorage.setItem('savedQuotes', JSON.stringify([testQuote]));
+            log('✅ Added fresh test quote', 'success');
+            
+            // Open main app
+            setTimeout(() => {
+                window.open('http://localhost:3000', '_blank');
+                log('🔗 Opened main app - navigate to Quote Maker to test', 'info');
+            }, 500);
+        }
+        
+        // Auto-check localStorage on page load
+        window.onload = function() {
+            const quotes = localStorage.getItem('savedQuotes');
+            if (quotes) {
+                const parsedQuotes = JSON.parse(quotes);
+                log(`📊 Page loaded - Found ${parsedQuotes.length} quotes in localStorage`, 'info');
+            } else {
+                log('📊 Page loaded - No quotes in localStorage', 'info');
+            }
+        };
+    </script>
+</body>
+</html>

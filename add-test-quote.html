@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Test Quote</title>
+</head>
+<body>
+    <h1>Add Test Quote to LocalStorage</h1>
+    <div id="output"></div>
+    <button onclick="addTestQuote()">Add Test Quote</button>
+    <button onclick="checkQuotes()">Check Quotes</button>
+    <a href="/" target="_blank">Open Main App</a>
+
+    <script>
+        function log(message) {
+            const output = document.getElementById('output');
+            output.innerHTML += '<p>' + message + '</p>';
+            console.log(message);
+        }
+
+        function addTestQuote() {
+            log('=== Adding Test Quote ===');
+            try {
+                const testQuote = {
+                    id: 'test-quote-' + Date.now(),
+                    quoteNumber: 'Q' + Date.now(),
+                    clientName: 'Test Client Company',
+                    clientEmail: 'test@example.com',
+                    clientPhone: '+1234567890',
+                    date: new Date().toISOString().split('T')[0],
+                    salesperson: 'Test Salesperson',
+                    items: [
+                        {
+                            description: 'Test Hair Product 1',
+                            quantity: 10,
+                            price: 50.00,
+                            total: 500.00
+                        },
+                        {
+                            description: 'Test Hair Product 2',
+                            quantity: 5,
+                            price: 75.00,
+                            total: 375.00
+                        }
+                    ],
+                    subtotal: 875.00,
+                    discount: 0,
+                    tax: 0,
+                    shipping: 0,
+                    totalAmount: 875.00,
+                    currency: 'USD',
+                    notes: 'This is a test quote for debugging purposes',
+                    createdAt: new Date().toISOString(),
+                    lastModified: new Date().toISOString()
+                };
+
+                let savedQuotes = JSON.parse(localStorage.getItem('savedQuotes') || '[]');
+                savedQuotes.push(testQuote);
+                localStorage.setItem('savedQuotes', JSON.stringify(savedQuotes));
+                
+                log('✅ Test quote added successfully!');
+                log('Quote ID: ' + testQuote.id);
+                log('Quote Number: ' + testQuote.quoteNumber);
+                log('Client: ' + testQuote.clientName);
+                log('Total: $' + testQuote.totalAmount);
+                
+                checkQuotes();
+            } catch (error) {
+                log('❌ Error adding test quote: ' + error.message);
+            }
+        }
+
+        function checkQuotes() {
+            log('=== Checking Saved Quotes ===');
+            try {
+                const savedQuotes = localStorage.getItem('savedQuotes');
+                if (savedQuotes) {
+                    const quotes = JSON.parse(savedQuotes);
+                    log('📋 Found ' + quotes.length + ' quotes in localStorage');
+                    
+                    quotes.forEach((quote, index) => {
+                        log('Quote ' + (index + 1) + ': ' + quote.quoteNumber + ' - ' + quote.clientName + ' ($' + quote.totalAmount + ')');
+                    });
+                } else {
+                    log('📋 No quotes found in localStorage');
+                }
+            } catch (error) {
+                log('❌ Error reading localStorage: ' + error.message);
+            }
+        }
+
+        // Auto-check on page load
+        window.addEventListener('load', checkQuotes);
+    </script>
+</body>
+</html>

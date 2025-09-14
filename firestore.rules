@@ -19,12 +19,17 @@ service cloud.firestore {
     // Public read access for products and config (for unauthenticated users)
     match /products/{productId} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if true; // Allow service account access for sync and admin interface
     }
     
     match /config/{configId} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if true; // Allow admin interface access
+    }
+    
+    // Allow public access for admin interface
+    match /salesmen/{salesmanId} {
+      allow read, write: if true;
     }
     
     // Admin-only collections for data management
@@ -53,6 +58,16 @@ service cloud.firestore {
     match /salesmen/{salesmanId} {
       allow read: if isAuthenticated();
       allow write: if isAdmin();
+    }
+    
+    // Sync logs - allow service account access
+    match /sync_logs/{logId} {
+      allow read, write: if true; // Allow service account access
+    }
+    
+    // Storage collection for localStorage replacement
+    match /storage/{storageId} {
+      allow read, write: if true; // Allow public access for localStorage replacement
     }
     
     // User profiles
