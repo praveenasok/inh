@@ -48,6 +48,9 @@ build/Release
 node_modules/
 
 # Backup directories
+
+# Service account credentials
+service-account-key.json
 backup_*/
 
 # Optional npm cache directory
