@@ -52289,63 +52289,23 @@
       const basePrice = matchingProduct ? parseFloat(matchingProduct.Rate) || 0 : 0;
       const weight = matchingProduct ? parseFloat(matchingProduct['Standard Weight']) || 0 : 0;
       
-      // Debug logging for price extraction
-      console.log('Product matching debug:', {
-        category,
-        density,
-        productName,
-        length,
-        color,
-        matchingProduct: matchingProduct ? {
-          Category: matchingProduct.Category,
-          Density: matchingProduct.Density,
-          Product: matchingProduct.Product,
-          Length: matchingProduct.Length,
-          Colors: matchingProduct.Colors,
-          Rate: matchingProduct.Rate
-        } : null,
-        basePrice,
-        filteredProductsCount: state.filteredProducts ? state.filteredProducts.length : 0
-      });
-      
       // Store prices in INR (base currency) for consistency
       // Override price should be converted back to INR if provided in different currency
       const selectedCurrency = document.getElementById('quote-currency')?.value || state.currency || 'INR';
       let unitPriceInINR = basePrice;
       
-      if (overridePrice && !isNaN(overridePrice) && overridePrice > 0) {
+      if (overridePrice) {
         // If override price is provided, convert it back to INR for storage
         if (selectedCurrency !== 'INR') {
           const exchangeRates = state.rates?.rates || {};
-          const fallbackRates = {
-            'USD': 0.012, 'EUR': 0.011, 'GBP': 0.0095,
-            'AUD': 0.018, 'CAD': 0.016, 'INR': 1
-          };
-          const finalRates = Object.keys(exchangeRates).length > 0 ? exchangeRates : fallbackRates;
-          const rate = finalRates[selectedCurrency] || 1;
+          const rate = exchangeRates[selectedCurrency] || 1;
           unitPriceInINR = overridePrice / rate; // Convert back to INR
         } else {
           unitPriceInINR = overridePrice;
         }
-        console.log('Using override price:', overridePrice, 'converted to INR:', unitPriceInINR);
-      } else if (basePrice === 0) {
-        // If no product match and no override, try to get price from dropdown option
-        const productSelect = document.getElementById('new-item-product');
-        const selectedOption = productSelect?.options[productSelect.selectedIndex];
-        if (selectedOption && selectedOption.dataset.price) {
-          unitPriceInINR = parseFloat(selectedOption.dataset.price) || 0;
-          console.log('Using price from dropdown option:', unitPriceInINR);
-        }
       }
       
       const unitPrice = unitPriceInINR;
-      
-      console.log('Final unit price for item:', {
-        basePrice,
-        overridePrice,
-        unitPriceInINR,
-        finalUnitPrice: unitPrice
-      });
 
       const item = {
         id: Date.now(),
@@ -52439,47 +52399,17 @@
       // Get current selected currency
       const selectedCurrency = document.getElementById('quote-currency')?.value || state.currency || 'INR';
       const exchangeRates = state.rates?.rates || {};
-      
-      // Debug exchange rates
-      console.log('Exchange rates debug:', {
-        selectedCurrency,
-        stateRates: state.rates,
-        exchangeRates,
-        availableCurrencies: Object.keys(exchangeRates)
-      });
-      
-      // Fallback exchange rates if not available
-      const fallbackRates = {
-        'USD': 0.012,
-        'EUR': 0.011,
-        'GBP': 0.0095,
-        'AUD': 0.018,
-        'CAD': 0.016,
-        'INR': 1
-      };
-      
-      // Use fallback rates if no rates are available
-      const finalExchangeRates = Object.keys(exchangeRates).length > 0 ? exchangeRates : fallbackRates;
 
       quoteItems.forEach((item, index) => {
-        // Debug logging for currency conversion
-        console.log('Currency conversion debug:', {
-          itemUnitPrice: item.unitPrice,
-          selectedCurrency,
-          finalExchangeRates,
-          availableRates: Object.keys(finalExchangeRates)
-        });
-        
         // Items are stored in their original currency, so we need to convert for display
         // Assume items are stored in INR base price, convert to selected currency
         let displayUnitPrice = item.unitPrice;
         
         // If current currency is different from INR, convert the price
         if (selectedCurrency !== 'INR') {
-          const rate = finalExchangeRates[selectedCurrency] || 1;
+          const rate = exchangeRates[selectedCurrency] || 1;
           // Convert from INR to selected currency
           displayUnitPrice = item.unitPrice * rate;
-          console.log(`Converting price from INR ${item.unitPrice} to ${selectedCurrency} ${displayUnitPrice} (rate: ${rate})`);
         }
         
         const displayLineTotal = displayUnitPrice * item.quantity;

@@ -30899,8 +30899,7 @@
           else if (dropdown === elDensityDropdown) onDensityChange();
           else if (dropdown === elColorDropdown) onColorChange();
         });
-    }
-      
+      }
       
       // Checkbox event listeners removed
       
@@ -48707,56 +48706,173 @@
           </div>
         </section>
 
-        <!-- Items Table section removed -->
-
-
-
-        <!-- Quote Items Display -->
-        <section class="bg-white rounded-xl shadow-soft p-4 sm:p-6 mb-4 mobile-padding" style="background: #f0f9ff;">
-          <h2 class="text-lg font-semibold text-gray-800 mb-4">Quote Items</h2>
-          <div id="quote-items" class="quote-items-container mb-4">
-            <!-- Quote items will be added here dynamically -->
+        <!-- Items Table -->
+        <section class="bg-white rounded-xl shadow-soft p-2 mb-2 mobile-padding">
+          <h2 class="text-lg font-semibold text-gray-800 mb-3">Items</h2>
+          <div class="table-container table-responsive overflow-x-auto bg-white rounded-lg border border-gray-200">
+            <table id="items-table" class="w-full border-collapse min-w-full">
+              <thead>
+                <tr class="bg-gradient-to-r from-gray-50 via-gray-100 to-gray-150 border-b-2 border-gray-300">
+                  <th class="px-4 py-2 text-center text-xs font-bold text-gray-800 uppercase tracking-wider border-r border-gray-300">
+                    <div class="flex items-center justify-center">
+                      <span class="w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 font-bold text-xs">#</span>
+                    </div>
+                  </th>
+                  <th class="px-4 py-2 text-left text-xs font-bold text-gray-800 uppercase tracking-wider border-r border-gray-300 bg-gray-100">
+                    <div class="flex items-center space-x-2">
+                      <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                      </svg>
+                      <span>Product Details</span>
+                    </div>
+                  </th>
+                  <th class="px-4 py-2 text-left text-xs font-bold text-gray-800 uppercase tracking-wider border-r border-gray-300">
+                    <div class="flex items-center space-x-1">
+                      <span>Variant</span>
+                      <span class="sort-indicator ml-1 text-gray-500 cursor-pointer hover:text-gray-700">↕</span>
+                    </div>
+                  </th>
+                  <th class="px-4 py-2 text-left text-xs font-bold text-gray-800 uppercase tracking-wider border-r border-gray-300">
+                    <div class="flex items-center space-x-1">
+                      <span>Length</span>
+                      <span class="sort-indicator ml-1 text-gray-500 cursor-pointer hover:text-gray-700">↕</span>
+                    </div>
+                  </th>
+                  <th class="px-4 py-2 text-left text-xs font-bold text-gray-800 uppercase tracking-wider border-r border-gray-300">
+                    <span>Color</span>
+                  </th>
+                  <th class="px-4 py-2 text-left text-xs font-bold text-gray-800 uppercase tracking-wider border-r border-gray-300">
+                    <span>Styles</span>
+                  </th>
+                  <th class="px-4 py-2 text-center text-xs font-bold text-gray-800 uppercase tracking-wider border-r border-gray-300 bg-gray-100">
+                    <div class="flex items-center justify-center space-x-1">
+                      <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"></path>
+                      </svg>
+                      <span>Qty</span>
+                    </div>
+                  </th>
+                  <th class="px-4 py-2 text-right text-xs font-bold text-gray-800 uppercase tracking-wider border-r border-gray-300 bg-gray-100">
+                    <div class="flex items-center justify-end space-x-1">
+                      <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                      </svg>
+                      <span>Unit Price</span>
+                    </div>
+                  </th>
+                  <th class="px-4 py-2 text-right text-xs font-bold text-gray-800 uppercase tracking-wider border-r border-gray-300 bg-gray-100">
+                    <div class="flex items-center justify-end space-x-1">
+                      <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                      </svg>
+                      <span>Line Total</span>
+                    </div>
+                  </th>
+                  <th class="px-4 py-2 text-center text-xs font-bold text-gray-800 uppercase tracking-wider no-print">
+                    <div class="flex items-center justify-center">
+                      <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                      </svg>
+                    </div>
+                  </th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200"></tbody>
+              <tfoot class="bg-gradient-to-r from-gray-50 to-gray-100 border-t-2 border-gray-300">
+                <tr class="border-b border-gray-200 bg-gradient-to-r from-gray-100 to-gray-150 hover:from-gray-150 hover:to-gray-200 transition-all duration-200">
+                  <td colspan="8" class="font-semibold px-4 py-3 text-sm text-gray-800">
+                    <div class="flex items-center space-x-2">
+                      <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16l3-1m-3 1l-3-1"></path>
+                      </svg>
+                      <span>Total Weight</span>
+                    </div>
+                  </td>
+                  <td id="grand-weight" class="px-4 py-3 text-sm font-bold text-gray-900 text-right bg-gray-200 rounded-l-lg">—</td>
+                  <td class="no-print"></td>
+                </tr>
+                <tr class="border-b border-gray-200 hover:bg-gray-50 transition-all duration-200">
+                  <td colspan="8" class="font-semibold px-4 py-3 text-sm text-gray-800">
+                    <div class="flex items-center space-x-2">
+                      <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                      </svg>
+                      <span>Subtotal</span>
+                    </div>
+                  </td>
+                  <td id="subtotal" class="px-4 py-3 text-sm font-medium text-gray-900 text-right">—</td>
+                  <td class="no-print"></td>
+                </tr>
+                <tr class="border-b border-gray-200 hover:bg-gray-50 transition-all duration-200">
+                  <td colspan="8" class="font-semibold px-4 py-3 text-sm text-gray-800">
+                    <div class="flex items-center space-x-2">
+                      <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
+                      </svg>
+                      <span>Discount</span>
+                    </div>
+                  </td>
+                  <td id="discount" class="px-4 py-3 text-sm font-medium text-gray-900 text-right">—</td>
+                  <td class="no-print"></td>
+                </tr>
+                <tr class="border-b border-gray-200 hover:bg-gray-50 transition-all duration-200">
+                  <td colspan="8" class="font-semibold px-4 py-3 text-sm text-gray-800">
+                    <div class="flex items-center space-x-2">
+                      <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                      </svg>
+                      <span>Tax</span>
+                    </div>
+                  </td>
+                  <td id="tax" class="px-4 py-3 text-sm font-medium text-gray-900 text-right">—</td>
+                  <td class="no-print"></td>
+                </tr>
+                <tr class="border-b border-gray-200 hover:bg-gray-50 transition-all duration-200">
+                  <td colspan="8" class="font-semibold px-4 py-3 text-sm text-gray-800">
+                    <div class="flex items-center space-x-2">
+                      <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                      </svg>
+                      <span>Shipping</span>
+                    </div>
+                  </td>
+                  <td id="shipping-total" class="px-4 py-3 text-sm font-medium text-gray-900 text-right">—</td>
+                  <td class="no-print"></td>
+                </tr>
+                <tr class="border-t-2 border-gray-400 bg-gradient-to-r from-gray-100 to-gray-200 hover:from-gray-200 hover:to-gray-300 transition-all duration-200">
+                  <td colspan="8" class="font-bold px-4 py-4 text-base text-gray-900">
+                    <div class="flex items-center space-x-2">
+                      <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                      </svg>
+                      <span>Grand Total</span>
+                    </div>
+                  </td>
+                  <td id="grand-total-table" class="px-4 py-4 text-base font-bold text-gray-900 text-right bg-gray-300 rounded-l-lg border-l-4 border-gray-600">—</td>
+                  <td class="no-print"></td>
+                </tr>
+              </tfoot>
+            </table>
           </div>
+          <textarea id="notes-terms" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none" rows="3" placeholder="Notes / Terms (Payment terms, lead time, shipping details, etc.)"></textarea>
           
-          <!-- Quote Totals -->
-          <div class="border-t pt-4">
-            <div class="flex justify-between items-center mb-2">
-              <span class="text-sm text-gray-600">Subtotal:</span>
-              <span class="quote-subtotal font-medium">₹0.00</span>
-            </div>
-            <div class="flex justify-between items-center mb-2">
-              <span class="text-sm text-gray-600">Tax:</span>
-              <span class="quote-tax font-medium">₹0.00</span>
-            </div>
-            <div class="flex justify-between items-center mb-4 text-lg font-bold border-t pt-2">
-              <span>Total:</span>
-              <span class="quote-total">₹0.00</span>
-            </div>
-            
-            <!-- Save Quote Button -->
-            <button id="save-quote-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center">
-              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3-3m0 0l-3 3m3-3v12"></path>
-              </svg>
+          <!-- Quote Actions positioned at bottom-left -->
+          <div class="flex gap-2 flex-wrap mt-3">
+            <button onclick="saveQuote()" class="btn-primary px-4 py-1 rounded-lg">
               Save Quote
             </button>
+            <button id="clear-quote-btn" class="btn-secondary px-4 py-1 rounded-lg">Clear</button>
           </div>
         </section>
 
+
+
         <!-- Saved Quotes List -->
-        <section class="bg-white rounded-xl shadow-soft p-4 sm:p-6 mb-4 mobile-padding" style="background: #fefce8;">
-          <div class="flex items-center justify-between mb-4">
-            <h2 class="text-lg font-semibold text-gray-800">Saved Quotes</h2>
-            <span class="text-sm text-gray-500" id="quotes-count">0 quotes</span>
-          </div>
-          
-          <div id="saved-quotes-list" class="saved-quotes-list">
-            <div id="no-quotes-message" class="text-center py-8 text-gray-500">
-              <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              <p class="text-lg font-medium">No saved quotes</p>
-              <p class="text-sm">Create and save your first quote to see it here</p>
+        <section class="bg-white rounded-lg shadow-soft p-2 sm:p-3 mb-3 mobile-padding">
+          <h2 class="text-sm font-semibold text-gray-800 mb-2">Saved Quotes</h2>
+          <div id="saved-quotes-container" class="saved-quotes-container">
+            <div id="no-quotes-message" class="no-quotes-message">
+              No saved quotes yet. Save a quote to see it here.
             </div>
           </div>
         </section>
@@ -51427,19 +51543,9 @@
           return false;
         }
         
-        // Generate order number by replacing 'Q' with 'O' in quote name
-        const quoteName = selectedQuote.quoteName || selectedQuote.quoteNumber || 'Untitled';
-        const orderNumber = quoteName.replace(/Q/g, 'O'); // Replace all 'Q' with 'O'
-        const clientName = selectedQuote.clientName || selectedQuote.customerName || 'Unknown Client';
-        const total = selectedQuote.total || selectedQuote.totalAmount || 0;
-        const currency = selectedQuote.currency || 'INR';
-        
-        // Enhanced confirmation dialog for conversion
-        const confirmMessage = `🔄 CONVERT TO ORDER\n\nQuote: ${quoteName}\nClient: ${clientName}\nTotal: ${currency} ${total}\n\n➡️ New Order Number: ${orderNumber}\n\nThis will:\n• Convert the quote to an order\n• Remove the quote from saved quotes\n• Save the order to the database\n\nProceed with conversion?`;
-        
-        const userConfirmed = confirm(confirmMessage);
-        if (!userConfirmed) {
-          console.log('Quote to order conversion cancelled by user');
+        // Show confirmation dialog for conversion
+        const confirmMessage = `Convert Quote to Order: ${selectedQuote.quoteName || selectedQuote.quoteNumber || 'Untitled'}?\n\nThis will transform the quote into an order and update its status. The conversion cannot be undone.`;
+        if (!confirm(confirmMessage)) {
           return false;
         }
         
@@ -51447,15 +51553,20 @@
         const loadingMessage = showLoadingMessage('Converting quote to order...');
         
         try {
-          // Convert quote to order using Firebase function with custom order number
+          // Convert quote to order using Firebase function
           const orderData = await window.firebaseDB.convertQuoteToOrder(selectedQuote.id, {
-            orderNumber: orderNumber, // Use the Q->O converted number
             orderDate: new Date().toISOString(),
             orderSource: 'saved_quote_conversion',
             priority: 'normal'
           });
           
           hideLoadingMessage(loadingMessage);
+          
+          // Show success message
+          const orderNumber = orderData.orderNumber;
+          const clientName = selectedQuote.clientName || selectedQuote.customerName || 'Unknown Client';
+          const total = selectedQuote.total || selectedQuote.totalAmount || 0;
+          const currency = selectedQuote.currency || 'INR';
           
           // Remove quote from localStorage as well (for consistency)
           const localQuotes = localStorage.getItem('savedQuotes');
@@ -51466,8 +51577,7 @@
             console.log('Quote removed from localStorage after conversion');
           }
           
-          // Enhanced success message with clear feedback
-          const successMessage = `✅ CONVERSION SUCCESSFUL!\n\n📋 Original Quote: ${quoteName}\n📦 New Order Number: ${orderNumber}\n👤 Client: ${clientName}\n💰 Total: ${currency} ${total}\n\n🎉 The quote has been successfully converted to an order!\n\n• Quote removed from saved quotes\n• Order saved to database\n• Order ready for processing`;
+          const successMessage = `Quote converted to order successfully!\n\nOrder Number: ${orderNumber}\nClient: ${clientName}\nTotal: ${currency} ${total}\n\nThe quote has been removed from the quotes list and the order has been saved to the database.`;
           
           alert(successMessage);
           
@@ -51811,7 +51921,7 @@
       }, 'image/png');
     }
     
-    // Enhanced Delete Quote Function with improved confirmation dialog
+    // Enhanced Delete Quote Function with confirmation
     async function deleteQuote(quoteIndex) {
       console.log('🗑️ Deleting quote, index:', quoteIndex);
       
@@ -51835,15 +51945,9 @@
         
         const selectedQuote = savedQuotes[quoteIndex];
         
-        // Enhanced confirmation dialog with clear options
-        const quoteName = selectedQuote.quoteName || selectedQuote.quoteNumber || 'Untitled';
-        const clientName = selectedQuote.clientName || selectedQuote.customerName || 'Unknown Client';
-        const confirmMessage = `⚠️ CONFIRM DELETION\n\nQuote: ${quoteName}\nClient: ${clientName}\n\n❌ This action CANNOT be undone!\n\nThe quote will be PERMANENTLY removed from the system.\n\nDo you want to proceed with deletion?`;
-        
-        // Show confirmation dialog - user must explicitly confirm
-        const userConfirmed = confirm(confirmMessage);
-        if (!userConfirmed) {
-          console.log('Quote deletion cancelled by user');
+        // Show confirmation dialog
+        const confirmMessage = `Delete Quote: ${selectedQuote.quoteName || selectedQuote.quoteNumber || 'Untitled'}?\n\nThis action cannot be undone. The quote will be permanently removed from the system.`;
+        if (!confirm(confirmMessage)) {
           return false;
         }
         
@@ -51862,45 +51966,16 @@
           console.log('Quote also removed from localStorage for consistency');
         }
         
-        // Force clear any cached references or event listeners
-        const contextMenu = document.getElementById('quote-context-menu');
-        if (contextMenu) {
-          contextMenu.remove();
-          console.log('🧹 Removed context menu');
-        }
-        
-        // Clear any selected radio buttons
-        const radioButtons = document.querySelectorAll('.quote-radio');
-        radioButtons.forEach(radio => {
-          radio.checked = false;
-        });
-        
         alert(`Quote "${selectedQuote.quoteName || selectedQuote.quoteNumber || 'Untitled'}" has been permanently deleted from the system and removed from the quotes list.`);
         
         // Refresh saved quotes list with a small delay to ensure deletion operations complete
         setTimeout(() => {
           console.log('🔄 Refreshing quotes list after deletion...');
-          console.log('📊 Checking container before refresh...');
-          const container = document.getElementById('saved-quotes-container');
-          if (container) {
-            console.log('📊 Container children before refresh:', container.children.length);
-          }
-          
-          // Use force refresh to ensure complete clearing
-          if (typeof window.forceRefreshQuotesList === 'function') {
-            window.forceRefreshQuotesList();
-          } else if (typeof renderSavedQuotesList === 'function') {
+          if (typeof renderSavedQuotesList === 'function') {
             renderSavedQuotesList();
           } else {
-            console.error('❌ No refresh function available');
+            console.error('❌ renderSavedQuotesList function not found');
           }
-          
-          // Check again after refresh
-          setTimeout(() => {
-            if (container) {
-              console.log('📊 Container children after refresh:', container.children.length);
-            }
-          }, 200);
         }, 100);
         
         return true;
@@ -51943,9 +52018,6 @@
 
       // Initialize dropdowns with product data
       populateQuoteDropdowns();
-      
-      // Initialize salesman dropdown
-      populateSalesmanDropdown();
 
       // Add event listeners
       const addItemBtn = document.getElementById('add-item-btn');
@@ -51976,25 +52048,6 @@
           // Update totals with new currency
           updateQuoteCalculations();
         });
-      }
-      
-      // Add event listeners for financial inputs
-      const discountInput = document.getElementById('discount-input');
-      if (discountInput) {
-        discountInput.addEventListener('input', updateQuoteCalculations);
-        discountInput.addEventListener('change', updateQuoteCalculations);
-      }
-      
-      const taxInput = document.getElementById('tax-input');
-      if (taxInput) {
-        taxInput.addEventListener('input', updateQuoteCalculations);
-        taxInput.addEventListener('change', updateQuoteCalculations);
-      }
-      
-      const shippingInput = document.getElementById('shipping-input');
-      if (shippingInput) {
-        shippingInput.addEventListener('input', updateQuoteCalculations);
-        shippingInput.addEventListener('change', updateQuoteCalculations);
       }
       
       quoteMakerInitialized = true;
@@ -52289,63 +52342,23 @@
       const basePrice = matchingProduct ? parseFloat(matchingProduct.Rate) || 0 : 0;
       const weight = matchingProduct ? parseFloat(matchingProduct['Standard Weight']) || 0 : 0;
       
-      // Debug logging for price extraction
-      console.log('Product matching debug:', {
-        category,
-        density,
-        productName,
-        length,
-        color,
-        matchingProduct: matchingProduct ? {
-          Category: matchingProduct.Category,
-          Density: matchingProduct.Density,
-          Product: matchingProduct.Product,
-          Length: matchingProduct.Length,
-          Colors: matchingProduct.Colors,
-          Rate: matchingProduct.Rate
-        } : null,
-        basePrice,
-        filteredProductsCount: state.filteredProducts ? state.filteredProducts.length : 0
-      });
-      
       // Store prices in INR (base currency) for consistency
       // Override price should be converted back to INR if provided in different currency
       const selectedCurrency = document.getElementById('quote-currency')?.value || state.currency || 'INR';
       let unitPriceInINR = basePrice;
       
-      if (overridePrice && !isNaN(overridePrice) && overridePrice > 0) {
+      if (overridePrice) {
         // If override price is provided, convert it back to INR for storage
         if (selectedCurrency !== 'INR') {
           const exchangeRates = state.rates?.rates || {};
-          const fallbackRates = {
-            'USD': 0.012, 'EUR': 0.011, 'GBP': 0.0095,
-            'AUD': 0.018, 'CAD': 0.016, 'INR': 1
-          };
-          const finalRates = Object.keys(exchangeRates).length > 0 ? exchangeRates : fallbackRates;
-          const rate = finalRates[selectedCurrency] || 1;
+          const rate = exchangeRates[selectedCurrency] || 1;
           unitPriceInINR = overridePrice / rate; // Convert back to INR
         } else {
           unitPriceInINR = overridePrice;
         }
-        console.log('Using override price:', overridePrice, 'converted to INR:', unitPriceInINR);
-      } else if (basePrice === 0) {
-        // If no product match and no override, try to get price from dropdown option
-        const productSelect = document.getElementById('new-item-product');
-        const selectedOption = productSelect?.options[productSelect.selectedIndex];
-        if (selectedOption && selectedOption.dataset.price) {
-          unitPriceInINR = parseFloat(selectedOption.dataset.price) || 0;
-          console.log('Using price from dropdown option:', unitPriceInINR);
-        }
       }
       
       const unitPrice = unitPriceInINR;
-      
-      console.log('Final unit price for item:', {
-        basePrice,
-        overridePrice,
-        unitPriceInINR,
-        finalUnitPrice: unitPrice
-      });
 
       const item = {
         id: Date.now(),
@@ -52439,47 +52452,17 @@
       // Get current selected currency
       const selectedCurrency = document.getElementById('quote-currency')?.value || state.currency || 'INR';
       const exchangeRates = state.rates?.rates || {};
-      
-      // Debug exchange rates
-      console.log('Exchange rates debug:', {
-        selectedCurrency,
-        stateRates: state.rates,
-        exchangeRates,
-        availableCurrencies: Object.keys(exchangeRates)
-      });
-      
-      // Fallback exchange rates if not available
-      const fallbackRates = {
-        'USD': 0.012,
-        'EUR': 0.011,
-        'GBP': 0.0095,
-        'AUD': 0.018,
-        'CAD': 0.016,
-        'INR': 1
-      };
-      
-      // Use fallback rates if no rates are available
-      const finalExchangeRates = Object.keys(exchangeRates).length > 0 ? exchangeRates : fallbackRates;
 
       quoteItems.forEach((item, index) => {
-        // Debug logging for currency conversion
-        console.log('Currency conversion debug:', {
-          itemUnitPrice: item.unitPrice,
-          selectedCurrency,
-          finalExchangeRates,
-          availableRates: Object.keys(finalExchangeRates)
-        });
-        
         // Items are stored in their original currency, so we need to convert for display
         // Assume items are stored in INR base price, convert to selected currency
         let displayUnitPrice = item.unitPrice;
         
         // If current currency is different from INR, convert the price
         if (selectedCurrency !== 'INR') {
-          const rate = finalExchangeRates[selectedCurrency] || 1;
+          const rate = exchangeRates[selectedCurrency] || 1;
           // Convert from INR to selected currency
           displayUnitPrice = item.unitPrice * rate;
-          console.log(`Converting price from INR ${item.unitPrice} to ${selectedCurrency} ${displayUnitPrice} (rate: ${rate})`);
         }
         
         const displayLineTotal = displayUnitPrice * item.quantity;
@@ -52615,33 +52598,9 @@
     }
 
     function removeQuoteItem(index) {
-      // Get item details for confirmation dialog
-      const item = quoteItems[index];
-      if (!item) {
-        console.warn('Item not found at index:', index);
-        return;
-      }
-      
-      const itemName = item.product || 'Unnamed Item';
-      const itemQuantity = item.quantity || 1;
-      const itemTotal = item.lineTotal || 0;
-      const currency = document.getElementById('quote-currency')?.value || 'INR';
-      
-      // Show confirmation dialog
-      const confirmMessage = `🗑️ REMOVE ITEM\n\nItem: ${itemName}\nQuantity: ${itemQuantity}\nTotal: ${currency} ${itemTotal.toFixed(2)}\n\nAre you sure you want to remove this item from the quote?`;
-      
-      const userConfirmed = confirm(confirmMessage);
-      if (!userConfirmed) {
-        console.log('Item removal cancelled by user');
-        return;
-      }
-      
-      // Remove the item
       quoteItems.splice(index, 1);
       renderQuoteItems();
       saveQuoteToStorage(); // Auto-save when item is removed
-      
-      console.log(`Item "${itemName}" removed from quote`);
     }
 
     function updateQuantity(index, newQuantity) {
@@ -52671,179 +52630,6 @@
       // Reset dependent dropdowns
       document.getElementById('new-item-density').disabled = true;
       document.getElementById('new-item-product').disabled = true;
-    }
-
-    // Currency formatting function
-    function formatQuoteCurrency(amount) {
-      const selectedCurrency = document.getElementById('quote-currency')?.value || state.currency || 'INR';
-      const numericAmount = parseFloat(amount) || 0;
-      
-      // Currency symbols mapping
-      const currencySymbols = {
-        'INR': '₹',
-        'USD': '$',
-        'EUR': '€',
-        'GBP': '£',
-        'AUD': 'A$',
-        'CAD': 'C$'
-      };
-      
-      const symbol = currencySymbols[selectedCurrency] || selectedCurrency;
-      return `${symbol} ${numericAmount.toFixed(2)}`;
-    }
-
-    // Financial calculations function
-    function calculateFinancialTotals(subtotal) {
-      const discountInput = document.getElementById('discount-input');
-      const taxInput = document.getElementById('tax-input');
-      const shippingInput = document.getElementById('shipping-input');
-      
-      let discountAmount = 0;
-      let taxAmount = 0;
-      let shippingAmount = 0;
-      
-      // Calculate discount
-      if (discountInput && discountInput.value.trim()) {
-        const discountValue = parseFloat(discountInput.value.replace('%', '')) || 0;
-        if (discountInput.value.includes('%')) {
-          discountAmount = (subtotal * discountValue) / 100;
-        } else {
-          discountAmount = discountValue;
-        }
-      }
-      
-      // Calculate tax (applied after discount)
-      const afterDiscount = subtotal - discountAmount;
-      if (taxInput && taxInput.value.trim()) {
-        const taxValue = parseFloat(taxInput.value.replace('%', '')) || 0;
-        taxAmount = (afterDiscount * taxValue) / 100;
-      }
-      
-      // Calculate shipping
-      if (shippingInput && shippingInput.value.trim()) {
-        shippingAmount = parseFloat(shippingInput.value) || 0;
-      }
-      
-      const grandTotal = afterDiscount + taxAmount + shippingAmount;
-      
-      return {
-        subtotal: subtotal,
-        discountAmount: discountAmount,
-        taxAmount: taxAmount,
-        shippingAmount: shippingAmount,
-        grandTotal: grandTotal
-      };
-    }
-
-    // Update financial previews in controls
-    function updateFinancialPreviews(financials) {
-      // Update discount preview
-      const discountPreview = document.getElementById('discount-preview');
-      if (discountPreview) {
-        if (financials.discountAmount > 0) {
-          discountPreview.textContent = `-${formatQuoteCurrency(financials.discountAmount)}`;
-          discountPreview.className = 'text-green-600 font-medium';
-        } else {
-          discountPreview.textContent = 'No discount';
-          discountPreview.className = 'text-gray-500';
-        }
-      }
-      
-      // Update tax preview
-      const taxPreview = document.getElementById('tax-preview');
-      if (taxPreview) {
-        if (financials.taxAmount > 0) {
-          taxPreview.textContent = `+${formatQuoteCurrency(financials.taxAmount)}`;
-          taxPreview.className = 'text-blue-600 font-medium';
-        } else {
-          taxPreview.textContent = 'Tax free';
-          taxPreview.className = 'text-gray-500';
-        }
-      }
-      
-      // Update shipping preview
-      const shippingPreview = document.getElementById('shipping-preview');
-      if (shippingPreview) {
-        if (financials.shippingAmount > 0) {
-          shippingPreview.textContent = `+${formatQuoteCurrency(financials.shippingAmount)}`;
-          shippingPreview.className = 'text-orange-600 font-medium';
-        } else {
-          shippingPreview.textContent = 'Free shipping';
-          shippingPreview.className = 'text-green-600 font-medium';
-        }
-      }
-    }
-
-    // Update quote calculations when financial inputs change
-    function updateQuoteCalculations() {
-      renderQuoteItems();
-    }
-
-    // Populate salesman dropdown
-    function populateSalesmanDropdown() {
-      const salesmanSelect = document.getElementById('salesman-name');
-      if (!salesmanSelect) return;
-      
-      // Clear existing options except the first one
-      salesmanSelect.innerHTML = '<option value="">Select Salesman</option>';
-      
-      // Get salesmen data from various sources
-      let salesmenData = [];
-      
-      // Try to get from embedded data first
-      if (window.embeddedSalesmenData && Array.isArray(window.embeddedSalesmenData)) {
-        salesmenData = window.embeddedSalesmenData;
-      }
-      // Fallback to cached data
-      else if (window.cachedSalesmenData && Array.isArray(window.cachedSalesmenData)) {
-        salesmenData = window.cachedSalesmenData;
-      }
-      // Fallback to embedded data object
-      else if (window.embeddedData && window.embeddedData.salesmen && Array.isArray(window.embeddedData.salesmen)) {
-        salesmenData = window.embeddedData.salesmen;
-      }
-      // Fallback to hardcoded list
-      else {
-        salesmenData = ['Praveen', 'Rupa', 'INH', 'HW', 'Vijay', 'Pankaj', 'Sunil'];
-      }
-      
-      // Populate dropdown with salesmen
-      if (salesmenData && salesmenData.length > 0) {
-        salesmenData.forEach(salesman => {
-          const option = document.createElement('option');
-          option.value = salesman;
-          option.textContent = salesman;
-          salesmanSelect.appendChild(option);
-        });
-        console.log(`Populated salesman dropdown with ${salesmenData.length} salesmen`);
-      } else {
-        console.warn('No salesmen data available for dropdown');
-      }
-    }
-
-    // Function to be called when salesmen data is updated from Firebase
-    function populateSalesmanOptions(salesmenData) {
-      if (!salesmenData || !Array.isArray(salesmenData)) return;
-      
-      // Update global salesmen data
-      window.cachedSalesmenData = salesmenData;
-      
-      // Directly populate the dropdown without calling populateSalesmanDropdown to avoid recursion
-      const salesmanSelect = document.getElementById('salesman-name');
-      if (!salesmanSelect) return;
-      
-      // Clear existing options except the first one
-      salesmanSelect.innerHTML = '<option value="">Select Salesman</option>';
-      
-      // Populate dropdown with new salesmen data
-      salesmenData.forEach(salesman => {
-        const option = document.createElement('option');
-        option.value = salesman;
-        option.textContent = salesman;
-        salesmanSelect.appendChild(option);
-      });
-      
-      console.log(`Updated salesman dropdown with ${salesmenData.length} salesmen from Firebase`);
     }
 
     function clearAllQuoteData() {
@@ -53015,9 +52801,624 @@
       }
     }
 
-    // Removed duplicate renderSavedQuotesList function - using the newer version below
+    async function renderSavedQuotesList() {
+      console.log('🔄 renderSavedQuotesList called');
+      const container = document.getElementById('saved-quotes-container');
+      const noQuotesMessage = document.getElementById('no-quotes-message');
+      
+      console.log('📋 Container element:', container);
+      console.log('📋 No quotes message element:', noQuotesMessage);
+      
+      let savedQuotes = [];
+      
+      // Try to load from Firebase Firestore first (where quotes are actually saved)
+      if (window.firebaseDB && window.firebaseDB.isAvailable()) {
+        try {
+          console.log('🔥 Trying Firebase Firestore...');
+          const firebaseQuotes = await window.firebaseDB.getQuotes();
+          savedQuotes = firebaseQuotes || [];
+          console.log('✅ Loaded quotes from Firebase Firestore:', savedQuotes.length);
+        } catch (error) {
+          console.warn('⚠️ Failed to load quotes from Firebase Firestore, trying Firebase Storage:', error);
+          
+          // Fallback to Firebase Storage
+          if (window.firebaseStorage) {
+            try {
+              const firebaseData = await window.firebaseStorage.getItem('savedQuotes');
+              savedQuotes = Array.isArray(firebaseData) ? firebaseData : [];
+              console.log('✅ Loaded quotes from Firebase Storage:', savedQuotes.length);
+            } catch (storageError) {
+              console.warn('⚠️ Failed to load from Firebase Storage, using localStorage:', storageError);
+              try {
+                const localData = localStorage.getItem('savedQuotes');
+                savedQuotes = Array.isArray(JSON.parse(localData || '[]')) ? JSON.parse(localData || '[]') : [];
+                console.log('💾 Loaded quotes from localStorage:', savedQuotes.length);
+              } catch (parseError) {
+                console.error('Error parsing localStorage data:', parseError);
+                savedQuotes = [];
+              }
+            }
+          } else {
+            // Final fallback to localStorage
+            try {
+              const localData = localStorage.getItem('savedQuotes');
+              savedQuotes = Array.isArray(JSON.parse(localData || '[]')) ? JSON.parse(localData || '[]') : [];
+              console.log('💾 Loaded quotes from localStorage:', savedQuotes.length);
+            } catch (parseError) {
+              console.error('Error parsing localStorage data:', parseError);
+              savedQuotes = [];
+            }
+          }
+        }
+      } else {
+        console.log('💾 Firebase not available, using localStorage fallback');
+        // Fallback to localStorage
+        try {
+          const localData = localStorage.getItem('savedQuotes');
+          savedQuotes = Array.isArray(JSON.parse(localData || '[]')) ? JSON.parse(localData || '[]') : [];
+          console.log('💾 Loaded quotes from localStorage:', savedQuotes.length);
+        } catch (parseError) {
+          console.error('Error parsing localStorage data:', parseError);
+          savedQuotes = [];
+        }
+      }
+      
+      // Ensure savedQuotes is always an array
+      if (!Array.isArray(savedQuotes)) {
+        console.warn('savedQuotes is not an array, resetting to empty array:', typeof savedQuotes, savedQuotes);
+        savedQuotes = [];
+      }
+      
+      console.log('📊 Total quotes found:', savedQuotes.length);
+      
+      if (savedQuotes.length === 0) {
+        console.log('❌ No quotes found, showing no quotes message');
+        if (noQuotesMessage) {
+          noQuotesMessage.style.display = 'block';
+        }
+        return;
+      }
+      
+      console.log('✅ Quotes found, hiding no quotes message');
+      if (noQuotesMessage) {
+        noQuotesMessage.style.display = 'none';
+      }
+      
+      // Create array with original indices before sorting
+      const quotesWithOriginalIndex = savedQuotes.map((quote, originalIndex) => ({
+        ...quote,
+        originalIndex
+      }));
+      
+      // Sort quotes by date (newest first)
+      quotesWithOriginalIndex.sort((a, b) => new Date(b.savedAt) - new Date(a.savedAt));
+      
+      // Clear existing quotes except the no-quotes message
+      const existingQuotes = container.querySelectorAll('.quote-item');
+      existingQuotes.forEach(item => item.remove());
+      
+      quotesWithOriginalIndex.forEach((quote, displayIndex) => {
+        const quoteItem = document.createElement('div');
+        quoteItem.className = 'quote-item bg-gray-50 border border-gray-200 rounded p-2 hover:bg-gray-100 transition-colors relative cursor-pointer';
+        quoteItem.innerHTML = `
+          <div class="flex items-center space-x-3 text-sm">
+            <input type="radio" name="selectedQuote" class="quote-radio mr-2" data-quote-index="${quote.originalIndex}" onchange="handleQuoteSelection(this, ${quote.originalIndex})">
+            <span class="font-medium text-gray-900">${quote.quoteId}</span>
+            <span class="text-gray-600">${quote.clientName || 'No client name'}</span>
+            <span class="text-gray-500">${new Date(quote.savedAt).toLocaleDateString()}</span>
+            <span class="text-xs text-gray-400">(${quote.items.length} items)</span>
+          </div>
+        `;
+        
+        // Add click handler for entire row
+        quoteItem.addEventListener('click', function(e) {
+          // Don't trigger if clicking directly on the radio button
+          if (e.target.type !== 'radio') {
+            const radioButton = this.querySelector('.quote-radio');
+            radioButton.checked = true;
+            handleQuoteSelection(radioButton, quote.originalIndex);
+          }
+        });
+        
+        container.appendChild(quoteItem);
+      });
+    }
+
+    function showQuoteContextMenu(checkboxElement, quoteIndex) {
+      // Remove any existing context menu
+      hideQuoteContextMenu();
+      
+      const contextMenu = document.createElement('div');
+      contextMenu.className = 'quote-context-menu fixed bg-white border border-gray-200 rounded-lg shadow-lg z-50 py-1 min-w-48';
+      contextMenu.id = 'quote-context-menu';
+      
+      // Position the menu with viewport boundary checking
+      const rect = checkboxElement.getBoundingClientRect();
+      const menuWidth = 192; // min-w-48 = 12rem = 192px
+      const menuHeight = 120; // Approximate height for 3 buttons
+      
+      let left = rect.right + 10;
+      let top = rect.top;
+      
+      // Check right boundary - if menu would go off screen, position to the left
+      if (left + menuWidth > window.innerWidth) {
+        left = rect.left - menuWidth - 10;
+      }
+      
+      // Check bottom boundary - if menu would go off screen, position above
+      if (top + menuHeight > window.innerHeight) {
+        top = rect.bottom - menuHeight;
+      }
+      
+      // Ensure menu doesn't go above viewport
+      if (top < 0) {
+        top = 10;
+      }
+      
+      // Ensure menu doesn't go left of viewport
+      if (left < 0) {
+        left = 10;
+      }
+      
+      contextMenu.style.left = left + 'px';
+      contextMenu.style.top = top + 'px';
+      
+      contextMenu.innerHTML = `
+        <button class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center" onclick="recallQuote(${quoteIndex}); hideQuoteContextMenu();">
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+          </svg>
+          Recall Quote
+        </button>
+        <button class="w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 flex items-center" onclick="shareQuoteFromContext(${quoteIndex}); hideQuoteContextMenu();">
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"></path>
+          </svg>
+          Share Quote
+        </button>
+        <button class="w-full text-left px-4 py-2 text-sm text-green-600 hover:bg-green-50 flex items-center" onclick="convertQuoteToOrder(${quoteIndex}); hideQuoteContextMenu();">
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          Convert2Order
+        </button>
+        <button class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center" onclick="if(deleteQuote(${quoteIndex})) hideQuoteContextMenu();">
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+          </svg>
+          Delete Quote
+        </button>
+      `;
+      
+      document.body.appendChild(contextMenu);
+      
+      // Store the current quote index for reference
+      contextMenu.dataset.quoteIndex = quoteIndex;
+      
+      // Set up click-outside behavior
+      setTimeout(() => {
+        document.addEventListener('click', handleContextMenuClickOutsideRadio);
+      }, 0);
+    }
     
-    // Add Item Functionality
+    function hideQuoteContextMenu() {
+      const existingMenu = document.getElementById('quote-context-menu');
+      if (existingMenu) {
+        existingMenu.remove();
+        document.removeEventListener('click', handleContextMenuClickOutsideRadio);
+      }
+      
+      // Uncheck all radio buttons
+      const radioButtons = document.querySelectorAll('.quote-radio');
+      radioButtons.forEach(radio => {
+        radio.checked = false;
+      });
+    }
+    
+    // handleContextMenuClickOutsideRadio function is defined in quote-radio-selector.js
+
+     function recallQuote(quoteIndex) {
+       const savedQuotes = JSON.parse(localStorage.getItem('savedQuotes') || '[]');
+       const quote = savedQuotes[quoteIndex];
+       
+       if (!quote) {
+         alert('Quote not found!');
+         return;
+       }
+       
+       // Load quote data into the form
+       document.getElementById('quote-number').value = quote.quoteNumber || '';
+       document.getElementById('quote-date').value = quote.date || '';
+       document.getElementById('client-name').value = quote.clientName || '';
+       document.getElementById('client-contact').value = quote.clientContact || '';
+       document.getElementById('salesman-name').value = quote.salesman || '';
+       document.getElementById('valid-days').value = quote.validDays || '';
+       document.getElementById('brief-preview').value = quote.briefPreview || '';
+       document.getElementById('notes-terms').value = quote.notes || '';
+       
+       // Load financial controls
+       // Restore discount
+       const discountInput = document.getElementById('discount-input');
+       if (discountInput) {
+         if (quote.discount && quote.discount.value && quote.discount.value !== '0') {
+           if (quote.discount.type === 'percentage') {
+             discountInput.value = quote.discount.value + '%';
+           } else {
+             discountInput.value = quote.discount.value;
+           }
+         } else {
+           discountInput.value = '';
+         }
+       }
+       
+       // Restore tax
+       const taxInput = document.getElementById('tax-input');
+       if (taxInput) {
+         if (quote.tax && quote.tax.rate && quote.tax.rate !== '0') {
+           taxInput.value = quote.tax.rate + '%';
+         } else {
+           taxInput.value = '';
+         }
+       }
+       
+       // Restore shipping
+       const shippingInput = document.getElementById('shipping-input');
+       if (shippingInput) {
+         if (quote.shipping && quote.shipping.cost && quote.shipping.cost !== '0' && quote.shipping.type === 'paid') {
+           shippingInput.value = quote.shipping.cost;
+         } else {
+           shippingInput.value = '';
+         }
+       }
+       
+       // Load quote items
+       quoteItems.length = 0; // Clear existing items
+       quote.items.forEach(item => {
+         quoteItems.push({...item}); // Create a copy of each item
+       });
+       
+       renderQuoteItems();
+       
+       // Remove any existing dropdown
+       const existingDropdown = document.querySelector('.quote-actions-dropdown');
+       if (existingDropdown) {
+         existingDropdown.remove();
+       }
+       
+       alert(`Quote ${quote.quoteId} recalled successfully!`);
+     }
+
+     async function shareQuoteAsImage(quoteIndex) {
+       const savedQuotes = JSON.parse(localStorage.getItem('savedQuotes') || '[]');
+       const quote = savedQuotes[quoteIndex];
+       
+       if (!quote) {
+         alert('Quote not found!');
+         return;
+       }
+       
+       // First recall the quote to load its data
+       recallQuote(quoteIndex);
+       
+       // Wait a moment for the data to load, then share
+       setTimeout(() => {
+         shareQuoteAsImageFromMain();
+       }, 500);
+     }
+
+     async function shareQuoteFromContext(quoteIndex) {
+       const savedQuotes = JSON.parse(localStorage.getItem('savedQuotes') || '[]');
+      const quote = savedQuotes[quoteIndex];
+       
+       if (!quote) {
+         console.error('Quote not found at index:', quoteIndex);
+         alert('Quote not found!');
+         return;
+       }
+       
+       try {
+         console.log('Starting share process for quote:', quote.quoteId);
+         // Show loading message
+         const loadingMsg = document.createElement('div');
+         loadingMsg.className = 'fixed top-4 left-4 right-4 bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded-lg z-50';
+         loadingMsg.innerHTML = `
+           <div class="flex items-center gap-2">
+             <span class="text-lg">⏳</span>
+             <span class="font-medium">Generating quote image for ${quote.quoteId}...</span>
+           </div>
+         `;
+         document.body.appendChild(loadingMsg);
+         
+         // Create quote details layout for image generation
+         console.log('Creating quote details layout...');
+         const quoteHTML = createQuoteDetailsLayout(quote);
+         console.log('Quote HTML created, length:', quoteHTML.length);
+         
+         // Create a temporary container for rendering
+         const tempContainer = document.createElement('div');
+         tempContainer.style.position = 'absolute';
+         tempContainer.style.left = '-9999px';
+         tempContainer.style.top = '-9999px';
+         tempContainer.style.width = '800px';
+         tempContainer.innerHTML = quoteHTML;
+         document.body.appendChild(tempContainer);
+         
+         // Convert to canvas using html2canvas
+         console.log('Starting html2canvas conversion...');
+         const canvas = await html2canvas(tempContainer, {
+           scale: 2,
+           useCORS: true,
+           allowTaint: true,
+           backgroundColor: '#ffffff',
+           width: 400,
+           height: 400
+         });
+         
+         // Remove temporary container
+         document.body.removeChild(tempContainer);
+         
+         // Convert canvas to blob
+         const blob = await new Promise(resolve => {
+           canvas.toBlob(resolve, 'image/png', 1.0);
+         });
+         
+         // Share using Web Share API
+         console.log('Checking Web Share API availability...');
+         if (navigator.share) {
+           console.log('Web Share API is available');
+           // Create a file from the blob
+           const file = new File([blob], `Quote-${quote.quoteId}-${new Date().toISOString().slice(0,10)}.png`, {
+             type: 'image/png'
+           });
+           console.log('File created for sharing:', file);
+           
+           try {
+             console.log('Attempting to share with Web Share API...');
+             await navigator.share({
+               title: `Quote ${quote.quoteId} - Indian Natural Hair`,
+               text: `Quote details for ${quote.quoteId}`,
+               files: [file]
+             });
+             console.log('Share completed successfully');
+             
+             // Remove loading message
+             loadingMsg.remove();
+             
+             // Show success message
+             showSuccessMessage(`Quote ${quote.quoteId} shared successfully! 📤✨`);
+           } catch (shareError) {
+             console.error('Share cancelled or failed:', shareError);
+             console.log('Share error details:', shareError.message, shareError.name);
+             
+             // Remove loading message
+             loadingMsg.remove();
+             
+             // Fallback to clipboard if share is cancelled
+             if (navigator.clipboard && window.ClipboardItem) {
+               await navigator.clipboard.write([
+                 new ClipboardItem({
+                   'image/png': blob
+                 })
+               ]);
+               showSuccessMessage(`Quote ${quote.quoteId} image copied to clipboard! 📋✨`);
+             } else {
+               // Final fallback: download the image
+               const url = URL.createObjectURL(blob);
+               const a = document.createElement('a');
+               a.href = url;
+               a.download = `Quote-${quote.quoteId}-${new Date().toISOString().slice(0,10)}.png`;
+               document.body.appendChild(a);
+               a.click();
+               document.body.removeChild(a);
+               URL.revokeObjectURL(url);
+               showSuccessMessage(`Quote ${quote.quoteId} image downloaded! 💾`);
+             }
+           }
+         } else {
+           // Fallback for browsers without Web Share API
+           if (navigator.clipboard && window.ClipboardItem) {
+             await navigator.clipboard.write([
+               new ClipboardItem({
+                 'image/png': blob
+               })
+             ]);
+             
+             // Remove loading message
+             loadingMsg.remove();
+             
+             // Show success message
+             showSuccessMessage(`Quote ${quote.quoteId} image copied to clipboard! 📋✨`);
+           } else {
+             // Final fallback: download the image
+             const url = URL.createObjectURL(blob);
+             const a = document.createElement('a');
+             a.href = url;
+             a.download = `Quote-${quote.quoteId}-${new Date().toISOString().slice(0,10)}.png`;
+             document.body.appendChild(a);
+             a.click();
+             document.body.removeChild(a);
+             URL.revokeObjectURL(url);
+              
+              // Remove loading message
+              loadingMsg.remove();
+              
+              showSuccessMessage(`Quote ${quote.quoteId} image downloaded! 💾`);
+            }
+          }
+         
+       } catch (error) {
+         console.error('Error in shareQuoteFromContext:', error);
+         console.log('Error details:', error.message, error.stack);
+         
+         // Remove any existing loading message
+         const existingMsg = document.querySelector('.fixed.top-4');
+         if (existingMsg) existingMsg.remove();
+         
+         // Show error message
+         showErrorMessage(`Failed to generate image for quote ${quote.quoteId}. Please try again.`);
+       }
+     }
+     
+     // Create quote details layout for image generation
+     function createQuoteDetailsLayout(quote) {
+       const currentDate = new Date().toLocaleDateString();
+       
+       // Calculate totals with safety checks
+        const subtotal = quote.items.reduce((sum, item) => {
+          const price = parseFloat(item.unitPrice || item.price) || 0;
+          const quantity = parseInt(item.quantity) || 1;
+          return sum + (price * quantity);
+        }, 0);
+        
+        // Calculate discount
+        let discountAmount = 0;
+        if (quote.discount && quote.discount.value && parseFloat(quote.discount.value) > 0) {
+          const discountValue = parseFloat(quote.discount.value);
+          if (quote.discount.type === 'percentage') {
+            discountAmount = (subtotal * discountValue) / 100;
+          } else {
+            discountAmount = discountValue;
+          }
+        } else {
+          // If no discount data in quote object, check current form input
+          const discountInput = document.getElementById('discount-input');
+          if (discountInput && discountInput.value.trim()) {
+            const discountValue = discountInput.value.trim();
+            if (discountValue.includes('%')) {
+              const percentage = parseFloat(discountValue.replace('%', '')) || 0;
+              discountAmount = (subtotal * percentage) / 100;
+            } else {
+              discountAmount = parseFloat(discountValue) || 0;
+            }
+          }
+        }
+        
+        // Calculate tax on discounted amount
+        const taxableAmount = subtotal - discountAmount;
+        let taxAmount = 0;
+        if (quote.tax && quote.tax.type === 'percentage' && quote.tax.rate) {
+          const taxRate = parseFloat(quote.tax.rate) || 0;
+          taxAmount = (taxableAmount * taxRate) / 100;
+        } else {
+          // If no tax data in quote object, check current form input
+          const taxInput = document.getElementById('tax-input');
+          if (taxInput && taxInput.value.trim()) {
+            const taxValue = taxInput.value.trim();
+            const taxRate = parseFloat(taxValue.replace('%', '')) || 0;
+            taxAmount = (taxableAmount * taxRate) / 100;
+          }
+        }
+        
+        // Calculate shipping
+        let shippingAmount = 0;
+        if (quote.shipping && quote.shipping.type === 'paid' && quote.shipping.cost) {
+          shippingAmount = parseFloat(quote.shipping.cost) || 0;
+        } else {
+          // If no shipping data in quote object, check current form input
+          const shippingInput = document.getElementById('shipping-input');
+          if (shippingInput && shippingInput.value.trim()) {
+            shippingAmount = parseFloat(shippingInput.value.trim()) || 0;
+          }
+        }
+        
+        const total = taxableAmount + taxAmount + shippingAmount;
+       
+       return `
+         <div style="font-family: 'Courier New', monospace; width: 400px; margin: 0; padding: 12px; background: white; color: #000; line-height: 1.1; box-sizing: border-box;">
+           <!-- Header -->
+           <div style="text-align: center; margin-bottom: 8px; border-bottom: 2px solid #000; padding-bottom: 6px;">
+             <h1 style="font-size: 18px; margin: 0; font-weight: bold; letter-spacing: 1px;">QUOTE</h1>
+             <p style="font-size: 12px; margin: 2px 0; font-weight: bold;">Indian Natural Hair</p>
+             <p style="font-size: 10px; margin: 0;">Hair Extensions</p>
+           </div>
+           
+           <!-- Quote Details Table -->
+           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; font-size: 10px;">
+             <div><strong>ID:</strong> ${quote.quoteId}</div>
+             <div><strong>Date:</strong> ${quote.date || currentDate}</div>
+             <div><strong>Client:</strong> ${quote.clientName || 'N/A'}</div>
+             <div><strong>Contact:</strong> ${quote.clientContact || 'N/A'}</div>
+             <div><strong>Sales:</strong> ${quote.salesman || 'N/A'}</div>
+             <div><strong>Valid:</strong> ${quote.validDays || 'N/A'} days</div>
+           </div>
+           
+           <!-- Brief Preview -->
+           ${quote.briefPreview ? `
+             <div style="margin-bottom: 8px; padding: 4px; background: #f9f9f9; border: 1px solid #ddd; font-size: 9px;">
+               <strong>Info:</strong> ${quote.briefPreview}
+             </div>
+           ` : ''}
+           
+           <!-- Items Section -->
+           <div style="border: 1px solid #000; margin-bottom: 8px;">
+             <div style="background: #f0f0f0; padding: 4px; font-weight: bold; font-size: 11px; border-bottom: 1px solid #000;">
+               <span>ITEMS</span>
+               <span style="float: right;">TOTAL</span>
+             </div>
+             <div style="padding: 4px;">
+               ${quote.items.map((item, index) => {
+                 const unitPrice = parseFloat(item.unitPrice || item.price) || 0;
+                 const quantity = parseInt(item.quantity) || 1;
+                 const lineTotal = unitPrice * quantity;
+                 return `
+                 <div style="display: flex; justify-content: space-between; margin-bottom: 3px; font-size: 9px; border-bottom: 1px dotted #ccc; padding-bottom: 2px;">
+                   <div style="flex: 1;">
+                     <strong>${index + 1}. ${item.product || item.name || 'N/A'}</strong>${item.category ? ` (${item.category})` : ''}${item.density ? ` ${item.density}` : ''}<br/>
+                     Length: ${item.length || 'N/A'} | Qty: ${quantity} | Unit: ${formatQuoteCurrency(unitPrice)}
+                   </div>
+                   <div style="font-weight: bold; margin-left: 8px;">${formatQuoteCurrency(lineTotal)}</div>
+                 </div>
+                 `;
+               }).join('')}
+             </div>
+           </div>
+           
+           <!-- Totals Section -->
+           <div style="border: 1px solid #000; margin-bottom: 8px; background: #f9f9f9;">
+             <div style="padding: 6px; font-size: 10px;">
+               <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
+                 <span>Subtotal:</span><span>${formatQuoteCurrency(subtotal)}</span>
+               </div>
+               ${discountAmount > 0 ? `
+                 <div style="display: flex; justify-content: space-between; margin-bottom: 2px; color: #d63384;">
+                   <span>Discount ${quote.discount.type === 'percentage' ? `(${quote.discount.value}%)` : ''}:</span><span>-${formatQuoteCurrency(discountAmount)}</span>
+                 </div>
+               ` : ''}
+               ${taxAmount > 0 ? `
+                 <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
+                   <span>Tax (${quote.tax.rate}%):</span><span>${formatQuoteCurrency(taxAmount)}</span>
+                 </div>
+               ` : ''}
+               ${shippingAmount > 0 ? `
+                 <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
+                   <span>Shipping:</span><span>${formatQuoteCurrency(shippingAmount)}</span>
+                 </div>
+               ` : quote.shipping && quote.shipping.type === 'free' ? `
+                 <div style="display: flex; justify-content: space-between; margin-bottom: 2px; color: #198754;">
+                   <span>Shipping:</span><span>FREE</span>
+                 </div>
+               ` : ''}
+               <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 12px; border-top: 1px solid #000; padding-top: 4px;">
+                 <span>TOTAL:</span><span>${formatQuoteCurrency(total)}</span>
+               </div>
+             </div>
+           </div>
+           
+           <!-- Notes -->
+           ${quote.notes ? `
+             <div style="margin-top: 4px;">
+               <p style="font-size: 9px; margin: 0; font-weight: bold;">Notes: ${quote.notes}</p>
+             </div>
+           ` : ''}
+           
+           <!-- Footer -->
+           <div style="text-align: center; font-size: 9px; border-top: 1px solid #000; padding-top: 6px;">
+             <p style="margin: 0; font-weight: bold;">Indian Natural Hair</p>
+             <p style="margin: 0;">info@indiannaturalhair.com</p>
+           </div>
+         </div>
+       `;
+     }
 
      function deleteQuote(quoteIndex) {
        console.log('deleteQuote called with index:', quoteIndex);
@@ -54944,12 +55345,6 @@
         });
       }
       
-      // Clear any existing quote data when initializing
-      if (typeof clearAllQuoteData === 'function') {
-        clearAllQuoteData();
-        console.log('🧹 Quote form cleared on initialization');
-      }
-      
       // Loading saved quotes when the quote maker is initialized
       console.log('🚀 initQuoteMaker: About to call renderSavedQuotesList');
       renderSavedQuotesList();
@@ -54958,25 +55353,21 @@
       console.log('✅ Quote Maker initialization complete');
     }
 
-    // Module initialization handlers
-    document.addEventListener('DOMContentLoaded', function() {
-      // Set up module change listeners
-      const moduleButtons = document.querySelectorAll('[onclick*="showModule"]');
-      moduleButtons.forEach(button => {
-        button.addEventListener('click', function() {
-          const moduleId = this.getAttribute('onclick').match(/showModule\('([^']+)'\)/)?.[1];
-          if (moduleId === 'client-management-module') {
-            setTimeout(initializeClientManagementModule, 100);
-          } else if (moduleId === 'quote-maker-module') {
-            console.log('🎯 Quote Maker module selected, initializing...');
-            setTimeout(() => {
-              populateClientDropdown();
-              initQuoteMaker();
-            }, 100);
-          }
-        });
-      });
-    });
+    // Add to module initialization
+     const originalShowModule = showModule;
+     showModule = function(moduleId) {
+       console.log('🔄 showModule called with:', moduleId);
+       originalShowModule(moduleId);
+       if (moduleId === 'client-management-module') {
+         setTimeout(initializeClientManagementModule, 100);
+       } else if (moduleId === 'quote-maker-module') {
+         console.log('🎯 Quote Maker module selected, initializing...');
+         setTimeout(() => {
+           populateClientDropdown();
+           initQuoteMaker();
+         }, 100);
+       }
+     };
      
      // Client selection functions for quote maker
      function populateClientDropdown() {
@@ -55029,436 +55420,8 @@
          document.getElementById('client-name').value = '';
          document.getElementById('client-contact').value = '';
          window.selectedQuoteClient = null;
-     }
-   }
-   
-   // Saved Quotes List Functionality with Custom Naming Convention
-   function renderSavedQuotesList() {
-     console.log('🔄 Rendering saved quotes list...');
-     
-     const container = document.getElementById('saved-quotes-list');
-     const noQuotesMessage = document.getElementById('no-quotes-message');
-     const quotesCount = document.getElementById('quotes-count');
-     
-     if (!container) {
-       console.error('❌ Saved quotes container not found');
-       return;
-     }
-     
-     // Get saved quotes from localStorage
-     let savedQuotes = [];
-     try {
-       const localData = localStorage.getItem('savedQuotes');
-       if (localData) {
-         savedQuotes = JSON.parse(localData);
-         if (!Array.isArray(savedQuotes)) {
-           savedQuotes = [];
-         }
        }
-     } catch (error) {
-       console.error('Error parsing saved quotes:', error);
-       savedQuotes = [];
      }
-     
-     console.log(`📊 Found ${savedQuotes.length} saved quotes`);
-     
-     // Update quotes count
-     if (quotesCount) {
-       quotesCount.textContent = `${savedQuotes.length} quote${savedQuotes.length !== 1 ? 's' : ''}`;
-     }
-     
-     // Clear existing quotes except no-quotes message
-     const existingQuotes = container.querySelectorAll('.saved-quote-item');
-     existingQuotes.forEach(item => item.remove());
-     
-     if (savedQuotes.length === 0) {
-       if (noQuotesMessage) {
-         noQuotesMessage.style.display = 'block';
-       }
-       return;
-     }
-     
-     // Hide no quotes message
-     if (noQuotesMessage) {
-       noQuotesMessage.style.display = 'none';
-     }
-     
-     // Sort quotes by date (newest first)
-     savedQuotes.sort((a, b) => new Date(b.savedAt || b.date) - new Date(a.savedAt || a.date));
-     
-     // Render each quote with custom naming convention
-     savedQuotes.forEach((quote, index) => {
-       const quoteItem = createSavedQuoteItem(quote, index);
-       container.appendChild(quoteItem);
-     });
-   }
-   
-   function createSavedQuoteItem(quote, index) {
-     const quoteDiv = document.createElement('div');
-     quoteDiv.className = 'saved-quote-item bg-gray-50 border border-gray-200 rounded-lg p-3 mb-2 hover:bg-gray-100 transition-colors cursor-pointer';
-     
-     // Extract data with fallbacks
-     const quoteNumber = quote.quoteId || quote.id || `Q${Date.now()}`;
-     const salesmanName = quote.salesperson || quote.salesmanName || 'Unknown Salesman';
-     const customerName = quote.clientName || quote.customerName || 'Unknown Customer';
-     const quoteDate = new Date(quote.savedAt || quote.date || Date.now()).toLocaleDateString();
-     const itemCount = (quote.lines || quote.items || []).length;
-     const total = quote.total || 0;
-     const currency = quote.currency || 'INR';
-     
-     // Create custom naming convention: Q-Quote#-Salesman Name - Date - Customer Name
-     const displayName = `Q-${quoteNumber}-${salesmanName} - ${quoteDate} - ${customerName}`;
-     
-     quoteDiv.innerHTML = `
-       <div class="flex items-center justify-between">
-         <div class="flex-1">
-           <div class="font-medium text-gray-900 text-sm mb-1">${displayName}</div>
-           <div class="text-xs text-gray-500">
-             <span class="mr-3">${itemCount} item${itemCount !== 1 ? 's' : ''}</span>
-             <span class="mr-3">${currency} ${total.toFixed(2)}</span>
-             <span>${quoteDate}</span>
-           </div>
-         </div>
-         <div class="flex items-center space-x-2">
-           <button onclick="recallQuote(${index})" class="text-blue-600 hover:text-blue-800 text-xs px-2 py-1 rounded border border-blue-200 hover:bg-blue-50">
-             Recall
-           </button>
-           <button onclick="deleteQuote(${index})" class="text-red-600 hover:text-red-800 text-xs px-2 py-1 rounded border border-red-200 hover:bg-red-50">
-             Delete
-           </button>
-         </div>
-       </div>
-     `;
-     
-     return quoteDiv;
-   }
-   
-   // Initialize saved quotes list when quote maker loads
-   const originalInitQuoteMaker = window.initQuoteMaker;
-   window.initQuoteMaker = function() {
-     if (originalInitQuoteMaker) {
-       originalInitQuoteMaker();
-     }
-     
-     // Render saved quotes list
-     setTimeout(() => {
-       renderSavedQuotesList();
-     }, 100);
-   };
-   
-   // Add Item Functionality
-   function addQuoteItem() {
-     console.log('🔄 Adding quote item...');
-     
-     // Get form values
-     const category = document.getElementById('new-item-category').value;
-     const product = document.getElementById('new-item-product').value;
-     const density = document.getElementById('new-item-density').value;
-     const length = document.getElementById('new-item-length').value;
-     const color = document.getElementById('new-item-color').value;
-     const colorDetail = document.getElementById('new-item-color-detail').value;
-     const styles = document.getElementById('new-item-styles').value;
-     const quantity = parseFloat(document.getElementById('new-item-quantity').value) || 1;
-     const overridePrice = parseFloat(document.getElementById('new-item-override-price').value);
-     
-     // Validation
-     if (!category || !product || !length) {
-       alert('Please select Category, Product, and Length');
-       return;
-     }
-     
-     // Calculate price (simplified - you may want to implement proper pricing logic)
-     let price = overridePrice || 100; // Default price or override
-     
-     // Create item object
-     const item = {
-       category,
-       product,
-       density,
-       length,
-       color,
-       colorDetail,
-       styles,
-       quantity,
-       price,
-       total: quantity * price
-     };
-     
-     // Add to quote items container
-     const container = document.getElementById('quote-items');
-     if (container) {
-       const itemElement = createQuoteItemElement(item);
-       container.appendChild(itemElement);
-       
-       // Update totals
-       updateQuoteTotals();
-       
-       // Clear form
-       clearAddItemForm();
-       
-       console.log('✅ Quote item added successfully');
-     } else {
-       console.error('❌ Quote items container not found');
-     }
-   }
-   
-   function createQuoteItemElement(item) {
-     const itemDiv = document.createElement('div');
-     itemDiv.className = 'quote-item bg-gray-50 border border-gray-200 rounded-lg p-3 mb-2';
-     
-     const itemName = `${item.product} - ${item.length}" ${item.color || ''} ${item.colorDetail || ''} ${item.styles || ''}`.trim();
-     
-     itemDiv.innerHTML = `
-       <div class="flex items-center justify-between">
-         <div class="flex-1">
-           <div class="item-name font-medium text-gray-900 text-sm">${itemName}</div>
-           <div class="text-xs text-gray-500">
-             <span class="mr-3">Category: ${item.category}</span>
-             <span class="mr-3">Density: ${item.density || 'N/A'}</span>
-           </div>
-         </div>
-         <div class="flex items-center space-x-4">
-           <div class="text-right">
-             <div class="text-sm">Qty: <span class="item-quantity">${item.quantity}</span></div>
-             <div class="text-sm">Price: ₹<span class="item-price">${item.price.toFixed(2)}</span></div>
-           </div>
-           <div class="text-right">
-             <div class="font-medium">₹<span class="item-total">${item.total.toFixed(2)}</span></div>
-           </div>
-           <button onclick="removeQuoteItem(this)" class="text-red-600 hover:text-red-800 text-xs px-2 py-1 rounded border border-red-200 hover:bg-red-50">
-             Remove
-           </button>
-         </div>
-       </div>
-     `;
-     
-     return itemDiv;
-   }
-   
-   function removeQuoteItem(button) {
-     const itemElement = button.closest('.quote-item');
-     if (itemElement) {
-       itemElement.remove();
-       updateQuoteTotals();
-       console.log('✅ Quote item removed');
-     }
-   }
-   
-   function clearAddItemForm() {
-     const fields = [
-       'new-item-category', 'new-item-product', 'new-item-density',
-       'new-item-length', 'new-item-color', 'new-item-color-detail',
-       'new-item-styles', 'new-item-override-price'
-     ];
-     
-     fields.forEach(fieldId => {
-       const field = document.getElementById(fieldId);
-       if (field) {
-         field.value = '';
-       }
-     });
-     
-     // Reset quantity to 1
-     const quantityField = document.getElementById('new-item-quantity');
-     if (quantityField) {
-       quantityField.value = '1';
-     }
-   }
-   
-   function updateQuoteTotals() {
-     const items = getQuoteItems();
-     const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-     const tax = subtotal * 0.18; // 18% tax
-     const total = subtotal + tax;
-     
-     // Update display
-     const subtotalEl = document.querySelector('.quote-subtotal');
-     const taxEl = document.querySelector('.quote-tax');
-     const totalEl = document.querySelector('.quote-total');
-     
-     if (subtotalEl) subtotalEl.textContent = `₹${subtotal.toFixed(2)}`;
-     if (taxEl) taxEl.textContent = `₹${tax.toFixed(2)}`;
-     if (totalEl) totalEl.textContent = `₹${total.toFixed(2)}`;
-   }
-   
-   // Save Quote Functionality
-   function saveQuote() {
-     console.log('🔄 Saving quote...');
-     
-     // Get quote data
-     const quoteData = {
-       quoteId: document.getElementById('quote-number').value || `Q${Date.now()}`,
-       clientName: document.getElementById('client-name').value,
-       clientContact: document.getElementById('client-contact').value,
-       salesperson: document.getElementById('salesman-name').value,
-       currency: document.getElementById('quote-currency').value || 'INR',
-       priceList: document.getElementById('quote-price-list-selector').value,
-       validDays: document.getElementById('valid-days').value || '14',
-       briefPreview: document.getElementById('brief-preview').value,
-       items: getQuoteItems(),
-       date: new Date().toISOString(),
-       savedAt: new Date().toISOString()
-     };
-     
-     // Validation
-     if (!quoteData.clientName) {
-       alert('Please enter client name');
-       return;
-     }
-     
-     if (!quoteData.items || quoteData.items.length === 0) {
-       alert('Please add at least one item to the quote');
-       return;
-     }
-     
-     // Calculate totals
-     const subtotal = quoteData.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-     quoteData.subtotal = subtotal;
-     quoteData.tax = subtotal * 0.18;
-     quoteData.total = subtotal + quoteData.tax;
-     
-     // Save to localStorage
-     try {
-       let savedQuotes = JSON.parse(localStorage.getItem('savedQuotes') || '[]');
-       
-       // Check if quote already exists (update vs create)
-       const existingIndex = savedQuotes.findIndex(q => q.quoteId === quoteData.quoteId);
-       if (existingIndex >= 0) {
-         savedQuotes[existingIndex] = quoteData;
-         console.log('✅ Quote updated');
-       } else {
-         savedQuotes.push(quoteData);
-         console.log('✅ New quote saved');
-       }
-       
-       localStorage.setItem('savedQuotes', JSON.stringify(savedQuotes));
-       
-       // Refresh saved quotes list
-       renderSavedQuotesList();
-       
-       alert('Quote saved successfully!');
-       
-     } catch (error) {
-       console.error('❌ Error saving quote:', error);
-       alert('Error saving quote. Please try again.');
-     }
-   }
-   
-   // Recall Quote Functionality
-   function recallQuote(index) {
-     console.log('🔄 Recalling quote at index:', index);
-     
-     try {
-       const savedQuotes = JSON.parse(localStorage.getItem('savedQuotes') || '[]');
-       const quote = savedQuotes[index];
-       
-       if (!quote) {
-         alert('Quote not found');
-         return;
-       }
-       
-       // Fill form fields
-       document.getElementById('quote-number').value = quote.quoteId || '';
-       document.getElementById('client-name').value = quote.clientName || '';
-       document.getElementById('client-contact').value = quote.clientContact || '';
-       document.getElementById('salesman-name').value = quote.salesperson || '';
-       document.getElementById('quote-currency').value = quote.currency || 'INR';
-       document.getElementById('valid-days').value = quote.validDays || '14';
-       document.getElementById('brief-preview').value = quote.briefPreview || '';
-       
-       // Clear existing items
-       const container = document.getElementById('quote-items');
-       if (container) {
-         container.innerHTML = '';
-       }
-       
-       // Add quote items
-       if (quote.items && quote.items.length > 0) {
-         quote.items.forEach(item => {
-           const itemElement = createQuoteItemElement(item);
-           container.appendChild(itemElement);
-         });
-       }
-       
-       // Update totals
-       updateQuoteTotals();
-       
-       console.log('✅ Quote recalled successfully');
-       alert('Quote recalled successfully!');
-       
-     } catch (error) {
-       console.error('❌ Error recalling quote:', error);
-       alert('Error recalling quote. Please try again.');
-     }
-   }
-   
-   // Delete Quote Functionality
-   function deleteQuote(index) {
-     console.log('🔄 Deleting quote at index:', index);
-     
-     if (!confirm('Are you sure you want to delete this quote?')) {
-       return false;
-     }
-     
-     try {
-       let savedQuotes = JSON.parse(localStorage.getItem('savedQuotes') || '[]');
-       
-       if (index >= 0 && index < savedQuotes.length) {
-         savedQuotes.splice(index, 1);
-         localStorage.setItem('savedQuotes', JSON.stringify(savedQuotes));
-         
-         // Refresh saved quotes list
-         renderSavedQuotesList();
-         
-         console.log('✅ Quote deleted successfully');
-         alert('Quote deleted successfully!');
-         return true;
-       } else {
-         alert('Quote not found');
-         return false;
-       }
-       
-     } catch (error) {
-       console.error('❌ Error deleting quote:', error);
-       alert('Error deleting quote. Please try again.');
-       return false;
-     }
-   }
-   
-   // Attach event listeners
-   document.addEventListener('DOMContentLoaded', function() {
-     // Add item button
-     const addItemBtn = document.getElementById('add-item-btn');
-     if (addItemBtn) {
-       addItemBtn.addEventListener('click', addQuoteItem);
-       console.log('✅ Add item button event listener attached');
-     }
-     
-     // Save quote button
-     const saveQuoteBtn = document.getElementById('save-quote-btn');
-     if (saveQuoteBtn) {
-       saveQuoteBtn.addEventListener('click', saveQuote);
-       console.log('✅ Save quote button event listener attached');
-     }
-   });
-   
-   // Make functions globally available
-   window.addQuoteItem = addQuoteItem;
-   window.saveQuote = saveQuote;
-   window.recallQuote = recallQuote;
-   window.deleteQuote = deleteQuote;
-   window.removeQuoteItem = removeQuoteItem;
-   window.updateQuoteTotals = updateQuoteTotals;
-   window.renderSavedQuotesList = renderSavedQuotesList;
-   
-   // Clear quote data on page load/refresh
-   document.addEventListener('DOMContentLoaded', function() {
-     console.log('🔄 Page loaded - clearing quote data');
-     if (typeof clearAllQuoteData === 'function') {
-       clearAllQuoteData();
-       console.log('🧹 Quote form cleared on page load');
-     }
-   });
-  </script>
+    </script>
 </body>
 </html>

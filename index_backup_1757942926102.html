@@ -51943,9 +51943,6 @@
 
       // Initialize dropdowns with product data
       populateQuoteDropdowns();
-      
-      // Initialize salesman dropdown
-      populateSalesmanDropdown();
 
       // Add event listeners
       const addItemBtn = document.getElementById('add-item-btn');
@@ -51976,25 +51973,6 @@
           // Update totals with new currency
           updateQuoteCalculations();
         });
-      }
-      
-      // Add event listeners for financial inputs
-      const discountInput = document.getElementById('discount-input');
-      if (discountInput) {
-        discountInput.addEventListener('input', updateQuoteCalculations);
-        discountInput.addEventListener('change', updateQuoteCalculations);
-      }
-      
-      const taxInput = document.getElementById('tax-input');
-      if (taxInput) {
-        taxInput.addEventListener('input', updateQuoteCalculations);
-        taxInput.addEventListener('change', updateQuoteCalculations);
-      }
-      
-      const shippingInput = document.getElementById('shipping-input');
-      if (shippingInput) {
-        shippingInput.addEventListener('input', updateQuoteCalculations);
-        shippingInput.addEventListener('change', updateQuoteCalculations);
       }
       
       quoteMakerInitialized = true;
@@ -52289,63 +52267,23 @@
       const basePrice = matchingProduct ? parseFloat(matchingProduct.Rate) || 0 : 0;
       const weight = matchingProduct ? parseFloat(matchingProduct['Standard Weight']) || 0 : 0;
       
-      // Debug logging for price extraction
-      console.log('Product matching debug:', {
-        category,
-        density,
-        productName,
-        length,
-        color,
-        matchingProduct: matchingProduct ? {
-          Category: matchingProduct.Category,
-          Density: matchingProduct.Density,
-          Product: matchingProduct.Product,
-          Length: matchingProduct.Length,
-          Colors: matchingProduct.Colors,
-          Rate: matchingProduct.Rate
-        } : null,
-        basePrice,
-        filteredProductsCount: state.filteredProducts ? state.filteredProducts.length : 0
-      });
-      
       // Store prices in INR (base currency) for consistency
       // Override price should be converted back to INR if provided in different currency
       const selectedCurrency = document.getElementById('quote-currency')?.value || state.currency || 'INR';
       let unitPriceInINR = basePrice;
       
-      if (overridePrice && !isNaN(overridePrice) && overridePrice > 0) {
+      if (overridePrice) {
         // If override price is provided, convert it back to INR for storage
         if (selectedCurrency !== 'INR') {
           const exchangeRates = state.rates?.rates || {};
-          const fallbackRates = {
-            'USD': 0.012, 'EUR': 0.011, 'GBP': 0.0095,
-            'AUD': 0.018, 'CAD': 0.016, 'INR': 1
-          };
-          const finalRates = Object.keys(exchangeRates).length > 0 ? exchangeRates : fallbackRates;
-          const rate = finalRates[selectedCurrency] || 1;
+          const rate = exchangeRates[selectedCurrency] || 1;
           unitPriceInINR = overridePrice / rate; // Convert back to INR
         } else {
           unitPriceInINR = overridePrice;
         }
-        console.log('Using override price:', overridePrice, 'converted to INR:', unitPriceInINR);
-      } else if (basePrice === 0) {
-        // If no product match and no override, try to get price from dropdown option
-        const productSelect = document.getElementById('new-item-product');
-        const selectedOption = productSelect?.options[productSelect.selectedIndex];
-        if (selectedOption && selectedOption.dataset.price) {
-          unitPriceInINR = parseFloat(selectedOption.dataset.price) || 0;
-          console.log('Using price from dropdown option:', unitPriceInINR);
-        }
       }
       
       const unitPrice = unitPriceInINR;
-      
-      console.log('Final unit price for item:', {
-        basePrice,
-        overridePrice,
-        unitPriceInINR,
-        finalUnitPrice: unitPrice
-      });
 
       const item = {
         id: Date.now(),
@@ -52439,47 +52377,17 @@
       // Get current selected currency
       const selectedCurrency = document.getElementById('quote-currency')?.value || state.currency || 'INR';
       const exchangeRates = state.rates?.rates || {};
-      
-      // Debug exchange rates
-      console.log('Exchange rates debug:', {
-        selectedCurrency,
-        stateRates: state.rates,
-        exchangeRates,
-        availableCurrencies: Object.keys(exchangeRates)
-      });
-      
-      // Fallback exchange rates if not available
-      const fallbackRates = {
-        'USD': 0.012,
-        'EUR': 0.011,
-        'GBP': 0.0095,
-        'AUD': 0.018,
-        'CAD': 0.016,
-        'INR': 1
-      };
-      
-      // Use fallback rates if no rates are available
-      const finalExchangeRates = Object.keys(exchangeRates).length > 0 ? exchangeRates : fallbackRates;
 
       quoteItems.forEach((item, index) => {
-        // Debug logging for currency conversion
-        console.log('Currency conversion debug:', {
-          itemUnitPrice: item.unitPrice,
-          selectedCurrency,
-          finalExchangeRates,
-          availableRates: Object.keys(finalExchangeRates)
-        });
-        
         // Items are stored in their original currency, so we need to convert for display
         // Assume items are stored in INR base price, convert to selected currency
         let displayUnitPrice = item.unitPrice;
         
         // If current currency is different from INR, convert the price
         if (selectedCurrency !== 'INR') {
-          const rate = finalExchangeRates[selectedCurrency] || 1;
+          const rate = exchangeRates[selectedCurrency] || 1;
           // Convert from INR to selected currency
           displayUnitPrice = item.unitPrice * rate;
-          console.log(`Converting price from INR ${item.unitPrice} to ${selectedCurrency} ${displayUnitPrice} (rate: ${rate})`);
         }
         
         const displayLineTotal = displayUnitPrice * item.quantity;
@@ -52615,33 +52523,9 @@
     }
 
     function removeQuoteItem(index) {
-      // Get item details for confirmation dialog
-      const item = quoteItems[index];
-      if (!item) {
-        console.warn('Item not found at index:', index);
-        return;
-      }
-      
-      const itemName = item.product || 'Unnamed Item';
-      const itemQuantity = item.quantity || 1;
-      const itemTotal = item.lineTotal || 0;
-      const currency = document.getElementById('quote-currency')?.value || 'INR';
-      
-      // Show confirmation dialog
-      const confirmMessage = `🗑️ REMOVE ITEM\n\nItem: ${itemName}\nQuantity: ${itemQuantity}\nTotal: ${currency} ${itemTotal.toFixed(2)}\n\nAre you sure you want to remove this item from the quote?`;
-      
-      const userConfirmed = confirm(confirmMessage);
-      if (!userConfirmed) {
-        console.log('Item removal cancelled by user');
-        return;
-      }
-      
-      // Remove the item
       quoteItems.splice(index, 1);
       renderQuoteItems();
       saveQuoteToStorage(); // Auto-save when item is removed
-      
-      console.log(`Item "${itemName}" removed from quote`);
     }
 
     function updateQuantity(index, newQuantity) {
@@ -52671,179 +52555,6 @@
       // Reset dependent dropdowns
       document.getElementById('new-item-density').disabled = true;
       document.getElementById('new-item-product').disabled = true;
-    }
-
-    // Currency formatting function
-    function formatQuoteCurrency(amount) {
-      const selectedCurrency = document.getElementById('quote-currency')?.value || state.currency || 'INR';
-      const numericAmount = parseFloat(amount) || 0;
-      
-      // Currency symbols mapping
-      const currencySymbols = {
-        'INR': '₹',
-        'USD': '$',
-        'EUR': '€',
-        'GBP': '£',
-        'AUD': 'A$',
-        'CAD': 'C$'
-      };
-      
-      const symbol = currencySymbols[selectedCurrency] || selectedCurrency;
-      return `${symbol} ${numericAmount.toFixed(2)}`;
-    }
-
-    // Financial calculations function
-    function calculateFinancialTotals(subtotal) {
-      const discountInput = document.getElementById('discount-input');
-      const taxInput = document.getElementById('tax-input');
-      const shippingInput = document.getElementById('shipping-input');
-      
-      let discountAmount = 0;
-      let taxAmount = 0;
-      let shippingAmount = 0;
-      
-      // Calculate discount
-      if (discountInput && discountInput.value.trim()) {
-        const discountValue = parseFloat(discountInput.value.replace('%', '')) || 0;
-        if (discountInput.value.includes('%')) {
-          discountAmount = (subtotal * discountValue) / 100;
-        } else {
-          discountAmount = discountValue;
-        }
-      }
-      
-      // Calculate tax (applied after discount)
-      const afterDiscount = subtotal - discountAmount;
-      if (taxInput && taxInput.value.trim()) {
-        const taxValue = parseFloat(taxInput.value.replace('%', '')) || 0;
-        taxAmount = (afterDiscount * taxValue) / 100;
-      }
-      
-      // Calculate shipping
-      if (shippingInput && shippingInput.value.trim()) {
-        shippingAmount = parseFloat(shippingInput.value) || 0;
-      }
-      
-      const grandTotal = afterDiscount + taxAmount + shippingAmount;
-      
-      return {
-        subtotal: subtotal,
-        discountAmount: discountAmount,
-        taxAmount: taxAmount,
-        shippingAmount: shippingAmount,
-        grandTotal: grandTotal
-      };
-    }
-
-    // Update financial previews in controls
-    function updateFinancialPreviews(financials) {
-      // Update discount preview
-      const discountPreview = document.getElementById('discount-preview');
-      if (discountPreview) {
-        if (financials.discountAmount > 0) {
-          discountPreview.textContent = `-${formatQuoteCurrency(financials.discountAmount)}`;
-          discountPreview.className = 'text-green-600 font-medium';
-        } else {
-          discountPreview.textContent = 'No discount';
-          discountPreview.className = 'text-gray-500';
-        }
-      }
-      
-      // Update tax preview
-      const taxPreview = document.getElementById('tax-preview');
-      if (taxPreview) {
-        if (financials.taxAmount > 0) {
-          taxPreview.textContent = `+${formatQuoteCurrency(financials.taxAmount)}`;
-          taxPreview.className = 'text-blue-600 font-medium';
-        } else {
-          taxPreview.textContent = 'Tax free';
-          taxPreview.className = 'text-gray-500';
-        }
-      }
-      
-      // Update shipping preview
-      const shippingPreview = document.getElementById('shipping-preview');
-      if (shippingPreview) {
-        if (financials.shippingAmount > 0) {
-          shippingPreview.textContent = `+${formatQuoteCurrency(financials.shippingAmount)}`;
-          shippingPreview.className = 'text-orange-600 font-medium';
-        } else {
-          shippingPreview.textContent = 'Free shipping';
-          shippingPreview.className = 'text-green-600 font-medium';
-        }
-      }
-    }
-
-    // Update quote calculations when financial inputs change
-    function updateQuoteCalculations() {
-      renderQuoteItems();
-    }
-
-    // Populate salesman dropdown
-    function populateSalesmanDropdown() {
-      const salesmanSelect = document.getElementById('salesman-name');
-      if (!salesmanSelect) return;
-      
-      // Clear existing options except the first one
-      salesmanSelect.innerHTML = '<option value="">Select Salesman</option>';
-      
-      // Get salesmen data from various sources
-      let salesmenData = [];
-      
-      // Try to get from embedded data first
-      if (window.embeddedSalesmenData && Array.isArray(window.embeddedSalesmenData)) {
-        salesmenData = window.embeddedSalesmenData;
-      }
-      // Fallback to cached data
-      else if (window.cachedSalesmenData && Array.isArray(window.cachedSalesmenData)) {
-        salesmenData = window.cachedSalesmenData;
-      }
-      // Fallback to embedded data object
-      else if (window.embeddedData && window.embeddedData.salesmen && Array.isArray(window.embeddedData.salesmen)) {
-        salesmenData = window.embeddedData.salesmen;
-      }
-      // Fallback to hardcoded list
-      else {
-        salesmenData = ['Praveen', 'Rupa', 'INH', 'HW', 'Vijay', 'Pankaj', 'Sunil'];
-      }
-      
-      // Populate dropdown with salesmen
-      if (salesmenData && salesmenData.length > 0) {
-        salesmenData.forEach(salesman => {
-          const option = document.createElement('option');
-          option.value = salesman;
-          option.textContent = salesman;
-          salesmanSelect.appendChild(option);
-        });
-        console.log(`Populated salesman dropdown with ${salesmenData.length} salesmen`);
-      } else {
-        console.warn('No salesmen data available for dropdown');
-      }
-    }
-
-    // Function to be called when salesmen data is updated from Firebase
-    function populateSalesmanOptions(salesmenData) {
-      if (!salesmenData || !Array.isArray(salesmenData)) return;
-      
-      // Update global salesmen data
-      window.cachedSalesmenData = salesmenData;
-      
-      // Directly populate the dropdown without calling populateSalesmanDropdown to avoid recursion
-      const salesmanSelect = document.getElementById('salesman-name');
-      if (!salesmanSelect) return;
-      
-      // Clear existing options except the first one
-      salesmanSelect.innerHTML = '<option value="">Select Salesman</option>';
-      
-      // Populate dropdown with new salesmen data
-      salesmenData.forEach(salesman => {
-        const option = document.createElement('option');
-        option.value = salesman;
-        option.textContent = salesman;
-        salesmanSelect.appendChild(option);
-      });
-      
-      console.log(`Updated salesman dropdown with ${salesmenData.length} salesmen from Firebase`);
     }
 
     function clearAllQuoteData() {

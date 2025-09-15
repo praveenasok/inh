@@ -51,22 +51,22 @@ async function convertToOrder() {
         
         // Enhanced validation
         if (!quoteData.quoteName || !quoteData.customerName) {
-            alert('Please fill in quote name and customer name before converting to order.');
+            console.warn('Quote name and customer name required for conversion');
             return;
         }
         
         if (!quoteData.items || quoteData.items.length === 0) {
-            alert('Please add items to the quote before converting to order.');
+            console.warn('Quote items required for conversion');
             return;
         }
         
         if (!quoteData.salesman) {
-            alert('Please select a salesman before converting to order.');
+            console.warn('Salesman selection required for conversion');
             return;
         }
         
         if (!quoteData.total || quoteData.total <= 0) {
-            alert('Quote total must be greater than zero.');
+            console.warn('Quote total must be greater than zero');
             return;
         }
         
@@ -78,7 +78,7 @@ async function convertToOrder() {
         // Check if Firebase is available
         if (!window.firebaseDB || !window.firebaseDB.isAvailable()) {
             hideLoadingMessage(loadingMessage);
-            alert('Firebase is not available. Please check your connection and try again.');
+            console.error('Firebase is not available. Please check your connection.');
             return;
         }
         
@@ -99,14 +99,13 @@ async function convertToOrder() {
         
         // Show success message with order details
         const orderNumber = orderData.orderNumber;
-        const successMessage = `Quote converted to order successfully!\n\nOrder Number: ${orderNumber}\nCustomer: ${quoteData.customerName}\nTotal: ${quoteData.currency} ${quoteData.total}\n\nThe order has been saved to Firebase and synced to Google Sheets.`;
+        const successMessage = `✅ Order ${orderNumber} created successfully!\nCustomer: ${quoteData.customerName} | Total: ${quoteData.currency} ${quoteData.total}`;
         
         alert(successMessage);
         
-        // Clear the current quote form
-        if (confirm('Would you like to clear the current quote form to start a new quote?')) {
-            clearAllQuoteData();
-        }
+        // Automatically clear the current quote form
+        clearAllQuoteData();
+        console.log('Quote form cleared automatically after successful conversion');
         
         // Log the conversion for debugging
         console.log('Quote converted to order:', {

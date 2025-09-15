@@ -51,9 +51,13 @@ service cloud.firestore {
     }
     
     match /quotes/{quoteId} {
-      allow read, write: if isAuthenticated();
+      allow read, write: if true; // Allow public access for quotes functionality
     }
-    
+
+    match /orders/{orderId} {
+      allow read, write: if true; // Allow public access for orders functionality
+    }
+
     // Salesmen data - read for all authenticated, write for admin
     match /salesmen/{salesmanId} {
       allow read: if isAuthenticated();

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Saved Quotes UI</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .log { background: #f8f9fa; padding: 10px; margin: 10px 0; font-family: monospace; white-space: pre-wrap; border-radius: 4px; max-height: 300px; overflow-y: auto; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 4px; }
+        button:hover { background: #0056b3; }
+        .success { color: #28a745; }
+        .error { color: #dc3545; }
+        .info { color: #17a2b8; }
+        .warning { color: #ffc107; }
+    </style>
+</head>
+<body>
+    <h1>Test Saved Quotes UI</h1>
+    
+    <div>
+        <button onclick="testQuotesFunction()">Test renderSavedQuotesList Function</button>
+        <button onclick="checkElements()">Check DOM Elements</button>
+        <button onclick="openMainApp()">Open Main App</button>
+    </div>
+    
+    <div id="test-log" class="log"></div>
+    
+    <script>
+        function log(message, type = 'info') {
+            const element = document.getElementById('test-log');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'success' ? 'success' : type === 'error' ? 'error' : type === 'warning' ? 'warning' : 'info';
+            element.innerHTML += `<span class="${className}">${timestamp}: ${message}</span>\n`;
+            console.log(`[${type.toUpperCase()}] ${message}`);
+        }
+        
+        function testQuotesFunction() {
+            log('=== Testing Saved Quotes Function ===', 'info');
+            
+            // Open main app in new window and test
+            const mainWindow = window.open('http://localhost:3000', '_blank');
+            
+            setTimeout(() => {
+                try {
+                    // Check if function exists
+                    if (typeof mainWindow.renderSavedQuotesList === 'function') {
+                        log('✅ renderSavedQuotesList function found', 'success');
+                        
+                        // Call the function
+                        mainWindow.renderSavedQuotesList();
+                        log('✅ renderSavedQuotesList called', 'success');
+                        
+                        // Check for saved quotes container
+                        const container = mainWindow.document.getElementById('saved-quotes-container');
+                        if (container) {
+                            log(`📊 Saved quotes container found with ${container.children.length} children`, 'info');
+                        } else {
+                            log('❌ Saved quotes container not found', 'error');
+                        }
+                        
+                    } else {
+                        log('❌ renderSavedQuotesList function not found', 'error');
+                    }
+                } catch (error) {
+                    log(`❌ Error testing function: ${error.message}`, 'error');
+                }
+            }, 3000);
+        }
+        
+        function checkElements() {
+            log('=== Checking DOM Elements ===', 'info');
+            
+            const mainWindow = window.open('http://localhost:3000', '_blank');
+            
+            setTimeout(() => {
+                try {
+                    const elements = [
+                        'saved-quotes-container',
+                        'no-quotes-message',
+                        'quote-maker-module',
+                        'nav-quote-maker'
+                    ];
+                    
+                    elements.forEach(id => {
+                        const element = mainWindow.document.getElementById(id);
+                        if (element) {
+                            const style = mainWindow.getComputedStyle(element);
+                            log(`✅ ${id}: Found (display: ${style.display}, visibility: ${style.visibility})`, 'success');
+                        } else {
+                            log(`❌ ${id}: Not found`, 'error');
+                        }
+                    });
+                } catch (error) {
+                    log(`❌ Error checking elements: ${error.message}`, 'error');
+                }
+            }, 3000);
+        }
+        
+        function openMainApp() {
+            log('🚀 Opening main app...', 'info');
+            window.open('http://localhost:3000', '_blank');
+        }
+        
+        // Auto-log on page load
+        window.onload = function() {
+            log('Test page loaded. Use buttons above to test saved quotes functionality.', 'info');
+        };
+    </script>
+</body>
+</html>

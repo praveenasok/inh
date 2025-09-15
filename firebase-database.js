@@ -320,7 +320,7 @@ class FirebaseDatabase {
         ...quoteData,
         ...additionalOrderData,
         originalQuoteId: quoteId,
-        orderNumber: this.generateOrderNumber(),
+        orderNumber: additionalOrderData.orderNumber || this.generateOrderNumber(), // Use provided orderNumber or generate new one
         status: 'pending',
         orderType: 'converted_from_quote'
       };
@@ -332,12 +332,9 @@ class FirebaseDatabase {
       // Save the order
       const savedOrder = await this.saveOrder(orderData);
       
-      // Update quote status
-      await this.db.collection('quotes').doc(quoteId).update({
-        status: 'converted_to_order',
-        convertedToOrderId: savedOrder.id,
-        convertedAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
+      // Delete the quote from database after successful conversion
+      await this.db.collection('quotes').doc(quoteId).delete();
+      console.log('Quote deleted from database after conversion to order:', quoteId);
       
       return savedOrder;
       
@@ -1118,7 +1115,24 @@ class FirebaseDatabase {
       }
     });
     
-    console.log('✅ Real-time synchronization enabled');
+    // Set up quotes listener for real-time updates
+    this.quotesUnsubscribe = this.onQuotesChange((quotes) => {
+      try {
+        console.log('🔄 Quotes updated in real-time, count:', quotes.length);
+        
+        // Update quotes list UI if function is available
+        if (typeof renderSavedQuotesList === 'function') {
+          console.log('🔄 Refreshing quotes list due to real-time update...');
+          renderSavedQuotesList();
+        }
+        
+        console.log('✅ Quotes synchronized and UI updated');
+      } catch (error) {
+        console.error('❌ Error updating quotes in real-time:', error);
+      }
+    });
+    
+    console.log('✅ Real-time synchronization enabled (products, salesmen, quotes)');
   }
   
   // Disable Real-time Synchronization
