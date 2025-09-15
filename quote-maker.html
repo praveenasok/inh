@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quote Maker - InstaQuote</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- jsPDF for PDF generation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  
+  <!-- html2canvas for capturing HTML as image -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  
+  <!-- SheetJS for Excel export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+  
+  <!-- Firebase Configuration -->
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBmJJ8vQgQgQgQgQgQgQgQgQgQgQgQgQgQ",
+      authDomain: "instaquote-demo.firebaseapp.com",
+      projectId: "instaquote-demo",
+      storageBucket: "instaquote-demo.appspot.com",
+      messagingSenderId: "123456789012",
+      appId: "1:123456789012:web:abcdefghijklmnop"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+    const storage = firebase.storage();
+  </script>
+  
+  <style>
+    /* Custom CSS for responsive design and styling */
+    .mobile-padding { padding: 1rem; }
+    .shadow-soft { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+    .btn-primary { @apply bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200; }
+    .btn-secondary { @apply bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg transition-colors duration-200; }
+    .btn-success { @apply bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200; }
+    .btn-sm { @apply py-1 px-3 text-sm; }
+    .chip { @apply inline-block px-3 py-1 text-xs font-medium rounded-full; }
+    
+    /* Mobile-first responsive design */
+    @media (max-width: 640px) {
+      .mobile-padding { padding: 0.75rem; }
+      .text-lg { font-size: 1rem; }
+      .text-xl { font-size: 1.125rem; }
+      .grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+      .gap-4 { gap: 0.75rem; }
+      .gap-6 { gap: 1rem; }
+      .p-4 { padding: 0.75rem; }
+      .p-6 { padding: 1rem; }
+      .px-4 { padding-left: 0.75rem; padding-right: 0.75rem; }
+      .py-8 { padding-top: 1.5rem; padding-bottom: 1.5rem; }
+    }
+    
+    @media (max-width: 480px) {
+      .mobile-padding { padding: 0.5rem; }
+      .text-base { font-size: 0.875rem; }
+      .text-lg { font-size: 0.875rem; }
+      .text-xl { font-size: 1rem; }
+      .gap-2 { gap: 0.375rem; }
+      .gap-3 { gap: 0.5rem; }
+      .gap-4 { gap: 0.5rem; }
+      .p-2 { padding: 0.375rem; }
+      .p-4 { padding: 0.5rem; }
+      .px-3 { padding-left: 0.5rem; padding-right: 0.5rem; }
+      .py-2 { padding-top: 0.375rem; padding-bottom: 0.375rem; }
+    }
+    
+    /* Form elements styling */
+    input, select, textarea {
+      transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+    
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    
+    /* Card hover effects */
+    .card-hover {
+      transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+    
+    .card-hover:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+    
+    /* Navigation styles */
+    .nav-button {
+      transition: all 0.2s ease-in-out;
+    }
+    
+    .nav-button:hover {
+      background-color: #f3f4f6;
+      transform: translateY(-1px);
+    }
+    
+    .nav-button.active {
+      background-color: #081249;
+      color: white;
+    }
+    
+    /* Module content display */
+    .module-content {
+      display: none;
+    }
+    
+    .module-content.active {
+      display: block;
+    }
+    
+    /* Mobile navigation adjustments */
+    @media (max-width: 768px) {
+      .desktop-nav { display: none; }
+      .mobile-nav { display: flex; }
+      .nav-button { padding: 0.5rem 0.75rem; font-size: 0.875rem; }
+      .grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .gap-1 { gap: 0.25rem; }
+    }
+    
+    @media (min-width: 769px) {
+      .desktop-nav { display: flex; }
+      .mobile-nav { display: none; }
+    }
+    
+    /* Quote items styling */
+    .quote-items-container {
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    
+    .quote-item {
+      border: 1px solid #e5e7eb;
+      border-radius: 0.5rem;
+      padding: 1rem;
+      margin-bottom: 0.5rem;
+      background-color: #f9fafb;
+    }
+    
+    .quote-item:hover {
+      background-color: #f3f4f6;
+    }
+    
+    /* Saved quotes styling */
+    .saved-quotes-container {
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    
+    .saved-quote-item {
+      border: 1px solid #d1d5db;
+      border-radius: 0.375rem;
+      padding: 0.75rem;
+      margin-bottom: 0.5rem;
+      background-color: #ffffff;
+      cursor: pointer;
+      transition: all 0.2s ease-in-out;
+    }
+    
+    .saved-quote-item:hover {
+      background-color: #f9fafb;
+      border-color: #9ca3af;
+    }
+    
+    .no-quotes-message {
+      text-align: center;
+      color: #6b7280;
+      padding: 2rem;
+      font-style: italic;
+    }
+  </style>
+</head>
+
+<body class="bg-gray-50 min-h-screen">
+  <!-- Top Menu Bar -->
+  <header class="bg-white shadow-soft mb-4">
+    <div class="max-w-4xl mx-auto px-3 sm:px-6">
+      <!-- Header with InstaQuote flush left and logo flush right -->
+      <div class="flex items-center justify-between py-3">
+        <!-- InstaQuote heading flush left -->
+        <h1 class="text-xl sm:text-2xl lg:text-3xl font-bold" style="line-height: 0.7;">
+          <span style="color: #081249;">Insta</span><span style="color: #9b7952;">Q</span><span style="color: #081249;">uote</span>
+        </h1>
+        
+        <!-- Logo flush right -->
+        <div class="flex-shrink-0">
+          <img src="images/logo.png" alt="Company Logo" class="h-12 sm:h-16 w-auto opacity-75 hover:opacity-100 transition-opacity duration-200">
+        </div>
+      </div>
+      
+      <!-- Navigation Menu below header -->
+      <div class="pb-3">
+        <nav class="hidden md:flex gap-2 justify-center">
+          <a href="price-calculator.html" class="nav-btn px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2">
+            <span>📊</span>
+            <span>PriceLists</span>
+          </a>
+          <a href="quote-maker.html" class="nav-btn nav-btn-active px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2">
+            <span class="text-lg">📋</span>
+            <span>Quote Maker</span>
+          </a>
+          <a href="product-catalog.html" class="nav-btn px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2">
+            <span class="text-lg">📦</span>
+            <span>Product Catalog</span>
+          </a>
+          <a href="admin-panel.html" class="nav-btn px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2">
+            <span class="text-lg">⚙️</span>
+            <span>Admin Panel</span>
+          </a>
+        </nav>
+      </div>
+      
+      <!-- Mobile Navigation Menu -->
+      <nav class="md:hidden pb-3">
+        <div class="flex flex-wrap justify-center gap-2">
+          <a href="price-calculator.html" class="nav-btn px-3 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-1 text-sm">
+            <span>📊</span>
+            <span>PriceLists</span>
+          </a>
+          <a href="quote-maker.html" class="nav-btn nav-btn-active px-3 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-1 text-sm">
+            <span>📋</span>
+            <span>Quote</span>
+          </a>
+          <a href="product-catalog.html" class="nav-btn px-3 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-1 text-sm">
+            <span>📦</span>
+            <span>Catalog</span>
+          </a>
+          <a href="admin-panel.html" class="nav-btn px-3 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-1 text-sm">
+            <span>⚙️</span>
+            <span>Admin</span>
+          </a>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <div class="container mx-auto px-4 py-6">
+    <!-- Page Header -->
+    <div class="bg-gradient-to-r from-purple-600 to-blue-600 rounded-xl p-6 mb-8 text-white">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+        <div>
+          <h1 class="text-3xl font-bold mb-2">Quote Maker</h1>
+          <p class="text-purple-100">Create professional quotes with dynamic pricing and multi-currency support</p>
+        </div>
+        <div class="mt-4 md:mt-0">
+          <div class="flex items-center space-x-4">
+            <div class="text-center">
+              <div class="text-2xl font-bold" id="total-quotes">0</div>
+              <div class="text-sm text-purple-200">Total Quotes</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quote Maker Module -->
+    <div id="quote-maker-module" class="module-content active">
+      <div class="mb-6">
+        
+        <!-- Quote Details -->
+        <section class="bg-white rounded-xl shadow-soft p-4 sm:p-6 mb-4 mobile-padding" style="background: #eef2ff;">
+          <div class="flex items-center justify-between mb-2">
+            <h2 class="section-heading">Quote Details</h2>
+            <span class="chip no-print" id="quote-chip">Draft</span>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+            <div>
+              <input type="text" id="quote-number" placeholder="Quote # (INH-#####-DDMMYY-###)" class="w-full border-2 border-gray-200 rounded-lg px-3 py-1 bg-gray-50 text-gray-700" />
+            </div>
+            <div>
+              <input type="date" id="quote-date" placeholder="Date" class="w-full border-2 border-gray-300 rounded-lg px-3 py-1 focus:border-blue-500 focus:outline-none" />
+            </div>
+            <div>
+              <input type="text" id="client-name" placeholder="Client Name" class="w-full border-2 border-gray-300 rounded-lg px-3 py-1 focus:border-blue-500 focus:outline-none" />
+            </div>
+            <div>
+              <input type="text" id="client-contact" placeholder="Client Contact" class="w-full border-2 border-gray-300 rounded-lg px-3 py-1 focus:border-blue-500 focus:outline-none" />
+            </div>
+            <div>
+              <select id="client-selector" class="w-full border-2 border-gray-300 rounded-lg px-3 py-1 focus:border-blue-500 focus:outline-none bg-white" onchange="selectClient()">
+                <option value="">Select Existing Client</option>
+              </select>
+            </div>
+            <div>
+              <select id="salesman-name" class="w-full border-2 border-gray-300 rounded-lg px-3 py-1 focus:border-blue-500 focus:outline-none bg-white">
+                <option value="">Select Sales Representative</option>
+              </select>
+            </div>
+            <div>
+              <input type="number" id="valid-days" value="14" placeholder="Valid for (days)" class="w-full border-2 border-gray-300 rounded-lg px-3 py-1 focus:border-blue-500 focus:outline-none" />
+            </div>
+            <div class="md:col-span-2">
+              <textarea id="brief-preview" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none" rows="2" placeholder="Brief Preview (e.g., Clip-on set, 18–22 inch mix, 200g total)"></textarea>
+            </div>
+          </div>
+        </section>
+
+        <!-- Currency and Price List Controls -->
+        <section class="bg-white rounded-xl shadow-soft p-4 sm:p-6 mb-4 mobile-padding" style="background: #f8fafc;">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <select id="quote-currency" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
+                <option value="INR" selected>INR (₹) - Indian Rupee</option>
+                <option value="USD">USD ($) - US Dollar</option>
+                <option value="EUR">EUR (€) - Euro</option>
+                <option value="GBP">GBP (£) - British Pound</option>
+                <option value="AUD">AUD (A$) - Australian Dollar</option>
+                <option value="SAR">SAR - Saudi Riyal</option>
+                <option value="NGN">NGN (₦) - Nigerian Naira</option>
+                <option value="AED">AED (د.إ) - UAE Dirham</option>
+                <option value="JPY">JPY (¥) - Japanese Yen</option>
+              </select>
+            </div>
+            <div>
+              <select id="quote-price-list-selector" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
+              </select>
+            </div>
+          </div>
+        </section>
+
+        <!-- Catalog -->
+        <section class="bg-white rounded-xl shadow-soft p-4 sm:p-6 mb-4 mobile-padding" style="background: #ecfeff;">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+            <div>
+              <select id="new-item-category" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
+                <option value="">Select Category</option>
+              </select>
+            </div>
+            <div>
+              <select id="new-item-product" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none" disabled>
+                <option value="">Select Product</option>
+              </select>
+            </div>
+            <div>
+              <select id="new-item-density" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none" disabled>
+                <option value="">Select Density</option>
+              </select>
+            </div>
+            <div>
+              <select id="new-item-length" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
+                <option value="">Select Length</option>
+              </select>
+            </div>
+            <div>
+              <select id="new-item-color" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
+                <option value="">Select Color</option>
+              </select>
+            </div>
+            <div>
+              <input type="text" id="new-item-color-detail" placeholder="Color Detail" class="w-full border-2 border-gray-300 rounded-lg px-3 py-1 focus:border-blue-500 focus:outline-none" />
+            </div>
+            <div>
+              <input type="text" id="new-item-styles" placeholder="Styles" class="w-full border-2 border-gray-300 rounded-lg px-3 py-1 focus:border-blue-500 focus:outline-none" />
+            </div>
+            <div>
+              <input type="number" id="new-item-quantity" value="1" min="0.01" step="0.01" placeholder="Quantity" class="w-full border-2 border-gray-300 rounded-lg px-3 py-1 focus:border-blue-500 focus:outline-none" />
+            </div>
+            <div>
+              <input type="number" id="new-item-override-price" placeholder="Override Unit Price (Optional)" class="w-full border-2 border-gray-300 rounded-lg px-3 py-1 focus:border-blue-500 focus:outline-none" />
+            </div>
+          </div>
+          
+          <!-- Dynamic Rate Display -->
+          <div id="dynamic-rate-display" class="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-lg p-4 mt-3 mb-3 hidden">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-2">
+                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                </svg>
+                <span class="text-sm font-medium text-blue-800">Calculated Rate:</span>
+              </div>
+              <div class="text-right">
+                <div id="rate-amount" class="text-lg font-bold text-blue-900">₹0.00</div>
+                <div id="rate-details" class="text-xs text-blue-600">per unit</div>
+              </div>
+            </div>
+            <div id="rate-breakdown" class="mt-2 text-xs text-blue-700 hidden">
+              <div class="grid grid-cols-2 gap-2">
+                <span>Base Rate:</span><span id="base-rate-value">₹0.00</span>
+                <span>Currency:</span><span id="currency-rate-value">INR</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="flex items-center gap-2 mt-2">
+            <button id="add-item-btn" class="btn-primary px-3 py-1 rounded-lg">Add Item</button>
+            <span class="text-xs text-gray-600">Override converts back to INR using current FX.</span>
+          </div>
+        </section>
+
+        <!-- Financial Controls -->
+        <section class="bg-white rounded-xl shadow-soft p-2 mb-2 mobile-padding" style="background: #f0f9ff;">
+          
+          <!-- Discount Controls -->
+          <div class="grid grid-cols-1 gap-2 mb-2">
+            <div>
+              <input type="text" id="discount-input" placeholder="Discount (e.g., 10% or 50)" class="w-full border-2 border-gray-300 rounded-lg px-2 py-1 focus:border-blue-500 focus:outline-none" />
+            </div>
+          </div>
+          
+          <!-- Tax Controls -->
+          <div class="grid grid-cols-1 gap-2 mb-2">
+            <div>
+              <input type="text" id="tax-input" placeholder="Tax (e.g., 10%)" class="w-full border-2 border-gray-300 rounded-lg px-2 py-1 focus:border-blue-500 focus:outline-none" />
+            </div>
+          </div>
+          
+          <!-- Shipping Controls -->
+          <div class="grid grid-cols-1 gap-2">
+            <div>
+              <input type="text" id="shipping-input" placeholder="Shipping (e.g., 25 or 0 for free)" class="w-full border-2 border-gray-300 rounded-lg px-2 py-1 focus:border-blue-500 focus:outline-none" />
+            </div>
+          </div>
+        </section>
+
+        <!-- Quote Items Display -->
+        <section class="bg-white rounded-xl shadow-soft p-4 sm:p-6 mb-4 mobile-padding" style="background: #f0f9ff;">
+          <h2 class="section-heading">Quote Items</h2>
+          <div id="quote-items" class="quote-items-container mb-4">
+            <!-- Quote items will be added here dynamically -->
+          </div>
+          
+          <!-- Quote Totals -->
+          <div class="border-t pt-4">
+            <div class="flex justify-between items-center mb-2">
+              <span class="text-sm text-gray-600">Subtotal:</span>
+              <span class="quote-subtotal font-medium">₹0.00</span>
+            </div>
+            <div class="flex justify-between items-center mb-2">
+              <span class="text-sm text-gray-600">Tax:</span>
+              <span class="quote-tax font-medium">₹0.00</span>
+            </div>
+            <div class="flex justify-between items-center mb-4 text-lg font-bold border-t pt-2">
+              <span>Total:</span>
+              <span class="quote-total">₹0.00</span>
+            </div>
+            
+            <!-- Save Quote Button -->
+            <button id="save-quote-btn" class="w-full text-white font-medium py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center" style="background-color: #081249; border-color: #081249;" onmouseover="this.style.backgroundColor='#0a1a5c'" onmouseout="this.style.backgroundColor='#081249'">
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3-3m0 0l-3 3m3-3v12"></path>
+              </svg>
+              Save Quote
+            </button>
+          </div>
+        </section>
+
+        <!-- Saved Quotes List -->
+        <section class="bg-white rounded-lg shadow-soft p-2 sm:p-3 mb-3 mobile-padding">
+          <h2 class="section-heading">Saved Quotes</h2>
+          <div id="saved-quotes-container" class="saved-quotes-container">
+            <div id="no-quotes-message" class="no-quotes-message">
+              No saved quotes yet. Save a quote to see it here.
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-gray-800 text-white py-8 mt-12">
+    <div class="container mx-auto px-4 text-center">
+      <p>&copy; 2024 Indian Natural Hair Pvt Ltd. All rights reserved.</p>
+      <p class="mt-1">Made with f10w</p>
+    </div>
+  </footer>
+
+  <script>
+    // Quote Maker specific JavaScript
+    let quoteItems = [];
+    let savedQuotes = [];
+    let currentQuote = {
+      number: '',
+      date: '',
+      client: '',
+      contact: '',
+      salesman: '',
+      validDays: 14,
+      briefPreview: '',
+      currency: 'INR',
+      priceList: '',
+      items: [],
+      discount: 0,
+      tax: 0,
+      shipping: 0,
+      subtotal: 0,
+      total: 0
+    };
+    
+    // Supported currencies with their symbols
+    const SUPPORTED_CURRENCIES = {
+      'INR': { symbol: '₹', name: 'Indian Rupee' },
+      'USD': { symbol: '$', name: 'US Dollar' },
+      'EUR': { symbol: '€', name: 'Euro' },
+      'GBP': { symbol: '£', name: 'British Pound' },
+      'AUD': { symbol: 'A$', name: 'Australian Dollar' },
+      'SAR': { symbol: 'SAR ', name: 'Saudi Riyal' },
+      'NGN': { symbol: '₦', name: 'Nigerian Naira' },
+      'AED': { symbol: 'د.إ ', name: 'UAE Dirham' },
+      'JPY': { symbol: '¥', name: 'Japanese Yen' }
+    };
+    
+    // Initialize the application
+    document.addEventListener('DOMContentLoaded', function() {
+      initializeQuoteMaker();
+      populateSalesRepresentatives();
+      setupEventListeners();
+      generateQuoteNumber();
+      setCurrentDate();
+    });
+    
+    // Initialize Quote Maker
+    function initializeQuoteMaker() {
+      console.log('Quote Maker initialized');
+      updateQuoteDisplay();
+    }
+    
+    // Populate sales representatives
+    function populateSalesRepresentatives() {
+      const salesmen = [
+        'Rajesh Kumar',
+        'Priya Sharma',
+        'Amit Patel',
+        'Sneha Gupta',
+        'Vikram Singh'
+      ];
+      
+      const salesmanSelect = document.getElementById('salesman-name');
+      salesmen.forEach(name => {
+        const option = document.createElement('option');
+        option.value = name;
+        option.textContent = name;
+        salesmanSelect.appendChild(option);
+      });
+    }
+    
+    // Setup event listeners
+    function setupEventListeners() {
+      document.getElementById('add-item-btn').addEventListener('click', addQuoteItem);
+      document.getElementById('save-quote-btn').addEventListener('click', saveQuote);
+      
+      // Form field listeners
+      document.getElementById('quote-currency').addEventListener('change', updateCurrency);
+      document.getElementById('discount-input').addEventListener('input', updateTotals);
+      document.getElementById('tax-input').addEventListener('input', updateTotals);
+      document.getElementById('shipping-input').addEventListener('input', updateTotals);
+    }
+    
+    // Generate quote number
+    function generateQuoteNumber() {
+      const now = new Date();
+      const day = String(now.getDate()).padStart(2, '0');
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const year = String(now.getFullYear()).slice(-2);
+      const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+      const quoteNumber = `INH-${Math.floor(Math.random() * 100000).toString().padStart(5, '0')}-${day}${month}${year}-${random}`;
+      
+      document.getElementById('quote-number').value = quoteNumber;
+      currentQuote.number = quoteNumber;
+    }
+    
+    // Set current date
+    function setCurrentDate() {
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('quote-date').value = today;
+      currentQuote.date = today;
+    }
+    
+    // Add quote item
+    function addQuoteItem() {
+      const category = document.getElementById('new-item-category').value;
+      const product = document.getElementById('new-item-product').value;
+      const density = document.getElementById('new-item-density').value;
+      const length = document.getElementById('new-item-length').value;
+      const color = document.getElementById('new-item-color').value;
+      const colorDetail = document.getElementById('new-item-color-detail').value;
+      const styles = document.getElementById('new-item-styles').value;
+      const quantity = parseFloat(document.getElementById('new-item-quantity').value) || 1;
+      const overridePrice = parseFloat(document.getElementById('new-item-override-price').value) || 0;
+      
+      if (!category || !product) {
+        alert('Please select at least category and product.');
+        return;
+      }
+      
+      const item = {
+        id: Date.now(),
+        category,
+        product,
+        density,
+        length,
+        color,
+        colorDetail,
+        styles,
+        quantity,
+        unitPrice: overridePrice || 100, // Default price for demo
+        total: (overridePrice || 100) * quantity
+      };
+      
+      quoteItems.push(item);
+      updateQuoteDisplay();
+      clearItemForm();
+    }
+    
+    // Clear item form
+    function clearItemForm() {
+      document.getElementById('new-item-category').value = '';
+      document.getElementById('new-item-product').value = '';
+      document.getElementById('new-item-density').value = '';
+      document.getElementById('new-item-length').value = '';
+      document.getElementById('new-item-color').value = '';
+      document.getElementById('new-item-color-detail').value = '';
+      document.getElementById('new-item-styles').value = '';
+      document.getElementById('new-item-quantity').value = '1';
+      document.getElementById('new-item-override-price').value = '';
+    }
+    
+    // Update quote display
+    function updateQuoteDisplay() {
+      const container = document.getElementById('quote-items');
+      container.innerHTML = '';
+      
+      if (quoteItems.length === 0) {
+        container.innerHTML = '<div class="text-center py-8 text-gray-500">No items added yet. Add items to see them here.</div>';
+        updateTotals();
+        return;
+      }
+      
+      quoteItems.forEach(item => {
+        const itemElement = document.createElement('div');
+        itemElement.className = 'quote-item';
+        itemElement.innerHTML = `
+          <div class="flex justify-between items-start">
+            <div class="flex-1">
+              <h4 class="font-medium text-gray-800">${item.product}</h4>
+              <p class="text-sm text-gray-600">${item.category} | ${item.density || 'N/A'} | ${item.length || 'N/A'} | ${item.color || 'N/A'}</p>
+              <p class="text-sm text-gray-500">Qty: ${item.quantity} × ${getCurrencySymbol()}${item.unitPrice.toFixed(2)}</p>
+            </div>
+            <div class="text-right">
+              <p class="font-medium text-gray-800">${getCurrencySymbol()}${item.total.toFixed(2)}</p>
+              <button onclick="removeQuoteItem(${item.id})" class="text-red-500 hover:text-red-700 text-sm mt-1">
+                Remove
+              </button>
+            </div>
+          </div>
+        `;
+        container.appendChild(itemElement);
+      });
+      
+      updateTotals();
+    }
+    
+    // Remove quote item
+    function removeQuoteItem(itemId) {
+      quoteItems = quoteItems.filter(item => item.id !== itemId);
+      updateQuoteDisplay();
+    }
+    
+    // Update currency
+    function updateCurrency() {
+      currentQuote.currency = document.getElementById('quote-currency').value;
+      updateQuoteDisplay();
+    }
+    
+    // Get currency symbol
+    function getCurrencySymbol() {
+      return SUPPORTED_CURRENCIES[currentQuote.currency]?.symbol || '₹';
+    }
+    
+    // Update totals
+    function updateTotals() {
+      const subtotal = quoteItems.reduce((sum, item) => sum + item.total, 0);
+      
+      const discountInput = document.getElementById('discount-input').value;
+      const taxInput = document.getElementById('tax-input').value;
+      const shippingInput = document.getElementById('shipping-input').value;
+      
+      let discount = 0;
+      if (discountInput.includes('%')) {
+        discount = subtotal * (parseFloat(discountInput) / 100);
+      } else {
+        discount = parseFloat(discountInput) || 0;
+      }
+      
+      let tax = 0;
+      if (taxInput.includes('%')) {
+        tax = (subtotal - discount) * (parseFloat(taxInput) / 100);
+      } else {
+        tax = parseFloat(taxInput) || 0;
+      }
+      
+      const shipping = parseFloat(shippingInput) || 0;
+      const total = subtotal - discount + tax + shipping;
+      
+      const symbol = getCurrencySymbol();
+      document.querySelector('.quote-subtotal').textContent = `${symbol}${subtotal.toFixed(2)}`;
+      document.querySelector('.quote-tax').textContent = `${symbol}${tax.toFixed(2)}`;
+      document.querySelector('.quote-total').textContent = `${symbol}${total.toFixed(2)}`;
+      
+      currentQuote.subtotal = subtotal;
+      currentQuote.discount = discount;
+      currentQuote.tax = tax;
+      currentQuote.shipping = shipping;
+      currentQuote.total = total;
+    }
+    
+    // Save quote
+    function saveQuote() {
+      if (quoteItems.length === 0) {
+        alert('Please add at least one item to save the quote.');
+        return;
+      }
+      
+      const quote = {
+        ...currentQuote,
+        items: [...quoteItems],
+        savedAt: new Date().toISOString()
+      };
+      
+      savedQuotes.push(quote);
+      updateSavedQuotesList();
+      
+      alert('Quote saved successfully!');
+    }
+    
+    // Update saved quotes list
+    function updateSavedQuotesList() {
+      const container = document.getElementById('saved-quotes-container');
+      const noQuotesMessage = document.getElementById('no-quotes-message');
+      
+      if (savedQuotes.length === 0) {
+        noQuotesMessage.style.display = 'block';
+        return;
+      }
+      
+      noQuotesMessage.style.display = 'none';
+      
+      // Clear existing quotes except the no-quotes message
+      const existingQuotes = container.querySelectorAll('.saved-quote-item');
+      existingQuotes.forEach(quote => quote.remove());
+      
+      savedQuotes.forEach(quote => {
+        const quoteElement = document.createElement('div');
+        quoteElement.className = 'saved-quote-item';
+        quoteElement.innerHTML = `
+          <div class="flex justify-between items-start">
+            <div>
+              <h4 class="font-medium text-gray-800">${quote.number}</h4>
+              <p class="text-sm text-gray-600">${quote.client || 'No client'} | ${quote.date}</p>
+              <p class="text-sm text-gray-500">${quote.items.length} items | ${getCurrencySymbol()}${quote.total.toFixed(2)}</p>
+            </div>
+            <div class="text-right">
+              <button onclick="loadQuote('${quote.number}')" class="text-white px-3 py-1 rounded text-sm transition-colors duration-200" style="background-color: #081249; border: 1px solid #081249;" onmouseover="this.style.backgroundColor='#0a1a5c'" onmouseout="this.style.backgroundColor='#081249'">
+                Load
+              </button>
+            </div>
+          </div>
+        `;
+        container.appendChild(quoteElement);
+      });
+    }
+    
+    // Load quote
+    function loadQuote(quoteNumber) {
+      const quote = savedQuotes.find(q => q.number === quoteNumber);
+      if (!quote) return;
+      
+      // Load quote data into form
+      document.getElementById('quote-number').value = quote.number;
+      document.getElementById('quote-date').value = quote.date;
+      document.getElementById('client-name').value = quote.client || '';
+      document.getElementById('client-contact').value = quote.contact || '';
+      document.getElementById('salesman-name').value = quote.salesman || '';
+      document.getElementById('valid-days').value = quote.validDays || 14;
+      document.getElementById('brief-preview').value = quote.briefPreview || '';
+      document.getElementById('quote-currency').value = quote.currency || 'INR';
+      
+      // Load items
+      quoteItems = [...quote.items];
+      currentQuote = { ...quote };
+      
+      updateQuoteDisplay();
+      alert('Quote loaded successfully!');
+    }
+    
+    // Select client function (placeholder)
+    function selectClient() {
+      // This would normally populate client details from a database
+      console.log('Client selection functionality would be implemented here');
+    }
+    
+    // Data arrays for consistency
+    let productData = [];
+    
+    const FX_APIS = [
+      (base) => `https://api.exchangerate-api.com/v4/latest/${base}`,
+      (base) => `https://api.fixer.io/latest?base=${base}`,
+      (base) => `https://open.er-api.com/v6/latest/${base}`
+    ];
+    const SUPPORTED = ['INR','USD','EUR','GBP','AUD','SAR','NGN','AED','JPY'];
+    const SYMBOL = { INR:'₹', USD:'$', EUR:'€', GBP:'£', AUD:'A$', SAR:'SAR ', NGN:'₦', AED:'د.إ ', JPY:'¥' };
+    const DEFAULT_RATES = { base:'INR',
+      rates:{ INR:1, USD:0.0120, EUR:0.0110, GBP:0.0095, AUD:0.0180, SAR:0.0450, NGN:5.5000, AED:0.0440, JPY:1.8000 },
+      updatedAt: null, mode:'auto'
+    };
+
+    // Mobile menu toggle functionality
+    document.getElementById('mobile-menu-btn').addEventListener('click', function() {
+      const mobileMenu = document.getElementById('mobile-menu');
+      mobileMenu.classList.toggle('hidden');
+    });
+  </script>
+</body>
+</html>

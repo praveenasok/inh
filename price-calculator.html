@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes"/>
+  <title>Price List Calculator — InstaQuote</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- jsPDF for PDF export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <!-- html2canvas for HTML to canvas conversion -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <!-- SheetJS for Excel parsing -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
+  
+  <!-- Firebase Configuration -->
+  <script src="firebase-config.js"></script>
+  
+  <!-- Firebase Database Service -->
+  <script src="firebase-database.js"></script>
+  <script src="firebase-storage-replacement.js"></script>
+  <script src="google-sheets-config.js"></script>
+  
+  <!-- Firebase Error Handler -->
+  <script src="firebase-error-handler.js"></script>
+  
+  <!-- Unified Button System -->
+  <link rel="stylesheet" href="unified-button-system.css">
+
+  <style>
+    /* Custom CSS for responsive design and styling */
+    .mobile-padding { padding: 1rem; }
+    .shadow-soft { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+    /* Button styles now handled by unified-button-system.css */
+    .chip { @apply inline-block px-3 py-1 text-xs font-medium rounded-full; }
+    
+    /* Mobile-first responsive design */
+    @media (max-width: 640px) {
+      .mobile-padding { padding: 0.75rem; }
+      .text-lg { font-size: 1rem; }
+      .text-xl { font-size: 1.125rem; }
+      .grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+      .gap-4 { gap: 0.75rem; }
+      .gap-6 { gap: 1rem; }
+      .p-4 { padding: 0.75rem; }
+      .p-6 { padding: 1rem; }
+      .px-4 { padding-left: 0.75rem; padding-right: 0.75rem; }
+      .py-8 { padding-top: 1.5rem; padding-bottom: 1.5rem; }
+    }
+    
+    @media (max-width: 480px) {
+      .mobile-padding { padding: 0.5rem; }
+      .text-base { font-size: 0.875rem; }
+      .text-lg { font-size: 0.875rem; }
+      .text-xl { font-size: 1rem; }
+      .gap-2 { gap: 0.375rem; }
+      .gap-3 { gap: 0.5rem; }
+      .gap-4 { gap: 0.5rem; }
+      .p-2 { padding: 0.375rem; }
+      .p-4 { padding: 0.5rem; }
+      .px-3 { padding-left: 0.5rem; padding-right: 0.5rem; }
+      .py-2 { padding-top: 0.375rem; padding-bottom: 0.375rem; }
+    }
+    
+    /* Form elements styling */
+    input, select, textarea {
+      transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+    
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    
+    /* Card hover effects */
+    .card-hover {
+      transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+    
+    .card-hover:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+    
+    /* Navigation styles */
+    .nav-button {
+      transition: all 0.2s ease-in-out;
+    }
+    
+    .nav-button:hover {
+      background-color: #f3f4f6;
+      transform: translateY(-1px);
+    }
+    
+    .nav-button.active {
+      background-color: #3b82f6;
+      color: white;
+    }
+    
+    /* Loading spinner animation */
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    
+    .loading-spinner {
+      animation: spin 1s linear infinite;
+    }
+    
+    /* Enhanced button styles with better touch targets */
+    button {
+      min-height: 48px;
+      padding: 12px 16px;
+      font-weight: 500;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+    
+    button:focus { 
+      outline: 3px solid #3b82f6; 
+      outline-offset: 2px; 
+    }
+    
+    button:disabled { 
+      cursor: not-allowed; 
+      opacity: 0.6;
+    }
+    
+    /* Button styles now handled by unified-button-system.css */
+    
+    /* Responsive navigation */
+    @media (max-width: 640px) {
+      .nav-btn span:last-child {
+        display: none;
+      }
+      
+      .nav-btn {
+        min-width: 60px;
+        justify-content: center;
+      }
+    }
+    
+    /* Mobile-first responsive breakpoints */
+    @media (max-width: 640px) { 
+      .stack-mobile { 
+        flex-direction: column; 
+        gap: 1rem;
+      }
+      
+      /* Enhanced mobile typography */
+      body {
+        font-size: 16px; /* Prevents zoom on iOS */
+        line-height: 1.7;
+      }
+      
+      /* Better spacing on mobile */
+      .mobile-padding {
+        padding: 1rem;
+      }
+      
+      /* Full-width elements on mobile */
+      .mobile-full {
+        width: 100%;
+      }
+      
+      /* Hide less important elements on very small screens */
+      .mobile-hide {
+        display: none;
+      }
+      
+      /* Improved mobile text spacing */
+      p, div, span {
+        line-height: 1.7;
+      }
+      
+      /* Better button text on mobile */
+      button {
+        font-size: 16px;
+        line-height: 1.4;
+        letter-spacing: 0.025em;
+      }
+      
+      /* Make icons 2x bigger on mobile */
+      .md\:hidden button span:first-child,
+      .mobile-full span[aria-hidden="true"],
+      button span.text-base,
+      button span.text-lg {
+        font-size: 2em !important;
+        line-height: 1;
+      }
+    }
+  </style>
+  <script src="main-functions.js"></script>
+</head>
+<body class="bg-gray-50 min-h-screen text-slate-800">
+
+
+
+  <!-- Top Menu Bar -->
+  <header class="bg-white shadow-soft mb-4">
+    <div class="max-w-4xl mx-auto px-3 sm:px-6">
+      <!-- Header with InstaQuote flush left and logo flush right -->
+      <div class="flex items-center justify-between py-3">
+        <!-- InstaQuote heading flush left -->
+        <h1 class="text-xl sm:text-2xl lg:text-3xl font-bold" style="line-height: 0.7;">
+          <span style="color: #081249;">Insta</span><span style="color: #9b7952;">Q</span><span style="color: #081249;">uote</span>
+        </h1>
+        
+        <!-- Logo flush right -->
+        <div class="flex-shrink-0">
+          <img src="images/logo.png" alt="Company Logo" class="h-12 sm:h-16 w-auto opacity-75 hover:opacity-100 transition-opacity duration-200">
+        </div>
+      </div>
+      
+      <!-- Navigation Menu below header -->
+      <div class="pb-3">
+        <nav class="hidden md:flex gap-2 justify-center">
+          <a href="price-calculator.html" class="nav-btn nav-btn-active px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2">
+            <span>📊</span>
+            <span>PriceLists</span>
+          </a>
+          <a href="quote-maker.html" class="nav-btn px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2">
+            <span class="text-lg">📋</span>
+            <span>Quote Maker</span>
+          </a>
+          <a href="product-catalog.html" class="nav-btn px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2">
+            <span class="text-lg">📦</span>
+            <span>Product Catalog</span>
+          </a>
+          <a href="admin-panel.html" class="nav-btn px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2">
+            <span class="text-lg">⚙️</span>
+            <span>Admin Panel</span>
+          </a>
+        </nav>
+      </div>
+      
+      <!-- Mobile Navigation Menu -->
+      <nav class="md:hidden pb-3">
+        <div class="flex flex-wrap justify-center gap-2">
+          <a href="price-calculator.html" class="nav-btn nav-btn-active px-3 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-1 text-sm">
+            <span>📊</span>
+            <span>PriceLists</span>
+          </a>
+          <a href="quote-maker.html" class="nav-btn px-3 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-1 text-sm">
+            <span>📋</span>
+            <span>Quote</span>
+          </a>
+          <a href="product-catalog.html" class="nav-btn px-3 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-1 text-sm">
+            <span>📦</span>
+            <span>Catalog</span>
+          </a>
+          <a href="admin-panel.html" class="nav-btn px-3 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-1 text-sm">
+            <span>⚙️</span>
+            <span>Admin</span>
+          </a>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container mx-auto px-4 py-6">
+    <!-- Page Header -->
+    <div class="bg-gradient-to-r from-purple-600 to-blue-600 rounded-xl p-6 mb-8 text-white">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+        <div>
+          <h1 class="text-3xl font-bold mb-2">Price List Calculator</h1>
+          <p class="text-purple-100">Generate and manage price lists with multi-select options and PDF export capabilities</p>
+        </div>
+        <div class="mt-4 md:mt-0">
+          <div class="flex items-center space-x-4">
+            <div class="text-center">
+              <div class="text-2xl font-bold" id="total-pricelists">0</div>
+              <div class="text-sm text-purple-200">Price Lists</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Price List Calculator Content will be inserted here -->
+    <div id="price-calculator-content">
+      
+      <!-- Price List Calculator Module Content -->
+      <section class="bg-white rounded-xl shadow-soft p-4 sm:p-6 mb-4 mobile-padding" style="background: #eef2ff;">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="section-heading">Price List Calculator</h2>
+          <span class="chip no-print" id="price-chip">Ready</span>
+        </div>
+        
+        <!-- Controls -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+          <div>
+            <select id="price-list" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
+              <option value="">Select Price List</option>
+            </select>
+          </div>
+          <div>
+            <select id="currency" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
+              <option value="INR" selected>INR (₹) - Indian Rupee</option>
+              <option value="USD">USD ($) - US Dollar</option>
+              <option value="EUR">EUR (€) - Euro</option>
+              <option value="GBP">GBP (£) - British Pound</option>
+            </select>
+          </div>
+          <div>
+            <input type="number" id="factor" value="1" step="0.01" min="0.01" placeholder="Factor" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none" />
+          </div>
+          <div>
+            <select id="salesman" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
+              <option value="">Select Sales Representative</option>
+            </select>
+          </div>
+          <div>
+            <select id="category" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
+              <option value="">All Categories</option>
+            </select>
+          </div>
+          <div class="flex items-center gap-2">
+            <input type="checkbox" id="kg-toggle" class="w-5 h-5 text-blue-600 border-2 border-gray-300 rounded focus:ring-blue-500 focus:ring-2" />
+            <label for="kg-toggle" class="text-sm font-medium text-gray-700">Price per KG</label>
+          </div>
+        </div>
+        
+        <!-- Product/Density/Color Dropdowns -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div>
+            <select id="product" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
+              <option value="">All Products</option>
+            </select>
+          </div>
+          <div>
+            <select id="density" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
+              <option value="">All Densities</option>
+            </select>
+          </div>
+          <div>
+            <select id="color" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
+              <option value="">All Colors</option>
+            </select>
+          </div>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="flex flex-wrap gap-3 mb-6">
+          <button onclick="clearAll()" class="btn-secondary">
+            <span>🗑️</span> <span>Clear All</span>
+          </button>
+          <button onclick="generatePreview()" class="btn-primary">
+            <span>📋</span> <span>Generate Preview</span>
+          </button>
+          <button id="sharePricesBtn" onclick="shareAllPricesDirectly()" class="btn-success" disabled>
+            <span>📤</span> <span>Share Prices</span>
+          </button>
+        </div>
+      </section>
+      
+      <!-- Preview Section -->
+      <section id="preview-section" class="bg-white rounded-xl shadow-soft p-4 sm:p-6 mobile-padding" style="display: none;">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="section-heading">Preview</h3>
+          <div class="flex gap-2">
+            <button onclick="downloadPDF()" class="btn-primary btn-sm">
+              <span>📄</span> <span>Download PDF</span>
+            </button>
+            <button onclick="shareWhatsApp()" class="btn-success btn-sm">
+              <span>📱</span> <span>Share WhatsApp</span>
+            </button>
+          </div>
+        </div>
+        <div id="htmlPreview" class="border border-gray-200 rounded-lg p-4 bg-gray-50"></div>
+      </section>
+      
+      <!-- Footer with Asset Info -->
+      <footer class="mt-8 text-center text-sm text-gray-500">
+        <p>© 2024 Indian Natural Hair Pvt Ltd. All rights reserved.</p>
+        <p class="mt-1">Made with f10w</p>
+        <p class="mt-1">Asset Version: 2.1.0 | Last Updated: January 2024</p>
+      </footer>
+    </div>
+  </div>
+
+  <script>
+    // FX API Configuration
+    const FX_API_KEY = 'fca_live_VQSyOjJhKJhGGJhGGJhGGJhGGJhGGJhG';
+    const FX_API_URL = 'https://api.freecurrencyapi.com/v1/latest';
+    
+    // Supported currencies with their symbols
+    const SUPPORTED_CURRENCIES = {
+      'INR': { symbol: '₹', name: 'Indian Rupee' },
+      'USD': { symbol: '$', name: 'US Dollar' },
+      'EUR': { symbol: '€', name: 'Euro' },
+      'GBP': { symbol: '£', name: 'British Pound' },
+      'AUD': { symbol: 'A$', name: 'Australian Dollar' },
+      'SAR': { symbol: 'SAR ', name: 'Saudi Riyal' },
+      'NGN': { symbol: '₦', name: 'Nigerian Naira' },
+      'AED': { symbol: 'د.إ ', name: 'UAE Dirham' },
+      'JPY': { symbol: '¥', name: 'Japanese Yen' }
+    };
+    
+    // Default exchange rates (fallback)
+    const DEFAULT_RATES = {
+      'INR': 1,
+      'USD': 0.012,
+      'EUR': 0.011,
+      'GBP': 0.0095,
+      'AUD': 0.018,
+      'SAR': 0.045,
+      'NGN': 19.2,
+      'AED': 0.044,
+      'JPY': 1.8
+    };
+    
+    // Product data will be loaded here
+    let productData = [];
+    
+    // Application state
+    let state = {
+      segments: [],
+      currency: 'INR',
+      factor: 1,
+      kg: false,
+      exchangeRates: DEFAULT_RATES
+    };
+    
+    // Initialize the application
+    document.addEventListener('DOMContentLoaded', function() {
+      loadProductData();
+      loadExchangeRates();
+      populateSalesRepresentatives();
+      setupEventListeners();
+    });
+    
+    // Load product data from embedded JSON
+    function loadProductData() {
+      // This would normally load from the embedded product data
+      // For now, we'll use a placeholder
+      console.log('Loading product data...');
+    }
+    
+    // Load exchange rates
+    async function loadExchangeRates() {
+      try {
+        const response = await fetch(`${FX_API_URL}?apikey=${FX_API_KEY}&base_currency=INR`);
+        const data = await response.json();
+        if (data && data.data) {
+          state.exchangeRates = { INR: 1, ...data.data };
+        }
+      } catch (error) {
+        console.warn('Failed to load exchange rates, using defaults:', error);
+      }
+    }
+    
+    // Populate sales representatives
+    function populateSalesRepresentatives() {
+      const salesmen = [
+        'Rajesh Kumar',
+        'Priya Sharma',
+        'Amit Patel',
+        'Sneha Gupta',
+        'Vikram Singh'
+      ];
+      
+      const salesmanSelect = document.getElementById('salesman');
+      salesmen.forEach(name => {
+        const option = document.createElement('option');
+        option.value = name;
+        option.textContent = name;
+        salesmanSelect.appendChild(option);
+      });
+    }
+    
+    // Setup event listeners
+    function setupEventListeners() {
+      document.getElementById('currency').addEventListener('change', function() {
+        state.currency = this.value;
+      });
+      
+      document.getElementById('factor').addEventListener('input', function() {
+        state.factor = parseFloat(this.value) || 1;
+      });
+      
+      document.getElementById('kg-toggle').addEventListener('change', function() {
+        state.kg = this.checked;
+      });
+    }
+    
+    // Clear all selections
+    function clearAll() {
+      document.getElementById('price-list').value = '';
+      document.getElementById('category').value = '';
+      document.getElementById('product').value = '';
+      document.getElementById('density').value = '';
+      document.getElementById('color').value = '';
+      document.getElementById('currency').value = 'INR';
+      document.getElementById('factor').value = '1';
+      document.getElementById('kg-toggle').checked = false;
+      document.getElementById('salesman').value = '';
+      
+      state.segments = [];
+      state.currency = 'INR';
+      state.factor = 1;
+      state.kg = false;
+      
+      document.getElementById('preview-section').style.display = 'none';
+      document.getElementById('sharePricesBtn').disabled = true;
+    }
+    
+    // Generate preview
+    function generatePreview() {
+      // Placeholder implementation
+      const previewSection = document.getElementById('preview-section');
+      const htmlPreview = document.getElementById('htmlPreview');
+      
+      htmlPreview.innerHTML = '<div class="text-center py-8 text-gray-500">Preview will be generated here based on selected criteria.</div>';
+      previewSection.style.display = 'block';
+      document.getElementById('sharePricesBtn').disabled = false;
+    }
+    
+    // Download PDF
+    function downloadPDF() {
+      alert('PDF download functionality will be implemented here.');
+    }
+    
+    // Share WhatsApp
+    function shareWhatsApp() {
+      alert('WhatsApp sharing functionality will be implemented here.');
+    }
+    
+    // Share all prices directly
+    async function shareAllPricesDirectly() {
+      alert('Share prices functionality will be implemented here.');
+    }
+    
+    // Mobile menu toggle functionality
+    document.getElementById('mobile-menu-btn').addEventListener('click', function() {
+      const mobileMenu = document.getElementById('mobile-menu');
+      mobileMenu.classList.toggle('hidden');
+    });
+  </script>
+</body>
+</html>

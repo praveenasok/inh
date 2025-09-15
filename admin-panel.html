@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - INH</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="firebase-db.js"></script>
+    <script src="client-management.js"></script>
+    <script src="exchange-rates.js"></script>
+    <script src="data-manager.js"></script>
+    <link rel="stylesheet" href="unified-button-system.css">
+    <style>
+        /* Responsive padding */
+        .mobile-padding {
+            padding: 1.5rem;
+        }
+        @media (max-width: 640px) {
+            .mobile-padding {
+                padding: 1rem;
+            }
+        }
+        
+        /* Shadow effects */
+        .shadow-soft {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        
+        /* Button styles now handled by unified-button-system.css */
+        
+        /* Mobile-first responsive design */
+        @media (max-width: 768px) {
+            .container {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+            .text-responsive {
+                font-size: 0.875rem;
+            }
+        }
+        
+        /* Form elements */
+        .form-input {
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        /* Card hover effects */
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        /* Navigation styles now handled by unified-button-system.css */
+        
+        /* Module display */
+        .module {
+            display: none;
+        }
+        .module.active {
+            display: block;
+        }
+        .nav-item.active {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .mobile-menu {
+            display: none;
+        }
+        @media (max-width: 768px) {
+            .desktop-nav {
+                display: none;
+            }
+            .mobile-menu.active {
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-soft mb-4">
+      <div class="max-w-4xl mx-auto px-3 sm:px-6">
+        <!-- Header with InstaQuote flush left and logo flush right -->
+        <div class="flex items-center justify-between py-3">
+          <!-- InstaQuote heading flush left -->
+          <h1 class="text-xl sm:text-2xl lg:text-3xl font-bold" style="line-height: 0.7;">
+            <span style="color: #081249;">Insta</span><span style="color: #9b7952;">Q</span><span style="color: #081249;">uote</span>
+          </h1>
+          
+          <!-- Logo flush right -->
+          <div class="flex-shrink-0">
+            <img src="images/logo.png" alt="Company Logo" class="h-12 sm:h-16 w-auto opacity-75 hover:opacity-100 transition-opacity duration-200">
+          </div>
+        </div>
+        
+        <!-- Navigation Menu below header -->
+        <div class="pb-3">
+          <nav class="hidden md:flex gap-2 justify-center">
+            <a href="price-calculator.html" class="nav-btn px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2">
+              <span>📊</span>
+              <span>PriceLists</span>
+            </a>
+            <a href="quote-maker.html" class="nav-btn px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2">
+              <span class="text-lg">📋</span>
+              <span>Quote Maker</span>
+            </a>
+            <a href="product-catalog.html" class="nav-btn px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2">
+              <span class="text-lg">📦</span>
+              <span>Product Catalog</span>
+            </a>
+            <a href="admin-panel.html" class="nav-btn nav-btn-active btn-primary px-4 py-2 rounded-lg font-medium hover:bg-emerald-700 transition-all duration-200 flex items-center gap-2">
+              <span class="text-lg">⚙️</span>
+              <span>Admin Panel</span>
+            </a>
+          </nav>
+        </div>
+        
+        <!-- Mobile Navigation Menu -->
+        <nav class="md:hidden pb-3">
+          <div class="flex flex-wrap justify-center gap-2">
+            <a href="price-calculator.html" class="nav-btn px-3 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-1 text-sm">
+              <span>📊</span>
+              <span>PriceLists</span>
+            </a>
+            <a href="quote-maker.html" class="nav-btn px-3 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-1 text-sm">
+              <span>📋</span>
+              <span>Quote</span>
+            </a>
+            <a href="product-catalog.html" class="nav-btn px-3 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-1 text-sm">
+              <span>📦</span>
+              <span>Catalog</span>
+            </a>
+            <a href="admin-panel.html" class="nav-btn nav-btn-active btn-primary px-3 py-2 rounded-lg font-medium hover:bg-emerald-700 transition-all duration-200 flex items-center gap-1 text-sm">
+              <span>⚙️</span>
+              <span>Admin</span>
+            </a>
+          </div>
+        </nav>
+      </div>
+    </header>
+
+    <!-- Admin Panel Module -->
+    <div class="container mx-auto px-4 py-6">
+        <!-- Enhanced Admin Panel Header -->
+        <div class="bg-gradient-to-r from-purple-600 to-blue-600 rounded-xl p-6 mb-8 text-white">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold mb-2">Admin Panel</h1>
+                    <p class="text-purple-100">Manage your data, clients, and system settings</p>
+                </div>
+                <div class="mt-4 md:mt-0">
+                    <div class="flex items-center space-x-4">
+                        <div class="text-center">
+                            <div class="text-2xl font-bold" id="total-clients">0</div>
+                            <div class="text-sm text-purple-200">Total Clients</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold" id="month-clients">0</div>
+                            <div class="text-sm text-purple-200">This Month</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Panel Tabs -->
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+            <!-- Tab Navigation -->
+            <div class="border-b border-gray-200">
+                <nav class="flex space-x-8 px-6" aria-label="Tabs">
+                    <button onclick="showAdminTab('excel-management')" class="admin-tab-btn active border-b-2 border-blue-500 py-4 px-1 text-sm font-medium text-blue-600">
+                        Excel Data Management
+                    </button>
+                    <button onclick="showAdminTab('client-management')" class="admin-tab-btn border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                        Client Management
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Excel Data Management Tab -->
+            <div id="excel-management" class="admin-tab-content p-6">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Upload Section -->
+                    <div class="bg-white rounded-xl shadow-soft p-4 sm:p-6 mb-4 mobile-padding" style="background: #eef2ff;">
+                        <h3 class="section-heading">Upload Excel Data</h3>
+                        <div class="space-y-4">
+                            <button onclick="openAdminModal()" class="w-full btn-primary font-medium py-3 px-4 rounded-lg transition-colors">
+                    Upload to Firebase
+                </button>
+                            <div class="text-sm text-gray-600">
+                                <p>• Upload product data, price lists, and salesmen information</p>
+                                <p>• Supports Excel (.xlsx) and CSV files</p>
+                                <p>• Data is automatically validated and processed</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Status Section -->
+                    <div class="bg-white rounded-xl shadow-soft p-4 sm:p-6 mb-4 mobile-padding" style="background: #f8fafc;">
+                        <h3 class="section-heading">System Status</h3>
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-600">Firebase Connection</span>
+                                <span id="firebase-status" class="px-2 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-700">Checking...</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-600">Last Data Update</span>
+                                <span id="last-update" class="text-sm text-gray-500">Never</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-600">Total Products</span>
+                                <span id="products-count" class="text-sm font-medium">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Client Management Tab -->
+            <div id="client-management" class="admin-tab-content hidden p-6">
+                <!-- Client Management Header -->
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
+                    <div>
+                        <h2 class="section-heading-large">Client Management</h2>
+                        <p class="text-gray-600 mt-1">Manage your client database and information</p>
+                    </div>
+                    <div class="mt-4 sm:mt-0 flex space-x-3">
+                        <button onclick="exportClients()" class="btn-success">
+                    Export Data
+                </button>
+                <button onclick="showAddClientModal()" class="btn-primary">
+                            Add Client
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Client Statistics -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-blue-50 rounded-lg p-4">
+                        <div class="flex items-center">
+                            <div class="p-2 bg-blue-100 rounded-lg">
+                                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM9 9a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                </svg>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-blue-600">Total Clients</p>
+                                <p class="text-2xl font-semibold text-blue-900" id="total-clients">0</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-green-50 rounded-lg p-4">
+                        <div class="flex items-center">
+                            <div class="p-2 bg-green-100 rounded-lg">
+                                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                                </svg>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-green-600">This Month</p>
+                                <p class="text-2xl font-semibold text-green-900" id="month-clients">0</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-purple-50 rounded-lg p-4">
+                        <div class="flex items-center">
+                            <div class="p-2 bg-purple-100 rounded-lg">
+                                <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 012 2v6a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2V6"></path>
+                                </svg>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-purple-600">Salespeople</p>
+                                <p class="text-2xl font-semibold text-purple-900" id="salespeople-count">0</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-orange-50 rounded-lg p-4">
+                        <div class="flex items-center">
+                            <div class="p-2 bg-orange-100 rounded-lg">
+                                <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                                </svg>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-orange-600">Device ID</p>
+                                <p class="text-lg font-semibold text-orange-900" id="device-id">Unknown</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Search and Filter -->
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
+                    <div class="relative flex-1 max-w-md">
+                        <input type="text" id="client-search" placeholder="Search clients..." 
+                               class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                               oninput="searchClients()">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                        </div>
+                        <button onclick="clearSearch()" class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                            <svg class="h-5 w-5 text-gray-400 hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Clients Table -->
+                <div class="bg-white rounded-xl shadow-soft p-4 sm:p-6 mb-4 mobile-padding overflow-hidden" style="background: #f8fafc;">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client Info</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact Details</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Address</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Salesperson</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="clients-table-body" class="bg-white divide-y divide-gray-200">
+                                <!-- Client rows will be inserted here -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Empty State -->
+                    <div id="clients-empty-state" class="hidden text-center py-12">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM9 9a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                        </svg>
+                        <h3 class="mt-2 text-sm font-medium text-gray-900">No clients found</h3>
+                        <p class="mt-1 text-sm text-gray-500">Get started by adding your first client.</p>
+                        <div class="mt-6">
+                            <button onclick="showAddClientModal()" class="btn-primary">
+                                Add Client
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Panel Modal -->
+    <div id="admin-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <!-- Modal Header -->
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-medium text-gray-900">Firebase Excel Upload</h3>
+                    <button onclick="closeAdminModal()" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                
+                <!-- Authentication Status -->
+                <div id="auth-status" class="mb-4 p-3 rounded-lg bg-gray-100">
+                    <div class="flex items-center">
+                        <div id="auth-indicator" class="w-3 h-3 rounded-full bg-gray-400 mr-2"></div>
+                        <span id="auth-text" class="text-sm text-gray-600">Checking authentication...</span>
+                    </div>
+                </div>
+                
+                <!-- Login Section -->
+                <div id="login-section" class="mb-6 hidden">
+                    <h4 class="text-md font-medium text-gray-800 mb-3">Firebase Authentication</h4>
+                    <div class="space-y-3">
+                        <input type="email" id="admin-email" placeholder="Email" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <input type="password" id="admin-password" placeholder="Password" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <div class="flex space-x-2">
+                            <button onclick="loginAdmin()" class="flex-1 btn-primary px-4 py-2 rounded-md transition-colors">Login</button>
+                            <button onclick="logoutAdmin()" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md transition-colors">Logout</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- File Upload Section -->
+                <div id="upload-section" class="mb-6">
+                    <h4 class="text-md font-medium text-gray-800 mb-3">Upload Excel File</h4>
+                    <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                        <input type="file" id="excel-file" accept=".xlsx,.xls,.csv" class="hidden" onchange="handleFileSelect(event)">
+                        <div id="file-drop-zone" class="cursor-pointer" onclick="document.getElementById('excel-file').click()">
+                            <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                                <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                            </svg>
+                            <p class="mt-2 text-sm text-gray-600">Click to select Excel file or drag and drop</p>
+                            <p class="text-xs text-gray-500">Supports .xlsx, .xls, and .csv files</p>
+                        </div>
+                        <div id="file-info" class="hidden mt-3 text-sm text-gray-600"></div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <button id="upload-btn" onclick="uploadToFirebase()" disabled class="w-full btn-success disabled:bg-gray-400 px-4 py-2 rounded-md transition-colors">
+                            Upload to Firebase
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Database Status -->
+                <div id="database-status" class="mb-4">
+                    <h4 class="text-md font-medium text-gray-800 mb-3">Database Status</h4>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span>Products:</span>
+                            <span id="db-products-count" class="font-medium">0</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Price Lists:</span>
+                            <span id="db-pricelists-count" class="font-medium">0</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Salesmen:</span>
+                            <span id="db-salesmen-count" class="font-medium">0</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Last Updated:</span>
+                            <span id="db-last-updated" class="font-medium">Never</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Progress Bar -->
+                <div id="upload-progress" class="hidden mb-4">
+                    <div class="flex justify-between text-sm text-gray-600 mb-1">
+                        <span>Uploading...</span>
+                        <span id="progress-text">0%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div id="progress-bar" class="h-2 rounded-full transition-all duration-300" style="width: 0%; background-color: #081249;"></div>
+                    </div>
+                </div>
+                
+                <!-- Messages -->
+                <div id="upload-messages" class="space-y-2"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Client Management Modal -->
+    <div id="client-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <!-- Modal Header -->
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-medium text-gray-900" id="modal-title">Add New Client</h3>
+                    <button onclick="closeClientModal()" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                
+                <!-- Modal Body -->
+                <form id="client-form" onsubmit="saveClient(event)">
+                    <input type="hidden" id="client-id" value="">
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Client Name -->
+                        <div>
+                            <label for="client-name" class="block text-sm font-medium text-gray-700 mb-1">Client Name *</label>
+                            <input type="text" id="client-name" name="clientName" required 
+                                   class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
+                        </div>
+                        
+                        <!-- Company Name -->
+                        <div>
+                            <label for="company-name" class="block text-sm font-medium text-gray-700 mb-1">Company Name *</label>
+                            <input type="text" id="company-name" name="companyName" required 
+                                   class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
+                        </div>
+                        
+                        <!-- Phone 1 -->
+                        <div>
+                            <label for="phone1" class="block text-sm font-medium text-gray-700 mb-1">Phone Number 1 *</label>
+                            <input type="tel" id="phone1" name="phone1" required 
+                                   class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
+                        </div>
+                        
+                        <!-- Phone 2 -->
+                        <div>
+                            <label for="phone2" class="block text-sm font-medium text-gray-700 mb-1">Phone Number 2</label>
+                            <input type="tel" id="phone2" name="phone2" 
+                                   class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
+                        </div>
+                        
+                        <!-- Contact Person -->
+                        <div>
+                            <label for="contact-person" class="block text-sm font-medium text-gray-700 mb-1">Contact Person *</label>
+                            <input type="text" id="contact-person" name="contactPerson" required 
+                                   class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
+                        </div>
+                        
+                        <!-- Email -->
+                        <div>
+                            <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email ID *</label>
+                            <input type="email" id="email" name="email" required 
+                                   class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
+                        </div>
+                        
+                        <!-- Address -->
+                        <div class="md:col-span-2">
+                            <label for="address" class="block text-sm font-medium text-gray-700 mb-1">Address *</label>
+                            <textarea id="address" name="address" required rows="3"
+                                      class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none"></textarea>
+                        </div>
+                        
+                        <!-- Postal Code -->
+                        <div>
+                            <label for="postal-code" class="block text-sm font-medium text-gray-700 mb-1">Postal Code</label>
+                            <input type="text" id="postal-code" name="postalCode" 
+                                   class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
+                        </div>
+                        
+                        <!-- TAX ID -->
+                        <div>
+                            <label for="tax-id" class="block text-sm font-medium text-gray-700 mb-1">TAX ID</label>
+                            <input type="text" id="tax-id" name="taxId" 
+                                   class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
+                        </div>
+                    </div>
+                    
+                    <!-- Modal Footer -->
+                    <div class="flex justify-end space-x-3 mt-6">
+                        <button type="button" onclick="closeClientModal()" 
+                                class="btn-secondary">
+                            Cancel
+                        </button>
+                        <button type="submit" 
+                                class="btn-primary">
+                            Save Client
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Embedded Data -->
+    <script type="application/json" id="EMBEDDED_DATA">
+    {
+        "products": [],
+        "salesmen": [],
+        "lastUpdated": null
+    }
+    </script>
+
+    <script>
+        // Data arrays for consistency
+        let productData = [];
+        
+        const FX_APIS = [
+          (base) => `https://api.exchangerate-api.com/v4/latest/${base}`,
+          (base) => `https://api.fixer.io/latest?base=${base}`,
+          (base) => `https://open.er-api.com/v6/latest/${base}`
+        ];
+        const SUPPORTED = ['INR','USD','EUR','GBP','AUD','SAR','NGN','AED','JPY'];
+        const SYMBOL = { INR:'₹', USD:'$', EUR:'€', GBP:'£', AUD:'A$', SAR:'SAR ', NGN:'₦', AED:'د.إ ', JPY:'¥' };
+        const DEFAULT_RATES = { base:'INR',
+          rates:{ INR:1, USD:0.0120, EUR:0.0110, GBP:0.0095, AUD:0.0180, SAR:0.0450, NGN:5.5000, AED:0.0440, JPY:1.8000 },
+          updatedAt: null, mode:'auto'
+        };
+
+        // Mobile menu toggle
+        function toggleMobileMenu() {
+            const mobileMenu = document.querySelector('.mobile-menu');
+            mobileMenu.classList.toggle('active');
+        }
+
+        // Admin tab switching
+        function showAdminTab(tabId) {
+            // Hide all tab contents
+            document.querySelectorAll('.admin-tab-content').forEach(tab => {
+                tab.classList.add('hidden');
+            });
+            
+            // Remove active class from all tab buttons
+            document.querySelectorAll('.admin-tab-btn').forEach(btn => {
+                btn.classList.remove('active', 'border-blue-500', 'text-blue-600');
+                btn.classList.add('border-transparent', 'text-gray-500');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabId).classList.remove('hidden');
+            
+            // Add active class to selected tab button
+            const activeBtn = document.querySelector(`[onclick="showAdminTab('${tabId}')"]`);
+            if (activeBtn) {
+                activeBtn.classList.add('active', 'border-blue-500', 'text-blue-600');
+                activeBtn.classList.remove('border-transparent', 'text-gray-500');
+            }
+            
+            // Initialize specific tab functionality
+            if (tabId === 'client-management') {
+                initializeClientManagementModule();
+            }
+        }
+
+        // Admin modal functions
+        function openAdminModal() {
+            document.getElementById('admin-modal').classList.remove('hidden');
+            initFirebaseUpload();
+        }
+
+        function closeAdminModal() {
+            document.getElementById('admin-modal').classList.add('hidden');
+        }
+
+        // Initialize Firebase upload functionality
+        function initFirebaseUpload() {
+            checkAuthStatus();
+            updateDatabaseStatus();
+        }
+
+        function checkAuthStatus() {
+            const authIndicator = document.getElementById('auth-indicator');
+            const authText = document.getElementById('auth-text');
+            const loginSection = document.getElementById('login-section');
+            
+            if (window.firebaseDB && window.firebaseDB.isAuthenticated()) {
+                authIndicator.className = 'w-3 h-3 rounded-full bg-green-400 mr-2';
+                authText.textContent = 'Authenticated and ready';
+                loginSection.classList.add('hidden');
+            } else {
+                authIndicator.className = 'w-3 h-3 rounded-full bg-red-400 mr-2';
+                authText.textContent = 'Not authenticated - login required';
+                loginSection.classList.remove('hidden');
+            }
+        }
+
+        async function loginAdmin() {
+            const email = document.getElementById('admin-email').value;
+            const password = document.getElementById('admin-password').value;
+            
+            if (!email || !password) {
+                alert('Please enter email and password');
+                return;
+            }
+            
+            try {
+                if (window.firebaseDB) {
+                    await window.firebaseDB.signIn(email, password);
+                    checkAuthStatus();
+                    updateDatabaseStatus();
+                    alert('Login successful!');
+                } else {
+                    alert('Firebase not available');
+                }
+            } catch (error) {
+                alert('Login failed: ' + error.message);
+            }
+        }
+
+        async function logoutAdmin() {
+            try {
+                if (window.firebaseDB) {
+                    await window.firebaseDB.signOut();
+                    checkAuthStatus();
+                    alert('Logged out successfully');
+                } else {
+                    alert('Firebase not available');
+                }
+            } catch (error) {
+                alert('Logout failed: ' + error.message);
+            }
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            const fileInfo = document.getElementById('file-info');
+            const uploadBtn = document.getElementById('upload-btn');
+            
+            if (file) {
+                fileInfo.textContent = `Selected: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+                fileInfo.classList.remove('hidden');
+                uploadBtn.disabled = false;
+                window.selectedFile = file;
+            } else {
+                fileInfo.classList.add('hidden');
+                uploadBtn.disabled = true;
+                window.selectedFile = null;
+            }
+        }
+
+        async function uploadToFirebase() {
+            if (!window.selectedFile) {
+                alert('Please select a file first');
+                return;
+            }
+            
+            if (!window.firebaseDB || !window.firebaseDB.isAuthenticated()) {
+                alert('Please login first');
+                return;
+            }
+            
+            const progressContainer = document.getElementById('upload-progress');
+            const progressBar = document.getElementById('progress-bar');
+            const progressText = document.getElementById('progress-text');
+            const messagesContainer = document.getElementById('upload-messages');
+            
+            try {
+                progressContainer.classList.remove('hidden');
+                progressBar.style.width = '0%';
+                progressText.textContent = '0%';
+                messagesContainer.innerHTML = '';
+                
+                // Read and parse Excel file
+                const data = await readExcelFile(window.selectedFile);
+                progressBar.style.width = '25%';
+                progressText.textContent = '25%';
+                
+                // Validate data
+                const validatedData = validateExcelData(data);
+                progressBar.style.width = '50%';
+                progressText.textContent = '50%';
+                
+                // Upload to Firebase
+                await window.firebaseDB.uploadExcelData(validatedData);
+                progressBar.style.width = '75%';
+                progressText.textContent = '75%';
+                
+                // Update local storage and UI
+                await updateApplicationData();
+                progressBar.style.width = '100%';
+                progressText.textContent = '100%';
+                
+                // Show success message
+                const successMsg = document.createElement('div');
+                successMsg.className = 'p-3 bg-green-100 border border-green-400 text-green-700 rounded';
+                successMsg.textContent = 'Upload completed successfully!';
+                messagesContainer.appendChild(successMsg);
+                
+                // Update database status
+                updateDatabaseStatus();
+                
+                // Log audit event
+                logAuditEvent('excel_upload', {
+                    filename: window.selectedFile.name,
+                    filesize: window.selectedFile.size,
+                    recordCount: validatedData.products?.length || 0
+                });
+                
+            } catch (error) {
+                console.error('Upload error:', error);
+                const errorMsg = document.createElement('div');
+                errorMsg.className = 'p-3 bg-red-100 border border-red-400 text-red-700 rounded';
+                errorMsg.textContent = 'Upload failed: ' + error.message;
+                messagesContainer.appendChild(errorMsg);
+            } finally {
+                setTimeout(() => {
+                    progressContainer.classList.add('hidden');
+                }, 2000);
+            }
+        }
+
+        async function readExcelFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        
+                        const result = {};
+                        workbook.SheetNames.forEach(sheetName => {
+                            const worksheet = workbook.Sheets[sheetName];
+                            result[sheetName] = XLSX.utils.sheet_to_json(worksheet);
+                        });
+                        
+                        resolve(result);
+                    } catch (error) {
+                        reject(new Error('Failed to parse Excel file: ' + error.message));
+                    }
+                };
+                reader.onerror = () => reject(new Error('Failed to read file'));
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        function validateExcelData(data) {
+            const validated = {
+                products: [],
+                salesmen: [],
+                priceLists: []
+            };
+            
+            // Process each sheet
+            Object.keys(data).forEach(sheetName => {
+                const sheetData = data[sheetName];
+                
+                if (sheetName.toLowerCase().includes('product') || sheetName.toLowerCase().includes('price')) {
+                    validated.products = validated.products.concat(sheetData);
+                } else if (sheetName.toLowerCase().includes('sales')) {
+                    validated.salesmen = validated.salesmen.concat(sheetData);
+                }
+            });
+            
+            return validated;
+        }
+
+        async function updateApplicationData() {
+            // Refresh embedded data
+            if (window.dataManager) {
+                await window.dataManager.refreshData();
+            }
+            
+            // Update UI elements
+            updateDatabaseStatus();
+        }
+
+        async function updateDatabaseStatus() {
+            try {
+                if (window.firebaseDB && window.firebaseDB.isAvailable()) {
+                    const stats = await window.firebaseDB.getDatabaseStats();
+                    
+                    document.getElementById('db-products-count').textContent = stats.products || 0;
+                    document.getElementById('db-pricelists-count').textContent = stats.priceLists || 0;
+                    document.getElementById('db-salesmen-count').textContent = stats.salesmen || 0;
+                    document.getElementById('db-last-updated').textContent = stats.lastUpdated || 'Never';
+                    
+                    // Update main status indicators
+                    document.getElementById('products-count').textContent = stats.products || 0;
+                    document.getElementById('last-update').textContent = stats.lastUpdated || 'Never';
+                    
+                    const firebaseStatus = document.getElementById('firebase-status');
+                    if (firebaseStatus) {
+                        firebaseStatus.textContent = 'Connected';
+                        firebaseStatus.className = 'px-2 py-1 rounded-full text-xs font-medium bg-green-200 text-green-700';
+                    }
+                } else {
+                    const firebaseStatus = document.getElementById('firebase-status');
+                    if (firebaseStatus) {
+                        firebaseStatus.textContent = 'Disconnected';
+                        firebaseStatus.className = 'px-2 py-1 rounded-full text-xs font-medium bg-red-200 text-red-700';
+                    }
+                }
+            } catch (error) {
+                console.error('Error updating database status:', error);
+            }
+        }
+
+        function logAuditEvent(action, details) {
+            const auditEvent = {
+                timestamp: new Date().toISOString(),
+                action: action,
+                details: details,
+                user: window.firebaseDB?.getCurrentUser()?.email || 'anonymous'
+            };
+            
+            // Store in localStorage for now
+            const auditLog = JSON.parse(localStorage.getItem('auditLog') || '[]');
+            auditLog.push(auditEvent);
+            
+            // Keep only last 100 events
+            if (auditLog.length > 100) {
+                auditLog.splice(0, auditLog.length - 100);
+            }
+            
+            localStorage.setItem('auditLog', JSON.stringify(auditLog));
+        }
+
+        // Client Management Functions
+        async function initClientManagement() {
+            await loadClientsFromFirebase();
+            updateClientStatistics();
+            renderClientsTable();
+        }
+
+        async function loadClientsFromFirebase() {
+            if (window.firebaseDB && window.firebaseDB.isAvailable()) {
+                try {
+                    console.log('Loading clients from Firebase...');
+                    const firebaseClients = await window.firebaseDB.getClients();
+                    console.log('Loaded', firebaseClients.length, 'clients from Firebase');
+                    
+                    // Get localStorage clients
+                    const localClients = window.clientManager.getAllClients();
+                    
+                    // Merge clients (Firebase takes priority)
+                    const mergedClients = new Map();
+                    
+                    // Add local clients first
+                    localClients.forEach(client => {
+                        mergedClients.set(client.id, { ...client, source: 'local' });
+                    });
+                    
+                    // Add Firebase clients (overwrites local if same ID)
+                    firebaseClients.forEach(client => {
+                        mergedClients.set(client.id, { ...client, source: 'firebase' });
+                    });
+                    
+                    // Update the client manager with merged data
+                    window.clientManager.clients = Array.from(mergedClients.values());
+                    
+                    console.log('Merged', mergedClients.size, 'total clients');
+                    
+                } catch (error) {
+                    console.warn('Failed to load clients from Firebase:', error);
+                    // Continue with localStorage data only
+                }
+            } else {
+                console.log('Firebase not available, using localStorage only');
+            }
+        }
+
+        function updateClientStatistics() {
+            const stats = window.clientManager.getStatistics();
+            
+            document.getElementById('total-clients').textContent = stats.totalClients;
+            document.getElementById('month-clients').textContent = stats.thisMonth;
+            document.getElementById('salespeople-count').textContent = stats.salespeople;
+            document.getElementById('device-id').textContent = window.clientManager.deviceId.split('-')[1] || 'Unknown';
+        }
+
+        function renderClientsTable(clients = null) {
+            const clientsToRender = clients || window.clientManager.getAllClients();
+            const tbody = document.getElementById('clients-table-body');
+            const emptyState = document.getElementById('clients-empty-state');
+            
+            if (clientsToRender.length === 0) {
+                tbody.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            
+            emptyState.classList.add('hidden');
+            
+            tbody.innerHTML = clientsToRender.map(client => `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm font-medium text-gray-900">${client.clientName}</div>
+                        <div class="text-sm text-gray-500">${client.companyName}</div>
+                        <div class="text-xs text-blue-600 font-mono">${client.id}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">${client.contactPerson}</div>
+                        <div class="text-sm text-gray-500">${client.email}</div>
+                        <div class="text-sm text-gray-500">${client.phone1}</div>
+                        ${client.phone2 ? `<div class="text-sm text-gray-500">${client.phone2}</div>` : ''}
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="text-sm text-gray-900 max-w-xs truncate">${client.address}</div>
+                        ${client.postalCode ? `<div class="text-sm text-gray-500">${client.postalCode}</div>` : ''}
+                        ${client.taxId ? `<div class="text-xs text-gray-500">TAX: ${client.taxId}</div>` : ''}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">${client.salesperson}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">${new Date(client.createdAt).toLocaleDateString()}</div>
+                        <div class="text-xs text-gray-500">${new Date(client.createdAt).toLocaleTimeString()}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button onclick="editClient('${client.id}')" class="text-blue-600 hover:text-blue-900 mr-3">
+                            Edit
+                        </button>
+                        <button onclick="deleteClient('${client.id}')" class="text-red-600 hover:text-red-900">
+                            Delete
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function showAddClientModal() {
+            document.getElementById('modal-title').textContent = 'Add New Client';
+            document.getElementById('client-form').reset();
+            document.getElementById('client-id').value = '';
+            document.getElementById('client-modal').classList.remove('hidden');
+        }
+
+        function editClient(clientId) {
+            const client = window.clientManager.getClient(clientId);
+            if (!client) {
+                alert('Client not found');
+                return;
+            }
+            
+            document.getElementById('modal-title').textContent = 'Edit Client';
+            document.getElementById('client-id').value = client.id;
+            document.getElementById('client-name').value = client.clientName;
+            document.getElementById('company-name').value = client.companyName;
+            document.getElementById('phone1').value = client.phone1;
+            document.getElementById('phone2').value = client.phone2 || '';
+            document.getElementById('contact-person').value = client.contactPerson;
+            document.getElementById('email').value = client.email;
+            document.getElementById('address').value = client.address;
+            document.getElementById('postal-code').value = client.postalCode || '';
+            document.getElementById('tax-id').value = client.taxId || '';
+            
+            document.getElementById('client-modal').classList.remove('hidden');
+        }
+
+        function closeClientModal() {
+            document.getElementById('client-modal').classList.add('hidden');
+        }
+
+        async function saveClient(event) {
+            event.preventDefault();
+            
+            const formData = new FormData(event.target);
+            const clientData = Object.fromEntries(formData.entries());
+            const clientId = document.getElementById('client-id').value;
+            
+            // Show loading state
+            const submitBtn = event.target.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Saving...';
+            submitBtn.disabled = true;
+            
+            try {
+                let savedClient;
+                
+                if (clientId) {
+                    // Update existing client
+                    if (window.firebaseDB && window.firebaseDB.isAvailable()) {
+                        try {
+                            savedClient = await window.firebaseDB.updateClient(clientId, clientData);
+                            console.log('Client updated in Firebase:', savedClient);
+                        } catch (firebaseError) {
+                            console.warn('Firebase update failed, using localStorage:', firebaseError);
+                            savedClient = window.clientManager.updateClient(clientId, clientData);
+                        }
+                    } else {
+                        savedClient = window.clientManager.updateClient(clientId, clientData);
+                    }
+                    alert('Client updated successfully!');
+                } else {
+                    // Add new client
+                    const salesperson = 'Admin'; // Default for admin panel
+                    
+                    if (window.firebaseDB && window.firebaseDB.isAvailable()) {
+                        try {
+                            // Add device ID and timestamps for Firebase
+                            const enhancedClientData = {
+                                ...clientData,
+                                salesperson: salesperson,
+                                deviceId: window.clientManager.deviceId
+                            };
+                            
+                            savedClient = await window.firebaseDB.saveClient(enhancedClientData);
+                            console.log('Client saved to Firebase:', savedClient);
+                            
+                            // Also save to localStorage as backup
+                            window.clientManager.addClient(clientData, salesperson);
+                            
+                        } catch (firebaseError) {
+                            console.warn('Firebase save failed, using localStorage:', firebaseError);
+                            savedClient = window.clientManager.addClient(clientData, salesperson);
+                        }
+                    } else {
+                        savedClient = window.clientManager.addClient(clientData, salesperson);
+                    }
+                    alert('Client added successfully!');
+                }
+                
+                closeClientModal();
+                updateClientStatistics();
+                renderClientsTable();
+                
+            } catch (error) {
+                console.error('Error saving client:', error);
+                alert('Error saving client: ' + error.message);
+            } finally {
+                // Reset button state
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            }
+        }
+
+        async function deleteClient(clientId) {
+            if (!confirm('Are you sure you want to delete this client?')) {
+                return;
+            }
+            
+            try {
+                // Delete from Firebase first, then localStorage
+                if (window.firebaseDB && window.firebaseDB.isAvailable()) {
+                    try {
+                        await window.firebaseDB.deleteClient(clientId);
+                        console.log('Client deleted from Firebase:', clientId);
+                    } catch (firebaseError) {
+                        console.warn('Firebase delete failed, continuing with localStorage:', firebaseError);
+                    }
+                }
+                
+                // Always delete from localStorage as well
+                window.clientManager.deleteClient(clientId);
+                alert('Client deleted successfully!');
+                updateClientStatistics();
+                renderClientsTable();
+                
+            } catch (error) {
+                alert('Error deleting client: ' + error.message);
+            }
+        }
+
+        function searchClients() {
+            const query = document.getElementById('client-search').value;
+            if (query.trim() === '') {
+                renderClientsTable();
+            } else {
+                const results = window.clientManager.searchClients(query);
+                renderClientsTable(results);
+            }
+        }
+
+        function clearSearch() {
+            document.getElementById('client-search').value = '';
+            renderClientsTable();
+        }
+
+        function exportClients() {
+            const exportData = window.clientManager.exportClients();
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `clients-export-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            alert('Client data exported successfully!');
+        }
+
+        function initializeClientManagementModule() {
+            if (typeof window.clientManager !== 'undefined') {
+                initClientManagement();
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize Firebase status
+            updateDatabaseStatus();
+            
+            // Initialize client management if available
+            if (typeof window.clientManager !== 'undefined') {
+                initClientManagement();
+            }
+        });
+    </script>
+</body>
+</html>
