@@ -18,29 +18,20 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   
   <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
   
   <!-- Unified Button System CSS -->
   <link rel="stylesheet" href="unified-button-system.css">
   
   <!-- Firebase Configuration -->
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyBmJJ8vQgQgQgQgQgQgQgQgQgQgQgQgQgQ",
-      authDomain: "instaquote-demo.firebaseapp.com",
-      projectId: "instaquote-demo",
-      storageBucket: "instaquote-demo.appspot.com",
-      messagingSenderId: "123456789012",
-      appId: "1:123456789012:web:abcdefghijklmnop"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-    const auth = firebase.auth();
-    const storage = firebase.storage();
-  </script>
+  <script src="firebase-config.js"></script>
+  <script src="firebase-database.js"></script>
+  <script src="firebase-error-handler.js"></script>
+
   
   <style>
     /* Custom CSS for responsive design and styling */
@@ -184,12 +175,61 @@
       padding: 2rem;
       font-style: italic;
     }
+    
+    /* Navigation link styles */
+    .nav-btn {
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 48px;
+      padding: 12px 16px;
+      font-weight: 500;
+      cursor: pointer;
+      touch-action: manipulation;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+      background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+      border: 2px solid #e2e8f0;
+      box-shadow: 0 4px 12px rgba(71, 85, 105, 0.15);
+    }
+    
+    .nav-btn:hover {
+      text-decoration: none;
+      background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+      border-color: #cbd5e1;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(71, 85, 105, 0.2);
+    }
+    
+    .nav-btn.nav-btn-active {
+      background: #081249;
+      color: white !important;
+      border: 2px solid #081249;
+      box-shadow: 0 4px 12px rgba(8, 18, 73, 0.3);
+    }
+    
+    .nav-btn.nav-btn-active:hover {
+      background: #0a1555;
+      border-color: #0a1555;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(8, 18, 73, 0.4);
+    }
+    
+    /* Remove default link styles */
+    .no-underline {
+      text-decoration: none !important;
+    }
+    
+    .no-underline:hover {
+      text-decoration: none !important;
+    }
   </style>
 </head>
 
 <body class="bg-gray-50 min-h-screen">
   <!-- Top Menu Bar -->
-  <header class="bg-white shadow-soft mb-4">
+  <header class="bg-white shadow-soft mb-4 sticky top-0 z-50">
     <div class="max-w-4xl mx-auto px-3 sm:px-6">
       <!-- Header with InstaQuote flush left and logo flush right -->
       <div class="flex items-center justify-between py-3">
@@ -207,19 +247,19 @@
       <!-- Navigation Menu below header -->
       <div class="pb-3">
         <nav class="hidden md:flex gap-2 justify-center">
-          <a href="price-calculator.html" class="nav-btn px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2">
+          <a href="price-calculator.html" class="nav-btn px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 text-gray-700 hover:text-gray-900 no-underline">
             <span>📊</span>
             <span>PriceLists</span>
           </a>
-          <a href="quote-maker.html" class="nav-btn nav-btn-active px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2">
+          <a href="quote-maker.html" class="nav-btn nav-btn-active btn-primary px-4 py-2 rounded-lg font-medium hover:bg-emerald-700 transition-all duration-200 flex items-center gap-2 text-white no-underline">
             <span class="text-lg">📋</span>
             <span>Quote Maker</span>
           </a>
-          <a href="product-catalog.html" class="nav-btn px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2">
+          <a href="product-catalog.html" class="nav-btn px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 text-gray-700 hover:text-gray-900 no-underline">
             <span class="text-lg">📦</span>
             <span>Product Catalog</span>
           </a>
-          <a href="admin-panel.html" class="nav-btn px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2">
+          <a href="admin-panel.html" class="nav-btn px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 text-gray-700 hover:text-gray-900 no-underline">
             <span class="text-lg">⚙️</span>
             <span>Admin Panel</span>
           </a>
@@ -229,19 +269,19 @@
       <!-- Mobile Navigation Menu -->
       <nav class="md:hidden pb-3">
         <div class="flex flex-wrap justify-center gap-2">
-          <a href="price-calculator.html" class="nav-btn px-3 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-1 text-sm">
+          <a href="price-calculator.html" class="nav-btn px-3 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-1 text-sm text-gray-700 hover:text-gray-900 no-underline">
             <span>📊</span>
             <span>PriceLists</span>
           </a>
-          <a href="quote-maker.html" class="nav-btn nav-btn-active px-3 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-1 text-sm">
+          <a href="quote-maker.html" class="nav-btn nav-btn-active btn-primary px-3 py-2 rounded-lg font-medium hover:bg-emerald-700 transition-all duration-200 flex items-center gap-1 text-sm text-white no-underline">
             <span>📋</span>
             <span>Quote</span>
           </a>
-          <a href="product-catalog.html" class="nav-btn px-3 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-1 text-sm">
+          <a href="product-catalog.html" class="nav-btn px-3 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-1 text-sm text-gray-700 hover:text-gray-900 no-underline">
             <span>📦</span>
             <span>Catalog</span>
           </a>
-          <a href="admin-panel.html" class="nav-btn px-3 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-1 text-sm">
+          <a href="admin-panel.html" class="nav-btn px-3 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-1 text-sm text-gray-700 hover:text-gray-900 no-underline">
             <span>⚙️</span>
             <span>Admin</span>
           </a>
@@ -253,7 +293,7 @@
   <!-- Main Content -->
   <div class="container mx-auto px-4 py-6">
     <!-- Page Header -->
-    <div class="bg-gradient-to-r from-purple-600 to-blue-600 rounded-xl p-6 mb-8 text-white">
+    <div class="rounded-xl p-6 mb-8 text-white" style="background-color: #081249;">
       <div class="flex flex-col md:flex-row md:items-center md:justify-between">
         <div>
           <h1 class="text-3xl font-bold mb-2">Quote Maker</h1>
@@ -519,12 +559,22 @@
     };
     
     // Initialize the application
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', async function() {
+      console.log('🔄 Initializing Quote Maker...');
+      
+      // Wait for Firebase to be ready
+      if (window.firebaseDB) {
+        await window.firebaseDB.initialize();
+      }
+      
+      // Initialize components sequentially
       initializeQuoteMaker();
-      populateSalesRepresentatives();
+      await populateSalesRepresentatives();
       setupEventListeners();
       generateQuoteNumber();
       setCurrentDate();
+      
+      console.log('✅ Quote Maker initialized successfully');
     });
     
     // Initialize Quote Maker
@@ -533,23 +583,48 @@
       updateQuoteDisplay();
     }
     
-    // Populate sales representatives
-    function populateSalesRepresentatives() {
-      const salesmen = [
-        'Rajesh Kumar',
-        'Priya Sharma',
-        'Amit Patel',
-        'Sneha Gupta',
-        'Vikram Singh'
-      ];
-      
+    // Populate sales representatives from Firebase
+    async function populateSalesRepresentatives() {
       const salesmanSelect = document.getElementById('salesman-name');
-      salesmen.forEach(name => {
+      
+      try {
+        // Load from Firebase only
+        if (window.firebaseDB && window.firebaseDB.isAvailable()) {
+          const salesmenData = await window.firebaseDB.getSalesmen();
+          console.log('Loaded salesmen from Firebase:', salesmenData ? salesmenData.length : 0, 'salesmen');
+          
+          if (salesmenData && salesmenData.length > 0) {
+            salesmenData.forEach(salesmanName => {
+              const option = document.createElement('option');
+              option.value = salesmanName;
+              option.textContent = salesmanName;
+              salesmanSelect.appendChild(option);
+            });
+            console.log('Quote maker salesman dropdown populated with', salesmenData.length, 'salesmen');
+          } else {
+            console.warn('No salesmen data found in Firebase');
+            const option = document.createElement('option');
+            option.value = '';
+            option.textContent = 'No salesmen available in Firebase';
+            option.disabled = true;
+            salesmanSelect.appendChild(option);
+          }
+        } else {
+          console.warn('Firebase not available for salesmen data');
+          const option = document.createElement('option');
+          option.value = '';
+          option.textContent = 'Firebase connection required';
+          option.disabled = true;
+          salesmanSelect.appendChild(option);
+        }
+      } catch (error) {
+        console.error('❌ Error loading salesmen from Firebase:', error);
         const option = document.createElement('option');
-        option.value = name;
-        option.textContent = name;
+        option.value = '';
+        option.textContent = 'Firebase connection required';
+        option.disabled = true;
         salesmanSelect.appendChild(option);
-      });
+      }
     }
     
     // Setup event listeners

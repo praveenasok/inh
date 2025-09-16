@@ -1038,6 +1038,102 @@ class FirebaseDatabase {
     }
   }
   
+  // Get Database Statistics
+  async getDatabaseStats() {
+    if (!this.isAvailable()) {
+      throw new Error('Firebase not available');
+    }
+
+    try {
+      const stats = {
+        products: 0,
+        clients: 0,
+        salesmen: 0,
+        priceLists: 0,
+        categories: 0,
+        quotes: 0,
+        orders: 0,
+        lastUpdated: 'Never'
+      };
+
+      // Get products count and extract categories/price lists
+      const productsSnapshot = await this.db.collection('products').get();
+      stats.products = productsSnapshot.size;
+      
+      const categories = new Set();
+      const priceLists = new Set();
+      let lastProductUpdate = null;
+      
+      productsSnapshot.forEach(doc => {
+        const data = doc.data();
+        if (data.Category) categories.add(data.Category);
+        if (data.PriceList || data['Price List Name']) {
+          priceLists.add(data.PriceList || data['Price List Name']);
+        }
+        if (data.updatedAt && (!lastProductUpdate || data.updatedAt > lastProductUpdate)) {
+          lastProductUpdate = data.updatedAt;
+        }
+      });
+      
+      stats.categories = categories.size;
+      stats.priceLists = priceLists.size;
+
+      // Get clients count
+      const clientsSnapshot = await this.db.collection('clients').get();
+      stats.clients = clientsSnapshot.size;
+
+      // Get quotes count
+      const quotesSnapshot = await this.db.collection('quotes').get();
+      stats.quotes = quotesSnapshot.size;
+
+      // Get orders count
+      const ordersSnapshot = await this.db.collection('orders').get();
+      stats.orders = ordersSnapshot.size;
+
+      // Get salesmen count
+      try {
+        const salesmenDoc = await this.db.collection('config').doc('salesmen').get();
+        if (salesmenDoc.exists) {
+          const salesmenData = salesmenDoc.data();
+          stats.salesmen = (salesmenData.list || []).length;
+        }
+      } catch (error) {
+        console.warn('Could not fetch salesmen count:', error);
+      }
+
+      // Set last updated time
+      if (lastProductUpdate) {
+        try {
+          // Handle Firebase Timestamp objects
+          if (lastProductUpdate && typeof lastProductUpdate.toDate === 'function') {
+            stats.lastUpdated = lastProductUpdate.toDate().toLocaleString();
+          } else if (lastProductUpdate && typeof lastProductUpdate.seconds === 'number') {
+            // Handle Firestore Timestamp format
+            stats.lastUpdated = new Date(lastProductUpdate.seconds * 1000).toLocaleString();
+          } else {
+            // Handle regular date strings or numbers
+            const date = new Date(lastProductUpdate);
+            if (!isNaN(date.getTime())) {
+              stats.lastUpdated = date.toLocaleString();
+            } else {
+              stats.lastUpdated = 'Invalid date format';
+            }
+          }
+        } catch (error) {
+          console.warn('Error formatting last update time:', error);
+          stats.lastUpdated = 'Date formatting error';
+        }
+      }
+
+      console.log('📊 Database stats retrieved:', stats);
+      return stats;
+      
+    } catch (error) {
+      console.error('Error getting database stats:', error);
+      throw error;
+    }
+  }
+
   // Enable Real-time Synchronization
   enableRealTimeSync() {
     if (!this.isAvailable()) {

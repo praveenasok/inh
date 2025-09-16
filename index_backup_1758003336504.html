@@ -29,6 +29,9 @@
   
   <!-- Firebase Error Handler -->
   <script src="firebase-error-handler.js"></script>
+  
+  <!-- Unified Button System CSS -->
+  <link rel="stylesheet" href="unified-button-system.css">
 
   <style>
     /* Base responsive styles */
@@ -144,6 +147,55 @@
       border-color: #1d4ed8;
       transform: translateY(-2px);
       box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
+    }
+    
+    /* Navigation link styles */
+    .nav-btn {
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 48px;
+      padding: 12px 16px;
+      font-weight: 500;
+      cursor: pointer;
+      touch-action: manipulation;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+      background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+      border: 2px solid #e2e8f0;
+      box-shadow: 0 4px 12px rgba(71, 85, 105, 0.15);
+    }
+    
+    .nav-btn:hover {
+      text-decoration: none;
+      background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+      border-color: #cbd5e1;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(71, 85, 105, 0.2);
+    }
+    
+    .nav-btn.nav-btn-active {
+      background: #081249;
+      color: white !important;
+      border: 2px solid #081249;
+      box-shadow: 0 4px 12px rgba(8, 18, 73, 0.3);
+    }
+    
+    .nav-btn.nav-btn-active:hover {
+      background: #0a1555;
+      border-color: #0a1555;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(8, 18, 73, 0.4);
+    }
+    
+    /* Remove default link styles */
+    .no-underline {
+      text-decoration: none !important;
+    }
+    
+    .no-underline:hover {
+      text-decoration: none !important;
     }
     
     /* Responsive typography */
@@ -15730,7 +15782,7 @@
 <body class="bg-slate-100 min-h-screen text-slate-800">
 
   <!-- Top Menu Bar -->
-  <header class="bg-white shadow-soft mb-4">
+  <header class="bg-white shadow-soft mb-4 sticky top-0 z-50">
     <div class="max-w-4xl mx-auto px-3 sm:px-6">
       <!-- Header with InstaQuote flush left and logo flush right -->
       <div class="flex items-center justify-between py-3">
@@ -15748,44 +15800,44 @@
       <!-- Navigation Menu below header -->
       <div class="pb-3">
         <nav class="hidden md:flex gap-2 justify-center">
-          <button id="nav-price-calculator" class="nav-btn nav-btn-active btn-primary px-4 py-2 rounded-lg font-medium hover:bg-emerald-700 transition-all duration-200 flex items-center gap-2">
+          <a href="price-calculator.html" class="nav-btn px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 text-gray-700 hover:text-gray-900 no-underline">
             <span>📊</span>
             <span>PriceLists</span>
-          </button>
-          <button id="nav-quote-maker" class="nav-btn px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2">
+          </a>
+          <a href="quote-maker.html" class="nav-btn px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 text-gray-700 hover:text-gray-900 no-underline">
             <span class="text-lg">📋</span>
             <span>Quote Maker</span>
-          </button>
-          <button id="nav-product-catalog" class="nav-btn px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2">
+          </a>
+          <a href="product-catalog.html" class="nav-btn px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 text-gray-700 hover:text-gray-900 no-underline">
             <span class="text-lg">📦</span>
             <span>Product Catalog</span>
-          </button>
-          <button id="nav-admin-panel" class="nav-btn px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2">
+          </a>
+          <a href="admin-panel.html" class="nav-btn px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 text-gray-700 hover:text-gray-900 no-underline">
             <span class="text-lg">⚙️</span>
             <span>Admin Panel</span>
-          </button>
+          </a>
         </nav>
       </div>
       
       <!-- Mobile Navigation Menu -->
       <nav class="md:hidden pb-3">
         <div class="flex flex-wrap justify-center gap-2">
-          <button id="nav-price-calculator-mobile" class="nav-btn nav-btn-active btn-primary px-3 py-2 rounded-lg font-medium hover:bg-emerald-700 transition-all duration-200 flex items-center gap-1 text-sm">
+          <a href="price-calculator.html" class="nav-btn px-3 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-1 text-sm text-gray-700 hover:text-gray-900 no-underline">
             <span>📊</span>
             <span>PriceLists</span>
-          </button>
-          <button id="nav-quote-maker-mobile" class="nav-btn px-3 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-1 text-sm">
+          </a>
+          <a href="quote-maker.html" class="nav-btn px-3 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-1 text-sm text-gray-700 hover:text-gray-900 no-underline">
             <span>📋</span>
             <span>Quote</span>
-          </button>
-          <button id="nav-product-catalog-mobile" class="nav-btn px-3 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-1 text-sm">
+          </a>
+          <a href="product-catalog.html" class="nav-btn px-3 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-1 text-sm text-gray-700 hover:text-gray-900 no-underline">
             <span>📦</span>
             <span>Catalog</span>
-          </button>
-          <button id="nav-admin-panel-mobile" class="nav-btn px-3 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-1 text-sm">
+          </a>
+          <a href="admin-panel.html" class="nav-btn px-3 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-1 text-sm text-gray-700 hover:text-gray-900 no-underline">
             <span>⚙️</span>
             <span>Admin</span>
-          </button>
+          </a>
         </div>
       </nav>
     </div>

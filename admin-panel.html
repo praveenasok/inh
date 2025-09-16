@@ -7,7 +7,17 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
+    
     <script src="firebase-config.js"></script>
+    <script src="firebase-database.js"></script>
+    <script src="firebase-error-handler.js"></script>
     <script src="firebase-db.js"></script>
     <script src="client-management.js"></script>
     <script src="exchange-rates.js"></script>
@@ -89,75 +99,124 @@
                 display: block;
             }
         }
+        
+        /* Navigation link styles */
+        .nav-btn {
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 48px;
+            padding: 12px 16px;
+            font-weight: 500;
+            cursor: pointer;
+            touch-action: manipulation;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            border: 2px solid #e2e8f0;
+            box-shadow: 0 4px 12px rgba(71, 85, 105, 0.15);
+        }
+        
+        .nav-btn:hover {
+            text-decoration: none;
+            background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+            border-color: #cbd5e1;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(71, 85, 105, 0.2);
+        }
+        
+        .nav-btn.nav-btn-active {
+            background: #081249;
+            color: white !important;
+            border: 2px solid #081249;
+            box-shadow: 0 4px 12px rgba(8, 18, 73, 0.3);
+        }
+        
+        .nav-btn.nav-btn-active:hover {
+            background: #0a1555;
+            border-color: #0a1555;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(8, 18, 73, 0.4);
+        }
+        
+        /* Remove default link styles */
+        .no-underline {
+            text-decoration: none !important;
+        }
+        
+        .no-underline:hover {
+            text-decoration: none !important;
+        }
     </style>
 </head>
 <body class="bg-gray-50">
-    <!-- Header -->
-    <header class="bg-white shadow-soft mb-4">
-      <div class="max-w-4xl mx-auto px-3 sm:px-6">
-        <!-- Header with InstaQuote flush left and logo flush right -->
-        <div class="flex items-center justify-between py-3">
-          <!-- InstaQuote heading flush left -->
-          <h1 class="text-xl sm:text-2xl lg:text-3xl font-bold" style="line-height: 0.7;">
-            <span style="color: #081249;">Insta</span><span style="color: #9b7952;">Q</span><span style="color: #081249;">uote</span>
-          </h1>
-          
-          <!-- Logo flush right -->
-          <div class="flex-shrink-0">
-            <img src="images/logo.png" alt="Company Logo" class="h-12 sm:h-16 w-auto opacity-75 hover:opacity-100 transition-opacity duration-200">
-          </div>
-        </div>
+  <!-- Top Menu Bar -->
+  <header class="bg-white shadow-soft mb-4 sticky top-0 z-50">
+    <div class="max-w-4xl mx-auto px-3 sm:px-6">
+      <!-- Header with InstaQuote flush left and logo flush right -->
+      <div class="flex items-center justify-between py-3">
+        <!-- InstaQuote heading flush left -->
+        <h1 class="text-xl sm:text-2xl lg:text-3xl font-bold" style="line-height: 0.7;">
+          <span style="color: #081249;">Insta</span><span style="color: #9b7952;">Q</span><span style="color: #081249;">uote</span>
+        </h1>
         
-        <!-- Navigation Menu below header -->
-        <div class="pb-3">
-          <nav class="hidden md:flex gap-2 justify-center">
-            <a href="price-calculator.html" class="nav-btn px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2">
-              <span>📊</span>
-              <span>PriceLists</span>
-            </a>
-            <a href="quote-maker.html" class="nav-btn px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2">
-              <span class="text-lg">📋</span>
-              <span>Quote Maker</span>
-            </a>
-            <a href="product-catalog.html" class="nav-btn px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2">
-              <span class="text-lg">📦</span>
-              <span>Product Catalog</span>
-            </a>
-            <a href="admin-panel.html" class="nav-btn nav-btn-active btn-primary px-4 py-2 rounded-lg font-medium hover:bg-emerald-700 transition-all duration-200 flex items-center gap-2">
-              <span class="text-lg">⚙️</span>
-              <span>Admin Panel</span>
-            </a>
-          </nav>
+        <!-- Logo flush right -->
+        <div class="flex-shrink-0">
+          <img src="images/logo.png" alt="Company Logo" class="h-12 sm:h-16 w-auto opacity-75 hover:opacity-100 transition-opacity duration-200">
         </div>
-        
-        <!-- Mobile Navigation Menu -->
-        <nav class="md:hidden pb-3">
-          <div class="flex flex-wrap justify-center gap-2">
-            <a href="price-calculator.html" class="nav-btn px-3 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-1 text-sm">
-              <span>📊</span>
-              <span>PriceLists</span>
-            </a>
-            <a href="quote-maker.html" class="nav-btn px-3 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-1 text-sm">
-              <span>📋</span>
-              <span>Quote</span>
-            </a>
-            <a href="product-catalog.html" class="nav-btn px-3 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-1 text-sm">
-              <span>📦</span>
-              <span>Catalog</span>
-            </a>
-            <a href="admin-panel.html" class="nav-btn nav-btn-active btn-primary px-3 py-2 rounded-lg font-medium hover:bg-emerald-700 transition-all duration-200 flex items-center gap-1 text-sm">
-              <span>⚙️</span>
-              <span>Admin</span>
-            </a>
-          </div>
+      </div>
+      
+      <!-- Navigation Menu below header -->
+      <div class="pb-3">
+        <nav class="hidden md:flex gap-2 justify-center">
+          <a href="price-calculator.html" class="nav-btn px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 text-gray-700 hover:text-gray-900 no-underline">
+            <span>📊</span>
+            <span>PriceLists</span>
+          </a>
+          <a href="quote-maker.html" class="nav-btn px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 text-gray-700 hover:text-gray-900 no-underline">
+            <span class="text-lg">📋</span>
+            <span>Quote Maker</span>
+          </a>
+          <a href="product-catalog.html" class="nav-btn px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 text-gray-700 hover:text-gray-900 no-underline">
+            <span class="text-lg">📦</span>
+            <span>Product Catalog</span>
+          </a>
+          <a href="admin-panel.html" class="nav-btn nav-btn-active btn-primary px-4 py-2 rounded-lg font-medium hover:bg-emerald-700 transition-all duration-200 flex items-center gap-2 text-white no-underline">
+            <span class="text-lg">⚙️</span>
+            <span>Admin Panel</span>
+          </a>
         </nav>
       </div>
-    </header>
+      
+      <!-- Mobile Navigation Menu -->
+      <nav class="md:hidden pb-3">
+        <div class="flex flex-wrap justify-center gap-2">
+          <a href="price-calculator.html" class="nav-btn px-3 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-1 text-sm text-gray-700 hover:text-gray-900 no-underline">
+            <span>📊</span>
+            <span>PriceLists</span>
+          </a>
+          <a href="quote-maker.html" class="nav-btn px-3 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-1 text-sm text-gray-700 hover:text-gray-900 no-underline">
+            <span>📋</span>
+            <span>Quote</span>
+          </a>
+          <a href="product-catalog.html" class="nav-btn px-3 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-1 text-sm text-gray-700 hover:text-gray-900 no-underline">
+            <span>📦</span>
+            <span>Catalog</span>
+          </a>
+          <a href="admin-panel.html" class="nav-btn nav-btn-active btn-primary px-3 py-2 rounded-lg font-medium hover:bg-emerald-700 transition-all duration-200 flex items-center gap-1 text-sm text-white no-underline">
+            <span>⚙️</span>
+            <span>Admin</span>
+          </a>
+        </div>
+      </nav>
+    </div>
+  </header>
 
     <!-- Admin Panel Module -->
     <div class="container mx-auto px-4 py-6">
         <!-- Enhanced Admin Panel Header -->
-        <div class="bg-gradient-to-r from-purple-600 to-blue-600 rounded-xl p-6 mb-8 text-white">
+        <div class="rounded-xl p-6 mb-8 text-white" style="background-color: #081249;">
             <div class="flex flex-col md:flex-row md:items-center md:justify-between">
                 <div>
                     <h1 class="text-3xl font-bold mb-2">Admin Panel</h1>
@@ -210,21 +269,75 @@
                         </div>
                     </div>
 
-                    <!-- Status Section -->
+                    <!-- Database Statistics Section -->
                     <div class="bg-white rounded-xl shadow-soft p-4 sm:p-6 mb-4 mobile-padding" style="background: #f8fafc;">
-                        <h3 class="section-heading">System Status</h3>
-                        <div class="space-y-3">
+                        <h3 class="section-heading flex items-center gap-2">
+                            📊 Database Statistics
+                            <button onclick="refreshDatabaseStats()" class="text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 px-2 py-1 rounded-full transition-colors" title="Refresh Statistics">
+                                🔄 Refresh
+                            </button>
+                        </h3>
+                        
+                        <!-- Connection Status -->
+                        <div class="mb-4 p-3 bg-gray-50 rounded-lg">
                             <div class="flex justify-between items-center">
-                                <span class="text-gray-600">Firebase Connection</span>
+                                <span class="text-gray-600 font-medium">Firebase Connection</span>
                                 <span id="firebase-status" class="px-2 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-700">Checking...</span>
                             </div>
-                            <div class="flex justify-between items-center">
-                                <span class="text-gray-600">Last Data Update</span>
+                            <div class="flex justify-between items-center mt-2">
+                                <span class="text-gray-600">Last Updated</span>
                                 <span id="last-update" class="text-sm text-gray-500">Never</span>
                             </div>
-                            <div class="flex justify-between items-center">
-                                <span class="text-gray-600">Total Products</span>
-                                <span id="products-count" class="text-sm font-medium">0</span>
+                        </div>
+                        
+                        <!-- Statistics Grid -->
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            <!-- Products -->
+                            <div class="bg-blue-50 p-3 rounded-lg text-center">
+                                <div class="text-2xl font-bold text-blue-600" id="products-count">0</div>
+                                <div class="text-xs text-blue-700 font-medium">Products</div>
+                            </div>
+                            
+                            <!-- Clients -->
+                            <div class="bg-green-50 p-3 rounded-lg text-center">
+                                <div class="text-2xl font-bold text-green-600" id="clients-count">0</div>
+                                <div class="text-xs text-green-700 font-medium">Clients</div>
+                            </div>
+                            
+                            <!-- Quotes -->
+                            <div class="bg-purple-50 p-3 rounded-lg text-center">
+                                <div class="text-2xl font-bold text-purple-600" id="quotes-count">0</div>
+                                <div class="text-xs text-purple-700 font-medium">Quotes</div>
+                            </div>
+                            
+                            <!-- Orders -->
+                            <div class="bg-orange-50 p-3 rounded-lg text-center">
+                                <div class="text-2xl font-bold text-orange-600" id="orders-count">0</div>
+                                <div class="text-xs text-orange-700 font-medium">Orders</div>
+                            </div>
+                            
+                            <!-- Salesmen -->
+                            <div class="bg-indigo-50 p-3 rounded-lg text-center">
+                                <div class="text-2xl font-bold text-indigo-600" id="salesmen-count">0</div>
+                                <div class="text-xs text-indigo-700 font-medium">Salesmen</div>
+                            </div>
+                            
+                            <!-- Price Lists -->
+                            <div class="bg-pink-50 p-3 rounded-lg text-center">
+                                <div class="text-2xl font-bold text-pink-600" id="pricelists-count">0</div>
+                                <div class="text-xs text-pink-700 font-medium">Price Lists</div>
+                            </div>
+                            
+                            <!-- Categories -->
+                            <div class="bg-teal-50 p-3 rounded-lg text-center">
+                                <div class="text-2xl font-bold text-teal-600" id="categories-count">0</div>
+                                <div class="text-xs text-teal-700 font-medium">Categories</div>
+                            </div>
+                            
+                            <!-- Loading Indicator -->
+                            <div class="bg-gray-50 p-3 rounded-lg text-center" id="stats-loading" style="display: none;">
+                                <div class="text-2xl">⏳</div>
+                                <div class="text-xs text-gray-600 font-medium">Loading...</div>
                             </div>
                         </div>
                     </div>
@@ -835,33 +948,133 @@
 
         async function updateDatabaseStatus() {
             try {
+                const firebaseStatus = document.getElementById('firebase-status');
+                const lastUpdate = document.getElementById('last-update');
+                
                 if (window.firebaseDB && window.firebaseDB.isAvailable()) {
-                    const stats = await window.firebaseDB.getDatabaseStats();
-                    
-                    document.getElementById('db-products-count').textContent = stats.products || 0;
-                    document.getElementById('db-pricelists-count').textContent = stats.priceLists || 0;
-                    document.getElementById('db-salesmen-count').textContent = stats.salesmen || 0;
-                    document.getElementById('db-last-updated').textContent = stats.lastUpdated || 'Never';
-                    
-                    // Update main status indicators
-                    document.getElementById('products-count').textContent = stats.products || 0;
-                    document.getElementById('last-update').textContent = stats.lastUpdated || 'Never';
-                    
-                    const firebaseStatus = document.getElementById('firebase-status');
                     if (firebaseStatus) {
                         firebaseStatus.textContent = 'Connected';
                         firebaseStatus.className = 'px-2 py-1 rounded-full text-xs font-medium bg-green-200 text-green-700';
                     }
+                    
+                    // Get and display database statistics
+                    await refreshDatabaseStats();
                 } else {
-                    const firebaseStatus = document.getElementById('firebase-status');
                     if (firebaseStatus) {
                         firebaseStatus.textContent = 'Disconnected';
                         firebaseStatus.className = 'px-2 py-1 rounded-full text-xs font-medium bg-red-200 text-red-700';
                     }
+                    
+                    // Reset all counts to 0
+                    resetDatabaseStats();
+                    if (lastUpdate) lastUpdate.textContent = 'Never';
                 }
             } catch (error) {
                 console.error('Error updating database status:', error);
+                
+                // Fallback status
+                const firebaseStatus = document.getElementById('firebase-status');
+                if (firebaseStatus) {
+                    firebaseStatus.textContent = 'Error';
+                    firebaseStatus.className = 'px-2 py-1 rounded-full text-xs font-medium bg-red-200 text-red-700';
+                }
+                resetDatabaseStats();
             }
+        }
+        
+        async function refreshDatabaseStats() {
+            try {
+                // Show loading indicator
+                const loadingElement = document.getElementById('stats-loading');
+                if (loadingElement) loadingElement.style.display = 'block';
+                
+                // Check Firebase availability
+                if (!window.firebaseDB) {
+                    throw new Error('Firebase database service not initialized');
+                }
+                
+                if (!window.firebaseDB.isAvailable()) {
+                    throw new Error('Firebase not available - check connection and authentication');
+                }
+                
+                console.log('📊 Refreshing database statistics...');
+                
+                // Add timeout to prevent hanging
+                const timeoutPromise = new Promise((_, reject) => {
+                    setTimeout(() => reject(new Error('Database stats request timed out')), 30000);
+                });
+                
+                const statsPromise = window.firebaseDB.getDatabaseStats();
+                const stats = await Promise.race([statsPromise, timeoutPromise]);
+                
+                if (!stats) {
+                    throw new Error('No data returned from database stats');
+                }
+                
+                // Update all stat elements
+                const elements = {
+                    'products-count': stats.products || 0,
+                    'clients-count': stats.clients || 0,
+                    'salesmen-count': stats.salesmen || 0,
+                    'pricelists-count': stats.priceLists || 0,
+                    'categories-count': stats.categories || 0,
+                    'quotes-count': stats.quotes || 0,
+                    'orders-count': stats.orders || 0,
+                    'last-update': stats.lastUpdated || 'Never'
+                };
+                
+                Object.entries(elements).forEach(([id, value]) => {
+                    const element = document.getElementById(id);
+                    if (element) {
+                        element.textContent = value;
+                    }
+                });
+                
+                console.log('✅ Database statistics updated:', stats);
+                
+                // Update last update with success message
+                const lastUpdate = document.getElementById('last-update');
+                if (lastUpdate && stats.lastUpdated === 'Never') {
+                    lastUpdate.textContent = 'Just updated';
+                }
+                
+            } catch (error) {
+                console.error('❌ Error refreshing database stats:', error);
+                
+                // Show specific error message
+                const lastUpdate = document.getElementById('last-update');
+                if (lastUpdate) {
+                    if (error.message.includes('timeout')) {
+                        lastUpdate.textContent = 'Request timeout - try again';
+                    } else if (error.message.includes('permission')) {
+                        lastUpdate.textContent = 'Permission denied - check auth';
+                    } else if (error.message.includes('not available')) {
+                        lastUpdate.textContent = 'Firebase not connected';
+                    } else {
+                        lastUpdate.textContent = 'Error loading stats';
+                    }
+                }
+                
+                // Reset all counts to 0 on error
+                resetDatabaseStats();
+                
+            } finally {
+                // Hide loading indicator
+                const loadingElement = document.getElementById('stats-loading');
+                if (loadingElement) loadingElement.style.display = 'none';
+            }
+        }
+        
+        function resetDatabaseStats() {
+            const statIds = [
+                'products-count', 'clients-count', 'salesmen-count',
+                'pricelists-count', 'categories-count', 'quotes-count', 'orders-count'
+            ];
+            
+            statIds.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) element.textContent = '0';
+            });
         }
 
         function logAuditEvent(action, details) {
@@ -1167,6 +1380,253 @@
                 initClientManagement();
             }
         });
+        
+        // Admin Modal Functions
+        function openAdminModal() {
+            document.getElementById('adminModal').classList.remove('hidden');
+            setTimeout(() => {
+                const modal = document.querySelector('#adminModal .bg-white');
+                modal.classList.remove('scale-95', 'opacity-0');
+                modal.classList.add('scale-100', 'opacity-100');
+            }, 10);
+            checkAuthStatus();
+        }
+        
+        function closeAdminModal() {
+            const modal = document.querySelector('#adminModal .bg-white');
+            modal.classList.remove('scale-100', 'opacity-100');
+            modal.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                document.getElementById('adminModal').classList.add('hidden');
+            }, 300);
+        }
+        
+        // Check authentication status
+         function checkAuthStatus() {
+             const authStatus = document.getElementById('authStatus');
+             const loginSection = document.getElementById('loginSection');
+             const logoutBtn = document.getElementById('logoutBtn');
+             
+             // Ensure elements exist
+             if (!authStatus || !loginSection) {
+                 console.error('Auth elements not found');
+                 return;
+             }
+             
+             // Show login form by default
+             loginSection.classList.remove('hidden');
+             if (logoutBtn) logoutBtn.classList.add('hidden');
+             
+             if (typeof firebase !== 'undefined' && firebase.auth) {
+                 firebase.auth().onAuthStateChanged((user) => {
+                     if (user && user.email === 'info@indiannaturalhair.com') {
+                         // Admin is logged in
+                         authStatus.innerHTML = `
+                             <div class="flex items-center gap-2">
+                                 <div class="w-2 h-2 rounded-full bg-green-500"></div>
+                                 <span>✅ Authenticated as ${user.email}</span>
+                             </div>`;
+                         authStatus.className = 'mb-3 p-2 rounded-lg text-sm bg-green-50 border border-green-200';
+                         
+                         loginSection.classList.add('hidden');
+                         if (logoutBtn) logoutBtn.classList.remove('hidden');
+                     } else if (user) {
+                         // User logged in but not admin
+                         authStatus.innerHTML = `
+                             <div class="flex items-center gap-2">
+                                 <div class="w-2 h-2 rounded-full bg-yellow-500"></div>
+                                 <span>⚠️ Not authorized (${user.email})</span>
+                             </div>`;
+                         authStatus.className = 'mb-3 p-2 rounded-lg text-sm bg-yellow-50 border border-yellow-200';
+                         
+                         loginSection.classList.add('hidden');
+                         if (logoutBtn) logoutBtn.classList.remove('hidden');
+                     } else {
+                         // Not logged in
+                         authStatus.innerHTML = `
+                             <div class="flex items-center gap-2">
+                                 <div class="w-2 h-2 rounded-full bg-red-500"></div>
+                                 <span>❌ Not authenticated</span>
+                             </div>`;
+                         authStatus.className = 'mb-3 p-2 rounded-lg text-sm bg-red-50 border border-red-200';
+                         
+                         loginSection.classList.remove('hidden');
+                         if (logoutBtn) logoutBtn.classList.add('hidden');
+                     }
+                 });
+             } else {
+                 // Firebase not available - show login form
+                 authStatus.innerHTML = `
+                     <div class="flex items-center gap-2">
+                         <div class="w-2 h-2 rounded-full bg-gray-500"></div>
+                         <span>⚠️ Firebase not available - Please refresh page</span>
+                     </div>`;
+                 authStatus.className = 'mb-3 p-2 rounded-lg text-sm bg-gray-50 border border-gray-200';
+                 
+                 loginSection.classList.remove('hidden');
+                 if (logoutBtn) logoutBtn.classList.add('hidden');
+             }
+         }
+         
+         // Initialize authentication handlers
+         document.addEventListener('DOMContentLoaded', function() {
+             // Login handler
+             const loginBtn = document.getElementById('loginBtn');
+             const logoutBtn = document.getElementById('logoutBtn');
+             const adminEmail = document.getElementById('adminEmail');
+             const adminPassword = document.getElementById('adminPassword');
+             
+             if (loginBtn) {
+                 loginBtn.addEventListener('click', async () => {
+                     if (typeof firebase === 'undefined' || !firebase.auth) {
+                         alert('Firebase authentication not available');
+                         return;
+                     }
+                     
+                     const email = adminEmail.value;
+                     const password = adminPassword.value;
+                     
+                     if (!email || !password) {
+                         alert('Please enter both email and password');
+                         return;
+                     }
+                     
+                     const loginText = loginBtn.querySelector('.login-text');
+                     const loginLoading = loginBtn.querySelector('.login-loading');
+                     loginText.classList.add('hidden');
+                     loginLoading.classList.remove('hidden');
+                     loginBtn.disabled = true;
+                     
+                     try {
+                         await firebase.auth().signInWithEmailAndPassword(email, password);
+                         adminPassword.value = ''; // Clear password
+                     } catch (error) {
+                         console.error('Login error:', error);
+                         let errorMessage = 'Login failed';
+                         
+                         if (error.code === 'auth/user-not-found') {
+                             errorMessage = 'User not found';
+                         } else if (error.code === 'auth/wrong-password') {
+                             errorMessage = 'Incorrect password';
+                         } else if (error.code === 'auth/invalid-email') {
+                             errorMessage = 'Invalid email address';
+                         } else {
+                             errorMessage = `Login failed: ${error.message}`;
+                         }
+                         
+                         alert(errorMessage);
+                     } finally {
+                         loginText.classList.remove('hidden');
+                         loginLoading.classList.add('hidden');
+                         loginBtn.disabled = false;
+                     }
+                 });
+             }
+             
+             // Logout handler
+             if (logoutBtn) {
+                 logoutBtn.addEventListener('click', async () => {
+                     try {
+                         await firebase.auth().signOut();
+                     } catch (error) {
+                         console.error('Logout error:', error);
+                         alert(`Logout failed: ${error.message}`);
+                     }
+                 });
+             }
+             
+             // Allow Enter key to trigger login
+             if (adminPassword) {
+                 adminPassword.addEventListener('keypress', (e) => {
+                     if (e.key === 'Enter' && loginBtn && !loginBtn.disabled) {
+                         loginBtn.click();
+                     }
+                 });
+             }
+         });
     </script>
+    
+    <!-- Admin Panel Modal -->
+    <div id="adminModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden transition-opacity duration-300">
+        <div class="bg-white rounded-lg p-4 sm:p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto transform transition-all duration-300 scale-95 opacity-0">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">Admin Panel</h3>
+                <button onclick="closeAdminModal()" class="text-gray-500 hover:text-gray-700 transition-colors duration-200 p-1 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-300">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="space-y-4">
+                <!-- Firebase Excel Upload Section -->
+                <div class="border rounded-lg p-4 bg-gradient-to-r from-orange-50 to-red-50 border-orange-200">
+                    <h4 class="font-medium text-gray-700 mb-2 flex items-center gap-2">
+                        🔥 Firebase Excel Upload
+                        <span class="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full">SECURE</span>
+                    </h4>
+                    <p class="text-sm text-gray-600 mb-3">Upload Excel files to Firebase database with real-time synchronization</p>
+                    
+                    <!-- Authentication Status -->
+                    <div id="authStatus" class="mb-3 p-2 rounded-lg text-sm">
+                        <div class="flex items-center gap-2">
+                            <div id="authIndicator" class="w-2 h-2 rounded-full bg-gray-400"></div>
+                            <span id="authText">Checking authentication...</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Firebase Login Section -->
+                    <div id="loginSection" class="hidden mb-3 p-3 bg-white rounded-lg border">
+                        <h5 class="font-medium text-gray-700 mb-2">Admin Login Required</h5>
+                        <div class="space-y-2">
+                            <input type="email" id="adminEmail" placeholder="Admin Email" value="info@indiannaturalhair.com" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-300">
+                            <input type="password" id="adminPassword" placeholder="Password" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-300">
+                            <div class="flex gap-2">
+                                <button id="loginBtn" class="flex-1 px-3 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition-all duration-200">
+                                    <span class="login-text">🔐 Login</span>
+                                    <span class="login-loading hidden">⏳ Logging in...</span>
+                                </button>
+                                <button id="logoutBtn" class="hidden flex-1 px-3 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg text-sm font-medium transition-all duration-200">
+                                    🚪 Logout
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- File Upload Section -->
+                    <div id="uploadSection" class="space-y-3">
+                        <div class="relative">
+                            <input type="file" id="excelFile" accept=".xlsx,.xls" class="hidden">
+                            <button id="selectFileBtn" class="w-full px-4 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition-all duration-200 hover:transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-orange-300 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] touch-manipulation">
+                                <span class="select-text">📁 Select Excel File</span>
+                            </button>
+                        </div>
+                        
+                        <div id="fileInfo" class="hidden bg-white p-3 rounded-lg border">
+                            <div class="text-sm text-gray-600">
+                                <div><strong>File:</strong> <span id="fileName"></span></div>
+                                <div><strong>Size:</strong> <span id="fileSize"></span></div>
+                                <div><strong>Type:</strong> <span id="fileType"></span></div>
+                            </div>
+                        </div>
+                        
+                        <button id="uploadBtn" class="hidden w-full px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-all duration-200 hover:transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-300 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] touch-manipulation">
+                            <span class="upload-text">🚀 Upload to Firebase</span>
+                            <span class="upload-loading hidden">⏳ Uploading...</span>
+                        </button>
+                        
+                        <div id="uploadProgress" class="hidden">
+                            <div class="bg-gray-200 rounded-full h-2">
+                                <div id="progressBar" class="bg-orange-500 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                            </div>
+                            <div class="text-sm text-gray-600 mt-1 text-center">
+                                <span id="progressText">Preparing upload...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Firebase Connection Test</title>
+  
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  
+  <!-- Firebase Configuration -->
+  <script src="firebase-config.js"></script>
+</head>
+<body>
+  <h1>Firebase Connection Test</h1>
+  <div id="status">Testing Firebase connection...</div>
+  <div id="results"></div>
+  
+  <script>
+    async function testFirebaseConnection() {
+      const statusDiv = document.getElementById('status');
+      const resultsDiv = document.getElementById('results');
+      
+      try {
+        statusDiv.innerHTML = '🔄 Checking Firebase availability...';
+        
+        // Check if Firebase is loaded
+        if (typeof firebase === 'undefined') {
+          throw new Error('Firebase SDK not loaded');
+        }
+        
+        statusDiv.innerHTML = '🔄 Initializing Firestore...';
+        
+        // Get Firestore instance
+        const db = firebase.firestore();
+        
+        statusDiv.innerHTML = '🔄 Querying products collection...';
+        
+        // Try to get products
+        const snapshot = await db.collection('products').limit(5).get();
+        
+        statusDiv.innerHTML = '✅ Firebase connection successful!';
+        
+        const products = [];
+        snapshot.forEach(doc => {
+          products.push({ id: doc.id, ...doc.data() });
+        });
+        
+        resultsDiv.innerHTML = `
+          <h2>Test Results:</h2>
+          <p><strong>Products found:</strong> ${products.length}</p>
+          <h3>Sample Products:</h3>
+          <pre>${JSON.stringify(products, null, 2)}</pre>
+        `;
+        
+        console.log('✅ Firebase test successful:', products);
+        
+      } catch (error) {
+        statusDiv.innerHTML = '❌ Firebase connection failed!';
+        resultsDiv.innerHTML = `
+          <h2>Error Details:</h2>
+          <p><strong>Error:</strong> ${error.message}</p>
+          <pre>${error.stack}</pre>
+        `;
+        
+        console.error('❌ Firebase test failed:', error);
+      }
+    }
+    
+    // Run test when page loads
+    document.addEventListener('DOMContentLoaded', testFirebaseConnection);
+  </script>
+</body>
+</html>
