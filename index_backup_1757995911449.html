@@ -149,55 +149,6 @@
       box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
     }
     
-    /* Navigation link styles */
-    .nav-btn {
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 48px;
-      padding: 12px 16px;
-      font-weight: 500;
-      cursor: pointer;
-      touch-action: manipulation;
-      border-radius: 8px;
-      transition: all 0.2s ease;
-      background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
-      border: 2px solid #e2e8f0;
-      box-shadow: 0 4px 12px rgba(71, 85, 105, 0.15);
-    }
-    
-    .nav-btn:hover {
-      text-decoration: none;
-      background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
-      border-color: #cbd5e1;
-      transform: translateY(-1px);
-      box-shadow: 0 6px 16px rgba(71, 85, 105, 0.2);
-    }
-    
-    .nav-btn.nav-btn-active {
-      background: #081249;
-      color: white !important;
-      border: 2px solid #081249;
-      box-shadow: 0 4px 12px rgba(8, 18, 73, 0.3);
-    }
-    
-    .nav-btn.nav-btn-active:hover {
-      background: #0a1555;
-      border-color: #0a1555;
-      transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(8, 18, 73, 0.4);
-    }
-    
-    /* Remove default link styles */
-    .no-underline {
-      text-decoration: none !important;
-    }
-    
-    .no-underline:hover {
-      text-decoration: none !important;
-    }
-    
     /* Responsive typography */
     .chip { 
       display: inline-flex; 
@@ -15782,7 +15733,7 @@
 <body class="bg-slate-100 min-h-screen text-slate-800">
 
   <!-- Top Menu Bar -->
-  <header class="bg-white shadow-soft mb-4 sticky top-0 z-50">
+  <header class="bg-white shadow-soft mb-4">
     <div class="max-w-4xl mx-auto px-3 sm:px-6">
       <!-- Header with InstaQuote flush left and logo flush right -->
       <div class="flex items-center justify-between py-3">
@@ -15800,44 +15751,44 @@
       <!-- Navigation Menu below header -->
       <div class="pb-3">
         <nav class="hidden md:flex gap-2 justify-center">
-          <a href="price-calculator.html" class="nav-btn px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 text-gray-700 hover:text-gray-900 no-underline">
+          <button id="nav-price-calculator" class="nav-btn nav-btn-active btn-primary px-4 py-2 rounded-lg font-medium hover:bg-emerald-700 transition-all duration-200 flex items-center gap-2">
             <span>📊</span>
             <span>PriceLists</span>
-          </a>
-          <a href="quote-maker.html" class="nav-btn px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 text-gray-700 hover:text-gray-900 no-underline">
+          </button>
+          <button id="nav-quote-maker" class="nav-btn px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2">
             <span class="text-lg">📋</span>
             <span>Quote Maker</span>
-          </a>
-          <a href="product-catalog.html" class="nav-btn px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 text-gray-700 hover:text-gray-900 no-underline">
+          </button>
+          <button id="nav-product-catalog" class="nav-btn px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2">
             <span class="text-lg">📦</span>
             <span>Product Catalog</span>
-          </a>
-          <a href="admin-panel.html" class="nav-btn px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 text-gray-700 hover:text-gray-900 no-underline">
+          </button>
+          <button id="nav-admin-panel" class="nav-btn px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2">
             <span class="text-lg">⚙️</span>
             <span>Admin Panel</span>
-          </a>
+          </button>
         </nav>
       </div>
       
       <!-- Mobile Navigation Menu -->
       <nav class="md:hidden pb-3">
         <div class="flex flex-wrap justify-center gap-2">
-          <a href="price-calculator.html" class="nav-btn px-3 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-1 text-sm text-gray-700 hover:text-gray-900 no-underline">
+          <button id="nav-price-calculator-mobile" class="nav-btn nav-btn-active btn-primary px-3 py-2 rounded-lg font-medium hover:bg-emerald-700 transition-all duration-200 flex items-center gap-1 text-sm">
             <span>📊</span>
             <span>PriceLists</span>
-          </a>
-          <a href="quote-maker.html" class="nav-btn px-3 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-1 text-sm text-gray-700 hover:text-gray-900 no-underline">
+          </button>
+          <button id="nav-quote-maker-mobile" class="nav-btn px-3 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-1 text-sm">
             <span>📋</span>
             <span>Quote</span>
-          </a>
-          <a href="product-catalog.html" class="nav-btn px-3 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-1 text-sm text-gray-700 hover:text-gray-900 no-underline">
+          </button>
+          <button id="nav-product-catalog-mobile" class="nav-btn px-3 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-1 text-sm">
             <span>📦</span>
             <span>Catalog</span>
-          </a>
-          <a href="admin-panel.html" class="nav-btn px-3 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-1 text-sm text-gray-700 hover:text-gray-900 no-underline">
+          </button>
+          <button id="nav-admin-panel-mobile" class="nav-btn px-3 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-1 text-sm">
             <span>⚙️</span>
             <span>Admin</span>
-          </a>
+          </button>
         </div>
       </nav>
     </div>
@@ -15848,65 +15799,40 @@
     <!-- Module Content Container -->
     <div id="module-container">
       
-      <!-- Auto-redirect to Quote Maker -->
-      <script>
-        // Automatically redirect to Quote Maker on page load
-        window.location.href = 'quote-maker.html';
-      </script>
-      
-      <!-- Welcome Section (fallback if redirect fails) -->
-      <div class="text-center py-12">
-        <h2 class="text-3xl font-bold text-gray-800 mb-4">Redirecting to Quote Maker...</h2>
-        <p class="text-lg text-gray-600 mb-8">If you are not redirected automatically, <a href="quote-maker.html" class="text-blue-600 hover:text-blue-800 underline">click here</a>.</p>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <a href="price-calculator.html" class="bg-white p-6 rounded-xl shadow-soft hover:shadow-lg transition-all duration-200 hover:transform hover:scale-105">
-            <div class="text-4xl mb-4">📊</div>
-            <h3 class="text-xl font-semibold text-gray-800 mb-2">Price Lists</h3>
-            <p class="text-gray-600">Generate and manage price lists with multi-currency support</p>
-          </a>
-          <a href="quote-maker.html" class="bg-white p-6 rounded-xl shadow-soft hover:shadow-lg transition-all duration-200 hover:transform hover:scale-105">
-            <div class="text-4xl mb-4">📋</div>
-            <h3 class="text-xl font-semibold text-gray-800 mb-2">Quote Maker</h3>
-            <p class="text-gray-600">Create professional quotes with dynamic pricing</p>
-          </a>
-          <a href="product-catalog.html" class="bg-white p-6 rounded-xl shadow-soft hover:shadow-lg transition-all duration-200 hover:transform hover:scale-105">
-            <div class="text-4xl mb-4">📦</div>
-            <h3 class="text-xl font-semibold text-gray-800 mb-2">Product Catalog</h3>
-            <p class="text-gray-600">Browse and explore our comprehensive product collection</p>
-          </a>
-          <a href="admin-panel.html" class="bg-white p-6 rounded-xl shadow-soft hover:shadow-lg transition-all duration-200 hover:transform hover:scale-105">
-            <div class="text-4xl mb-4">⚙️</div>
-            <h3 class="text-xl font-semibold text-gray-800 mb-2">Admin Panel</h3>
-            <p class="text-gray-600">Manage data, clients, and system settings</p>
-          </a>
-        </div>
-      </div>
-      
-    </div> <!-- End Module Container -->
-  </div>
-
-  <!-- Admin Panel Modal -->
-  <div id="adminModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden transition-opacity duration-300">
-    <div class="bg-white rounded-lg p-4 sm:p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto transform transition-all duration-300 scale-95 opacity-0">
-      <div class="flex items-center justify-between mb-4">
-        <h3 class="text-lg font-semibold text-gray-800">Admin Panel</h3>
-        <button id="closeAdmin" class="text-gray-500 hover:text-gray-700 transition-colors duration-200 p-1 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-300">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-          </svg>
-        </button>
-      </div>
-      
-      <div class="space-y-4">
-        <!-- Firebase Excel Upload Section -->
-        <div class="border rounded-lg p-4 bg-gradient-to-r from-orange-50 to-red-50 border-orange-200">
-          <h4 class="font-medium text-gray-700 mb-2 flex items-center gap-2">
-            🔥 Firebase Excel Upload
-            <span class="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full">SECURE</span>
-          </h4>
-          <p class="text-sm text-gray-600 mb-3">Upload Excel files to Firebase database with real-time synchronization</p>
-          
-          <!-- Authentication Status -->
+      <!-- Price List Calculator Module -->
+      <div id="price-calculator-module" class="module-content">
+        <!-- Controls Section -->
+        <div class="card-responsive section-spacing">
+          <!-- First Row: Price List, Currency, Factor, Salesman -->
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+            <!-- Price List Selector -->
+            <div>
+              <select id="priceListSelector" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
+                <option value="">Select Price List</option>
+              </select>
+            </div>
+            
+            <!-- Currency Selector -->
+            <div>
+              <select id="currency" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
+                <option value="INR">₹ INR - Indian Rupee</option>
+                <option value="USD">$ USD - US Dollar</option>
+                <option value="EUR">€ EUR - Euro</option>
+                <option value="GBP">£ GBP - British Pound</option>
+                <option value="AUD">A$ AUD - Australian Dollar</option>
+                <option value="SAR">SAR - Saudi Riyal</option>
+                <option value="NGN">₦ NGN - Nigerian Naira</option>
+                <option value="AED">د.إ AED - UAE Dirham</option>
+                <option value="JPY">¥ JPY - Japanese Yen</option>
+              </select>
+            </div>
+            
+            <!-- Factor Input -->
+            <div>
+              <input type="number" id="priceFactor" value="" min="-100" max="1000" step="0.1" 
+                     class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none" 
+                     placeholder="Price Factor (%)"
+                     title="Price adjustment percentage: empty = no change, 10 = 10% increase, -10 = 10% decrease">
             </div>
             
             <!-- Salesman Selector -->
@@ -31087,15 +31013,25 @@
         }
         
       } catch (error) {
-        console.error('❌ Error loading categories from Firebase:', error);
-        
-        // Show error message - no fallback data
-        elCategory.innerHTML = '<option value="" disabled>Firebase connection required</option>';
-        elCategory.disabled = true;
-        
-        // Clear category selection
-        state.category = '';
-        elCategory.value = '';
+        // Use centralized error handling
+        handlePriceListModuleFirebaseError(error, 'category-loading', () => {
+          // Fallback: try to use existing state.filteredProducts
+          if (state.filteredProducts && state.filteredProducts.length > 0) {
+            console.log('📦 Using existing filtered products as fallback for categories');
+            // Re-attempt category population with existing data
+            const categories = [...new Set(state.filteredProducts.map(product => product.Category).filter(Boolean))];
+            if (categories.length > 0) {
+              elCategory.innerHTML = '<option value="">Select Category</option>';
+              categories.forEach(category => {
+                const option = document.createElement('option');
+                option.value = category;
+                option.textContent = category;
+                elCategory.appendChild(option);
+              });
+              elCategory.disabled = false;
+            }
+          }
+        });
       }
     }
 
@@ -50417,49 +50353,74 @@
       try {
         let salesmenData = null;
         
-        // Load from Firebase only
+        // Try to load from Firebase first
         if (window.firebaseDB && window.firebaseDB.isAvailable()) {
           salesmenData = await window.firebaseDB.getSalesmen();
           console.log('Loaded salesmen from Firebase:', salesmenData ? salesmenData.length : 0, 'salesmen');
-          
-          if (salesmenData && salesmenData.length > 0) {
-            populateSalesmanOptions(salesmenData);
-            
-            // Restore previously selected salesman from localStorage
-            const savedSalesman = localStorage.getItem('priceCalculatorSelectedSalesman');
-            if (savedSalesman && salesmanSelector.querySelector(`option[value="${savedSalesman}"]`)) {
-              salesmanSelector.value = savedSalesman;
-            }
-            
-            console.log('Price calculator salesman dropdown initialized with', salesmenData.length, 'salesmen');
-          } else {
-            console.warn('No salesmen data found in Firebase');
-            // Show error message in dropdown
-            const option = document.createElement('option');
-            option.value = '';
-            option.textContent = 'No salesmen available in Firebase';
-            option.disabled = true;
-            salesmanSelector.appendChild(option);
+        }
+        
+        // Fallback to cached data if Firebase fails
+        if (!salesmenData || salesmenData.length === 0) {
+          if (window.cachedSalesmenData && window.cachedSalesmenTimestamp && 
+              (Date.now() - window.cachedSalesmenTimestamp) < 300000) { // 5 minute cache
+            salesmenData = window.cachedSalesmenData;
+            console.log('Using cached salesmen data:', salesmenData.length, 'salesmen');
           }
+        }
+        
+        // Fallback to embedded data if both Firebase and cache fail
+        if (!salesmenData || salesmenData.length === 0) {
+          // Check for embedded salesmen data
+          if (window.embeddedSalesmenData && Array.isArray(window.embeddedSalesmenData)) {
+            salesmenData = window.embeddedSalesmenData;
+            console.log('Using embedded salesmen data:', salesmenData.length, 'salesmen');
+          } else {
+            // Try to extract from embedded data
+            const embeddedElement = document.getElementById('EMBEDDED_DATA');
+            if (embeddedElement) {
+              const embeddedData = JSON.parse(embeddedElement.textContent);
+              if (embeddedData.salesmen && Array.isArray(embeddedData.salesmen)) {
+                salesmenData = embeddedData.salesmen;
+                window.embeddedSalesmenData = salesmenData;
+                console.log('Extracted salesmen from embedded data:', salesmenData.length, 'salesmen');
+              }
+            }
+          }
+        }
+        
+        if (salesmenData && salesmenData.length > 0) {
+          // Cache the data
+          window.cachedSalesmenData = salesmenData;
+          window.cachedSalesmenTimestamp = Date.now();
+          
+          populateSalesmanOptions(salesmenData);
+          
+          // Restore previously selected salesman from localStorage
+          const savedSalesman = localStorage.getItem('priceCalculatorSelectedSalesman');
+          if (savedSalesman && salesmanSelector.querySelector(`option[value="${savedSalesman}"]`)) {
+            salesmanSelector.value = savedSalesman;
+          }
+          
+          console.log('Price calculator salesman dropdown initialized with', salesmenData.length, 'salesmen');
         } else {
-          console.warn('Firebase not available for salesmen data');
+          console.warn('No salesmen data found from any source');
           // Show error message in dropdown
           const option = document.createElement('option');
           option.value = '';
-          option.textContent = 'Firebase connection required';
+          option.textContent = 'No salesmen available';
           option.disabled = true;
           salesmanSelector.appendChild(option);
         }
         
       } catch (error) {
-        console.error('❌ Error loading salesmen from Firebase:', error);
-        
-        // Show error message - no fallback data
-        const option = document.createElement('option');
-        option.value = '';
-        option.textContent = 'Firebase connection required';
-        option.disabled = true;
-        salesmanSelector.appendChild(option);
+        // Use centralized error handling
+        handlePriceListModuleFirebaseError(error, 'salesman-loading', () => {
+          // Fallback: try to use cached or embedded data
+          if (window.embeddedSalesmenData && window.embeddedSalesmenData.length > 0) {
+            console.log('📦 Using embedded salesmen data as fallback');
+            populateSalesmanOptions(window.embeddedSalesmenData);
+          }
+        });
       }
       
       // Add event listener to save selection
@@ -50542,21 +50503,44 @@
               handlePriceListChange();
             }
             
-            return; // Successfully loaded from Firebase
+            return; // Successfully loaded from Firebase, no need for fallback
           }
         }
         
-        console.log('❌ Firebase not available or no products found');
+        console.log('⚠️ Firebase not available or no products found, trying fallback...');
         
-        // No fallback data - show error message
-        priceListSelector.innerHTML = '';
-        const errorOption = document.createElement('option');
-        errorOption.value = '';
-        errorOption.textContent = 'Firebase connection required';
-        errorOption.disabled = true;
-        priceListSelector.appendChild(errorOption);
         
-        console.log('❌ No price list data available - Firebase connection required');
+        // Fallback: try to use existing availablePriceLists or load from embedded data
+        if (availablePriceLists.size === 0 && state.allProducts && state.allProducts.length > 0) {
+          console.log('📦 Using embedded data as fallback for price lists');
+          const priceLists = new Set();
+          state.allProducts.forEach(product => {
+            if (product && (product.PriceListName || product.PriceList || product['Price List Name'])) {
+              const priceListName = product.PriceListName || product.PriceList || product['Price List Name'];
+              if (priceListName && priceListName !== 'N/A' && priceListName.trim() !== '') {
+                priceLists.add(priceListName);
+              }
+            }
+          });
+          availablePriceLists = priceLists;
+          
+          // Populate dropdown with fallback data
+          priceListSelector.innerHTML = '';
+          const defaultOption = document.createElement('option');
+          defaultOption.value = '';
+          defaultOption.textContent = 'Select Price List';
+          priceListSelector.appendChild(defaultOption);
+          
+          const sortedPriceLists = Array.from(availablePriceLists).sort();
+          sortedPriceLists.forEach(priceList => {
+            const option = document.createElement('option');
+            option.value = priceList;
+            option.textContent = priceList;
+            priceListSelector.appendChild(option);
+          });
+          
+          console.log(`📦 Fallback: populated dropdown with ${sortedPriceLists.length} price lists`);
+        }
         
       } catch (error) {
         console.error('❌ Error loading price lists:', error);
@@ -50621,33 +50605,53 @@
     
     // --------- Error Handling Functions ---------
     
-    // Firebase-only error handling - no fallback actions
-    function handlePriceListModuleFirebaseError(error, operation) {
+    // Centralized error handling for Firebase operations in price-list-module
+    function handlePriceListModuleFirebaseError(error, operation, fallbackAction = null) {
       console.error(`❌ Firebase error in ${operation}:`, error);
       
       // Determine error type and appropriate response
-      let userMessage = 'Firebase connection required';
+      let userMessage = 'Unable to load data from server';
+      let shouldRetry = false;
       
       if (error.code) {
         switch (error.code) {
           case 'permission-denied':
-            userMessage = 'Firebase access denied. Please check authentication.';
+            userMessage = 'Access denied. Please check your permissions.';
             break;
           case 'unavailable':
-            userMessage = 'Firebase service unavailable.';
+            userMessage = 'Service temporarily unavailable. Retrying...';
+            shouldRetry = true;
             break;
           case 'network-request-failed':
-            userMessage = 'Network error. Please check Firebase connection.';
+            userMessage = 'Network error. Please check your connection.';
+            shouldRetry = true;
             break;
           default:
-            userMessage = `Firebase error: ${error.message || 'Unknown error occurred'}`;
+            userMessage = `Error: ${error.message || 'Unknown error occurred'}`;
         }
       }
       
       // Show user-friendly error message
       showPriceListModuleError(userMessage, operation);
       
-      return { userMessage };
+      // Execute fallback action if provided
+      if (fallbackAction && typeof fallbackAction === 'function') {
+        try {
+          fallbackAction();
+        } catch (fallbackError) {
+          console.error(`❌ Fallback action failed for ${operation}:`, fallbackError);
+        }
+      }
+      
+      // Auto-retry for certain error types
+      if (shouldRetry) {
+        setTimeout(() => {
+          console.log(`🔄 Retrying ${operation}...`);
+          retryFirebaseOperation(operation);
+        }, 3000);
+      }
+      
+      return { userMessage, shouldRetry };
     }
     
     // Show error message in relevant dropdown
@@ -51014,9 +51018,35 @@
     }
     
     
-    // Firebase-only data loading - no localStorage fallback
+    // Load data from localStorage on page load
     function loadStoredData() {
-      console.log('📋 Firebase-only mode: localStorage fallback disabled');
+      try {
+        const storedData = localStorage.getItem('productData');
+        const timestamp = localStorage.getItem('productDataTimestamp');
+        
+        if (storedData && timestamp) {
+          const parsedData = JSON.parse(storedData);
+          if (parsedData && parsedData.length > 0) {
+            // Update application data
+            state.allProducts = parsedData;
+            state.filteredProducts = [...parsedData];
+            window.productData = parsedData;
+            
+            console.log(`Loaded ${parsedData.length} products from localStorage (updated: ${timestamp})`);
+            
+            // Debug: Check first product structure
+            if (parsedData[0]) {
+              console.log('First product structure:', Object.keys(parsedData[0]));
+              console.log('First product PriceList field:', parsedData[0].PriceList);
+              console.log('First product Price List field:', parsedData[0]['Price List']);
+            }
+            
+            return true;
+          }
+        }
+      } catch (error) {
+        console.error('Error loading stored data:', error);
+      }
       return false;
     }
     

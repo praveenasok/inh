@@ -1,0 +1,2289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes"/>
+  <title>Price List Calculator — InstaQuote</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- jsPDF for PDF export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <!-- html2canvas for HTML to canvas conversion -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <!-- SheetJS for Excel parsing -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
+  
+  <!-- Firebase Configuration -->
+  <script src="firebase-config.js"></script>
+  
+  <!-- Firebase Database Service -->
+  <script src="firebase-database.js"></script>
+  <script src="firebase-storage-replacement.js"></script>
+  <script src="google-sheets-config.js"></script>
+  
+  <!-- Firebase Error Handler -->
+  <script src="firebase-error-handler.js"></script>
+  
+  <!-- Unified Button System -->
+  <link rel="stylesheet" href="unified-button-system.css">
+
+  <style>
+    /* Custom CSS for responsive design and styling */
+    .mobile-padding { padding: 1rem; }
+    .shadow-soft { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+    /* Button styles now handled by unified-button-system.css */
+    .chip { @apply inline-block px-3 py-1 text-xs font-medium rounded-full; }
+    
+    /* Mobile-first responsive design */
+    @media (max-width: 640px) {
+      .mobile-padding { padding: 0.75rem; }
+      .text-lg { font-size: 1rem; }
+      .text-xl { font-size: 1.125rem; }
+      .grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+      .gap-4 { gap: 0.75rem; }
+      .gap-6 { gap: 1rem; }
+      .p-4 { padding: 0.75rem; }
+      .p-6 { padding: 1rem; }
+      .px-4 { padding-left: 0.75rem; padding-right: 0.75rem; }
+      .py-8 { padding-top: 1.5rem; padding-bottom: 1.5rem; }
+    }
+    
+    @media (max-width: 480px) {
+      .mobile-padding { padding: 0.5rem; }
+      .text-base { font-size: 0.875rem; }
+      .text-lg { font-size: 0.875rem; }
+      .text-xl { font-size: 1rem; }
+      .gap-2 { gap: 0.375rem; }
+      .gap-3 { gap: 0.5rem; }
+      .gap-4 { gap: 0.5rem; }
+      .p-2 { padding: 0.375rem; }
+      .p-4 { padding: 0.5rem; }
+      .px-3 { padding-left: 0.5rem; padding-right: 0.5rem; }
+      .py-2 { padding-top: 0.375rem; padding-bottom: 0.375rem; }
+    }
+    
+    /* Form elements styling */
+    input, select, textarea {
+      transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+    
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    
+    /* Card hover effects */
+    .card-hover {
+      transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+    
+    .card-hover:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+    
+    /* Navigation styles */
+    .nav-button {
+      transition: all 0.2s ease-in-out;
+    }
+    
+    .nav-button:hover {
+      background-color: #f3f4f6;
+      transform: translateY(-1px);
+    }
+    
+    .nav-button.active {
+      background-color: #3b82f6;
+      color: white;
+    }
+    
+    /* Loading spinner animation */
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    
+    .loading-spinner {
+      animation: spin 1s linear infinite;
+    }
+    
+    /* Enhanced button styles with better touch targets */
+    button {
+      min-height: 48px;
+      padding: 12px 16px;
+      font-weight: 500;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+    
+    button:focus { 
+      outline: 3px solid #3b82f6; 
+      outline-offset: 2px; 
+    }
+    
+    button:disabled { 
+      cursor: not-allowed; 
+      opacity: 0.6;
+    }
+    
+    /* Button styles now handled by unified-button-system.css */
+    
+    /* Responsive navigation */
+    @media (max-width: 640px) {
+      .nav-btn span:last-child {
+        display: none;
+      }
+      
+      .nav-btn {
+        min-width: 60px;
+        justify-content: center;
+      }
+    }
+    
+    /* Mobile-first responsive breakpoints */
+    @media (max-width: 640px) { 
+      .stack-mobile { 
+        flex-direction: column; 
+        gap: 1rem;
+      }
+      
+      /* Enhanced mobile typography */
+      body {
+        font-size: 16px; /* Prevents zoom on iOS */
+        line-height: 1.7;
+      }
+      
+      /* Better spacing on mobile */
+      .mobile-padding {
+        padding: 1rem;
+      }
+      
+      /* Full-width elements on mobile */
+      .mobile-full {
+        width: 100%;
+      }
+      
+      /* Hide less important elements on very small screens */
+      .mobile-hide {
+        display: none;
+      }
+      
+      /* Improved mobile text spacing */
+      p, div, span {
+        line-height: 1.7;
+      }
+      
+      /* Better button text on mobile */
+      button {
+        font-size: 16px;
+        line-height: 1.4;
+        letter-spacing: 0.025em;
+      }
+      
+      /* Make icons 2x bigger on mobile */
+      .md\:hidden button span:first-child,
+      .mobile-full span[aria-hidden="true"],
+      button span.text-base,
+      button span.text-lg {
+        font-size: 2em !important;
+        line-height: 1;
+      }
+    }
+    
+    /* Navigation link styles */
+    .nav-btn {
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 48px;
+      padding: 12px 16px;
+      font-weight: 500;
+      cursor: pointer;
+      touch-action: manipulation;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+      background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+      border: 2px solid #e2e8f0;
+      box-shadow: 0 4px 12px rgba(71, 85, 105, 0.15);
+    }
+    
+    .nav-btn:hover {
+      text-decoration: none;
+      background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+      border-color: #cbd5e1;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(71, 85, 105, 0.2);
+    }
+    
+    .nav-btn.nav-btn-active {
+      background: #081249;
+      color: white !important;
+      border: 2px solid #081249;
+      box-shadow: 0 4px 12px rgba(8, 18, 73, 0.3);
+    }
+    
+    .nav-btn.nav-btn-active:hover {
+      background: #0a1555;
+      border-color: #0a1555;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(8, 18, 73, 0.4);
+    }
+    
+    /* Remove default link styles */
+    .no-underline {
+      text-decoration: none !important;
+    }
+    
+    .no-underline:hover {
+      text-decoration: none !important;
+    }
+  </style>
+  <script src="main-functions.js"></script>
+</head>
+<body class="bg-gray-50 min-h-screen text-slate-800">
+  <!-- Top Menu Bar -->
+  <header class="bg-white shadow-soft mb-4 sticky top-0 z-50">
+    <div class="max-w-4xl mx-auto px-3 sm:px-6">
+      <!-- Header with InstaQuote flush left and logo flush right -->
+      <div class="flex items-center justify-between py-3">
+        <!-- InstaQuote heading flush left -->
+        <h1 class="text-xl sm:text-2xl lg:text-3xl font-bold" style="line-height: 0.7;">
+          <span style="color: #081249;">Insta</span><span style="color: #9b7952;">Q</span><span style="color: #081249;">uote</span>
+        </h1>
+        
+        <!-- Logo flush right -->
+        <div class="flex-shrink-0">
+          <img src="images/logo.png" alt="Company Logo" class="h-12 sm:h-16 w-auto opacity-75 hover:opacity-100 transition-opacity duration-200">
+        </div>
+      </div>
+      
+      <!-- Navigation Menu below header -->
+      <div class="pb-3">
+        <nav class="hidden md:flex gap-2 justify-center">
+          <a href="price-calculator.html" class="nav-btn nav-btn-active btn-primary px-4 py-2 rounded-lg font-medium hover:bg-emerald-700 transition-all duration-200 flex items-center gap-2 text-white no-underline">
+            <span>📊</span>
+            <span>PriceLists</span>
+          </a>
+          <a href="quote-maker.html" class="nav-btn px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 text-gray-700 hover:text-gray-900 no-underline">
+            <span class="text-lg">📋</span>
+            <span>Quote Maker</span>
+          </a>
+          <a href="product-catalog.html" class="nav-btn px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 text-gray-700 hover:text-gray-900 no-underline">
+            <span class="text-lg">📦</span>
+            <span>Product Catalog</span>
+          </a>
+          <a href="admin-panel.html" class="nav-btn px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 text-gray-700 hover:text-gray-900 no-underline">
+            <span class="text-lg">⚙️</span>
+            <span>Admin Panel</span>
+          </a>
+        </nav>
+      </div>
+      
+      <!-- Mobile Navigation Menu -->
+      <nav class="md:hidden pb-3">
+        <div class="flex flex-wrap justify-center gap-2">
+          <a href="price-calculator.html" class="nav-btn nav-btn-active btn-primary px-3 py-2 rounded-lg font-medium hover:bg-emerald-700 transition-all duration-200 flex items-center gap-1 text-sm text-white no-underline">
+            <span>📊</span>
+            <span>PriceLists</span>
+          </a>
+          <a href="quote-maker.html" class="nav-btn px-3 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-1 text-sm text-gray-700 hover:text-gray-900 no-underline">
+            <span>📋</span>
+            <span>Quote</span>
+          </a>
+          <a href="product-catalog.html" class="nav-btn px-3 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-1 text-sm text-gray-700 hover:text-gray-900 no-underline">
+            <span>📦</span>
+            <span>Catalog</span>
+          </a>
+          <a href="admin-panel.html" class="nav-btn px-3 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-1 text-sm text-gray-700 hover:text-gray-900 no-underline">
+            <span>⚙️</span>
+            <span>Admin</span>
+          </a>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container mx-auto px-4 py-6">
+    <!-- Page Header -->
+    <div class="rounded-xl p-6 mb-8 text-white" style="background-color: #081249;">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+        <div>
+          <h1 class="text-3xl font-bold mb-2">Price List Calculator</h1>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Price List Calculator Content will be inserted here -->
+    <div id="price-calculator-content">
+      
+      <!-- Price List Calculator Module Content -->
+      <section class="bg-white rounded-xl shadow-soft p-4 sm:p-6 mb-4 mobile-padding" style="background: #eef2ff;">
+        <div class="flex items-center justify-between mb-4">
+          <span class="chip no-print" id="price-chip">Ready</span>
+        </div>
+        
+        <!-- Controls -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+          <div>
+            <select id="price-list" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
+              <option value="">Select Price List</option>
+            </select>
+          </div>
+          <div>
+            <select id="currency" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
+              <option value="INR" selected>INR (₹) - Indian Rupee</option>
+              <option value="USD">USD ($) - US Dollar</option>
+              <option value="EUR">EUR (€) - Euro</option>
+              <option value="GBP">GBP (£) - British Pound</option>
+              <option value="AUD">AUD (A$) - Australian Dollar</option>
+              <option value="AED">AED (د.إ) - UAE Dirham</option>
+              <option value="NGN">NGN (₦) - Nigerian Naira</option>
+              <option value="SAR">SAR (SAR) - Saudi Riyal</option>
+              <option value="JPY">JPY (¥) - Japanese Yen</option>
+            </select>
+          </div>
+          <div>
+            <input type="number" id="factor" value="1" step="0.01" min="0.01" placeholder="Factor" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none" />
+          </div>
+          <div>
+            <select id="salesman" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
+              <option value="">Select Sales Representative</option>
+            </select>
+          </div>
+          <div>
+            <select id="category" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
+              <option value="">All Categories</option>
+            </select>
+          </div>
+          <div class="flex items-center gap-2">
+            <input type="checkbox" id="kg-toggle" class="w-5 h-5 text-blue-600 border-2 border-gray-300 rounded focus:ring-blue-500 focus:ring-2" />
+            <label for="kg-toggle" class="text-sm font-medium text-gray-700">Price per KG</label>
+          </div>
+        </div>
+        
+        <!-- Product/Density/Color Dropdowns -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div>
+            <select id="product" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
+              <option value="">All Products</option>
+            </select>
+          </div>
+          <div>
+            <select id="density" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
+              <option value="">All Densities</option>
+            </select>
+          </div>
+          <div>
+            <select id="color" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
+              <option value="">All Colors</option>
+            </select>
+          </div>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="flex flex-wrap gap-3 mb-6">
+          <button onclick="clearAll()" class="btn-secondary">
+            <span>🗑️</span> <span>Clear All</span>
+          </button>
+          <button onclick="generatePreview()" class="btn-primary">
+            <span>📋</span> <span>Generate Preview</span>
+          </button>
+        </div>
+      </section>
+      
+      <!-- Preview Section -->
+      <section id="preview-section" class="bg-white rounded-xl shadow-soft p-4 sm:p-6 mobile-padding" style="display: none;">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="section-heading">Preview</h3>
+          <div class="flex gap-2">
+            <div class="relative">
+              <button id="shareMenuBtn" onclick="toggleShareMenu()" class="btn-success btn-sm">
+                <span>📤</span> <span>Share</span>
+                <span class="ml-1">▼</span>
+              </button>
+              
+              <!-- Share Dropdown Menu -->
+                <div id="shareDropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50 min-w-48">
+                  <button onclick="downloadPDFFromMenu()" class="w-full text-left px-2 md:px-4 py-2 hover:bg-gray-100 flex items-center gap-2">
+                    <span>📄</span> <span class="hidden md:inline">Share PDF</span>
+                  </button>
+                </div>
+            </div>
+          </div>
+        </div>
+        <div id="htmlPreview" class="border border-gray-200 rounded-lg p-4 bg-gray-50"></div>
+      </section>
+      
+      <!-- Footer with Asset Info -->
+      <footer class="mt-8 text-center text-sm text-gray-500">
+        <p>© 2024 Indian Natural Hair Pvt Ltd. All rights reserved.</p>
+        <p class="mt-1">Made with f10w</p>
+        <p class="mt-1">Asset Version: 2.1.0 | Last Updated: January 2024</p>
+      </footer>
+    </div>
+  </div>
+
+  <script>
+    // FX API Configuration
+    const FX_API_KEY = 'fca_live_VQSyOjJhKJhGGJhGGJhGGJhGGJhGGJhG';
+    const FX_API_URL = 'https://api.freecurrencyapi.com/v1/latest';
+    
+    // Supported currencies with their symbols
+    const SUPPORTED_CURRENCIES = {
+      'INR': { symbol: '₹', name: 'Indian Rupee' },
+      'USD': { symbol: '$', name: 'US Dollar' },
+      'EUR': { symbol: '€', name: 'Euro' },
+      'GBP': { symbol: '£', name: 'British Pound' },
+      'AUD': { symbol: 'A$', name: 'Australian Dollar' },
+      'SAR': { symbol: 'SAR ', name: 'Saudi Riyal' },
+      'NGN': { symbol: '₦', name: 'Nigerian Naira' },
+      'AED': { symbol: 'د.إ ', name: 'UAE Dirham' },
+      'JPY': { symbol: '¥', name: 'Japanese Yen' }
+    };
+    
+    // Default exchange rates (fallback)
+    const DEFAULT_RATES = {
+      'INR': 1,
+      'USD': 0.012,
+      'EUR': 0.011,
+      'GBP': 0.0095,
+      'AUD': 0.018,
+      'SAR': 0.045,
+      'NGN': 19.2,
+      'AED': 0.044,
+      'JPY': 1.8
+    };
+    
+    // Product data will be loaded here
+    let productData = [];
+    
+    // Application state
+    let state = {
+      segments: [],
+      currency: 'INR',
+      factor: 1,
+      kg: false,
+      salesman: '',
+      exchangeRates: DEFAULT_RATES
+    };
+    
+    // Initialize the application
+    document.addEventListener('DOMContentLoaded', async function() {
+      console.log('🔄 Initializing Price Calculator...');
+      
+      try {
+        // Wait for Firebase to be ready
+        if (window.firebaseDB) {
+          await window.firebaseDB.initialize();
+        }
+        
+        // Load data sequentially
+        await loadProductData();
+        await populatePriceListDropdown();
+        await loadExchangeRates();
+        await populateSalesRepresentatives();
+        setupEventListeners();
+        
+        // Set default price list to INDIA25
+        const priceListSelect = document.getElementById('price-list');
+        if (priceListSelect.querySelector('option[value="INDIA25"]')) {
+          priceListSelect.value = 'INDIA25';
+          // Trigger change event to populate categories
+          priceListSelect.dispatchEvent(new Event('change'));
+        }
+        
+        console.log('✅ Price Calculator initialized successfully');
+        
+      } catch (error) {
+        console.error('❌ Price Calculator initialization failed:', error);
+        showInitializationError(error);
+      }
+    });
+    
+    // Simplified Firebase connection check
+    function checkFirebaseAvailability() {
+      if (typeof firebase === 'undefined') {
+        throw new Error('Firebase SDK not loaded');
+      }
+      
+      try {
+        const db = firebase.firestore();
+        console.log('✅ Firebase Firestore is available');
+        return db;
+      } catch (error) {
+        throw new Error(`Firebase initialization failed: ${error.message}`);
+      }
+    }
+    
+    // Show initialization error to user
+    function showInitializationError(error) {
+      const errorMessage = `
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          <h3 class="font-bold">Initialization Error</h3>
+          <p class="text-sm mt-1">${error.message}</p>
+          <p class="text-xs mt-2">Please refresh the page or check your internet connection.</p>
+          <button onclick="location.reload()" class="mt-2 bg-red-500 text-white px-3 py-1 rounded text-xs hover:bg-red-600">
+            Refresh Page
+          </button>
+        </div>
+      `;
+      
+      // Insert error message at the top of the content
+      const contentDiv = document.getElementById('price-calculator-content');
+      if (contentDiv) {
+        contentDiv.insertAdjacentHTML('afterbegin', errorMessage);
+      }
+    }
+    
+    // Load product data from Firebase only
+    async function loadProductData() {
+      try {
+        // Load from Firebase only
+        if (window.firebaseDB && window.firebaseDB.isAvailable()) {
+          const products = await window.firebaseDB.getProducts();
+          console.log('Loaded products from Firebase:', products ? products.length : 0, 'products');
+          
+          if (products && products.length > 0) {
+            productData = products;
+            console.log('Price calculator product data loaded successfully');
+          } else {
+            console.warn('No product data found in Firebase');
+            productData = [];
+          }
+        } else {
+          console.warn('Firebase not available for product data');
+          productData = [];
+        }
+      } catch (error) {
+        console.error('❌ Error loading products from Firebase:', error);
+        productData = [];
+      }
+    }
+    
+    // Populate price list dropdown from loaded product data
+    async function populatePriceListDropdown() {
+      const priceListSelect = document.getElementById('price-list');
+      
+      try {
+        console.log('🔄 Populating price list dropdown...');
+        
+        if (productData && productData.length > 0) {
+          // Extract unique price lists from product data
+          const priceLists = new Set();
+          productData.forEach(product => {
+            if (product && (product.PriceListName || product.PriceList || product['Price List Name'])) {
+              const priceListName = product.PriceListName || product.PriceList || product['Price List Name'];
+              if (priceListName && priceListName !== 'N/A' && priceListName.trim() !== '') {
+                priceLists.add(priceListName);
+              }
+            }
+          });
+          
+          console.log(`📋 Found price lists: ${Array.from(priceLists).join(', ')}`);
+          
+          // Clear existing options except the first one
+          while (priceListSelect.children.length > 1) {
+            priceListSelect.removeChild(priceListSelect.lastChild);
+          }
+          
+          // Add price list options
+          const sortedPriceLists = Array.from(priceLists).sort();
+          
+          if (sortedPriceLists.length === 0) {
+            const option = document.createElement('option');
+            option.value = '';
+            option.textContent = 'No price lists available';
+            option.disabled = true;
+            priceListSelect.appendChild(option);
+            console.log('⚠️ No valid price lists found in product data');
+          } else {
+            sortedPriceLists.forEach(priceList => {
+              const option = document.createElement('option');
+              option.value = priceList;
+              option.textContent = priceList;
+              priceListSelect.appendChild(option);
+            });
+            
+            console.log(`✅ Price list dropdown populated with ${sortedPriceLists.length} options`);
+          }
+        } else {
+          console.warn('No product data available for price list extraction');
+          const option = document.createElement('option');
+          option.value = '';
+          option.textContent = 'No product data available';
+          option.disabled = true;
+          priceListSelect.appendChild(option);
+        }
+      } catch (error) {
+        console.error('❌ Error populating price list dropdown:', error);
+        const option = document.createElement('option');
+        option.value = '';
+        option.textContent = 'Error loading price lists';
+        option.disabled = true;
+        priceListSelect.appendChild(option);
+      }
+    }
+    
+    // Load exchange rates
+    async function loadExchangeRates() {
+      try {
+        const response = await fetch(`${FX_API_URL}?apikey=${FX_API_KEY}&base_currency=INR`);
+        const data = await response.json();
+        if (data && data.data) {
+          state.exchangeRates = { INR: 1, ...data.data };
+        }
+      } catch (error) {
+        console.warn('Failed to load exchange rates, using defaults:', error);
+      }
+    }
+    
+    // Populate sales representatives from Firebase
+    async function populateSalesRepresentatives() {
+      const salesmanSelect = document.getElementById('salesman');
+      
+      try {
+        // Load from Firebase only
+        if (window.firebaseDB && window.firebaseDB.isAvailable()) {
+          const salesmenData = await window.firebaseDB.getSalesmen();
+          console.log('Loaded salesmen from Firebase:', salesmenData ? salesmenData.length : 0, 'salesmen');
+          
+          if (salesmenData && salesmenData.length > 0) {
+            salesmenData.forEach(salesmanName => {
+              const option = document.createElement('option');
+              option.value = salesmanName;
+              option.textContent = salesmanName;
+              salesmanSelect.appendChild(option);
+            });
+            console.log('Price calculator salesman dropdown populated with', salesmenData.length, 'salesmen');
+          } else {
+            console.warn('No salesmen data found in Firebase');
+            const option = document.createElement('option');
+            option.value = '';
+            option.textContent = 'No salesmen available in Firebase';
+            option.disabled = true;
+            salesmanSelect.appendChild(option);
+          }
+        } else {
+          console.warn('Firebase not available for salesmen data');
+          const option = document.createElement('option');
+          option.value = '';
+          option.textContent = 'Firebase connection required';
+          option.disabled = true;
+          salesmanSelect.appendChild(option);
+        }
+      } catch (error) {
+        console.error('❌ Error loading salesmen from Firebase:', error);
+        const option = document.createElement('option');
+        option.value = '';
+        option.textContent = 'Firebase connection required';
+        option.disabled = true;
+        salesmanSelect.appendChild(option);
+      }
+    }
+    
+    // Update KG option visibility based on category
+    function updateKgOptionVisibility(priceList, category) {
+      const kgToggleContainer = document.getElementById('kg-toggle').parentElement;
+      
+      try {
+        if (!priceList || !category || !productData || productData.length === 0) {
+          // Hide kg option if no price list/category selected or no data
+          kgToggleContainer.style.display = 'none';
+          document.getElementById('kg-toggle').checked = false;
+          state.kg = false;
+          return;
+        }
+        
+        // Check if any products in this category can be sold in KG
+        const canSellInKg = productData.some(product => {
+          const productPriceList = product.PriceListName || product.PriceList || product['Price List Name'];
+          const productCategory = product.Category;
+          const canBeSoldInKG = product['Can Be Sold in KG?'] || product.CanBeSoldInKG || product.BundledSalesKG;
+          
+          return productPriceList === priceList && 
+                 productCategory === category && 
+                 (canBeSoldInKG === 'Y' || canBeSoldInKG === 'y' || canBeSoldInKG === true);
+        });
+        
+        if (canSellInKg) {
+          kgToggleContainer.style.display = 'flex';
+          console.log(`✅ KG option enabled for category: ${category}`);
+        } else {
+          kgToggleContainer.style.display = 'none';
+          document.getElementById('kg-toggle').checked = false;
+          state.kg = false;
+          console.log(`❌ KG option disabled for category: ${category}`);
+        }
+        
+      } catch (error) {
+        console.error('❌ Error updating KG option visibility:', error);
+        kgToggleContainer.style.display = 'none';
+      }
+    }
+    
+    // Setup event listeners
+    function setupEventListeners() {
+      // Initialize kg option as hidden
+      const kgToggleContainer = document.getElementById('kg-toggle').parentElement;
+      kgToggleContainer.style.display = 'none';
+      
+      // Currency change listener with real-time preview update
+      document.getElementById('currency').addEventListener('change', function() {
+        state.currency = this.value;
+        updatePriceDisplay();
+        // Update preview in real-time if it exists
+        if (state.segments.length > 0) {
+          generatePreview();
+        }
+      });
+      
+      // Factor input listener with real-time preview update
+      document.getElementById('factor').addEventListener('input', function() {
+        state.factor = parseFloat(this.value) || 1;
+        updatePriceDisplay();
+        // Update preview in real-time if it exists
+        if (state.segments.length > 0) {
+          generatePreview();
+        }
+      });
+      
+      // Price per kg toggle listener with real-time preview update
+      document.getElementById('kg-toggle').addEventListener('change', function() {
+        state.kg = this.checked;
+        updatePriceDisplay();
+        // Update preview in real-time if it exists
+        if (state.segments.length > 0) {
+          generatePreview();
+        }
+      });
+      
+      // Price list change listener with currency auto-selection
+      document.getElementById('price-list').addEventListener('change', function() {
+        const selectedPriceList = this.value;
+        
+        // Auto-select currency based on price list
+        if (selectedPriceList === 'USA25') {
+          document.getElementById('currency').value = 'USD';
+          state.currency = 'USD';
+        }
+        
+        // Clear dependent dropdowns first, but not category since we're about to populate it
+        clearDependentDropdowns(['product', 'density', 'color']);
+        // Hide kg option when price list changes
+        updateKgOptionVisibility(selectedPriceList, '');
+        // Then populate categories based on selected price list
+        populateCategories(selectedPriceList);
+        // Update preview in real-time if it exists
+        if (state.segments.length > 0) {
+          generatePreview();
+        }
+      });
+      
+      // Category change listener with real-time preview update
+      document.getElementById('category').addEventListener('change', function() {
+        const selectedCategory = this.value;
+        const selectedPriceList = document.getElementById('price-list').value;
+        // Clear dependent dropdowns first, but not product since we're about to populate it
+        clearDependentDropdowns(['density', 'color']);
+        // Check if category supports KG pricing and show/hide kg option
+        updateKgOptionVisibility(selectedPriceList, selectedCategory);
+        // Then populate products based on selected category
+        populateProducts(selectedPriceList, selectedCategory);
+        // Update preview in real-time if it exists
+        if (state.segments.length > 0) {
+          generatePreview();
+        }
+      });
+      
+      // Product change listener with real-time preview update
+      document.getElementById('product').addEventListener('change', function() {
+        const selectedProduct = this.value;
+        const selectedPriceList = document.getElementById('price-list').value;
+        const selectedCategory = document.getElementById('category').value;
+        // Clear dependent dropdowns first, but not density/color since we're about to populate them
+        // (No need to clear anything here since we're populating the final level)
+        // Populate densities and colors based on selected product
+        populateDensities(selectedPriceList, selectedCategory, selectedProduct);
+        populateColors(selectedPriceList, selectedCategory, selectedProduct);
+        // Update preview in real-time if it exists
+        if (state.segments.length > 0) {
+          generatePreview();
+        }
+      });
+      
+      // Density and color change listeners with real-time preview updates
+      document.getElementById('density').addEventListener('change', function() {
+        updatePriceDisplay();
+        if (state.segments.length > 0) {
+          generatePreview();
+        }
+      });
+      document.getElementById('color').addEventListener('change', function() {
+        updatePriceDisplay();
+        if (state.segments.length > 0) {
+          generatePreview();
+        }
+      });
+      
+      // Salesman change listener with real-time preview update
+      document.getElementById('salesman').addEventListener('change', function() {
+        state.salesman = this.value;
+        updatePriceDisplay();
+        // Update preview in real-time if it exists
+        if (state.segments.length > 0) {
+          generatePreview();
+        }
+      });
+    }
+    
+    // Populate categories based on selected price list
+    function populateCategories(priceList) {
+      const categorySelect = document.getElementById('category');
+      
+      try {
+        console.log('🔄 Populating categories for price list:', priceList);
+        console.log('📊 Product data available:', productData ? productData.length : 'No data');
+        
+        if (!priceList) {
+          console.log('⚠️ No price list selected');
+          categorySelect.innerHTML = '<option value="">All Categories</option>';
+          return;
+        }
+        
+        if (!productData || productData.length === 0) {
+          console.log('⚠️ No product data available');
+          categorySelect.innerHTML = '<option value="">All Categories</option>';
+          return;
+        }
+        
+        // Debug: Check first few products and their price list fields
+        console.log('🔍 Sample product data:');
+        productData.slice(0, 3).forEach((product, index) => {
+          console.log(`Product ${index}:`, {
+            PriceListName: product.PriceListName,
+            PriceList: product.PriceList,
+            'Price List Name': product['Price List Name'],
+            Category: product.Category,
+            Product: product.Product
+          });
+        });
+        
+        // Filter products by price list and extract unique categories
+        const categories = new Set();
+        let matchingProducts = 0;
+        
+        productData.forEach(product => {
+          const productPriceList = product.PriceListName || product.PriceList || product['Price List Name'];
+          
+          if (productPriceList === priceList) {
+            matchingProducts++;
+            if (product.Category) {
+              categories.add(product.Category);
+            }
+          }
+        });
+        
+        console.log(`📋 Found ${matchingProducts} products matching price list "${priceList}"`);
+        console.log(`📂 Found ${categories.size} unique categories`);
+        
+        // Clear and populate category dropdown
+        categorySelect.innerHTML = '<option value="">All Categories</option>';
+        const sortedCategories = Array.from(categories).sort();
+        
+        if (sortedCategories.length === 0) {
+          console.log('⚠️ No categories found for this price list');
+          const option = document.createElement('option');
+          option.value = '';
+          option.textContent = 'No categories available';
+          option.disabled = true;
+          categorySelect.appendChild(option);
+        } else {
+          sortedCategories.forEach(category => {
+            const option = document.createElement('option');
+            option.value = category;
+            option.textContent = category;
+            categorySelect.appendChild(option);
+          });
+          console.log(`✅ Categories populated: ${sortedCategories.join(', ')}`);
+        }
+        
+      } catch (error) {
+        console.error('❌ Error populating categories:', error);
+      }
+    }
+    
+    // Populate products based on selected price list and category
+    function populateProducts(priceList, category) {
+      const productSelect = document.getElementById('product');
+      
+      try {
+        console.log('🔄 Populating products for price list:', priceList, 'category:', category);
+        console.log('📊 Product data available:', productData ? productData.length : 'No data');
+        
+        if (!priceList) {
+          console.log('⚠️ No price list selected');
+          productSelect.innerHTML = '<option value="">All Products</option>';
+          return;
+        }
+        
+        if (!productData || productData.length === 0) {
+          console.log('⚠️ No product data available');
+          productSelect.innerHTML = '<option value="">All Products</option>';
+          return;
+        }
+        
+        // Filter products by price list and category
+        const products = new Set();
+        let matchingProducts = 0;
+        
+        productData.forEach(product => {
+          const productPriceList = product.PriceListName || product.PriceList || product['Price List Name'];
+          const matchesPriceList = productPriceList === priceList;
+          const matchesCategory = !category || product.Category === category;
+          
+          if (matchesPriceList && matchesCategory) {
+            matchingProducts++;
+            if (product.Product) {
+              products.add(product.Product);
+            }
+          }
+        });
+        
+        console.log(`📋 Found ${matchingProducts} products matching price list "${priceList}" and category "${category || 'All'}"`);
+        console.log(`📦 Found ${products.size} unique product names`);
+        
+        // Clear and populate product dropdown
+        productSelect.innerHTML = '<option value="">All Products</option>';
+        const sortedProducts = Array.from(products).sort();
+        
+        if (sortedProducts.length === 0) {
+          console.log('⚠️ No products found for this combination');
+          const option = document.createElement('option');
+          option.value = '';
+          option.textContent = 'No products available';
+          option.disabled = true;
+          productSelect.appendChild(option);
+        } else {
+          sortedProducts.forEach(product => {
+            const option = document.createElement('option');
+            option.value = product;
+            option.textContent = product;
+            productSelect.appendChild(option);
+          });
+          console.log(`✅ Products populated: ${sortedProducts.slice(0, 5).join(', ')}${sortedProducts.length > 5 ? '...' : ''}`);
+         }
+      } catch (error) {
+        console.error('❌ Error populating products:', error);
+      }
+    }
+    
+    // Populate densities based on selected criteria
+    function populateDensities(priceList, category, product) {
+      const densitySelect = document.getElementById('density');
+      
+      try {
+        console.log('🔄 Populating densities for price list:', priceList, 'category:', category, 'product:', product);
+        console.log('📊 Product data available:', productData ? productData.length : 'No data');
+        
+        if (!priceList) {
+          console.log('⚠️ No price list selected for densities');
+          densitySelect.innerHTML = '<option value="">All Densities</option>';
+          return;
+        }
+        
+        if (!productData || productData.length === 0) {
+          console.log('⚠️ No product data available for densities');
+          densitySelect.innerHTML = '<option value="">All Densities</option>';
+          return;
+        }
+        
+        // Filter products and extract unique densities
+        const densities = new Set();
+        let matchingProducts = 0;
+        
+        productData.forEach(productItem => {
+          const productPriceList = productItem.PriceListName || productItem.PriceList || productItem['Price List Name'];
+          const matchesPriceList = productPriceList === priceList;
+          const matchesCategory = !category || productItem.Category === category;
+          const matchesProduct = !product || productItem.Product === product;
+          
+          if (matchesPriceList && matchesCategory && matchesProduct) {
+            matchingProducts++;
+            if (productItem.Density) {
+              densities.add(productItem.Density);
+            }
+          }
+        });
+        
+        console.log(`📋 Found ${matchingProducts} products matching criteria for densities`);
+        console.log(`🔧 Found ${densities.size} unique densities`);
+        
+        // Clear and populate density dropdown
+        densitySelect.innerHTML = '<option value="">All Densities</option>';
+        const sortedDensities = Array.from(densities).sort();
+        
+        if (sortedDensities.length === 0) {
+          console.log('⚠️ No densities found for this combination');
+          const option = document.createElement('option');
+          option.value = '';
+          option.textContent = 'No densities available';
+          option.disabled = true;
+          densitySelect.appendChild(option);
+        } else {
+          sortedDensities.forEach(density => {
+            const option = document.createElement('option');
+            option.value = density;
+            option.textContent = density;
+            densitySelect.appendChild(option);
+          });
+          console.log(`✅ Densities populated: ${sortedDensities.join(', ')}`);
+        }
+        
+      } catch (error) {
+        console.error('❌ Error populating densities:', error);
+      }
+    }
+    
+    // Populate colors based on selected criteria
+    function populateColors(priceList, category, product) {
+      const colorSelect = document.getElementById('color');
+      
+      try {
+        console.log('🔄 Populating colors for price list:', priceList, 'category:', category, 'product:', product);
+        console.log('📊 Product data available:', productData ? productData.length : 'No data');
+        
+        if (!priceList) {
+          console.log('⚠️ No price list selected for colors');
+          colorSelect.innerHTML = '<option value="">All Colors</option>';
+          return;
+        }
+        
+        if (!productData || productData.length === 0) {
+          console.log('⚠️ No product data available for colors');
+          colorSelect.innerHTML = '<option value="">All Colors</option>';
+          return;
+        }
+        
+        // Filter products and extract unique colors
+        const colors = new Set();
+        let matchingProducts = 0;
+        
+        productData.forEach(productItem => {
+          const productPriceList = productItem.PriceListName || productItem.PriceList || productItem['Price List Name'];
+          const matchesPriceList = productPriceList === priceList;
+          const matchesCategory = !category || productItem.Category === category;
+          const matchesProduct = !product || productItem.Product === product;
+          
+          if (matchesPriceList && matchesCategory && matchesProduct) {
+            matchingProducts++;
+            if (productItem.Colors) {
+              colors.add(productItem.Colors);
+            }
+          }
+        });
+        
+        console.log(`📋 Found ${matchingProducts} products matching criteria for colors`);
+        console.log(`🎨 Found ${colors.size} unique colors`);
+        
+        // Clear and populate color dropdown
+        colorSelect.innerHTML = '<option value="">All Colors</option>';
+        const sortedColors = Array.from(colors).sort();
+        
+        if (sortedColors.length === 0) {
+          console.log('⚠️ No colors found for this combination');
+          const option = document.createElement('option');
+          option.value = '';
+          option.textContent = 'No colors available';
+          option.disabled = true;
+          colorSelect.appendChild(option);
+        } else {
+          sortedColors.forEach(color => {
+            const option = document.createElement('option');
+            option.value = color;
+            option.textContent = color;
+            colorSelect.appendChild(option);
+          });
+          console.log(`✅ Colors populated: ${sortedColors.join(', ')}`);
+        }
+        
+      } catch (error) {
+        console.error('❌ Error populating colors:', error);
+      }
+    }
+    
+    // Clear dependent dropdowns
+    function clearDependentDropdowns(dropdownIds) {
+      dropdownIds.forEach(id => {
+        const dropdown = document.getElementById(id);
+        if (dropdown) {
+          const defaultText = {
+            'category': 'All Categories',
+            'product': 'All Products',
+            'density': 'All Densities',
+            'color': 'All Colors'
+          };
+          dropdown.innerHTML = `<option value="">${defaultText[id] || 'Select Option'}</option>`;
+        }
+      });
+    }
+    
+    // Update price display based on current selections and settings
+    function updatePriceDisplay() {
+      try {
+        const priceList = document.getElementById('price-list').value;
+        const category = document.getElementById('category').value;
+        const product = document.getElementById('product').value;
+        const density = document.getElementById('density').value;
+        const color = document.getElementById('color').value;
+        
+        if (!priceList || !productData || productData.length === 0) {
+          return;
+        }
+        
+        // Find matching products
+        const matchingProducts = productData.filter(productItem => {
+          const productPriceList = productItem.PriceListName || productItem.PriceList || productItem['Price List Name'];
+          const matchesPriceList = productPriceList === priceList;
+          const matchesCategory = !category || productItem.Category === category;
+          const matchesProduct = !product || productItem.Product === product;
+          const matchesDensity = !density || productItem.Density === density;
+          const matchesColor = !color || productItem.Colors === color;
+          
+          return matchesPriceList && matchesCategory && matchesProduct && matchesDensity && matchesColor;
+        });
+        
+        console.log(`📊 Found ${matchingProducts.length} matching products for price calculation`);
+        
+        // Update state segments for price calculation
+        state.segments = matchingProducts.map(productItem => {
+          let basePrice = parseFloat(productItem.Rate) || 0;
+          
+          // Apply price per kg calculation (multiply by 10)
+          if (state.kg) {
+            basePrice *= 10;
+          }
+          
+          // Apply factor
+          basePrice *= state.factor;
+          
+          // Apply currency conversion
+          const exchangeRate = state.exchangeRates[state.currency] || 1;
+          const convertedPrice = basePrice * exchangeRate;
+          
+          return {
+            ...productItem,
+            calculatedPrice: convertedPrice,
+            currency: state.currency,
+            currencySymbol: SUPPORTED_CURRENCIES[state.currency]?.symbol || state.currency
+          };
+        });
+        
+        console.log(`💰 Price calculation updated for ${state.segments.length} products`);
+        
+      } catch (error) {
+        console.error('❌ Error updating price display:', error);
+      }
+    }
+    
+    // Clear all selections
+    function clearAll() {
+      document.getElementById('price-list').value = '';
+      document.getElementById('category').value = '';
+      document.getElementById('product').value = '';
+      document.getElementById('density').value = '';
+      document.getElementById('color').value = '';
+      document.getElementById('currency').value = 'INR';
+      document.getElementById('factor').value = '1';
+      document.getElementById('kg-toggle').checked = false;
+      document.getElementById('salesman').value = '';
+      
+      state.segments = [];
+      state.currency = 'INR';
+      state.factor = 1;
+      state.kg = false;
+      
+      document.getElementById('preview-section').style.display = 'none';
+    }
+    
+    /* Category to image mapping */
+    function getCategoryImage(category) {
+      const categoryImageMap = {
+        'Tips': 'images/tipsstamps.png',
+        'Tapes': 'images/tapesstamps.png',
+        'Genius Weaves': 'images/geniusstamps.png',
+        'Closures': 'images/lacestamps.png',
+        'Wigs': 'images/generalstamps.png',
+        'Weaves': 'images/generalstamps.png',
+        'Bulk': 'images/generalstamps.png',
+        'ClipOn': 'images/generalstamps.png',
+        'DIY': 'images/generalstamps.png',
+        'Toppers': 'images/generalstamps.png'
+      };
+      return categoryImageMap[category] || 'images/generalstamps.png';
+    }
+
+    /* Category to feature images mapping */
+    function getCategoryFeatureImages(category) {
+      const categoryFeatureMap = {
+        'Bulk': ['cuticle.png', 'color.png', 'measure.png', 'durable.png', 'noshedding.png', 'cut.png'],
+        'Weaves': ['cuticle.png', 'color.png', 'measure.png', 'durable.png', 'noshedding.png', 'stitch.png'],
+        'Wigs': ['transparentlace.png', 'plucked.png', 'cuticle.png', 'color.png', 'durable.png', 'noshedding.png'],
+        'Toppers': ['plucked.png', 'cuticle.png', 'color.png', 'durable.png', 'noshedding.png', 'cut.png'],
+        'Closures': ['transparentlace.png', 'plucked.png', 'cuticle.png', 'color.png', 'durable.png', 'noshedding.png'],
+        'Tapes': ['tapes.png', 'cuticle.png', 'color.png', 'durable.png', 'noshedding.png', 'cut.png'],
+        'Tips': ['tips.png', 'cuticle.png', 'color.png', 'durable.png', 'noshedding.png', 'cut.png'],
+        'Genius': ['genius.png', 'cuticle.png', 'color.png', 'durable.png', 'noshedding.png', 'cut.png'],
+        'Genius Weaves': ['genius.png', 'cuticle.png', 'color.png', 'durable.png', 'noshedding.png', 'cut.png'],
+        'DIY': ['diy.png', 'cuticle.png', 'color.png', 'measure.png', 'durable.png', 'cut.png'],
+        'ClipOn': ['cuticle.png', 'color.png', 'measure.png', 'durable.png', 'noshedding.png', 'stitch.png']
+      };
+      const images = categoryFeatureMap[category] || [];
+      return images.map(img => {
+        // For genius.png, use the Products directory path
+        if (img === 'genius.png') {
+          return `images/Products/Genius.png`;
+        }
+        return `images/category-images/${category}/${img}`;
+      });
+    }
+
+    /* Product image mapping */
+    function getProductImagePath(category, product, density) {
+      const categoryLower = (category || '').toLowerCase();
+      const productLower = (product || '').toLowerCase();
+      const densityLower = (density || '').toLowerCase();
+      
+      // Product image mapping based on specifications
+      const imageMap = {
+        // Weaves category
+        'weaves': {
+          'weaves': {
+            'single drawn': 'images/Products/Weaves-SD.png',
+            'double drawn': 'images/Products/Weaves-DD.png',
+            'super double drawn': 'images/Products/Weaves-SDD.png'
+          }
+        },
+        // Genius Weaves
+        'genius weaves': {
+          'genius weaves': 'images/Products/Genius.png'
+        },
+        // DIY category
+        'diy': {
+          'bangs': 'images/Products/Bangs.png',
+          'curtain bangs': 'images/Products/Bangs.png',
+          'curly faux buns': 'images/Products/CurlyBun.png',
+          'bun20': 'images/Products/BUN.png',
+          'bun30': 'images/Products/BUN.png',
+          'flatclip ponytail': 'images/Products/FLATCLIPPONYTAIL.png',
+          'highlights': 'images/Products/Highlights.png',
+          'frontline-13x1': 'images/Products/Frontline.png',
+          'frontline-2x1': 'images/Products/Frontline.png',
+          'frontline-5x1': 'images/Products/Frontline.png',
+          'single clip cover patch': 'images/Products/CoverPatch.png',
+          'clutch bun': 'images/Products/ClutchBun.png'
+        },
+        // Closures
+        'closures': {
+          'closure': 'images/Products/Closure.png',
+          'frontal': 'images/Products/Frontal.png',
+          'frontal-13x4': 'images/Products/Frontal.png',
+          'frontal-13x6': 'images/Products/Frontal.png',
+          'closure-5x3': 'images/Products/Closure.png',
+          'closure-4x4': 'images/Products/Closure.png',
+          'closure-5x5': 'images/Products/Closure.png',
+          'closure-6x6': 'images/Products/Closure.png',
+          'closure-6x2': 'images/Products/Closure.png'
+        },
+        // Wigs
+        'wigs': {
+          'wig-closure5x5': 'images/Products/WIGCLOSURE.png',
+          'wig-closure6x2': 'images/Products/WIGCLOSURE.png',
+          'wig-dd-closure6x2': 'images/Products/WIGCLOSURE.png',
+          'wig-dd-closure5x5': 'images/Products/WIGCLOSURE.png',
+          'wig-silktopper': 'images/Products/SILKTOPPER.png',
+          'wig-dd-frontal13x4': 'images/Products/WIGFRONTAL.png',
+          'wig-dd-frontal13x6': 'images/Products/WIGFRONTAL.png',
+          'wig-frontal13x6': 'images/Products/WIGFRONTAL.png',
+          'wig-frontal13x4': 'images/Products/WIGFRONTAL.png'
+        },
+        // Bulk
+        'bulk': {
+          'bulk': 'images/Products/Bulk.png'
+        },
+        // Tapes
+        'tapes': {
+          'tape extension': 'images/Products/Tapes.png'
+        },
+        // Tips
+        'tips': {
+          'tips': 'images/Products/ITIPS.png',
+          'tipsnano': 'images/Products/Nano.png',
+          'tipsy': 'images/Products/YTIPS.png',
+          'flat tips': 'images/Products/FlatTips.png',
+          'u tips': 'images/Products/UTIPS.png'
+        },
+        // ClipOn
+        'clipon': {
+          'clipon classic': 'images/Products/ClipOn.png',
+          'clipon seamless': 'images/Products/ClipOn.png',
+          'clutch ponytail': 'images/Products/PonyTail.png',
+          'halo extensions': 'images/Products/Halo.png',
+          'wrap around ponytail': 'images/Products/PonyTail.png'
+        },
+        // Toppers
+        'toppers': {
+          'topper': 'images/Products/SILKTOPPER.png'
+        }
+      };
+      
+      // First try to find by category and product
+      if (imageMap[categoryLower] && imageMap[categoryLower][productLower]) {
+        const productMapping = imageMap[categoryLower][productLower];
+        // If it's an object (like Weaves with density), check for density
+        if (typeof productMapping === 'object') {
+          return productMapping[densityLower] || Object.values(productMapping)[0] || '';
+        }
+        // If it's a direct string path
+        return productMapping;
+      }
+      
+      // Fallback: try to find by density for Weaves category
+      if (categoryLower === 'weaves' && densityLower) {
+        if (densityLower.includes('single drawn')) return 'images/Products/Weaves-SD.png';
+        if (densityLower.includes('double drawn')) return 'images/Products/Weaves-DD.png';
+        if (densityLower.includes('super double drawn')) return 'images/Products/Weaves-SDD.png';
+      }
+      
+      return ''; // No image found
+    }
+
+    // Generate product-specific price lists with length-price layout
+    function generatePreview() {
+      const previewSection = document.getElementById('preview-section');
+      const htmlPreview = document.getElementById('htmlPreview');
+      
+      try {
+        // Update price display first
+        updatePriceDisplay();
+        
+        if (!state.segments || state.segments.length === 0) {
+          htmlPreview.innerHTML = '<div class="text-center py-8 text-gray-500">No products match the selected criteria. Please adjust your selections.</div>';
+          previewSection.style.display = 'block';
+          return;
+        }
+        
+        // Group products by unique combination of category, product, density, and color
+        const groupedByProduct = state.segments.reduce((groups, product) => {
+          const key = `${product.Category || 'N/A'}_${product.Product || 'N/A'}_${product.Density || 'N/A'}_${product.Colors || 'N/A'}`;
+          if (!groups[key]) {
+            groups[key] = {
+              category: product.Category || 'N/A',
+              product: product.Product || 'N/A',
+              density: product.Density || 'N/A',
+              colors: product.Colors || 'N/A',
+              items: []
+            };
+          }
+          groups[key].items.push(product);
+          return groups;
+        }, {});
+        
+        let previewHTML = '';
+        
+        Object.entries(groupedByProduct).forEach(([key, productGroup]) => {
+          previewHTML += createProductPriceList(productGroup);
+        });
+        
+        htmlPreview.innerHTML = previewHTML;
+        previewSection.style.display = 'block';
+        
+        console.log(`✅ Product-specific price lists generated for ${Object.keys(groupedByProduct).length} unique products`);
+        
+      } catch (error) {
+        console.error('❌ Error generating preview:', error);
+        htmlPreview.innerHTML = '<div class="text-center py-8 text-red-500">Error generating preview. Please try again.</div>';
+        previewSection.style.display = 'block';
+      }
+    }
+
+    // Create product-specific price list with length-price-image layout
+    function createProductPriceList(productGroup) {
+      const unit = state.kg ? 'Per Kg' : 'Per Piece';
+      const { category, product, density, colors, items } = productGroup;
+      
+      // Get product image
+      const productImage = getProductImagePath(category, product, density);
+      
+      // Determine company name based on price list
+      const priceListName = items[0]?.PriceListName || items[0]?.PriceList || items[0]?.['Price List Name'] || '';
+      let companyName = 'Indian Natural Hair';
+      if (priceListName === 'INDIA25') {
+        companyName = 'IND Natural Hair Pvt Ltd';
+      } else if (priceListName === 'USA25') {
+        companyName = 'Indian Natural Hair, LLC';
+      }
+      
+      // Sort items by length for better display
+      const sortedItems = items.sort((a, b) => {
+        const lengthA = parseFloat(a.Length) || 0;
+        const lengthB = parseFloat(b.Length) || 0;
+        return lengthA - lengthB;
+      });
+      
+      return `
+        <div class="product-price-list bg-white border rounded-lg shadow-lg mb-6 overflow-hidden max-w-full">
+          <!-- Main Header -->
+          <div class="main-header p-3 md:p-4 border-b" style="background-color: #e6eaeb;">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2 md:gap-3">
+                <img src="images/logo.png" alt="Company Logo" class="h-8 w-8 md:h-12 md:w-12 object-contain" onerror="this.style.display='none'">
+                <div>
+                  <h2 class="text-sm md:text-lg font-bold text-gray-800">${companyName}</h2>
+                </div>
+              </div>
+              <div class="text-right">
+                <div class="text-lg md:text-2xl font-bold text-gray-800">${SUPPORTED_CURRENCIES[state.currency]?.symbol || state.currency}</div>
+                <div class="text-xs md:text-sm text-gray-600">${state.currency}</div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Category Images Sub-Header -->
+          <div class="category-sub-header p-2 md:p-3 border-b bg-gray-100">
+            <div class="flex items-center justify-center">
+              <img src="${getCategoryImage(category)}" alt="${category}" class="h-12 md:h-16 object-contain" onerror="this.style.display='none'">
+            </div>
+          </div>
+          
+          <!-- Price List Details Sub-Header -->
+          <div class="details-sub-header p-3 md:p-4 border-b bg-gray-50">
+            <div class="text-center">
+              <h3 class="text-lg md:text-xl font-bold text-gray-800 mb-2 break-words">${product.toUpperCase()} | ${density.toUpperCase()} | ${colors.toUpperCase()}</h3>
+              <p class="text-xs md:text-sm text-gray-600">Currency: ${state.currency} | Factor: ${state.factor} | ${unit}</p>
+            </div>
+          </div>
+          
+          <!-- Length-Price-Image Layout -->
+          <div class="length-price-container p-2 md:p-4">
+            <!-- Mobile Layout (stacked) -->
+            <div class="block md:hidden">
+              <!-- Product Image (Mobile) -->
+              <div class="mb-4">
+                ${productImage ? `
+                  <div class="text-center">
+                    <img src="${productImage}" alt="${product}" 
+                         class="w-full max-h-48 object-contain rounded border shadow-sm" 
+                         onerror="this.style.display='none'">
+                    <p class="text-base text-gray-800 mt-2 font-semibold">${product}</p>
+                  </div>
+                ` : `
+                  <div class="w-full h-32 bg-gray-200 rounded flex items-center justify-center">
+                    <span class="text-gray-500 text-sm">No Image</span>
+                  </div>
+                `}
+              </div>
+              
+              <!-- Length-Price Table (Mobile) -->
+              <div class="overflow-x-auto">
+                <table class="w-full border-collapse border border-gray-300">
+                  <thead>
+                    <tr class="bg-gray-100">
+                      <th class="border border-gray-300 px-2 py-1 text-xs font-semibold text-gray-700">Lengths</th>
+                      <th class="border border-gray-300 px-2 py-1 text-xs font-semibold text-gray-700">Prices (${state.currency})</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${sortedItems.map((item, index) => `
+                      <tr class="${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}">
+                        <td class="border border-gray-300 px-2 py-1 text-center text-xs font-medium text-gray-800">${item.Length || 'N/A'}"</td>
+                        <td class="border border-gray-300 px-2 py-1 text-center text-xs font-semibold" style="color: #081249;">${item.currencySymbol}${item.calculatedPrice.toFixed(2)}</td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            
+            <!-- Desktop Layout (grid) -->
+            <div class="hidden md:grid grid-cols-12 gap-4">
+              <!-- Lengths Column (minimal width) -->
+              <div class="col-span-2 lengths-section">
+                <h3 class="text-sm font-semibold text-gray-700 mb-3 text-center bg-gray-100 py-2 rounded">Lengths</h3>
+                <div class="space-y-2">
+                  ${sortedItems.map((item, index) => `
+                    <div class="length-item p-2 border rounded ${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'} text-center">
+                      <span class="font-medium text-gray-800 text-sm">${item.Length || 'N/A'}"</span>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+              
+              <!-- Prices Column (reduced width) -->
+              <div class="col-span-3 prices-section">
+                <h3 class="text-sm font-semibold text-gray-700 mb-3 text-center bg-gray-100 py-2 rounded">Prices (${state.currency})</h3>
+                <div class="space-y-2">
+                  ${sortedItems.map((item, index) => `
+                    <div class="price-item p-2 border rounded ${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'} text-center">
+                      <span class="font-semibold text-sm" style="color: #081249;">${item.currencySymbol}${item.calculatedPrice.toFixed(2)}</span>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+              
+              <!-- Product Image Column (increased width) -->
+              <div class="col-span-7 image-section flex items-center justify-center">
+                ${productImage ? `
+                  <div class="text-center w-full">
+                    <img src="${productImage}" alt="${product}" 
+                         class="w-full max-h-96 object-contain rounded border shadow-sm" 
+                         onerror="this.style.display='none'">
+                  </div>
+                ` : `
+                  <div class="w-full h-64 bg-gray-200 rounded flex items-center justify-center">
+                    <span class="text-gray-500 text-lg">No Image</span>
+                  </div>
+                `}
+              </div>
+            </div>
+            
+            <!-- Footer Information -->
+            <div class="mt-6 p-3 bg-gray-100 rounded">
+              <div class="text-sm text-gray-600">
+                <div><strong>Category:</strong> ${category}</div>
+              </div>
+              
+              <!-- Standard Weight Information -->
+              <div class="mt-2 text-sm text-gray-600">
+                ${items.length > 0 && items[0]['Standard Weight'] ? `
+                  <div><strong>Standard Weight:</strong> ${items[0]['Standard Weight']} grams</div>
+                ` : ''}
+              </div>
+              
+              <!-- KG Conversion Information -->
+              ${state.kg ? `
+                <div class="mt-2 text-sm text-blue-700 bg-blue-50 p-2 rounded">
+                  <div class="font-medium">📦 Weight Conversion:</div>
+                  <div class="text-xs mt-1">1 kg = 1000 grams = 10 packets</div>
+                </div>
+              ` : ''}
+              
+              ${priceListName === 'INDIA25' ? `
+                <div class="mt-3 flex flex-col md:flex-row md:justify-between md:items-center gap-2 text-xs text-gray-600">
+                  <div class="flex-1">
+                    <div class="font-medium">WZ 81/1A Guru Nanak Nagar, New Delhi 110018, India</div>
+                  </div>
+                  <div class="text-right">
+                    <div class="font-medium">+91 9871171978</div>
+                  </div>
+                </div>
+              ` : ''}
+              
+              <div class="mt-3 flex flex-col md:flex-row md:justify-between md:items-center gap-2 text-xs text-gray-500">
+                <div class="flex gap-4">
+                  <span>Generated: ${new Date().toLocaleDateString()}</span>
+                  <span>Valid Till: ${new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toLocaleDateString()}</span>
+                </div>
+                <div class="text-right">
+                  ${state.salesman ? `<span>Sales Rep: ${state.salesman}</span>` : ''}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Create individual product card with image
+    function createProductCard(product) {
+      const productImage = getProductImagePath(product.Category, product.Product, product.Density);
+      
+      return `
+        <div class="product-card bg-white border rounded-lg p-4 mb-4 shadow-sm">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <!-- Product Info -->
+            <div class="md:col-span-2">
+              <h3 class="font-bold text-lg text-gray-800 mb-2">
+                ${product.Product || 'N/A'} | ${product.Density || 'N/A'} | ${product.Colors || 'N/A'}
+              </h3>
+              
+              <div class="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span class="font-medium text-gray-600">Category:</span>
+                  <span class="text-gray-800">${product.Category || 'N/A'}</span>
+                </div>
+                <div>
+                  <span class="font-medium text-gray-600">Length:</span>
+                  <span class="text-gray-800">${product.Length || 'N/A'}"</span>
+                </div>
+                <div>
+                  <span class="font-medium text-gray-600">Density:</span>
+                  <span class="text-gray-800">${product.Density || 'N/A'}</span>
+                </div>
+                <div>
+                  <span class="font-medium text-gray-600">Colors:</span>
+                  <span class="text-gray-800">${product.Colors || 'N/A'}</span>
+                </div>
+              </div>
+              
+              <div class="mt-3 p-3 bg-gray-100 rounded">
+                <div class="text-2xl font-bold text-green-600">
+                  ${product.currencySymbol}${product.calculatedPrice.toFixed(2)}
+                </div>
+                <div class="text-sm text-gray-600">
+                  ${state.kg ? 'Price per KG' : 'Price per Piece'}
+                </div>
+              </div>
+            </div>
+            
+            <!-- Product Image -->
+            <div class="flex items-center justify-center">
+              ${productImage ? `
+                <img src="${productImage}" alt="${product.Product}" 
+                     class="max-w-full max-h-32 object-contain rounded border" 
+                     onerror="this.style.display='none'">
+              ` : `
+                <div class="w-24 h-24 bg-gray-200 rounded flex items-center justify-center">
+                  <span class="text-gray-500 text-xs">No Image</span>
+                </div>
+              `}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+    
+    // Toggle share menu dropdown
+    function toggleShareMenu() {
+      const dropdown = document.getElementById('shareDropdown');
+      dropdown.classList.toggle('hidden');
+      
+      // Close dropdown when clicking outside
+      if (!dropdown.classList.contains('hidden')) {
+        document.addEventListener('click', function closeDropdown(e) {
+          if (!e.target.closest('#shareMenuBtn') && !e.target.closest('#shareDropdown')) {
+            dropdown.classList.add('hidden');
+            document.removeEventListener('click', closeDropdown);
+          }
+        });
+      }
+    }
+    
+    // Share PDF from menu with native sharing
+    async function downloadPDFFromMenu() {
+      document.getElementById('shareDropdown').classList.add('hidden');
+      await shareEnhancedPDF();
+    }
+    
+    // Share image from menu
+    async function shareImageFromMenu() {
+      document.getElementById('shareDropdown').classList.add('hidden');
+      await shareAllPricesDirectly();
+    }
+    
+    // Share PDF with native sharing capabilities
+    async function shareEnhancedPDF() {
+      if (state.segments.length === 0) {
+        alert('Please generate a preview first. Select products and click "Generate Preview".');
+        return;
+      }
+      
+      try {
+        // Show loading indicator
+        const loadingDiv = document.createElement('div');
+        loadingDiv.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+        loadingDiv.innerHTML = `
+          <div class="bg-white rounded-lg p-6 text-center">
+            <div class="text-lg font-semibold mb-2">Generating PDF for Sharing...</div>
+            <div class="text-sm text-gray-600">Please wait while we prepare your PDF</div>
+          </div>
+        `;
+        document.body.appendChild(loadingDiv);
+        
+        // Generate PDF blob
+        const pdfBlob = await generatePDFBlob();
+        
+        // Generate filename with category and timestamp
+         const timestamp = new Date().toISOString().split('T')[0];
+         const selectedCategory = document.getElementById('category').value || 'AllCategories';
+         const filename = `Pricelist - ${selectedCategory} - ${timestamp}.pdf`;
+        
+        // Try native sharing first
+        if (navigator.share && navigator.canShare) {
+          const file = new File([pdfBlob], filename, { type: 'application/pdf' });
+          
+          if (navigator.canShare({ files: [file] })) {
+            await navigator.share({
+              title: 'Price List PDF',
+              text: 'Price list from Indian Natural Hair',
+              files: [file]
+            });
+            
+            console.log('✅ PDF shared successfully via native share');
+          } else {
+            // Fallback to download if file sharing not supported
+            downloadPDFBlob(pdfBlob, filename);
+            console.log('✅ PDF downloaded (native file sharing not supported)');
+          }
+        } else {
+          // Fallback to download if native share not available
+          downloadPDFBlob(pdfBlob, filename);
+          console.log('✅ PDF downloaded (native sharing not available)');
+        }
+        
+        // Remove loading indicator
+        document.body.removeChild(loadingDiv);
+        
+      } catch (error) {
+        console.error('❌ PDF sharing failed:', error);
+        alert('Failed to generate PDF. Please try again.');
+        
+        // Remove loading indicator if it exists
+        const loadingDiv = document.querySelector('.fixed.inset-0.bg-black.bg-opacity-50');
+        if (loadingDiv) {
+          document.body.removeChild(loadingDiv);
+        }
+      }
+    }
+    
+    // Generate PDF as blob for sharing
+    async function generatePDFBlob() {
+      // Get all price list sections
+      const priceListSections = document.querySelectorAll('.product-price-list');
+      
+      if (priceListSections.length === 0) {
+        throw new Error('No price lists found');
+      }
+      
+      // Create new jsPDF instance
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+      
+      // Process each price list section
+      for (let i = 0; i < priceListSections.length; i++) {
+        const section = priceListSections[i];
+        
+        // Generate canvas for this section with precise dimensions
+        const canvas = await html2canvas(section, {
+          backgroundColor: '#ffffff',
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+          width: section.offsetWidth,
+          height: section.offsetHeight,
+          scrollX: 0,
+          scrollY: 0,
+          logging: false,
+          removeContainer: true
+        });
+        
+        // A4 dimensions in mm
+        const a4Width = 210;
+        const a4Height = 297;
+        const margin = 10; // 10mm margin on all sides
+        const maxWidth = a4Width - (2 * margin);
+        const maxHeight = a4Height - (2 * margin);
+        
+        // Calculate original aspect ratio
+        const originalAspectRatio = canvas.width / canvas.height;
+        
+        // Calculate dimensions that fit within A4 bounds without distortion
+        let finalWidth, finalHeight;
+        
+        if (originalAspectRatio > (maxWidth / maxHeight)) {
+          // Image is wider relative to A4, constrain by width
+          finalWidth = maxWidth;
+          finalHeight = maxWidth / originalAspectRatio;
+        } else {
+          // Image is taller relative to A4, constrain by height
+          finalHeight = maxHeight;
+          finalWidth = maxHeight * originalAspectRatio;
+        }
+        
+        // Center the image on the page
+        const xOffset = (a4Width - finalWidth) / 2;
+        const yOffset = (a4Height - finalHeight) / 2;
+        
+        // Add new page for each price list (except the first one)
+        if (i > 0) {
+          pdf.addPage();
+        }
+        
+        // Add image to PDF with precise dimensions and positioning
+        const imgData = canvas.toDataURL('image/jpeg', 0.95);
+        pdf.addImage(imgData, 'JPEG', xOffset, yOffset, finalWidth, finalHeight);
+        
+        console.log(`📄 Page ${i + 1}: Original ${canvas.width}x${canvas.height}, PDF ${finalWidth.toFixed(2)}x${finalHeight.toFixed(2)}mm, Aspect ratio preserved: ${originalAspectRatio.toFixed(3)}`);
+      }
+      
+      // Return PDF as blob
+      return pdf.output('blob');
+    }
+    
+    // Download PDF blob as file
+    function downloadPDFBlob(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+    
+    // Enhanced PDF download with multi-page support and exact design preservation
+    async function downloadEnhancedPDF() {
+      if (state.segments.length === 0) {
+        alert('Please generate a preview first. Select products and click "Generate Preview".');
+        return;
+      }
+      
+      try {
+        // Show loading indicator
+        const loadingDiv = document.createElement('div');
+        loadingDiv.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+        loadingDiv.innerHTML = `
+          <div class="bg-white rounded-lg p-6 text-center">
+            <div class="text-lg font-semibold mb-2">Generating PDF...</div>
+            <div class="text-sm text-gray-600">Please wait while we create your multi-page PDF</div>
+          </div>
+        `;
+        document.body.appendChild(loadingDiv);
+        
+        // Get all price list sections
+        const priceListSections = document.querySelectorAll('.product-price-list');
+        
+        if (priceListSections.length === 0) {
+          throw new Error('No price lists found');
+        }
+        
+        // Create new jsPDF instance
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF({
+          orientation: 'portrait',
+          unit: 'mm',
+          format: 'a4'
+        });
+        
+        // Process each price list section
+        for (let i = 0; i < priceListSections.length; i++) {
+          const section = priceListSections[i];
+          
+          // Generate canvas for this section with precise dimensions
+          const canvas = await html2canvas(section, {
+            backgroundColor: '#ffffff',
+            scale: 2,
+            useCORS: true,
+            allowTaint: true,
+            width: section.offsetWidth,
+            height: section.offsetHeight,
+            scrollX: 0,
+            scrollY: 0,
+            logging: false,
+            removeContainer: true
+          });
+          
+          // A4 dimensions in mm
+          const a4Width = 210;
+          const a4Height = 297;
+          const margin = 10; // 10mm margin on all sides
+          const maxWidth = a4Width - (2 * margin);
+          const maxHeight = a4Height - (2 * margin);
+          
+          // Calculate original aspect ratio
+          const originalAspectRatio = canvas.width / canvas.height;
+          
+          // Calculate dimensions that fit within A4 bounds without distortion
+          let finalWidth, finalHeight;
+          
+          if (originalAspectRatio > (maxWidth / maxHeight)) {
+            // Image is wider relative to A4, constrain by width
+            finalWidth = maxWidth;
+            finalHeight = maxWidth / originalAspectRatio;
+          } else {
+            // Image is taller relative to A4, constrain by height
+            finalHeight = maxHeight;
+            finalWidth = maxHeight * originalAspectRatio;
+          }
+          
+          // Center the image on the page
+          const xOffset = (a4Width - finalWidth) / 2;
+          const yOffset = (a4Height - finalHeight) / 2;
+          
+          // Add new page for each price list (except the first one)
+          if (i > 0) {
+            pdf.addPage();
+          }
+          
+          // Add image to PDF with precise dimensions and positioning
+          const imgData = canvas.toDataURL('image/jpeg', 0.95);
+          pdf.addImage(imgData, 'JPEG', xOffset, yOffset, finalWidth, finalHeight);
+          
+          console.log(`📄 Page ${i + 1}: Original ${canvas.width}x${canvas.height}, PDF ${finalWidth.toFixed(2)}x${finalHeight.toFixed(2)}mm, Aspect ratio preserved: ${originalAspectRatio.toFixed(3)}`);
+        }
+        
+        // Generate filename with timestamp
+        const timestamp = new Date().toISOString().split('T')[0];
+        const filename = `PriceList_${timestamp}.pdf`;
+        
+        // Save PDF
+        pdf.save(filename);
+        
+        // Remove loading indicator
+        document.body.removeChild(loadingDiv);
+        
+        console.log(`✅ Multi-page PDF generated successfully: ${filename}`);
+        
+      } catch (error) {
+        console.error('❌ PDF generation failed:', error);
+        alert('Failed to generate PDF. Please try again.');
+        
+        // Remove loading indicator if it exists
+        const loadingDiv = document.querySelector('.fixed.inset-0.bg-black.bg-opacity-50');
+        if (loadingDiv) {
+          document.body.removeChild(loadingDiv);
+        }
+      }
+    }
+    
+    // Enhanced WhatsApp sharing
+    function shareWhatsApp() {
+      if (state.segments.length === 0) {
+        alert('Please generate a preview first. Select products and click "Generate Preview".');
+        return;
+      }
+      
+      try {
+        // Create WhatsApp message
+        let message = `🌟 *Price List from Indian Natural Hair* 🌟\n\n`;
+        message += `💰 Currency: ${state.currency}\n`;
+        message += `📊 Factor: ${state.factor}\n`;
+        message += `📦 ${state.kg ? 'Price per KG' : 'Price per Piece'}\n\n`;
+        
+        // Group by category
+        const groupedSegments = state.segments.reduce((groups, product) => {
+          const category = product.Category || 'Other';
+          if (!groups[category]) groups[category] = [];
+          groups[category].push(product);
+          return groups;
+        }, {});
+        
+        Object.entries(groupedSegments).forEach(([category, products]) => {
+          message += `*${category.toUpperCase()} PRODUCTS:*\n`;
+          products.forEach(product => {
+            message += `• ${product.Product} | ${product.Density} | ${product.Colors}\n`;
+            message += `  💵 ${product.currencySymbol}${product.calculatedPrice.toFixed(2)}\n`;
+          });
+          message += '\n';
+        });
+        
+        message += `📞 Contact us: www.indiannaturalhair.com\n`;
+        message += `📅 Generated: ${new Date().toLocaleDateString()}`;
+        
+        // Open WhatsApp with the message
+        const encodedMessage = encodeURIComponent(message);
+        const whatsappUrl = `https://wa.me/?text=${encodedMessage}`;
+        window.open(whatsappUrl, '_blank');
+        
+      } catch (error) {
+        console.error('WhatsApp sharing error:', error);
+        alert('Error sharing to WhatsApp. Please try again.');
+      }
+    }
+    
+    // Enhanced share functionality with image generation
+    async function shareAllPricesDirectly() {
+      if (state.segments.length === 0) {
+        alert('Please generate a preview first. Select products and click "Generate Preview".');
+        return;
+      }
+      
+      // Get all price list sections
+      const priceListSections = document.querySelectorAll('.product-price-list');
+      
+      if (priceListSections.length === 0) {
+        alert('No price lists found. Please generate a preview first.');
+        return;
+      }
+      
+      if (priceListSections.length === 1) {
+        // Single price list - share directly
+        await shareSelectedPriceLists([0]);
+      } else {
+        // Multiple price lists - show selection modal
+        showPriceListSelectionModal(priceListSections);
+      }
+    }
+    
+    // Show enhanced modal for selecting price lists to share as images
+    function showPriceListSelectionModal(priceListSections) {
+      const modal = document.createElement('div');
+      modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
+      modal.innerHTML = `
+        <div class="bg-white rounded-lg p-6 max-w-lg w-full max-h-96 overflow-y-auto">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-bold">📤 Select Price Lists to Share as Images</h3>
+            <button onclick="closePriceListModal()" class="text-gray-500 hover:text-gray-700 text-xl">&times;</button>
+          </div>
+          
+          <div class="mb-4 p-3 bg-blue-50 rounded-lg">
+            <p class="text-sm text-blue-700">💡 <strong>Tip:</strong> Selected price lists will be converted to high-quality PNG images for easy sharing.</p>
+          </div>
+          
+          <div class="space-y-3 mb-6">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-sm font-medium text-gray-700">Available Price Lists:</span>
+              <div class="flex gap-2">
+                <button onclick="selectAllPriceLists()" class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded hover:bg-green-200">
+                  Select All
+                </button>
+                <button onclick="deselectAllPriceLists()" class="text-xs bg-red-100 text-red-700 px-2 py-1 rounded hover:bg-red-200">
+                  Deselect All
+                </button>
+              </div>
+            </div>
+            
+            ${Array.from(priceListSections).map((section, index) => {
+               const productName = section.querySelector('h3')?.textContent || `Price List ${index + 1}`;
+               const productImage = section.querySelector('img[alt]')?.src || '';
+               return `
+                 <label class="flex items-center space-x-3 cursor-pointer p-3 border rounded-lg hover:bg-gray-50 transition-colors">
+                   <input type="checkbox" class="price-list-checkbox w-4 h-4 text-blue-600" data-index="${index}">
+                   <div class="flex-1">
+                     <div class="font-medium text-sm text-gray-900">${productName}</div>
+                     <div class="text-xs text-gray-500">Will be saved as: ${productName.split('|')[0]?.trim().replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.png</div>
+                   </div>
+                   <div class="text-gray-400 text-xs">Select to share</div>
+                 </label>
+               `;
+             }).join('')}
+          </div>
+          
+          <div class="border-t pt-4">
+            <div class="flex items-center justify-between mb-3">
+               <span class="text-sm text-gray-600">Selected: <span id="selectedCount">0</span> of ${priceListSections.length}</span>
+               <span class="text-xs text-gray-500">Format: PNG (High Quality)</span>
+             </div>
+            
+            <div class="flex space-x-3">
+              <button onclick="shareSelectedPriceListsFromModal()" class="flex-1 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors">
+                🖼️ Generate & Share Images
+              </button>
+              <button onclick="closePriceListModal()" class="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 transition-colors">
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      document.body.appendChild(modal);
+      window.currentModal = modal;
+      
+      // Add event listeners for checkbox changes
+      const checkboxes = modal.querySelectorAll('.price-list-checkbox');
+      checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', updateSelectedCount);
+      });
+    }
+    
+    // Update selected count in modal
+    function updateSelectedCount() {
+      const checkboxes = document.querySelectorAll('.price-list-checkbox');
+      const selectedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
+      const countElement = document.getElementById('selectedCount');
+      if (countElement) {
+        countElement.textContent = selectedCount;
+      }
+    }
+    
+    // Select all price lists
+    function selectAllPriceLists() {
+      const checkboxes = document.querySelectorAll('.price-list-checkbox');
+      checkboxes.forEach(checkbox => {
+        checkbox.checked = true;
+      });
+      updateSelectedCount();
+    }
+    
+    // Deselect all price lists
+    function deselectAllPriceLists() {
+      const checkboxes = document.querySelectorAll('.price-list-checkbox');
+      checkboxes.forEach(checkbox => {
+        checkbox.checked = false;
+      });
+      updateSelectedCount();
+    }
+    
+    // Share selected price lists from modal
+    async function shareSelectedPriceListsFromModal() {
+      const checkboxes = document.querySelectorAll('.price-list-checkbox:checked');
+      const selectedIndices = Array.from(checkboxes).map(cb => parseInt(cb.dataset.index));
+      
+      if (selectedIndices.length === 0) {
+        alert('Please select at least one price list to share.');
+        return;
+      }
+      
+      closePriceListModal();
+      await shareSelectedPriceLists(selectedIndices);
+    }
+    
+    // Close price list selection modal
+    function closePriceListModal() {
+      if (window.currentModal) {
+        document.body.removeChild(window.currentModal);
+        window.currentModal = null;
+      }
+    }
+    
+    // Share selected price lists as images
+    async function shareSelectedPriceLists(selectedIndices) {
+      try {
+        const priceListSections = document.querySelectorAll('.product-price-list');
+        const images = [];
+        
+        // Show loading indicator
+        const loadingDiv = document.createElement('div');
+        loadingDiv.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+        loadingDiv.innerHTML = `
+          <div class="bg-white rounded-lg p-6 text-center">
+            <div class="text-lg font-semibold mb-2">Generating Images...</div>
+            <div class="text-sm text-gray-600">Please wait while we create your price list images</div>
+          </div>
+        `;
+        document.body.appendChild(loadingDiv);
+        
+        // Generate images for selected price lists
+        for (const index of selectedIndices) {
+          const section = priceListSections[index];
+          if (section) {
+            const canvas = await html2canvas(section, {
+              backgroundColor: '#ffffff',
+              scale: 2,
+              useCORS: true,
+              allowTaint: true,
+              width: section.offsetWidth,
+              height: section.offsetHeight
+            });
+            
+            const imageBlob = await new Promise(resolve => {
+              canvas.toBlob(resolve, 'image/png', 0.9);
+            });
+            
+            const productName = section.querySelector('h3')?.textContent?.split('|')[0]?.trim() || `PriceList_${index + 1}`;
+            const fileName = `${productName.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.png`;
+            
+            images.push({
+              blob: imageBlob,
+              fileName: fileName,
+              productName: productName
+            });
+          }
+        }
+        
+        // Remove loading indicator
+        document.body.removeChild(loadingDiv);
+        
+        // Share or download images
+        if (images.length === 1) {
+          // Single image - try to share or download
+          await shareSingleImage(images[0]);
+        } else {
+          // Multiple images - download as zip or individual files
+          await shareMultipleImages(images);
+        }
+        
+      } catch (error) {
+        console.error('Error generating images:', error);
+        alert('Error generating price list images. Please try again.');
+      }
+    }
+    
+    // Share single image
+    async function shareSingleImage(imageData) {
+      try {
+        if (navigator.share && navigator.canShare && navigator.canShare({ files: [new File([imageData.blob], imageData.fileName, { type: 'image/png' })] })) {
+          // Use Web Share API if available
+          const file = new File([imageData.blob], imageData.fileName, { type: 'image/png' });
+          await navigator.share({
+            title: `Price List - ${imageData.productName}`,
+            text: `Price list for ${imageData.productName} from Indian Natural Hair`,
+            files: [file]
+          });
+        } else {
+          // Fallback to download
+          downloadImage(imageData.blob, imageData.fileName);
+        }
+      } catch (error) {
+        console.error('Share error:', error);
+        downloadImage(imageData.blob, imageData.fileName);
+      }
+    }
+    
+    // Share multiple images using native share or fallback
+    async function shareMultipleImages(images) {
+      try {
+        // Try to share each image individually using native share
+        for (const imageData of images) {
+          if (navigator.share && navigator.canShare && navigator.canShare({ files: [new File([imageData.blob], imageData.fileName, { type: 'image/png' })] })) {
+            const file = new File([imageData.blob], imageData.fileName, { type: 'image/png' });
+            await navigator.share({
+              title: `Price List - ${imageData.productName}`,
+              text: `Price list for ${imageData.productName} from Indian Natural Hair`,
+              files: [file]
+            });
+            
+            // Add a small delay between shares to avoid overwhelming the system
+            await new Promise(resolve => setTimeout(resolve, 500));
+          } else {
+            // Fallback to download if native share not available
+            downloadImage(imageData.blob, imageData.fileName);
+          }
+        }
+        
+        if (navigator.share) {
+          // Show success message for native sharing
+          alert(`Successfully shared ${images.length} price list images!`);
+        } else {
+          // Show download message for fallback
+          alert(`${images.length} price list images have been downloaded to your device.`);
+        }
+        
+      } catch (error) {
+        console.error('Error sharing multiple images:', error);
+        // Fallback to download all images
+        images.forEach(imageData => {
+          downloadImage(imageData.blob, imageData.fileName);
+        });
+        alert(`Sharing failed. ${images.length} images have been downloaded instead.`);
+      }
+    }
+    
+    // Download image helper function
+    function downloadImage(blob, fileName) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+  </script>
+</body>
+</html>

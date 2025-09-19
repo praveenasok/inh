@@ -17,6 +17,9 @@
     
     <!-- Firebase Database Helper -->
     <script src="firebase-database.js"></script>
+    
+    <!-- Unified Button System -->
+    <link rel="stylesheet" href="unified-button-system.css">
     <style>
         .status-indicator {
             width: 12px;
@@ -50,9 +53,9 @@
             <div class="flex justify-between items-center">
                 <h1 class="text-2xl font-bold text-gray-800">Admin Dashboard</h1>
                 <div class="flex space-x-4">
-                    <button onclick="showTab('sync')" id="sync-tab" class="px-4 py-2 rounded-lg bg-blue-600 text-white">Data Sync</button>
-                    <button onclick="showTab('clients')" id="clients-tab" class="px-4 py-2 rounded-lg bg-gray-200 text-gray-700">Client Management</button>
-                    <button onclick="showTab('salesmen')" id="salesmen-tab" class="px-4 py-2 rounded-lg bg-gray-200 text-gray-700">Salesman Management</button>
+                    <button onclick="showTab('sync')" id="sync-tab" class="nav-btn nav-btn-active">Data Sync</button>
+                    <button onclick="showTab('clients')" id="clients-tab" class="nav-btn">Client Management</button>
+                    <button onclick="showTab('salesmen')" id="salesmen-tab" class="nav-btn">Salesman Management</button>
                 </div>
             </div>
         </div>
@@ -105,7 +108,7 @@
                     <h3 class="font-semibold text-gray-700 mb-2">Product Data Sync</h3>
                     <p class="text-sm text-gray-600 mb-4">Sync product data from Google Sheets to Firebase</p>
                     <button onclick="triggerProductSync()" id="product-sync-btn" 
-                            class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center justify-center">
+                            class="w-full btn-primary flex items-center justify-center">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                         </svg>
@@ -118,7 +121,7 @@
                     <h3 class="font-semibold text-gray-700 mb-2">Salesman Data Sync</h3>
                     <p class="text-sm text-gray-600 mb-4">Sync salesman data from Google Sheets to Firebase</p>
                     <button onclick="triggerSalesmanSync()" id="salesman-sync-btn" 
-                            class="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center justify-center">
+                            class="w-full btn-success flex items-center justify-center">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
                         </svg>
@@ -130,7 +133,7 @@
             <!-- Full Sync Button -->
             <div class="mt-4">
                 <button onclick="triggerFullSync()" id="full-sync-btn" 
-                        class="w-full bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg flex items-center justify-center font-semibold">
+                        class="w-full btn-primary flex items-center justify-center font-semibold">
                     <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                     </svg>
@@ -144,21 +147,21 @@
             <h2 class="text-xl font-bold text-gray-800 mb-4">Scheduler Controls</h2>
             <div class="flex flex-col md:flex-row gap-4">
                 <button onclick="startScheduler()" id="start-scheduler-btn" 
-                        class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center">
+                        class="btn-success flex items-center">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h1m4 0h1m6-10V4a2 2 0 00-2-2H5a2 2 0 00-2 2v16l3-2 3 2 3-2 3 2V4z"></path>
                     </svg>
                     Start Scheduler
                 </button>
                 <button onclick="stopScheduler()" id="stop-scheduler-btn" 
-                        class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg flex items-center">
+                        class="btn-danger flex items-center">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10h6v4H9z"></path>
                     </svg>
                     Stop Scheduler
                 </button>
-                <button onclick="refreshStatus()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center">
+                <button onclick="refreshStatus()" class="btn-primary flex items-center">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                     </svg>
@@ -171,7 +174,7 @@
         <div class="bg-white rounded-lg shadow-md p-6">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-xl font-bold text-gray-800">Synchronization Logs</h2>
-                <button onclick="clearLogs()" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-sm">
+                <button onclick="clearLogs()" class="btn-secondary text-sm">
                     Clear Logs
                 </button>
             </div>
@@ -200,7 +203,7 @@
             <div class="bg-white rounded-lg shadow-md p-6 mb-6">
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-xl font-bold text-gray-800">Salesman Management</h2>
-                    <button onclick="showAddSalesmanModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center">
+                    <button onclick="showAddSalesmanModal()" class="btn-primary flex items-center">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                         </svg>
@@ -259,10 +262,10 @@
                         <input type="number" id="salesman-commission" min="0" max="100" step="0.1" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
                     </div>
                     <div class="flex justify-end space-x-3 mt-6">
-                        <button type="button" onclick="closeSalesmanModal()" class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-lg">
+                        <button type="button" onclick="closeSalesmanModal()" class="btn-secondary">
                             Cancel
                         </button>
-                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+                        <button type="submit" class="btn-primary">
                             Save Salesman
                         </button>
                     </div>
@@ -280,13 +283,13 @@
             document.getElementById('salesmen-content').classList.add('hidden');
             
             // Reset all tab buttons
-            document.getElementById('sync-tab').className = 'px-4 py-2 rounded-lg bg-gray-200 text-gray-700';
-            document.getElementById('clients-tab').className = 'px-4 py-2 rounded-lg bg-gray-200 text-gray-700';
-            document.getElementById('salesmen-tab').className = 'px-4 py-2 rounded-lg bg-gray-200 text-gray-700';
+            document.getElementById('sync-tab').className = 'nav-btn';
+            document.getElementById('clients-tab').className = 'nav-btn';
+            document.getElementById('salesmen-tab').className = 'nav-btn';
             
             // Show selected content and highlight tab
             document.getElementById(tabName + '-content').classList.remove('hidden');
-            document.getElementById(tabName + '-tab').className = 'px-4 py-2 rounded-lg bg-blue-600 text-white';
+            document.getElementById(tabName + '-tab').className = 'nav-btn nav-btn-active';
         }
 
         // Sync Management Functions

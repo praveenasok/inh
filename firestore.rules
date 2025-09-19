@@ -45,9 +45,10 @@ service cloud.firestore {
       allow read, write: if isAdmin();
     }
     
-    // User-specific collections
+    // User-specific collections - allow public read for admin dashboard stats
     match /clients/{clientId} {
-      allow read, write: if isAuthenticated();
+      allow read: if true; // Allow public read for dashboard statistics
+      allow write: if isAuthenticated();
     }
     
     match /quotes/{quoteId} {

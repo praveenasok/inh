@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Catalog - InstaQuote</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
+    
+    <script src="firebase-config.js"></script>
+    <script src="firebase-database.js"></script>
+    <script src="firebase-error-handler.js"></script>
+    
+    <!-- Unified Button System -->
+    <link rel="stylesheet" href="unified-button-system.css">
+    
+    <style>
+        /* Responsive padding */
+        .mobile-padding {
+            padding: 1.5rem;
+        }
+        @media (max-width: 640px) {
+            .mobile-padding {
+                padding: 1rem;
+            }
+        }
+        
+        /* Shadow effects */
+        .shadow-soft {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        
+        /* Button styles now handled by unified-button-system.css */
+        
+        /* Mobile-first responsive design */
+        @media (max-width: 768px) {
+            .container {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+            .text-responsive {
+                font-size: 0.875rem;
+            }
+        }
+        
+        /* Form elements */
+        .form-input {
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        /* Card hover effects */
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        /* Navigation styles now handled by unified-button-system.css */
+        
+        /* Module content display */
+        .module-content {
+            display: block;
+        }
+        
+        /* Navigation link styles */
+        .nav-btn {
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 48px;
+            padding: 12px 16px;
+            font-weight: 500;
+            cursor: pointer;
+            touch-action: manipulation;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            border: 2px solid #e2e8f0;
+            box-shadow: 0 4px 12px rgba(71, 85, 105, 0.15);
+        }
+        
+        .nav-btn:hover {
+            text-decoration: none;
+            background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+            border-color: #cbd5e1;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(71, 85, 105, 0.2);
+        }
+        
+        .nav-btn.nav-btn-active {
+            background: #081249;
+            color: white !important;
+            border: 2px solid #081249;
+            box-shadow: 0 4px 12px rgba(8, 18, 73, 0.3);
+        }
+        
+        .nav-btn.nav-btn-active:hover {
+            background: #0a1555;
+            border-color: #0a1555;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(8, 18, 73, 0.4);
+        }
+        
+        /* Remove default link styles */
+        .no-underline {
+            text-decoration: none !important;
+        }
+        
+        .no-underline:hover {
+            text-decoration: none !important;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+  <!-- Top Menu Bar -->
+  <header class="bg-white shadow-soft mb-4 sticky top-0 z-50">
+    <div class="max-w-4xl mx-auto px-3 sm:px-6">
+      <!-- Header with InstaQuote flush left and logo flush right -->
+      <div class="flex items-center justify-between py-3">
+        <!-- InstaQuote heading flush left -->
+        <h1 class="text-xl sm:text-2xl lg:text-3xl font-bold" style="line-height: 0.7;">
+          <span style="color: #081249;">Insta</span><span style="color: #9b7952;">Q</span><span style="color: #081249;">uote</span>
+        </h1>
+        
+        <!-- Logo flush right -->
+        <div class="flex-shrink-0">
+          <img src="images/logo.png" alt="Company Logo" class="h-12 sm:h-16 w-auto opacity-75 hover:opacity-100 transition-opacity duration-200">
+        </div>
+      </div>
+      
+      <!-- Navigation Menu below header -->
+      <div class="pb-3">
+        <nav class="hidden md:flex gap-2 justify-center">
+          <a href="price-calculator.html" class="nav-btn px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 text-gray-700 hover:text-gray-900 no-underline">
+            <span>📊</span>
+            <span>PriceLists</span>
+          </a>
+          <a href="quote-maker.html" class="nav-btn px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 text-gray-700 hover:text-gray-900 no-underline">
+            <span class="text-lg">📋</span>
+            <span>Quote Maker</span>
+          </a>
+          <a href="product-catalog.html" class="nav-btn nav-btn-active btn-primary px-4 py-2 rounded-lg font-medium hover:bg-emerald-700 transition-all duration-200 flex items-center gap-2 text-white no-underline">
+            <span class="text-lg">📦</span>
+            <span>Product Catalog</span>
+          </a>
+          <a href="admin-panel.html" class="nav-btn px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 text-gray-700 hover:text-gray-900 no-underline">
+            <span class="text-lg">⚙️</span>
+            <span>Admin Panel</span>
+          </a>
+        </nav>
+      </div>
+      
+      <!-- Mobile Navigation Menu -->
+      <nav class="md:hidden pb-3">
+        <div class="flex flex-wrap justify-center gap-2">
+          <a href="price-calculator.html" class="nav-btn px-3 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-1 text-sm text-gray-700 hover:text-gray-900 no-underline">
+            <span>📊</span>
+            <span>PriceLists</span>
+          </a>
+          <a href="quote-maker.html" class="nav-btn px-3 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-1 text-sm text-gray-700 hover:text-gray-900 no-underline">
+            <span>📋</span>
+            <span>Quote</span>
+          </a>
+          <a href="product-catalog.html" class="nav-btn nav-btn-active btn-primary px-3 py-2 rounded-lg font-medium hover:bg-emerald-700 transition-all duration-200 flex items-center gap-1 text-sm text-white no-underline">
+            <span>📦</span>
+            <span>Catalog</span>
+          </a>
+          <a href="admin-panel.html" class="nav-btn px-3 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-1 text-sm text-gray-700 hover:text-gray-900 no-underline">
+            <span>⚙️</span>
+            <span>Admin</span>
+          </a>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+    <!-- Main Content -->
+    <div class="container mx-auto px-4 py-6">
+        <!-- Page Header -->
+        <div class="rounded-xl p-6 mb-8 text-white" style="background-color: #081249;">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold mb-2">Product Catalog</h1>
+                    <p class="text-purple-100">Browse and explore our comprehensive product collection with advanced filtering</p>
+                </div>
+                <div class="mt-4 md:mt-0">
+                    <div class="flex items-center space-x-4">
+                        <div class="text-center">
+                            <div class="text-2xl font-bold" id="total-products">0</div>
+                            <div class="text-sm text-purple-200">Products</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Product Catalog Module -->
+        <div id="product-catalog-module" class="module-content">
+            
+            <!-- Modern Catalog Filters -->
+            <section class="bg-white rounded-xl shadow-soft p-4 sm:p-6 mb-4 mobile-padding" style="background: #eef2ff;">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="section-heading flex items-center">
+                        <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
+                        </svg>
+                        Filters
+                    </h3>
+                    <div class="text-sm text-gray-500">
+                        <span id="catalog-results-count">Loading products...</span>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <!-- Category Filter -->
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium text-gray-700 flex items-center">
+                            <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                            </svg>
+                            Category
+                        </label>
+                        <select id="catalog-category" class="w-full border-2 border-gray-200 rounded-lg px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 bg-gray-50 hover:bg-white">
+                            <option value="">All Categories</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Search Filter -->
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium text-gray-700 flex items-center">
+                            <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                            Search
+                        </label>
+                        <div class="relative">
+                            <input type="text" id="catalog-search" placeholder="Search products by name..." class="w-full border-2 border-gray-200 rounded-lg px-4 py-1 pl-10 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 bg-gray-50 hover:bg-white" />
+                            <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex flex-wrap gap-3">
+                    <button id="catalog-filter-btn" class="text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 flex items-center" style="background-color: #081249; border-color: #081249;" onmouseover="this.style.backgroundColor='#0a1a5c'" onmouseout="this.style.backgroundColor='#081249'">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
+                        </svg>
+                        Apply Filters
+                    </button>
+                    <button id="catalog-clear-btn" class="btn-secondary px-6 py-3 rounded-lg font-medium transition-all duration-200 flex items-center">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                        Clear All
+                    </button>
+                </div>
+            </section>
+
+            <!-- Enhanced Product Grid -->
+            <section class="bg-white rounded-xl shadow-soft p-4 sm:p-6 mb-4 mobile-padding" style="background: #f8fafc;">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="section-heading-large flex items-center">
+                        <svg class="w-6 h-6 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                        </svg>
+                        Our Products
+                    </h3>
+                    <div class="flex items-center space-x-4">
+                        <div class="text-sm text-gray-500 bg-gray-50 px-3 py-1 rounded-full">
+                            <span id="catalog-results-count-display">Loading...</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button id="grid-view-btn" class="p-2 rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors" title="Grid View">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
+                                </svg>
+                            </button>
+                            <button id="list-view-btn" class="p-2 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors" title="List View">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Loading State -->
+                <div id="catalog-loading" class="hidden flex items-center justify-center py-12">
+                    <div class="text-center">
+                        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                        <p class="text-gray-600">Loading products...</p>
+                    </div>
+                </div>
+                
+                <!-- Empty State -->
+                <div id="catalog-empty" class="hidden text-center py-12">
+                    <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+                    </svg>
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">No products found</h3>
+                    <p class="text-gray-500 mb-4">Try adjusting your search criteria or browse all categories.</p>
+                    <button onclick="clearCatalogFilters()" class="btn-primary px-4 py-2 rounded-lg">
+                        View All Products
+                    </button>
+                </div>
+                
+                <!-- Product Cards Container -->
+                <div id="catalog-products-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 sm:gap-6">
+                    <!-- Products will be dynamically loaded here -->
+                </div>
+                
+                <!-- Pagination -->
+                <div id="catalog-pagination" class="flex justify-center mt-6">
+                    <!-- Pagination controls will be added here -->
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        // Data arrays for consistency
+    // Function to get product image based on category and product name
+    function getProductImage(category, productName) {
+        const categoryImageMap = {
+            'Bulk': 'images/Products/Bulk.png',
+            'Weaves': 'images/Products/Weaves-SD.png',
+            'Weaves DD': 'images/Products/Weaves-DD.png',
+            'Weaves SDD': 'images/Products/Weaves-SDD.png',
+            'Tapes': 'images/Products/Tapes.png',
+            'ClipOn': 'images/Products/ClipOn.png',
+            'Closures': 'images/Products/Closure.png',
+            'Frontals': 'images/Products/Frontal.png',
+            'Frontline': 'images/Products/Frontline.png',
+            'Tips': 'images/Products/ITIPS.png',
+            'I Tips': 'images/Products/ITIPS.png',
+            'U Tips': 'images/Products/UTIPS.png',
+            'Y Tips': 'images/Products/YTIPS.png',
+            'Flat Tips': 'images/Products/FlatTips.png',
+            'Nano': 'images/Products/Nano.png',
+            'PonyTail': 'images/Products/PonyTail.png',
+            'BUN': 'images/Products/BUN.png',
+            'Curly Bun': 'images/Products/CurlyBun.png',
+            'Clutch Bun': 'images/Products/ClutchBun.png',
+            'Bangs': 'images/Products/Bangs.png',
+            'Halo': 'images/Products/Halo.png',
+            'Highlights': 'images/Products/Highlights.png',
+            'Cover Patch': 'images/Products/CoverPatch.png',
+            'Genius': 'images/Products/Genius.png',
+            'Genius Weaves': 'images/Products/Genius.png',
+            'Wigs': 'images/Products/WIGFRONTAL.png',
+            'Wig Closure': 'images/Products/WIGCLOSURE.png',
+            'Wig Frontal': 'images/Products/WIGFRONTAL.png',
+            'Silk Topper': 'images/Products/SILKTOPPER.png',
+            'Toppers': 'images/Products/SILKTOPPER.png',
+            'Flat Clip Ponytail': 'images/Products/FLATCLIPPONYTAIL.png',
+            'Hair Extensions': 'images/Products/Weaves-SD.png'
+        };
+        
+        // Check for specific product name matches first
+        const productLower = productName.toLowerCase();
+        if (productLower.includes('bulk')) return 'images/Products/Bulk.png';
+        if (productLower.includes('weave') && productLower.includes('double drawn')) return 'images/Products/Weaves-DD.png';
+        if (productLower.includes('weave') && productLower.includes('super double')) return 'images/Products/Weaves-SDD.png';
+        if (productLower.includes('weave')) return 'images/Products/Weaves-SD.png';
+        if (productLower.includes('tape')) return 'images/Products/Tapes.png';
+        if (productLower.includes('closure')) return 'images/Products/Closure.png';
+        if (productLower.includes('frontal')) return 'images/Products/Frontal.png';
+        if (productLower.includes('genius')) return 'images/Products/Genius.png';
+        if (productLower.includes('wig')) return 'images/Products/WIGFRONTAL.png';
+        if (productLower.includes('tip')) return 'images/Products/ITIPS.png';
+        if (productLower.includes('clip')) return 'images/Products/ClipOn.png';
+        if (productLower.includes('ponytail')) return 'images/Products/PonyTail.png';
+        if (productLower.includes('bun')) return 'images/Products/BUN.png';
+        if (productLower.includes('bang')) return 'images/Products/Bangs.png';
+        if (productLower.includes('halo')) return 'images/Products/Halo.png';
+        if (productLower.includes('topper')) return 'images/Products/SILKTOPPER.png';
+        
+        // Fall back to category mapping
+        return categoryImageMap[category] || 'images/template.png';
+    }
+
+    let productData = [
+        {
+            Product: "Premium Bulk Hair 18\"",
+            Category: "Bulk",
+            Rate: 2500,
+            Currency: "INR",
+            Colors: "Black, Brown, Blonde",
+            Length: 18,
+            Density: "150%",
+            image: getProductImage("Bulk", "Premium Bulk Hair 18\"")
+        },
+        {
+            Product: "Luxury Weaves Double Drawn 22\"",
+            Category: "Weaves DD",
+            Rate: 3200,
+            Currency: "INR",
+            Colors: "Black, Brown, Auburn",
+            Length: 22,
+            Density: "180%",
+            image: getProductImage("Weaves DD", "Luxury Weaves Double Drawn 22\"")
+        },
+        {
+            Product: "Natural Wave Weaves 20\"",
+            Category: "Weaves",
+            Rate: 2800,
+            Currency: "INR",
+            Colors: "Natural Black, Dark Brown",
+            Length: 20,
+            Density: "160%",
+            image: getProductImage("Weaves", "Natural Wave Weaves 20\"")
+        },
+        {
+            Product: "Tape Extensions 16\"",
+            Category: "Tapes",
+            Rate: 1800,
+            Currency: "INR",
+            Colors: "Black, Brown, Blonde, Auburn",
+            Length: 16,
+            Density: "120%",
+            image: getProductImage("Tapes", "Tape Extensions 16\"")
+        },
+        {
+            Product: "Lace Closure 4x4",
+            Category: "Closures",
+            Rate: 4500,
+            Currency: "INR",
+            Colors: "Natural Black, Dark Brown",
+            Length: 14,
+            Density: "130%",
+            image: getProductImage("Closures", "Lace Closure 4x4")
+        },
+        {
+            Product: "Lace Frontal 13x4",
+            Category: "Frontals",
+            Rate: 6500,
+            Currency: "INR",
+            Colors: "Natural Black, Brown",
+            Length: 16,
+            Density: "150%",
+            image: getProductImage("Frontals", "Lace Frontal 13x4")
+        },
+        {
+            Product: "I-Tips Extensions 18\"",
+            Category: "I Tips",
+            Rate: 2200,
+            Currency: "INR",
+            Colors: "Black, Brown, Blonde",
+            Length: 18,
+            Density: "140%",
+            image: getProductImage("I Tips", "I-Tips Extensions 18\"")
+        },
+        {
+            Product: "Clip-On Extensions 20\"",
+            Category: "ClipOn",
+            Rate: 1950,
+            Currency: "INR",
+            Colors: "Black, Brown, Blonde, Auburn",
+            Length: 20,
+            Density: "130%",
+            image: getProductImage("ClipOn", "Clip-On Extensions 20\"")
+        },
+        {
+            Product: "Genius Weaves 22\"",
+            Category: "Genius Weaves",
+            Rate: 3800,
+            Currency: "INR",
+            Colors: "Natural Black, Brown",
+            Length: 22,
+            Density: "170%",
+            image: getProductImage("Genius Weaves", "Genius Weaves 22\"")
+        },
+        {
+            Product: "Silk Top Topper 14\"",
+            Category: "Toppers",
+            Rate: 5200,
+            Currency: "INR",
+            Colors: "Natural Black, Dark Brown",
+            Length: 14,
+            Density: "150%",
+            image: getProductImage("Toppers", "Silk Top Topper 14\"")
+        }
+    ];
+    
+    const FX_APIS = [
+      (base) => `https://api.exchangerate-api.com/v4/latest/${base}`,
+      (base) => `https://api.fixer.io/latest?base=${base}`,
+      (base) => `https://open.er-api.com/v6/latest/${base}`
+    ];
+    const SUPPORTED = ['INR','USD','EUR','GBP','AUD','SAR','NGN','AED','JPY'];
+    const SYMBOL = { INR:'₹', USD:'$', EUR:'€', GBP:'£', AUD:'A$', SAR:'SAR ', NGN:'₦', AED:'د.إ ', JPY:'¥' };
+    const DEFAULT_RATES = { base:'INR',
+      rates:{ INR:1, USD:0.0120, EUR:0.0110, GBP:0.0095, AUD:0.0180, SAR:0.0450, NGN:5.5000, AED:0.0440, JPY:1.8000 },
+      updatedAt: null, mode:'auto'
+    };
+
+    // Mobile menu toggle functionality (if mobile menu button exists)
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    if (mobileMenuBtn) {
+      mobileMenuBtn.addEventListener('click', function() {
+        const mobileMenu = document.getElementById('mobile-menu');
+        if (mobileMenu) {
+          mobileMenu.classList.toggle('hidden');
+        }
+      });
+    }
+
+    // Product rendering function
+    function renderProducts(products = productData) {
+        const grid = document.getElementById('catalog-products-grid');
+        
+        if (!products || products.length === 0) {
+            document.getElementById('catalog-empty').classList.remove('hidden');
+            grid.innerHTML = '';
+            return;
+        }
+        
+        document.getElementById('catalog-empty').classList.add('hidden');
+        
+        grid.innerHTML = products.map(product => `
+             <div class="bg-white rounded-lg shadow-soft overflow-hidden card-hover flex flex-col h-full">
+                 <div class="aspect-w-16 aspect-h-9 bg-gray-200">
+                     <img src="${product.image || 'images/template.png'}" 
+                           alt="${product.Product}" 
+                           class="w-full h-48 object-contain"
+                           onerror="this.onerror=null; this.src='https://via.placeholder.com/300x200/6B7280/FFFFFF?text=Product+Image+Not+Found'; this.style.opacity='0.7';"
+                           onload="this.style.opacity='1';">
+                 </div>
+                 <div class="p-4 flex flex-col flex-grow">
+                     <h3 class="font-semibold text-gray-900 mb-2 line-clamp-2">${product.Product}</h3>
+                     <p class="text-sm text-gray-600 mb-2">${product.Category}</p>
+                     <div class="flex items-center justify-between mb-3">
+                         <span class="text-lg font-bold text-blue-600">${SYMBOL[product.Currency] || ''}${product.Rate}</span>
+                         <span class="text-sm text-gray-500">${product.Length}\"</span>
+                     </div>
+                     <div class="flex items-center justify-between mt-auto">
+                         <span class="text-xs text-gray-500">${product.Colors}</span>
+                         <button onclick="viewProductDetails('${product.Product}')" 
+                                 class="text-white px-3 py-1 rounded text-sm transition-colors duration-200" 
+                                 style="background-color: #081249;" 
+                                 onmouseover="this.style.backgroundColor='#0a1a5c'" 
+                                 onmouseout="this.style.backgroundColor='#081249'">
+                             View Details
+                         </button>
+                     </div>
+                 </div>
+             </div>
+         `).join('');
+        
+        document.getElementById('catalog-results-count').textContent = `${products.length} products found`;
+        document.getElementById('catalog-results-count-display').textContent = `${products.length} products`;
+    }
+    
+    // View product details function
+    function viewProductDetails(productName) {
+        const product = productData.find(p => p.Product === productName);
+        if (product) {
+            alert(`Product Details:\n\nName: ${product.Product}\nCategory: ${product.Category}\nPrice: ${SYMBOL[product.Currency] || ''}${product.Rate}\nLength: ${product.Length}\"\nColors: ${product.Colors}\nDensity: ${product.Density}`);
+        }
+    }
+    
+    // Initialize products on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        renderProducts();
+    });
+        
+    function clearCatalogFilters() {
+        document.getElementById('catalog-category').value = '';
+        document.getElementById('catalog-search').value = '';
+        renderProducts();
+    }
+    </script>
+</body>
+</html>
