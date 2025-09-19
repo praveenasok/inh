@@ -861,7 +861,7 @@ if (fs.existsSync(DATA_FILE_PATH)) {
   }
 }
 
-server.listen(PORT, async () => {
+server.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
   console.log('This server supports:');
   console.log('- Static file serving');
@@ -880,13 +880,16 @@ server.listen(PORT, async () => {
   console.log('- POST /save-html endpoint for permanent JSON embedding');
   console.log('- Automatic HTML file backups');
   
-  // Initialize sync services
-  try {
-    await initializeSyncServices();
-    console.log('Google Sheets sync services initialized successfully');
-  } catch (error) {
-    console.error('Failed to initialize sync services:', error.message);
-  }
+  // Initialize sync services asynchronously (don't block server startup)
+  console.log('Initializing sync services in background...');
+  initializeSyncServices()
+    .then(() => {
+      console.log('Google Sheets sync services initialized successfully');
+    })
+    .catch((error) => {
+      console.error('Failed to initialize sync services:', error.message);
+      console.log('Server will continue running without sync functionality');
+    });
 });
 
 module.exports = server;
