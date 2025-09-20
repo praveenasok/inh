@@ -51,26 +51,20 @@ async function convertToOrder() {
         
         // Enhanced validation
         if (!quoteData.quoteName || !quoteData.customerName) {
-            console.warn('Quote name and customer name required for conversion');
             return;
         }
         
         if (!quoteData.items || quoteData.items.length === 0) {
-            console.warn('Quote items required for conversion');
             return;
         }
         
         if (!quoteData.salesman) {
-            console.warn('Salesman selection required for conversion');
             return;
         }
         
         if (!quoteData.total || quoteData.total <= 0) {
-            console.warn('Quote total must be greater than zero');
             return;
         }
-        
-        console.log('Quote validation passed:', quoteData);
         
         // Show loading state
         const loadingMessage = showLoadingMessage('Converting quote to order...');
@@ -78,15 +72,12 @@ async function convertToOrder() {
         // Check if Firebase is available
         if (!window.firebaseDB || !window.firebaseDB.isAvailable()) {
             hideLoadingMessage(loadingMessage);
-            console.error('Firebase is not available. Please check your connection.');
             return;
         }
         
         // First save the quote to get a valid quote ID
-        console.log('Saving quote before conversion:', quoteData);
         const savedQuote = await window.firebaseDB.saveQuote(quoteData);
         const quoteId = savedQuote.id;
-        console.log('Quote saved with ID:', quoteId);
         
         // Convert quote to order
         const orderData = await window.firebaseDB.convertQuoteToOrder(quoteId, {
@@ -105,22 +96,9 @@ async function convertToOrder() {
         
         // Automatically clear the current quote form
         clearAllQuoteData();
-        console.log('Quote form cleared automatically after successful conversion');
-        
-        // Log the conversion for debugging
-        console.log('Quote converted to order:', {
-            quoteId: quoteId,
-            orderId: orderData.id,
-            orderNumber: orderNumber
-        });
         
     } catch (error) {
-        console.error('Error converting quote to order:', error);
-        console.error('Error details:', {
-            message: error.message,
-            stack: error.stack,
-            quoteData: quoteData
-        });
+        // Error handling without logging
         hideLoadingMessage();
         
         let errorMessage = 'Failed to convert quote to order. ';
@@ -265,8 +243,6 @@ function clearAllQuoteData() {
     totalElements.forEach(element => {
         element.textContent = '0.00';
     });
-    
-    console.log('Quote form cleared');
 }
 
 function shareQuote() {
@@ -404,7 +380,6 @@ function generateQuoteImage() {
                 text: `Quote for ${customerName}`,
                 files: [file]
             }).catch(err => {
-                console.log('Error sharing:', err);
                 downloadQuoteImage(url, quoteName);
             });
         } else {

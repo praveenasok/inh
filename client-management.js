@@ -39,21 +39,82 @@ class ClientManager {
     return deviceId;
   }
 
-  // Generate unique client ID
-  generateClientId(salespersonName) {
-    const date = new Date();
-    const dateStr = date.getFullYear() + 
-                   String(date.getMonth() + 1).padStart(2, '0') + 
-                   String(date.getDate()).padStart(2, '0');
-    const salesPerson = salespersonName.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
-    const deviceShort = this.deviceId.split('-')[1] || 'DEV';
-    
-    return `${deviceShort}-${dateStr}-${salesPerson}-${Date.now().toString().slice(-4)}`;
+  // Generate unique client ID with company4lettercode-autonumber format
+  async generateClientId() {
+    try {
+      // Get company code from Firebase companies collection
+      const companyCode = await this.getCompanyCode();
+      
+      // Get next auto number for clients
+      const autoNumber = await this.getNextClientAutoNumber();
+      
+      // Generate client ID: COMP-###
+      const clientId = `${companyCode}-${autoNumber.toString().padStart(3, '0')}`;
+      
+      return clientId;
+    } catch (error) {
+      console.error('Error generating client ID:', error);
+      // Fallback to timestamp-based ID
+      const timestamp = Date.now().toString().slice(-6);
+      return `INH-${timestamp}`;
+    }
+  }
+
+  // Get company code from Firebase companies collection
+  async getCompanyCode() {
+    try {
+      if (window.firebaseDB && window.firebaseDB.isAvailable()) {
+        const companiesSnapshot = await window.firebaseDB.db.collection('companies').limit(1).get();
+        if (!companiesSnapshot.empty) {
+          const company = companiesSnapshot.docs[0].data();
+          // Look for company code in various possible field names
+          const code = company.code || company.Code || company.company_code || company.companyCode || 
+                      company.fourLetterCode || company.four_letter_code || company.abbreviation;
+          if (code && code.length >= 3) {
+            return code.substring(0, 4).toUpperCase(); // Ensure 4 characters max
+          }
+        }
+      }
+      
+      // Fallback to default company code
+      return 'INH';
+    } catch (error) {
+      console.error('Error fetching company code:', error);
+      return 'INH'; // Fallback
+    }
+  }
+
+  // Get next auto number for clients
+  async getNextClientAutoNumber() {
+    try {
+      // Get all existing client IDs to determine next number
+      const existingClients = this.clients || [];
+      
+      // Extract auto numbers from existing client IDs
+      const autoNumbers = existingClients
+        .map(client => {
+          const parts = client.id.split('-');
+          if (parts.length >= 2) {
+            const numberPart = parts[parts.length - 1];
+            return parseInt(numberPart, 10);
+          }
+          return 0;
+        })
+        .filter(num => !isNaN(num));
+      
+      // Find the highest auto number and increment
+      const maxAutoNumber = autoNumbers.length > 0 ? Math.max(...autoNumbers) : 0;
+      return maxAutoNumber + 1;
+    } catch (error) {
+      console.error('Error getting next client auto number:', error);
+      return 1; // Start from 1 if error
+    }
   }
 
   // Validate client data
   validateClientData(clientData) {
-    const required = ['clientName', 'companyName', 'phone1', 'contactPerson', 'email', 'address'];
+    // Required fields for basic client information
+    const required = ['clientName', 'contactPerson', 'email', 'phone1'];
     const missing = required.filter(field => !clientData[field] || clientData[field].trim() === '');
     
     if (missing.length > 0) {
@@ -75,6 +136,28 @@ class ClientManager {
       throw new Error('Invalid phone number format for Phone 2');
     }
 
+    // Validate billing address if provided
+    if (clientData.billingAddress) {
+      const billingRequired = ['street', 'city', 'state', 'zipCode', 'country'];
+      const billingMissing = billingRequired.filter(field => 
+        !clientData.billingAddress[field] || clientData.billingAddress[field].trim() === ''
+      );
+      if (billingMissing.length > 0) {
+        throw new Error(`Missing billing address fields: ${billingMissing.join(', ')}`);
+      }
+    }
+
+    // Validate shipping address if provided and different from billing
+    if (clientData.shippingAddress && !clientData.sameAsBilling) {
+      const shippingRequired = ['street', 'city', 'state', 'zipCode', 'country'];
+      const shippingMissing = shippingRequired.filter(field => 
+        !clientData.shippingAddress[field] || clientData.shippingAddress[field].trim() === ''
+      );
+      if (shippingMissing.length > 0) {
+        throw new Error(`Missing shipping address fields: ${shippingMissing.join(', ')}`);
+      }
+    }
+
     return true;
   }
 
@@ -84,14 +167,37 @@ class ClientManager {
       await this.ensureInitialized();
       this.validateClientData(clientData);
       
+      // Generate client ID asynchronously
+      const clientId = await this.generateClientId();
+      
       const client = {
-        id: this.generateClientId(salespersonName),
+        id: clientId,
         ...clientData,
         salesperson: salespersonName,
         createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
         deviceId: this.deviceId
       };
 
+      // Save to Firebase first if available
+      if (window.firebaseDB && window.firebaseDB.isAvailable()) {
+        try {
+          const savedClient = await window.firebaseDB.saveClient(client);
+          console.log('✅ Client saved to Firebase:', savedClient.id);
+          
+          // Add to local array for immediate access
+          this.clients.push(client);
+          
+          // Also save to localStorage as backup
+          await this.saveClientsToLocalStorage();
+          
+          return client;
+        } catch (firebaseError) {
+          console.error('❌ Firebase save failed, falling back to localStorage:', firebaseError);
+        }
+      }
+      
+      // Fallback to localStorage-only operation
       this.clients.push(client);
       await this.saveClients();
       
@@ -112,14 +218,34 @@ class ClientManager {
         throw new Error('Client not found');
       }
 
-      this.clients[index] = {
+      const updatedClient = {
         ...this.clients[index],
         ...clientData,
         updatedAt: new Date().toISOString()
       };
+
+      // Update in Firebase first if available
+      if (window.firebaseDB && window.firebaseDB.isAvailable()) {
+        try {
+          await window.firebaseDB.updateClient(clientId, updatedClient);
+          console.log('✅ Client updated in Firebase:', clientId);
+          
+          // Update local array
+          this.clients[index] = updatedClient;
+          
+          // Also save to localStorage as backup
+          await this.saveClientsToLocalStorage();
+          
+          return updatedClient;
+        } catch (firebaseError) {
+          console.error('❌ Firebase update failed, falling back to localStorage:', firebaseError);
+        }
+      }
       
+      // Fallback to localStorage-only operation
+      this.clients[index] = updatedClient;
       await this.saveClients();
-      return this.clients[index];
+      return updatedClient;
     } catch (error) {
       throw new Error(`Failed to update client: ${error.message}`);
     }
@@ -127,15 +253,40 @@ class ClientManager {
 
   // Delete client
   async deleteClient(clientId) {
-    await this.ensureInitialized();
-    const index = this.clients.findIndex(c => c.id === clientId);
-    if (index === -1) {
-      throw new Error('Client not found');
-    }
+    try {
+      await this.ensureInitialized();
+      const index = this.clients.findIndex(c => c.id === clientId);
+      if (index === -1) {
+        throw new Error('Client not found');
+      }
 
-    const deletedClient = this.clients.splice(index, 1)[0];
-    await this.saveClients();
-    return deletedClient;
+      const deletedClient = this.clients[index];
+
+      // Delete from Firebase first if available
+      if (window.firebaseDB && window.firebaseDB.isAvailable()) {
+        try {
+          await window.firebaseDB.deleteClient(clientId);
+          console.log('✅ Client deleted from Firebase:', clientId);
+          
+          // Remove from local array
+          this.clients.splice(index, 1);
+          
+          // Also save to localStorage as backup
+          await this.saveClientsToLocalStorage();
+          
+          return deletedClient;
+        } catch (firebaseError) {
+          console.error('❌ Firebase delete failed, falling back to localStorage:', firebaseError);
+        }
+      }
+      
+      // Fallback to localStorage-only operation
+      this.clients.splice(index, 1);
+      await this.saveClients();
+      return deletedClient;
+    } catch (error) {
+      throw new Error(`Failed to delete client: ${error.message}`);
+    }
   }
 
   // Get client by ID
@@ -162,36 +313,48 @@ class ClientManager {
   // Load clients from Firebase (with localStorage fallback)
   async loadClients() {
     try {
-      // Try to load from Firebase first
-      if (window.firebaseStorage) {
-        const firebaseClients = await window.firebaseStorage.getItem('clientData');
-        if (firebaseClients && Array.isArray(firebaseClients)) {
-          console.log('Loaded clients from Firebase:', firebaseClients.length);
-          return firebaseClients;
+      // Try to load from Firebase database first
+      if (window.firebaseDB && window.firebaseDB.isAvailable()) {
+        try {
+          const firebaseClients = await window.firebaseDB.getClients();
+          if (firebaseClients && Array.isArray(firebaseClients)) {
+            console.log('✅ Loaded clients from Firebase database:', firebaseClients.length);
+            
+            // Also save to localStorage as backup
+            await this.saveClientsToLocalStorage(firebaseClients);
+            
+            return firebaseClients;
+          }
+        } catch (firebaseError) {
+          console.error('❌ Firebase database load failed:', firebaseError);
         }
       }
       
-      // Fallback to localStorage for migration
+      // Fallback to localStorage
       const stored = localStorage.getItem('clientData');
       const localClients = stored ? JSON.parse(stored) : [];
       
-      // Migrate to Firebase if we have local data
-      if (localClients.length > 0 && window.firebaseStorage) {
-        await window.firebaseStorage.setItem('clientData', localClients);
-        console.log('Migrated clients to Firebase:', localClients.length);
-      }
-      
+      console.log('📁 Loaded clients from localStorage:', localClients.length);
       return localClients;
     } catch (error) {
       console.error('Error loading clients:', error);
-      // Final fallback to localStorage
-      try {
-        const stored = localStorage.getItem('clientData');
-        return stored ? JSON.parse(stored) : [];
-      } catch (fallbackError) {
-        console.error('Fallback loading failed:', fallbackError);
-        return [];
-      }
+      // Final fallback to empty array
+      return [];
+    }
+  }
+
+  // Helper function to save clients to localStorage only
+  async saveClientsToLocalStorage(clientsArray = null) {
+    try {
+      const clientsToSave = clientsArray || this.clients;
+      const timestamp = Date.now().toString();
+      
+      localStorage.setItem('clientData', JSON.stringify(clientsToSave));
+      localStorage.setItem('clientDataTimestamp', timestamp);
+      
+      console.log('💾 Clients saved to localStorage backup:', clientsToSave.length);
+    } catch (error) {
+      console.error('❌ Error saving to localStorage:', error);
     }
   }
 

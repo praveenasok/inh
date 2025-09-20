@@ -2,8 +2,6 @@
 
 // Handle quote selection with radio buttons
 function handleQuoteSelection(radioElement, quoteIndex) {
-    console.log('handleQuoteSelection called with:', radioElement, quoteIndex);
-    
     // Hide any existing context menu
     hideQuoteContextMenu();
     
@@ -17,7 +15,6 @@ async function handleConvertToOrder(quoteIndex) {
         hideQuoteContextMenu();
         await convertQuoteToOrder(quoteIndex);
     } catch (error) {
-        console.error('Error in handleConvertToOrder:', error);
         hideQuoteContextMenu();
     }
 }
@@ -28,28 +25,22 @@ async function handleDeleteQuote(quoteIndex) {
         hideQuoteContextMenu();
         await deleteQuote(quoteIndex);
     } catch (error) {
-        console.error('Error in handleDeleteQuote:', error);
         hideQuoteContextMenu();
     }
 }
 
 // Modified function to show context menu above the selected quote
 function showQuoteContextMenuAbove(radioElement, quoteIndex) {
-    console.log('showQuoteContextMenuAbove called with:', radioElement, quoteIndex);
-    
     // Remove any existing context menu
     hideQuoteContextMenu();
     
     const contextMenu = document.createElement('div');
     contextMenu.className = 'quote-context-menu fixed bg-white border border-gray-200 rounded-lg shadow-lg z-50 py-1 min-w-48';
     contextMenu.id = 'quote-context-menu';
-    console.log('Created context menu element:', contextMenu);
     
     // Get the quote row element (parent of the radio button)
     const quoteRow = radioElement.closest('.quote-item');
-    console.log('Quote row found:', quoteRow);
     const rect = quoteRow.getBoundingClientRect();
-    console.log('Quote row rect:', rect);
     
     const menuWidth = 192; // min-w-48 = 12rem = 192px
     const menuHeight = 160; // Approximate height for 4 buttons
@@ -71,12 +62,10 @@ function showQuoteContextMenuAbove(radioElement, quoteIndex) {
     // Check top boundary - if menu would go above viewport, position below instead
     if (top < 10) {
         top = rect.bottom + 10; // Position below the row
-        console.log('Adjusted position to below');
     }
     
     contextMenu.style.left = left + 'px';
     contextMenu.style.top = top + 'px';
-    console.log('Menu positioned at:', top, left);
     
     contextMenu.innerHTML = `
         <button class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center" onclick="recallQuote(${quoteIndex}); hideQuoteContextMenu();">
@@ -106,9 +95,6 @@ function showQuoteContextMenuAbove(radioElement, quoteIndex) {
     `;
     
     document.body.appendChild(contextMenu);
-    console.log('Menu appended to body. Menu element:', contextMenu);
-    console.log('Menu visibility:', window.getComputedStyle(contextMenu).visibility);
-    console.log('Menu display:', window.getComputedStyle(contextMenu).display);
     
     // Store the current quote index for reference
     contextMenu.dataset.quoteIndex = quoteIndex;

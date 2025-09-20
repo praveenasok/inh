@@ -1,0 +1,1510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quote Maker v2 - Indian Natural Hair</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+    
+    <!-- Custom Styles -->
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: all 0.3s ease;
+        }
+        
+        .card:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+            padding: 10px 22px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .btn-secondary:hover {
+            background: #667eea;
+            color: white;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .form-select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .form-select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .quote-item {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            transition: all 0.3s ease;
+        }
+        
+        .quote-item:hover {
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+        }
+        
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .status-draft {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .status-sent {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .status-accepted {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            
+            .card {
+                box-shadow: none;
+                border: 1px solid #e5e7eb;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="gradient-bg text-white shadow-lg">
+        <div class="container mx-auto px-4 py-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <h1 class="text-2xl font-bold">Quote Maker v2</h1>
+                    <span class="status-badge bg-green-100 text-green-800">Firebase Connected</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button id="save-quote-btn" class="btn-secondary">
+                        <span class="mr-2">💾</span> Save Quote
+                    </button>
+                    <button id="export-quote-btn" class="btn-secondary">
+                        <span class="mr-2">📄</span> Export PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <!-- Left Column: Quote Builder -->
+            <div class="lg:col-span-2 space-y-6">
+                
+                <!-- Quote Information -->
+                <div class="card p-6">
+                    <h2 class="text-xl font-semibold mb-4 text-gray-800">Quote Information</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Quote Number</label>
+                            <input type="text" id="quote-number" class="form-input" placeholder="Auto-generated" readonly>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Date</label>
+                            <input type="date" id="quote-date" class="form-input">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Client</label>
+                            <select id="client-selector" class="form-select">
+                                <option value="">Select Client</option>
+                                <option value="add-new">+ Add New Client</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Salesperson</label>
+                            <select id="salesperson-selector" class="form-select">
+                                <option value="">Select Salesperson</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Product Selection -->
+                <div class="card p-6">
+                    <h2 class="text-xl font-semibold mb-4 text-gray-800">Add Products</h2>
+                    
+                    <!-- Price List and Currency -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Price List</label>
+                            <select id="price-list-selector" class="form-select">
+                                <option value="">Select Price List</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Currency</label>
+                            <select id="currency-selector" class="form-select">
+                                <option value="INR">INR (₹)</option>
+                                <option value="USD">USD ($)</option>
+                                <option value="EUR">EUR (€)</option>
+                                <option value="GBP">GBP (£)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Product Selectors -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                            <select id="category-selector" class="form-select" disabled>
+                                <option value="">Select Category</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Product</label>
+                            <select id="product-selector" class="form-select" disabled>
+                                <option value="">Select Product</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Density</label>
+                            <select id="density-selector" class="form-select" disabled>
+                                <option value="">Select Density</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Length</label>
+                            <select id="length-selector" class="form-select" disabled>
+                                <option value="">Select Length</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Color Type</label>
+                            <select id="color-type-selector" class="form-select" disabled>
+                                <option value="">Select Color Type</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Color</label>
+                            <select id="color-selector" class="form-select" disabled>
+                                <option value="">Select Color</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Style</label>
+                            <select id="style-selector" class="form-select" disabled>
+                                <option value="">Select Style</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Quantity and Price -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Quantity</label>
+                            <input type="number" id="quantity-input" class="form-input" min="1" value="1">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Unit Price</label>
+                            <input type="number" id="unit-price-input" class="form-input" step="0.01" placeholder="Auto-calculated">
+                        </div>
+                        <div class="flex items-end">
+                            <button id="add-item-btn" class="btn-primary w-full" disabled>
+                                <span class="mr-2">➕</span> Add Item
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Current Price Display -->
+                    <div id="price-display" class="bg-blue-50 border border-blue-200 rounded-lg p-4 hidden">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm font-medium text-blue-800">Calculated Price:</span>
+                            <span id="calculated-price" class="text-lg font-bold text-blue-900"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quote Items -->
+                <div class="card p-6">
+                    <h2 class="text-xl font-semibold mb-4 text-gray-800">Quote Items</h2>
+                    <div id="quote-items-container">
+                        <div class="text-center text-gray-500 py-8">
+                            <p>No items added yet. Use the form above to add products to your quote.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Quote Summary -->
+            <div class="space-y-6">
+                
+                <!-- Quote Summary -->
+                <div class="card p-6">
+                    <h2 class="text-xl font-semibold mb-4 text-gray-800">Quote Summary</h2>
+                    
+                    <div class="space-y-3">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Subtotal:</span>
+                            <span id="subtotal-amount" class="font-semibold">₹0.00</span>
+                        </div>
+                        
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">Discount:</span>
+                            <div class="flex items-center space-x-2">
+                                <input type="number" id="discount-input" class="form-input w-20 text-sm" min="0" max="100" value="0">
+                                <span class="text-sm text-gray-500">%</span>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">Tax:</span>
+                            <div class="flex items-center space-x-2">
+                                <input type="number" id="tax-input" class="form-input w-20 text-sm" min="0" max="100" value="18">
+                                <span class="text-sm text-gray-500">%</span>
+                            </div>
+                        </div>
+                        
+                        <hr class="my-3">
+                        
+                        <div class="flex justify-between text-lg font-bold">
+                            <span>Total:</span>
+                            <span id="total-amount" class="text-blue-600">₹0.00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="card p-6">
+                    <h2 class="text-xl font-semibold mb-4 text-gray-800">Quick Actions</h2>
+                    
+                    <div class="space-y-3">
+                        <button id="clear-quote-btn" class="btn-secondary w-full">
+                            <span class="mr-2">🗑️</span> Clear Quote
+                        </button>
+                        
+                        <button id="duplicate-quote-btn" class="btn-secondary w-full">
+                            <span class="mr-2">📋</span> Duplicate Quote
+                        </button>
+                        
+                        <button id="load-quote-btn" class="btn-secondary w-full">
+                            <span class="mr-2">📂</span> Load Quote
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Recent Quotes -->
+                <div class="card p-6">
+                    <h2 class="text-xl font-semibold mb-4 text-gray-800">Recent Quotes</h2>
+                    <div id="recent-quotes-container">
+                        <div class="text-center text-gray-500 py-4">
+                            <div class="loading mx-auto mb-2"></div>
+                            <p class="text-sm">Loading recent quotes...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add Client Modal -->
+    <div id="add-client-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg max-w-2xl w-full max-h-screen overflow-y-auto">
+                <div class="p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold">Add New Client</h3>
+                        <button id="close-modal-btn" class="text-gray-400 hover:text-gray-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <form id="add-client-form" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Client Name *</label>
+                                <input type="text" id="client-name" class="form-input" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Company Name</label>
+                                <input type="text" id="company-name" class="form-input">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                                <input type="email" id="client-email" class="form-input">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Phone</label>
+                                <input type="tel" id="client-phone" class="form-input">
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Address</label>
+                            <textarea id="client-address" class="form-input" rows="3"></textarea>
+                        </div>
+                        
+                        <div class="flex justify-end space-x-3 pt-4">
+                            <button type="button" id="cancel-client-btn" class="btn-secondary">Cancel</button>
+                            <button type="submit" class="btn-primary">Add Client</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="fixed inset-0 bg-black bg-opacity-50 hidden z-40">
+        <div class="flex items-center justify-center min-h-screen">
+            <div class="bg-white rounded-lg p-6 text-center">
+                <div class="loading mx-auto mb-4"></div>
+                <p class="text-gray-600">Loading...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="firebase-config.js"></script>
+    <script src="firebase-database.js"></script>
+    <script src="client-management.js"></script>
+    
+    <script>
+        // Global variables
+        let currentQuote = {
+            number: '',
+            date: '',
+            client: null,
+            salesperson: '',
+            currency: 'INR',
+            priceList: '',
+            items: [],
+            subtotal: 0,
+            discount: 0,
+            tax: 18,
+            total: 0,
+            status: 'draft'
+        };
+        
+        let productData = [];
+        let clientData = [];
+        let salesmenData = [];
+        let stylesData = [];
+        let colorsData = [];
+        let isManualPriceEntry = false; // Track if user is manually entering price
+        
+        // Currency symbols
+        const currencySymbols = {
+            'INR': '₹',
+            'USD': '$',
+            'EUR': '€',
+            'GBP': '£',
+            'AUD': 'A$',
+            'CAD': 'C$',
+            'JPY': '¥'
+        };
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', async function() {
+            showLoading(true);
+            
+            try {
+                // Initialize Firebase
+                await initializeFirebase();
+                
+                // Load initial data
+                await loadAllData();
+                
+                // Setup event listeners
+                setupEventListeners();
+                
+                // Initialize quote
+                initializeQuote();
+                
+                console.log('✅ Quote Maker v2 initialized successfully');
+                
+            } catch (error) {
+                console.error('❌ Initialization error:', error);
+                showError('Failed to initialize application. Please refresh the page.');
+            } finally {
+                showLoading(false);
+            }
+        });
+
+        // Initialize Firebase
+        async function initializeFirebase() {
+            if (window.firebaseDB) {
+                await window.firebaseDB.initialize();
+                
+                if (window.firebaseDB.isAvailable()) {
+                    updateConnectionStatus(true);
+                    console.log('✅ Firebase connected successfully');
+                } else {
+                    updateConnectionStatus(false);
+                    console.warn('⚠️ Firebase not available, using fallback data');
+                }
+            }
+        }
+
+        // Load all required data
+        async function loadAllData() {
+            try {
+                // Load data in parallel for better performance
+                const [products, clients, salesmen, styles, colors] = await Promise.all([
+                    loadProducts(),
+                    loadClients(),
+                    loadSalesmen(),
+                    loadStyles(),
+                    loadColors()
+                ]);
+                
+                console.log('🔍 DEBUG: Loaded styles data:', styles);
+                console.log('🔍 DEBUG: Loaded colors data:', colors);
+                console.log('✅ All data loaded successfully');
+                
+            } catch (error) {
+                console.error('❌ Error loading data:', error);
+                throw error;
+            }
+        }
+
+        // Load products from Firebase
+        async function loadProducts() {
+            try {
+
+                
+                if (window.firebaseDB && window.firebaseDB.isAvailable()) {
+                    productData = await window.firebaseDB.getProducts();
+                    console.log(`📦 Loaded ${productData.length} products from Firebase`);
+                } else {
+                    // Fallback to embedded data if available
+                    productData = window.embeddedProductData || [];
+                    console.log(`📦 Using ${productData.length} embedded products`);
+                }
+                
+                populatePriceListDropdown();
+                return productData;
+                
+            } catch (error) {
+                console.error('❌ Error loading products:', error);
+                productData = [];
+                return [];
+            }
+        }
+
+        // Load clients from Firebase
+        async function loadClients() {
+            try {
+                if (window.firebaseDB && window.firebaseDB.isAvailable()) {
+                    clientData = await window.firebaseDB.getClients();
+                    console.log(`👥 Loaded ${clientData.length} clients from Firebase`);
+                } else {
+                    clientData = [];
+                    console.log('👥 No clients loaded (Firebase unavailable)');
+                }
+                
+                populateClientDropdown();
+                return clientData;
+                
+            } catch (error) {
+                console.error('❌ Error loading clients:', error);
+                clientData = [];
+                return [];
+            }
+        }
+
+        // Load salesmen from Firebase
+        async function loadSalesmen() {
+            try {
+                if (window.firebaseDB && window.firebaseDB.isAvailable()) {
+                    salesmenData = await window.firebaseDB.getSalesmen();
+                    console.log(`👨‍💼 Loaded ${salesmenData.length} salesmen from Firebase`);
+                } else {
+                    salesmenData = [];
+                    console.log('👨‍💼 No salesmen loaded (Firebase unavailable)');
+                }
+                
+                populateSalespersonDropdown();
+                return salesmenData;
+                
+            } catch (error) {
+                console.error('❌ Error loading salesmen:', error);
+                salesmenData = [];
+                return [];
+            }
+        }
+
+        // Load styles from Firebase
+        async function loadStyles() {
+            try {
+                if (window.firebaseDB && window.firebaseDB.isAvailable()) {
+                    stylesData = await window.firebaseDB.getStyles();
+                    console.log(`🎨 Loaded ${stylesData.length} styles from Firebase`);
+                } else {
+                    stylesData = [];
+                    console.log('🎨 No styles loaded (Firebase unavailable)');
+                }
+                
+                populateStylesFromCollection();
+                
+                // Enable style selector since styles are independent of product selection
+                enableSelector('style-selector');
+                
+                return stylesData;
+                
+            } catch (error) {
+                console.error('❌ Error loading styles:', error);
+                stylesData = [];
+                populateStylesFromCollection(); // Still call to show "No styles available"
+                return [];
+            }
+        }
+
+        // Load colors from Firebase
+        async function loadColors() {
+            try {
+                if (window.firebaseDB && window.firebaseDB.isAvailable()) {
+                    colorsData = await window.firebaseDB.getColors();
+                    console.log(`🌈 Loaded ${colorsData.length} colors from Firebase`);
+                } else {
+                    colorsData = [];
+                    console.log('🌈 No colors loaded (Firebase unavailable)');
+                }
+                
+                populateColors();
+                return colorsData;
+                
+            } catch (error) {
+                console.error('❌ Error loading colors:', error);
+                colorsData = [];
+                return [];
+            }
+        }
+
+        // Populate price list dropdown
+        function populatePriceListDropdown() {
+            const selector = document.getElementById('price-list-selector');
+            const priceLists = [...new Set(productData.map(p => p['Price List Name'] || p.PriceListName || p.PriceList).filter(Boolean))];
+            
+            selector.innerHTML = '<option value="">Select Price List</option>';
+            
+            priceLists.sort().forEach(priceList => {
+                const option = document.createElement('option');
+                option.value = priceList;
+                option.textContent = priceList;
+                selector.appendChild(option);
+            });
+            
+            console.log(`📋 Populated ${priceLists.length} price lists`);
+        }
+
+        // Populate client dropdown
+        function populateClientDropdown() {
+            const selector = document.getElementById('client-selector');
+            
+            // Clear existing options except default and add new
+            selector.innerHTML = '<option value="">Select Client</option><option value="add-new">+ Add New Client</option>';
+            
+            clientData.forEach(client => {
+                const option = document.createElement('option');
+                option.value = client.id;
+                option.textContent = `${client.clientName} (${client.companyName || 'No Company'})`;
+                selector.appendChild(option);
+            });
+            
+            console.log(`👥 Populated ${clientData.length} clients`);
+        }
+
+        // Populate salesperson dropdown
+        function populateSalespersonDropdown() {
+            const selector = document.getElementById('salesperson-selector');
+            
+            selector.innerHTML = '<option value="">Select Salesperson</option>';
+            
+            salesmenData.forEach(salesman => {
+                const option = document.createElement('option');
+                option.value = salesman.name || salesman.Name;
+                option.textContent = salesman.name || salesman.Name;
+                selector.appendChild(option);
+            });
+            
+            console.log(`👨‍💼 Populated ${salesmenData.length} salespeople`);
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            console.log('🔧 Setting up event listeners...');
+            
+            // Price list change
+            document.getElementById('price-list-selector').addEventListener('change', onPriceListChange);
+            
+            // Category change
+            document.getElementById('category-selector').addEventListener('change', onCategoryChange);
+            
+            // Product change
+            document.getElementById('product-selector').addEventListener('change', onProductChange);
+            
+            // Other selectors
+            document.getElementById('density-selector').addEventListener('change', () => {
+                console.log('🎯 Density changed');
+                isManualPriceEntry = false; // Reset manual entry flag
+                updatePricing();
+            });
+            document.getElementById('length-selector').addEventListener('change', () => {
+                console.log('🎯 Length changed');
+                isManualPriceEntry = false; // Reset manual entry flag
+                updatePricing();
+            });
+            document.getElementById('color-type-selector').addEventListener('change', onColorTypeChange);
+            document.getElementById('color-selector').addEventListener('change', () => {
+                console.log('🎯 Color changed');
+                isManualPriceEntry = false; // Reset manual entry flag
+                updatePricing();
+            });
+            document.getElementById('style-selector').addEventListener('change', () => {
+                console.log('🎯 Style changed');
+                isManualPriceEntry = false; // Reset manual entry flag
+                updatePricing();
+            });
+            
+            // Quantity and price inputs
+            document.getElementById('quantity-input').addEventListener('input', () => {
+                console.log('🎯 Quantity changed');
+                updatePricing();
+            });
+            document.getElementById('unit-price-input').addEventListener('input', () => {
+                console.log('🎯 Unit price changed');
+                isManualPriceEntry = true; // User is manually entering price
+                updatePricing();
+            });
+            
+            // Currency change
+            document.getElementById('currency-selector').addEventListener('change', onCurrencyChange);
+            
+            // Client selector
+            document.getElementById('client-selector').addEventListener('change', onClientChange);
+            
+            // Add item button
+            document.getElementById('add-item-btn').addEventListener('click', addQuoteItem);
+            
+            // Summary inputs
+            document.getElementById('discount-input').addEventListener('input', updateQuoteSummary);
+            document.getElementById('tax-input').addEventListener('input', updateQuoteSummary);
+            
+            // Action buttons
+            document.getElementById('save-quote-btn').addEventListener('click', saveQuote);
+            document.getElementById('export-quote-btn').addEventListener('click', exportQuote);
+            document.getElementById('clear-quote-btn').addEventListener('click', clearQuote);
+            document.getElementById('duplicate-quote-btn').addEventListener('click', duplicateQuote);
+            document.getElementById('load-quote-btn').addEventListener('click', loadQuote);
+            
+            // Modal events
+            document.getElementById('close-modal-btn').addEventListener('click', closeAddClientModal);
+            document.getElementById('cancel-client-btn').addEventListener('click', closeAddClientModal);
+            document.getElementById('add-client-form').addEventListener('submit', addNewClient);
+        }
+
+        // Price list change handler
+        function onPriceListChange() {
+            const priceList = document.getElementById('price-list-selector').value;
+            currentQuote.priceList = priceList;
+            
+            if (priceList) {
+                populateCategories(priceList);
+                enableSelector('category-selector');
+            } else {
+                clearCascadeSelectors(['category-selector', 'product-selector', 'density-selector', 'length-selector', 'color-type-selector', 'color-selector']);
+            }
+        }
+
+        // Populate categories based on price list
+        function populateCategories(priceList) {
+            const selector = document.getElementById('category-selector');
+            const categories = [...new Set(
+                productData
+                    .filter(p => (p['Price List Name'] || p.PriceListName || p.PriceList) === priceList)
+                    .map(p => p.Category || p.category)
+                    .filter(Boolean)
+            )];
+            
+            selector.innerHTML = '<option value="">Select Category</option>';
+            
+            categories.sort().forEach(category => {
+                const option = document.createElement('option');
+                option.value = category;
+                option.textContent = category;
+                selector.appendChild(option);
+            });
+            
+            console.log(`📂 Populated ${categories.length} categories for ${priceList}`);
+        }
+
+        // Category change handler
+        function onCategoryChange() {
+            const priceList = document.getElementById('price-list-selector').value;
+            const category = document.getElementById('category-selector').value;
+            
+            if (priceList && category) {
+                populateProducts(priceList, category);
+                enableSelector('product-selector');
+            } else {
+                clearCascadeSelectors(['product-selector', 'density-selector', 'length-selector', 'color-type-selector', 'color-selector']);
+            }
+        }
+
+        // Populate products based on price list and category
+        function populateProducts(priceList, category) {
+            const selector = document.getElementById('product-selector');
+            const products = [...new Set(
+                productData
+                    .filter(p => 
+                        (p['Price List Name'] || p.PriceListName || p.PriceList) === priceList &&
+                        (p.Category || p.category) === category
+                    )
+                    .map(p => p.Product || p.product)
+                    .filter(Boolean)
+            )];
+            
+            selector.innerHTML = '<option value="">Select Product</option>';
+            
+            products.sort().forEach(product => {
+                const option = document.createElement('option');
+                option.value = product;
+                option.textContent = product;
+                selector.appendChild(option);
+            });
+            
+            console.log(`📦 Populated ${products.length} products for ${category}`);
+        }
+
+        // Product change handler
+        function onProductChange() {
+            const priceList = document.getElementById('price-list-selector').value;
+            const category = document.getElementById('category-selector').value;
+            const product = document.getElementById('product-selector').value;
+            
+            if (priceList && category && product) {
+                populateDensities(priceList, category, product);
+                populateLengths(priceList, category, product);
+                populateColorTypes(priceList, category, product);
+                
+                enableSelector('density-selector');
+                enableSelector('length-selector');
+                enableSelector('color-type-selector');
+                enableSelector('color-selector');
+                enableSelector('style-selector');
+                
+                updatePricing();
+            } else {
+                clearCascadeSelectors(['density-selector', 'length-selector', 'color-type-selector', 'color-selector']);
+            }
+        }
+
+        // Color type change handler
+        function onColorTypeChange() {
+            updatePricing();
+        }
+
+        // Populate densities
+        function populateDensities(priceList, category, product) {
+            const selector = document.getElementById('density-selector');
+            const densities = [...new Set(
+                productData
+                    .filter(p => 
+                        (p['Price List Name'] || p.PriceListName || p.PriceList) === priceList &&
+                        (p.Category || p.category) === category &&
+                        (p.Product || p.product) === product
+                    )
+                    .map(p => p.Density || p.density)
+                    .filter(Boolean)
+            )];
+            
+            selector.innerHTML = '<option value="">Select Density</option>';
+            
+            densities.sort().forEach(density => {
+                const option = document.createElement('option');
+                option.value = density;
+                option.textContent = density;
+                selector.appendChild(option);
+            });
+            
+            console.log(`⚖️ Populated ${densities.length} densities for ${product}`);
+        }
+
+        // Populate lengths
+        function populateLengths(priceList, category, product) {
+            const selector = document.getElementById('length-selector');
+            const lengths = [...new Set(
+                productData
+                    .filter(p => 
+                        (p['Price List Name'] || p.PriceListName || p.PriceList) === priceList &&
+                        (p.Category || p.category) === category &&
+                        (p.Product || p.product) === product
+                    )
+                    .map(p => p.Length || p.length)
+                    .filter(Boolean)
+            )];
+            
+            selector.innerHTML = '<option value="">Select Length</option>';
+            
+            lengths.sort((a, b) => {
+                const numA = parseFloat(a);
+                const numB = parseFloat(b);
+                return !isNaN(numA) && !isNaN(numB) ? numA - numB : a.localeCompare(b);
+            }).forEach(length => {
+                const option = document.createElement('option');
+                option.value = length;
+                option.textContent = length;
+                selector.appendChild(option);
+            });
+            
+            console.log(`📏 Populated ${lengths.length} lengths for ${product}`);
+        }
+
+        // Populate color types
+        function populateColorTypes(priceList, category, product) {
+            const selector = document.getElementById('color-type-selector');
+            const colors = [...new Set(
+                productData
+                    .filter(p => 
+                        (p['Price List Name'] || p.PriceListName || p.PriceList) === priceList &&
+                        (p.Category || p.category) === category &&
+                        (p.Product || p.product) === product
+                    )
+                    .map(p => p.Colors || p.Color || p.color)
+                    .filter(Boolean)
+                    .flatMap(colorString => colorString.split(',').map(c => c.trim()))
+                    .filter(Boolean)
+            )];
+            
+            selector.innerHTML = '<option value="">Select Color Type</option>';
+            
+            colors.sort().forEach(color => {
+                const option = document.createElement('option');
+                option.value = color;
+                option.textContent = color;
+                selector.appendChild(option);
+            });
+            
+            console.log(`🎨 Populated ${colors.length} color types for ${product}`);
+        }
+
+        // Populate colors from colors collection
+        function populateColors() {
+            const selector = document.getElementById('color-selector');
+            
+            if (!colorsData || colorsData.length === 0) {
+                selector.innerHTML = '<option value="">No colors available</option>';
+                return;
+            }
+            
+            selector.innerHTML = '<option value="">Select Color</option>';
+            
+            colorsData.forEach(colorItem => {
+                const colorName = colorItem.colorname || colorItem.Color || colorItem.color || colorItem.name;
+                if (colorName) {
+                    const option = document.createElement('option');
+                    option.value = colorName;
+                    option.textContent = colorName;
+                    selector.appendChild(option);
+                }
+            });
+            
+            console.log(`🌈 Populated ${colorsData.length} colors from colors collection`);
+        }
+
+        // Populate styles from styles collection
+        function populateStylesFromCollection() {
+            const selector = document.getElementById('style-selector');
+            
+            if (!selector) {
+                console.error('❌ Style selector element not found');
+                return;
+            }
+            
+            if (!stylesData || stylesData.length === 0) {
+                selector.innerHTML = '<option value="">No styles available</option>';
+                console.log('⚠️ No styles data available for population');
+                return;
+            }
+            
+            selector.innerHTML = '<option value="">Select Style</option>';
+            
+            let populatedCount = 0;
+            stylesData.forEach(styleItem => {
+                const styleName = styleItem.stylename || styleItem.Style || styleItem.style || styleItem.name;
+                if (styleName) {
+                    const option = document.createElement('option');
+                    option.value = styleName;
+                    option.textContent = styleName;
+                    selector.appendChild(option);
+                    populatedCount++;
+                }
+            });
+            
+            console.log(`✨ Populated ${populatedCount} styles from ${stylesData.length} style items`);
+        }
+
+        // Populate styles
+
+
+        // Update pricing based on current selections
+        function updatePricing() {
+            console.log('🔄 updatePricing called');
+            
+            const priceList = document.getElementById('price-list-selector').value;
+            const category = document.getElementById('category-selector').value;
+            const product = document.getElementById('product-selector').value;
+            const density = document.getElementById('density-selector').value;
+            const length = document.getElementById('length-selector').value;
+            const colorType = document.getElementById('color-type-selector').value;
+            const quantity = parseFloat(document.getElementById('quantity-input').value) || 1;
+            const overridePrice = parseFloat(document.getElementById('unit-price-input').value);
+            
+            console.log('📋 Current form values:', {
+                priceList, category, product, density, length, colorType, quantity, overridePrice
+            });
+            
+            console.log('📊 ProductData status:', {
+                loaded: !!productData,
+                length: productData ? productData.length : 0,
+                sample: productData && productData.length > 0 ? productData[0] : null
+            });
+            
+            let unitPrice = 0;
+            
+            // Always try to calculate price from product data first
+            if (priceList && category && product && density && length) {
+                // Find matching product for pricing
+                const matchingProduct = productData.find(p => {
+                    const productColors = p.Colors || p.Color || p.color || '';
+                    const colorMatches = !colorType || 
+                        productColors === colorType || 
+                        productColors.split(',').map(c => c.trim()).includes(colorType);
+                    
+                    return (p['Price List Name'] || p.PriceListName || p.PriceList) === priceList &&
+                        (p.Category || p.category) === category &&
+                        (p.Product || p.product) === product &&
+                        (p.Density || p.density) === density &&
+                        (p.Length || p.length) === length &&
+                        colorMatches;
+                });
+                
+                if (matchingProduct) {
+                    const calculatedPrice = parseFloat(matchingProduct.Rate || matchingProduct.Price || matchingProduct.price || 0);
+                    console.log('💰 Found matching product for pricing:', {
+                        product: matchingProduct,
+                        calculatedPrice: calculatedPrice
+                    });
+                    
+                    // Use override price if manually entered, otherwise use calculated price
+                     if (isManualPriceEntry && overridePrice && overridePrice > 0) {
+                         unitPrice = overridePrice;
+                         console.log('🔧 Using manual override price:', overridePrice);
+                     } else {
+                         unitPrice = calculatedPrice;
+                         // Update the input field with calculated price only if not manually entered
+                         if (!isManualPriceEntry) {
+                             document.getElementById('unit-price-input').value = unitPrice > 0 ? unitPrice.toFixed(2) : '';
+                         }
+                     }
+                } else {
+                    console.log('⚠️ No matching product found for pricing with criteria:', {
+                        priceList, category, product, density, length, colorType
+                    });
+                    
+                    // Use override price if available, otherwise no price
+                    if (overridePrice && overridePrice > 0) {
+                        unitPrice = overridePrice;
+                    } else {
+                        unitPrice = 0;
+                        document.getElementById('unit-price-input').value = '';
+                    }
+                }
+            } else {
+                // No product data available, use override price if entered
+                if (overridePrice && overridePrice > 0) {
+                    unitPrice = overridePrice;
+                } else {
+                    unitPrice = 0;
+                    document.getElementById('unit-price-input').value = '';
+                }
+            }
+            
+            // Update price display
+            const priceDisplay = document.getElementById('price-display');
+            const calculatedPrice = document.getElementById('calculated-price');
+            
+            if (unitPrice > 0) {
+                const totalPrice = unitPrice * quantity;
+                const currency = document.getElementById('currency-selector').value;
+                const symbol = currencySymbols[currency] || currency + ' ';
+                
+                calculatedPrice.textContent = `${symbol}${totalPrice.toFixed(2)}`;
+                priceDisplay.classList.remove('hidden');
+                
+                // Enable add button if all required fields are filled
+                const addBtn = document.getElementById('add-item-btn');
+                if (priceList && category && product && density && length) {
+                    addBtn.disabled = false;
+                } else {
+                    addBtn.disabled = true;
+                }
+            } else {
+                priceDisplay.classList.add('hidden');
+                document.getElementById('add-item-btn').disabled = true;
+            }
+        }
+
+        // Currency change handler
+        function onCurrencyChange() {
+            const currency = document.getElementById('currency-selector').value;
+            currentQuote.currency = currency;
+            updatePricing();
+            updateQuoteSummary();
+        }
+
+        // Client change handler
+        function onClientChange() {
+            const clientId = document.getElementById('client-selector').value;
+            
+            if (clientId === 'add-new') {
+                openAddClientModal();
+                document.getElementById('client-selector').value = '';
+            } else if (clientId) {
+                const client = clientData.find(c => c.id === clientId);
+                currentQuote.client = client;
+            } else {
+                currentQuote.client = null;
+            }
+        }
+
+        // Add quote item
+        function addQuoteItem() {
+            const priceList = document.getElementById('price-list-selector').value;
+            const category = document.getElementById('category-selector').value;
+            const product = document.getElementById('product-selector').value;
+            const density = document.getElementById('density-selector').value;
+            const length = document.getElementById('length-selector').value;
+            const colorType = document.getElementById('color-type-selector').value;
+            const color = document.getElementById('color-selector').value;
+            const style = document.getElementById('style-selector').value;
+            const quantity = parseFloat(document.getElementById('quantity-input').value) || 1;
+            const unitPrice = parseFloat(document.getElementById('unit-price-input').value) || 0;
+            
+            if (!priceList || !category || !product || !density || !length || unitPrice <= 0) {
+                showError('Please fill in all required fields and ensure a valid price is calculated.');
+                return;
+            }
+            
+            const item = {
+                id: Date.now().toString(),
+                priceList,
+                category,
+                product,
+                density,
+                length,
+                colorType: colorType || 'N/A',
+                color: color || 'N/A',
+                style: style || 'N/A',
+                quantity,
+                unitPrice,
+                totalPrice: unitPrice * quantity
+            };
+            
+            currentQuote.items.push(item);
+            
+            // Clear form
+            clearProductForm();
+            
+            // Update display
+            updateQuoteItemsDisplay();
+            updateQuoteSummary();
+            
+            console.log('✅ Item added to quote:', item);
+        }
+
+        // Clear product form
+        function clearProductForm() {
+            document.getElementById('quantity-input').value = '1';
+            document.getElementById('unit-price-input').value = '';
+            document.getElementById('price-display').classList.add('hidden');
+            document.getElementById('add-item-btn').disabled = true;
+            
+            // Clear selectors except price list
+            clearCascadeSelectors(['category-selector', 'product-selector', 'density-selector', 'length-selector', 'color-type-selector', 'color-selector']);
+        }
+
+        // Update quote items display
+        function updateQuoteItemsDisplay() {
+            const container = document.getElementById('quote-items-container');
+            
+            if (currentQuote.items.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center text-gray-500 py-8">
+                        <p>No items added yet. Use the form above to add products to your quote.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const currency = currentQuote.currency;
+            const symbol = currencySymbols[currency] || currency + ' ';
+            
+            container.innerHTML = currentQuote.items.map((item, index) => `
+                <div class="quote-item">
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <h4 class="font-semibold text-gray-800">${item.product}</h4>
+                            <p class="text-sm text-gray-600">
+                                ${item.category} • ${item.density} • ${item.length}" • ${item.colorType}
+                                ${item.color !== 'N/A' ? ' • Color: ' + item.color : ''}
+                                ${item.style !== 'N/A' ? ' • Style: ' + item.style : ''}
+                            </p>
+                            <p class="text-sm text-gray-500 mt-1">
+                                Qty: ${item.quantity} × ${symbol}${item.unitPrice.toFixed(2)}
+                            </p>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-semibold text-gray-800">${symbol}${item.totalPrice.toFixed(2)}</p>
+                            <button onclick="removeQuoteItem(${index})" class="text-red-500 hover:text-red-700 text-sm mt-1">
+                                Remove
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Remove quote item
+        function removeQuoteItem(index) {
+            currentQuote.items.splice(index, 1);
+            updateQuoteItemsDisplay();
+            updateQuoteSummary();
+        }
+
+        // Update quote summary
+        function updateQuoteSummary() {
+            const currency = currentQuote.currency;
+            const symbol = currencySymbols[currency] || currency + ' ';
+            
+            // Calculate subtotal
+            const subtotal = currentQuote.items.reduce((sum, item) => sum + item.totalPrice, 0);
+            
+            // Get discount and tax
+            const discountPercent = parseFloat(document.getElementById('discount-input').value) || 0;
+            const taxPercent = parseFloat(document.getElementById('tax-input').value) || 0;
+            
+            // Calculate amounts
+            const discountAmount = subtotal * (discountPercent / 100);
+            const taxableAmount = subtotal - discountAmount;
+            const taxAmount = taxableAmount * (taxPercent / 100);
+            const total = taxableAmount + taxAmount;
+            
+            // Update display
+            document.getElementById('subtotal-amount').textContent = `${symbol}${subtotal.toFixed(2)}`;
+            document.getElementById('total-amount').textContent = `${symbol}${total.toFixed(2)}`;
+            
+            // Update current quote
+            currentQuote.subtotal = subtotal;
+            currentQuote.discount = discountPercent;
+            currentQuote.tax = taxPercent;
+            currentQuote.total = total;
+        }
+
+        // Utility functions
+        function enableSelector(selectorId) {
+            document.getElementById(selectorId).disabled = false;
+        }
+
+        function clearCascadeSelectors(selectorIds) {
+            selectorIds.forEach(id => {
+                const selector = document.getElementById(id);
+                selector.innerHTML = '<option value="">Select ' + id.replace('-selector', '').replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase()) + '</option>';
+                selector.disabled = true;
+            });
+            
+            // Clear pricing
+            document.getElementById('unit-price-input').value = '';
+            document.getElementById('price-display').classList.add('hidden');
+            document.getElementById('add-item-btn').disabled = true;
+        }
+
+        function updateConnectionStatus(connected) {
+            const badge = document.querySelector('.status-badge');
+            if (connected) {
+                badge.textContent = 'Firebase Connected';
+                badge.className = 'status-badge bg-green-100 text-green-800';
+            } else {
+                badge.textContent = 'Offline Mode';
+                badge.className = 'status-badge bg-yellow-100 text-yellow-800';
+            }
+        }
+
+        function showLoading(show) {
+            const overlay = document.getElementById('loading-overlay');
+            if (show) {
+                overlay.classList.remove('hidden');
+            } else {
+                overlay.classList.add('hidden');
+            }
+        }
+
+        function showError(message) {
+            alert(message); // Simple alert for now, can be enhanced with a proper modal
+        }
+
+        function showSuccess(message) {
+            alert(message); // Simple alert for now, can be enhanced with a proper modal
+        }
+
+        // Initialize quote
+        function initializeQuote() {
+            // Generate quote number
+            const today = new Date();
+            const dateStr = today.toISOString().split('T')[0].replace(/-/g, '');
+            const randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+            currentQuote.number = `INH-${dateStr}-${randomNum}`;
+            
+            // Set current date
+            currentQuote.date = today.toISOString().split('T')[0];
+            
+            // Update form
+            document.getElementById('quote-number').value = currentQuote.number;
+            document.getElementById('quote-date').value = currentQuote.date;
+        }
+
+        // Modal functions
+        function openAddClientModal() {
+            document.getElementById('add-client-modal').classList.remove('hidden');
+            setTimeout(() => {
+                document.getElementById('client-name').focus();
+            }, 100);
+        }
+
+        function closeAddClientModal() {
+            document.getElementById('add-client-modal').classList.add('hidden');
+            document.getElementById('add-client-form').reset();
+        }
+
+        // Add new client
+        async function addNewClient(event) {
+            event.preventDefault();
+            
+            const clientName = document.getElementById('client-name').value.trim();
+            const companyName = document.getElementById('company-name').value.trim();
+            const email = document.getElementById('client-email').value.trim();
+            const phone = document.getElementById('client-phone').value.trim();
+            const address = document.getElementById('client-address').value.trim();
+            
+            if (!clientName) {
+                showError('Client name is required');
+                return;
+            }
+            
+            try {
+                showLoading(true);
+                
+                const newClient = {
+                    clientName,
+                    companyName,
+                    email,
+                    phone,
+                    address,
+                    createdAt: new Date(),
+                    updatedAt: new Date()
+                };
+                
+                if (window.firebaseDB && window.firebaseDB.isAvailable()) {
+                    const savedClient = await window.firebaseDB.saveClient(newClient);
+                    clientData.push(savedClient);
+                    
+                    // Add to dropdown
+                    const selector = document.getElementById('client-selector');
+                    const option = document.createElement('option');
+                    option.value = savedClient.id;
+                    option.textContent = `${clientName} (${companyName || 'No Company'})`;
+                    
+                    // Insert before "Add New Client" option
+                    const addNewOption = selector.querySelector('option[value="add-new"]');
+                    selector.insertBefore(option, addNewOption);
+                    
+                    // Select the new client
+                    selector.value = savedClient.id;
+                    currentQuote.client = savedClient;
+                    
+                    showSuccess('Client added successfully!');
+                } else {
+                    showError('Cannot add client: Firebase not available');
+                }
+                
+                closeAddClientModal();
+                
+            } catch (error) {
+                console.error('Error adding client:', error);
+                showError('Failed to add client. Please try again.');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Save quote
+        async function saveQuote() {
+            if (currentQuote.items.length === 0) {
+                showError('Cannot save empty quote. Please add at least one item.');
+                return;
+            }
+            
+            try {
+                showLoading(true);
+                
+                // Update quote data from form
+                currentQuote.number = document.getElementById('quote-number').value;
+                currentQuote.date = document.getElementById('quote-date').value;
+                currentQuote.salesperson = document.getElementById('salesperson-selector').value;
+                
+                if (window.firebaseDB && window.firebaseDB.isAvailable()) {
+                    await window.firebaseDB.saveQuote(currentQuote);
+                    showSuccess('Quote saved successfully!');
+                } else {
+                    // Save to localStorage as fallback
+                    const savedQuotes = JSON.parse(localStorage.getItem('savedQuotes') || '[]');
+                    savedQuotes.push(currentQuote);
+                    localStorage.setItem('savedQuotes', JSON.stringify(savedQuotes));
+                    showSuccess('Quote saved locally!');
+                }
+                
+            } catch (error) {
+                console.error('Error saving quote:', error);
+                showError('Failed to save quote. Please try again.');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Export quote (placeholder)
+        function exportQuote() {
+            showError('Export functionality will be implemented soon.');
+        }
+
+        // Clear quote
+        function clearQuote() {
+            if (confirm('Are you sure you want to clear the current quote? This action cannot be undone.')) {
+                currentQuote.items = [];
+                currentQuote.client = null;
+                
+                // Reset form
+                document.getElementById('client-selector').value = '';
+                document.getElementById('salesperson-selector').value = '';
+                document.getElementById('price-list-selector').value = '';
+                document.getElementById('discount-input').value = '0';
+                document.getElementById('tax-input').value = '18';
+                
+                clearProductForm();
+                updateQuoteItemsDisplay();
+                updateQuoteSummary();
+                
+                showSuccess('Quote cleared successfully!');
+            }
+        }
+
+        // Duplicate quote (placeholder)
+        function duplicateQuote() {
+            showError('Duplicate functionality will be implemented soon.');
+        }
+
+        // Load quote (placeholder)
+        function loadQuote() {
+            showError('Load quote functionality will be implemented soon.');
+        }
+
+
+    </script>
+</body>
+</html>

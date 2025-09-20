@@ -172,8 +172,21 @@ Firestore Database
 │   │   ├── phone2: string (optional)
 │   │   ├── contactPerson: string
 │   │   ├── email: string
-│   │   ├── address: string
-│   │   ├── postalCode: string (optional)
+│   │   ├── website: string (optional)
+│   │   ├── notes: string (optional)
+│   │   ├── billingAddress: object
+│   │   │   ├── street: string
+│   │   │   ├── city: string
+│   │   │   ├── state: string
+│   │   │   ├── postalCode: string
+│   │   │   └── country: string
+│   │   ├── shippingAddress: object
+│   │   │   ├── street: string
+│   │   │   ├── city: string
+│   │   │   ├── state: string
+│   │   │   ├── postalCode: string
+│   │   │   └── country: string
+│   │   ├── sameAsbilling: boolean (indicates if shipping = billing)
 │   │   ├── taxId: string (optional)
 │   │   ├── salesperson: string
 │   │   ├── createdAt: timestamp

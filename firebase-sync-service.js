@@ -327,7 +327,7 @@ class FirebaseSyncService {
       // Fetch current Firebase data
       const salesmenRef = this.db.collection('config').doc('salesmen');
       const doc = await salesmenRef.get();
-      const currentData = doc.exists ? doc.data().salesmen || [] : [];
+      const currentData = doc.exists ? doc.data().list || [] : [];
 
       // Compare and update
       const changes = this.compareData(currentData, sheetsData);
@@ -335,7 +335,7 @@ class FirebaseSyncService {
       // Update salesmen data in Firebase
       try {
         await salesmenRef.set({
-          salesmen: sheetsData,
+          list: sheetsData,
           lastUpdated: admin.firestore.FieldValue.serverTimestamp(),
           syncedAt: admin.firestore.FieldValue.serverTimestamp()
         }, { merge: true });
@@ -344,7 +344,7 @@ class FirebaseSyncService {
           console.log('Creating config collection...');
           // Create config collection by setting the document
           await this.db.collection('config').doc('salesmen').set({
-            salesmen: sheetsData,
+            list: sheetsData,
             lastUpdated: admin.firestore.FieldValue.serverTimestamp(),
             syncedAt: admin.firestore.FieldValue.serverTimestamp()
           });
@@ -447,6 +447,536 @@ class FirebaseSyncService {
       console.error('Error getting sync status:', error.message);
       return { ...this.syncStatus, productsCount: 0, salesmenCount: 0 };
     }
+  }
+
+  /**
+   * Sync companies data from Google Sheets to Firebase
+   * @param {string} spreadsheetId - Google Sheets ID
+   * @returns {Promise<Object>} Sync results
+   */
+  async syncCompaniesData(spreadsheetId) {
+    try {
+      console.log('Starting companies data sync...');
+      
+      // Fetch data from Google Sheets
+      const companiesData = await this.googleSheetsService.fetchCompaniesData(spreadsheetId);
+      
+      if (!companiesData || companiesData.length === 0) {
+        console.log('No companies data to sync');
+        return { added: 0, updated: 0, deleted: 0, total: 0 };
+      }
+
+      // Get current Firebase data
+      const snapshot = await this.db.collection('companies').get();
+      const currentData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+      // Compare and identify changes
+      const changes = this.compareCompaniesData(currentData, companiesData);
+
+      // Apply changes to Firebase
+      const batch = this.db.batch();
+      let operationCount = 0;
+
+      // Add new companies
+      for (const company of changes.added) {
+        const docRef = this.db.collection('companies').doc();
+        batch.set(docRef, {
+          ...company,
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+        operationCount++;
+      }
+
+      // Update existing companies
+      for (const company of changes.updated) {
+        const docRef = this.db.collection('companies').doc(company.id);
+        const { id, ...updateData } = company;
+        batch.update(docRef, {
+          ...updateData,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+        operationCount++;
+      }
+
+      // Delete removed companies
+      for (const company of changes.deleted) {
+        const docRef = this.db.collection('companies').doc(company.id);
+        batch.delete(docRef);
+        operationCount++;
+      }
+
+      // Commit batch operations
+      if (operationCount > 0) {
+        await batch.commit();
+        console.log(`Companies sync completed: ${changes.added.length} added, ${changes.updated.length} updated, ${changes.deleted.length} deleted`);
+      } else {
+        console.log('No changes detected in companies data');
+      }
+
+      // Log sync activity
+      await this.logSyncActivity({
+        type: 'companies',
+        status: 'success',
+        changes: {
+          added: changes.added.length,
+          updated: changes.updated.length,
+          deleted: changes.deleted.length,
+          total: companiesData.length
+        }
+      });
+
+      return {
+        added: changes.added.length,
+        updated: changes.updated.length,
+        deleted: changes.deleted.length,
+        total: companiesData.length
+      };
+
+    } catch (error) {
+      console.error('Companies sync failed:', error.message);
+      
+      await this.logSyncActivity({
+        type: 'companies',
+        status: 'error',
+        error: error.message
+      });
+
+      throw error;
+    }
+  }
+
+  /**
+   * Compare companies data for changes
+   * @param {Array} currentData - Current Firebase data
+   * @param {Array} newData - New Google Sheets data
+   * @returns {Object} Changes object
+   */
+  compareCompaniesData(currentData, newData) {
+    const changes = {
+      added: [],
+      updated: [],
+      deleted: [],
+      unchanged: 0
+    };
+
+    // Create maps for efficient lookup
+    const currentMap = new Map();
+    const newMap = new Map();
+
+    // Map current data by company name
+    currentData.forEach(company => {
+      const name = company.name || company.Name || company.company_name;
+      if (name) {
+        currentMap.set(name.toLowerCase(), company);
+      }
+    });
+
+    // Map new data and identify additions/updates
+    newData.forEach(company => {
+      const name = company.name || company.Name || company.company_name;
+      if (name) {
+        const key = name.toLowerCase();
+        newMap.set(key, company);
+        
+        const existing = currentMap.get(key);
+        if (existing) {
+          // Check if data has changed
+          const existingHash = this.generateDataHash(existing);
+          const newHash = this.generateDataHash(company);
+          
+          if (existingHash !== newHash) {
+            changes.updated.push({ ...company, id: existing.id });
+          } else {
+            changes.unchanged++;
+          }
+        } else {
+          changes.added.push(company);
+        }
+      }
+    });
+
+    // Identify deletions
+    currentData.forEach(company => {
+      const name = company.name || company.Name || company.company_name;
+      if (name && !newMap.has(name.toLowerCase())) {
+        changes.deleted.push(company);
+      }
+    });
+
+    return changes;
+  }
+
+  /**
+   * Sync colors data from Google Sheets to Firebase
+   * @param {string} spreadsheetId - The Google Sheets ID
+   * @returns {Promise<Object>} Sync result
+   */
+  async syncColorsData(spreadsheetId) {
+    if (!this.isInitialized) {
+      await this.initialize();
+    }
+
+    if (this.syncStatus.isRunning) {
+      throw new Error('Sync is already running');
+    }
+
+    this.syncStatus.isRunning = true;
+    this.syncStatus.lastError = null;
+
+    try {
+      console.log('Starting colors data synchronization...');
+      
+      // Fetch data from Google Sheets Colors tab
+      const sheetsData = await this.googleSheetsService.fetchColorsData(spreadsheetId);
+      
+      if (!this.googleSheetsService.validateData(sheetsData)) {
+        throw new Error('Invalid colors data received from Google Sheets');
+      }
+
+      // Fetch current Firebase data
+      const colorsRef = this.db.collection('colors');
+      const snapshot = await colorsRef.get();
+      const currentData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+      // Compare data and identify changes
+      const changes = this.compareColorsData(currentData, sheetsData);
+      
+      console.log(`Colors sync analysis: ${changes.added.length} added, ${changes.updated.length} updated, ${changes.deleted.length} deleted, ${changes.unchanged} unchanged`);
+
+      // Apply changes to Firebase
+      const batch = this.db.batch();
+      let operationCount = 0;
+
+      // Add new colors
+      changes.added.forEach(color => {
+        const docRef = colorsRef.doc();
+        batch.set(docRef, {
+          ...color,
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          syncedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+        operationCount++;
+      });
+
+      // Update existing colors
+      changes.updated.forEach(color => {
+        const docRef = colorsRef.doc(color._firebaseId);
+        const { _firebaseId, ...updateData } = color;
+        batch.update(docRef, {
+          ...updateData,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          syncedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+        operationCount++;
+      });
+
+      // Delete removed colors
+      changes.deleted.forEach(color => {
+        const docRef = colorsRef.doc(color.id);
+        batch.delete(docRef);
+        operationCount++;
+      });
+
+      // Commit batch operations
+      if (operationCount > 0) {
+        await batch.commit();
+        console.log(`✅ Colors sync completed: ${operationCount} operations executed`);
+      } else {
+        console.log('✅ Colors sync completed: No changes detected');
+      }
+
+      // Log sync activity
+      await this.logSyncActivity({
+        type: 'colors',
+        status: 'success',
+        changes: {
+          added: changes.added.length,
+          updated: changes.updated.length,
+          deleted: changes.deleted.length,
+          unchanged: changes.unchanged
+        },
+        operationCount,
+        spreadsheetId
+      });
+
+      this.syncStatus.isRunning = false;
+      this.syncStatus.lastSync = new Date();
+
+      return {
+        success: true,
+        changes,
+        operationCount,
+        message: `Colors sync completed successfully. ${operationCount} operations executed.`
+      };
+
+    } catch (error) {
+      console.error('❌ Colors sync failed:', error.message);
+      this.syncStatus.isRunning = false;
+      this.syncStatus.lastError = error.message;
+
+      // Log sync failure
+      await this.logSyncActivity({
+        type: 'colors',
+        status: 'error',
+        error: error.message,
+        spreadsheetId
+      });
+
+      throw error;
+    }
+  }
+
+  /**
+   * Compare current colors data with new data from Google Sheets
+   * @param {Array} currentData - Current Firebase data
+   * @param {Array} newData - New data from Google Sheets
+   * @returns {Object} Changes object
+   */
+  compareColorsData(currentData, newData) {
+    const changes = {
+      added: [],
+      updated: [],
+      deleted: [],
+      unchanged: 0
+    };
+
+    // Create maps for efficient comparison
+    const currentMap = new Map();
+    const newMap = new Map();
+
+    // Map current data by color name
+    currentData.forEach(color => {
+      const name = color.colorname;
+      if (name) {
+        currentMap.set(name.toLowerCase(), color);
+      }
+    });
+
+    // Map new data by color name
+    newData.forEach(color => {
+      const name = color.colorname;
+      if (name) {
+        newMap.set(name.toLowerCase(), color);
+      }
+    });
+
+    // Find added and updated items
+    newMap.forEach((newColor, key) => {
+      const currentColor = currentMap.get(key);
+      
+      if (!currentColor) {
+        // New color
+        changes.added.push(newColor);
+      } else {
+        // Check if color has changed
+        const currentHash = this.generateDataHash(currentColor);
+        const newHash = this.generateDataHash(newColor);
+        
+        if (currentHash !== newHash) {
+          changes.updated.push({ ...newColor, _firebaseId: currentColor.id });
+        } else {
+          changes.unchanged++;
+        }
+      }
+    });
+
+    // Find deleted items
+    currentData.forEach(color => {
+      const name = color.colorname;
+      if (name && !newMap.has(name.toLowerCase())) {
+        changes.deleted.push(color);
+      }
+    });
+
+    return changes;
+  }
+
+  /**
+   * Sync styles data from Google Sheets to Firebase
+   * @param {string} spreadsheetId - The Google Sheets ID
+   * @returns {Promise<Object>} Sync result
+   */
+  async syncStylesData(spreadsheetId) {
+    if (!this.isInitialized) {
+      await this.initialize();
+    }
+
+    if (this.syncStatus.isRunning) {
+      throw new Error('Sync is already running');
+    }
+
+    this.syncStatus.isRunning = true;
+    this.syncStatus.lastError = null;
+
+    try {
+      console.log('Starting styles data synchronization...');
+      
+      // Fetch data from Google Sheets Styles tab
+      const sheetsData = await this.googleSheetsService.fetchStylesData(spreadsheetId);
+      
+      if (!this.googleSheetsService.validateData(sheetsData)) {
+        throw new Error('Invalid styles data received from Google Sheets');
+      }
+
+      // Fetch current Firebase data
+      const stylesRef = this.db.collection('styles');
+      const snapshot = await stylesRef.get();
+      const currentData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+      // Compare data and identify changes
+      const changes = this.compareStylesData(currentData, sheetsData);
+      
+      console.log(`Styles sync analysis: ${changes.added.length} added, ${changes.updated.length} updated, ${changes.deleted.length} deleted, ${changes.unchanged} unchanged`);
+
+      // Apply changes to Firebase
+      const batch = this.db.batch();
+      let operationCount = 0;
+
+      // Add new styles
+      changes.added.forEach(style => {
+        const docRef = stylesRef.doc();
+        batch.set(docRef, {
+          ...style,
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          syncedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+        operationCount++;
+      });
+
+      // Update existing styles
+      changes.updated.forEach(style => {
+        const docRef = stylesRef.doc(style._firebaseId);
+        const { _firebaseId, ...updateData } = style;
+        batch.update(docRef, {
+          ...updateData,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          syncedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+        operationCount++;
+      });
+
+      // Delete removed styles
+      changes.deleted.forEach(style => {
+        const docRef = stylesRef.doc(style.id);
+        batch.delete(docRef);
+        operationCount++;
+      });
+
+      // Commit batch operations
+      if (operationCount > 0) {
+        await batch.commit();
+        console.log(`✅ Styles sync completed: ${operationCount} operations executed`);
+      } else {
+        console.log('✅ Styles sync completed: No changes detected');
+      }
+
+      // Log sync activity
+      await this.logSyncActivity({
+        type: 'styles',
+        status: 'success',
+        changes: {
+          added: changes.added.length,
+          updated: changes.updated.length,
+          deleted: changes.deleted.length,
+          unchanged: changes.unchanged
+        },
+        operationCount,
+        spreadsheetId
+      });
+
+      this.syncStatus.isRunning = false;
+      this.syncStatus.lastSync = new Date();
+
+      return {
+        success: true,
+        changes,
+        operationCount,
+        message: `Styles sync completed successfully. ${operationCount} operations executed.`
+      };
+
+    } catch (error) {
+      console.error('❌ Styles sync failed:', error.message);
+      this.syncStatus.isRunning = false;
+      this.syncStatus.lastError = error.message;
+
+      // Log sync failure
+      await this.logSyncActivity({
+        type: 'styles',
+        status: 'error',
+        error: error.message,
+        spreadsheetId
+      });
+
+      throw error;
+    }
+  }
+
+  /**
+   * Compare current styles data with new data from Google Sheets
+   * @param {Array} currentData - Current Firebase data
+   * @param {Array} newData - New data from Google Sheets
+   * @returns {Object} Changes object
+   */
+  compareStylesData(currentData, newData) {
+    const changes = {
+      added: [],
+      updated: [],
+      deleted: [],
+      unchanged: 0
+    };
+
+    // Create maps for efficient comparison
+    const currentMap = new Map();
+    const newMap = new Map();
+
+    // Map current data by style name
+    currentData.forEach(style => {
+      const name = style.stylename;
+      if (name) {
+        currentMap.set(name.toLowerCase(), style);
+      }
+    });
+
+    // Map new data by style name
+    newData.forEach(style => {
+      const name = style.stylename;
+      if (name) {
+        newMap.set(name.toLowerCase(), style);
+      }
+    });
+
+    // Find added and updated items
+    newMap.forEach((newStyle, key) => {
+      const currentStyle = currentMap.get(key);
+      
+      if (!currentStyle) {
+        // New style
+        changes.added.push(newStyle);
+      } else {
+        // Check if style has changed
+        const currentHash = this.generateDataHash(currentStyle);
+        const newHash = this.generateDataHash(newStyle);
+        
+        if (currentHash !== newHash) {
+          changes.updated.push({ ...newStyle, _firebaseId: currentStyle.id });
+        } else {
+          changes.unchanged++;
+        }
+      }
+    });
+
+    // Find deleted items
+    currentData.forEach(style => {
+      const name = style.stylename;
+      if (name && !newMap.has(name.toLowerCase())) {
+        changes.deleted.push(style);
+      }
+    });
+
+    return changes;
   }
 
   /**

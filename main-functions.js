@@ -21,11 +21,9 @@ function downloadQuoteAsImage() {
             URL.revokeObjectURL(url);
             alert('Quote image downloaded!');
         }).catch(error => {
-            console.error('Error generating image:', error);
             alert('Error generating image. Please try again.');
         });
     } catch (error) {
-        console.error('Error in downloadQuoteAsImage:', error);
         alert('Error downloading image. Please try again.');
     }
 }

@@ -13,6 +13,7 @@ class SyncScheduler {
     // Google Sheets IDs from the provided URLs
     this.productSheetId = '1hlfrnZnNQ0u8idg5KDmkSY4zFhLyvjLqUwAZn6HmW3s';
     this.salesmanSheetId = '1hlfrnZnNQ0u8idg5KDmkSY4zFhLyvjLqUwAZn6HmW3s';
+    this.companiesSheetId = '1hlfrnZnNQ0u8idg5KDmkSY4zFhLyvjLqUwAZn6HmW3s';
     
     // Configuration
     this.config = {
@@ -136,11 +137,39 @@ class SyncScheduler {
           timestamp: salesmanResult.timestamp
         });
 
+        // Sync companies data
+        const companiesResult = await this.syncService.syncCompaniesData(this.companiesSheetId);
+        console.log('Companies sync result:', {
+          added: companiesResult.added,
+          updated: companiesResult.updated,
+          deleted: companiesResult.deleted,
+          total: companiesResult.total
+        });
+
+        // Sync colors data
+        const colorsResult = await this.syncService.syncColorsData(this.productSheetId);
+        console.log('Colors sync result:', {
+          success: colorsResult.success,
+          operationCount: colorsResult.operationCount,
+          message: colorsResult.message
+        });
+
+        // Sync styles data
+        const stylesResult = await this.syncService.syncStylesData(this.productSheetId);
+        console.log('Styles sync result:', {
+          success: stylesResult.success,
+          operationCount: stylesResult.operationCount,
+          message: stylesResult.message
+        });
+
         console.log('Automated synchronization completed successfully');
         return {
           success: true,
           productResult,
           salesmanResult,
+          companiesResult,
+          colorsResult,
+          stylesResult,
           attempt
         };
 
@@ -199,6 +228,24 @@ class SyncScheduler {
         results.salesmanResult = await this.syncService.syncSalesmanData(this.salesmanSheetId);
       }
       
+      // Sync companies if requested (default: true)
+      if (options.syncCompanies !== false) {
+        console.log('Starting manual companies sync...');
+        results.companiesResult = await this.syncService.syncCompaniesData(this.companiesSheetId);
+      }
+      
+      // Sync colors if requested (default: true)
+      if (options.syncColors !== false) {
+        console.log('Starting manual colors sync...');
+        results.colorsResult = await this.syncService.syncColorsData(this.productSheetId);
+      }
+
+      // Sync styles if requested (default: true)
+      if (options.syncStyles !== false) {
+        console.log('Starting manual styles sync...');
+        results.stylesResult = await this.syncService.syncStylesData(this.productSheetId);
+      }
+
       console.log('Manual synchronization completed successfully');
       
       // Log manual sync

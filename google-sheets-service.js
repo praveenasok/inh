@@ -192,7 +192,7 @@ class GoogleSheetsService {
    * @param {string} range - The range to fetch
    * @returns {Promise<Array>} Array of salesman data
    */
-  async fetchSalesmanData(spreadsheetId, range = 'salesman!A1:Z1000') {
+  async fetchSalesmanData(spreadsheetId, range = 'salesmen!A1:Z1000') {
     if (!this.isInitialized) {
       await this.initialize();
     }
@@ -235,7 +235,215 @@ class GoogleSheetsService {
   }
 
   /**
-   * Validate data integrity
+   * Fetch companies data from Google Sheets
+   * @param {string} spreadsheetId - Google Sheets ID
+   * @param {string} range - Range to fetch (default: 'companies!A1:Z1000')
+   * @returns {Array} Array of company objects
+   */
+  async fetchCompaniesData(spreadsheetId, range = 'companies!A1:Z1000') {
+    try {
+      if (!this.isInitialized) {
+        throw new Error('Google Sheets service not initialized');
+      }
+
+      console.log(`Fetching companies data from range: ${range}`);
+      
+      const response = await this.sheets.spreadsheets.values.get({
+        spreadsheetId,
+        range,
+      });
+
+      const rows = response.data.values;
+      if (!rows || rows.length === 0) {
+        console.log('No companies data found');
+        return [];
+      }
+
+      // First row contains headers
+      const headers = rows[0];
+      const companies = [];
+
+      // Process each data row
+      for (let i = 1; i < rows.length; i++) {
+        const row = rows[i];
+        if (row.length === 0) continue; // Skip empty rows
+
+        const company = {};
+        headers.forEach((header, index) => {
+          company[header] = row[index] || '';
+        });
+
+        // Only add companies with required fields
+        if (company.name || company.Name || company.company_name) {
+          companies.push(company);
+        }
+      }
+
+      console.log(`Successfully fetched ${companies.length} companies`);
+      return companies;
+
+    } catch (error) {
+      console.error('Error fetching companies data:', error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Fetch client data from Google Sheets
+   * @param {string} spreadsheetId - Google Sheets ID
+   * @param {string} range - Range to fetch (default: 'clients!A1:Z1000')
+   * @returns {Array} Array of client objects
+   */
+  async fetchClientData(spreadsheetId, range = 'clients!A1:Z1000') {
+    try {
+      if (!this.isInitialized) {
+        throw new Error('Google Sheets service not initialized');
+      }
+
+      console.log(`Fetching client data from range: ${range}`);
+      
+      const response = await this.sheets.spreadsheets.values.get({
+        spreadsheetId,
+        range,
+      });
+
+      const rows = response.data.values;
+      if (!rows || rows.length === 0) {
+        console.log('No client data found');
+        return [];
+      }
+
+      // First row contains headers
+      const headers = rows[0];
+      const clients = [];
+
+      // Process each data row
+      for (let i = 1; i < rows.length; i++) {
+        const row = rows[i];
+        if (row.length === 0) continue; // Skip empty rows
+
+        const client = {};
+        headers.forEach((header, index) => {
+          client[header] = row[index] || '';
+        });
+
+        // Only add clients with required fields (at least client name or company name)
+        if (client.clientName || client.client_name || client.companyName || client.company_name) {
+          clients.push(client);
+        }
+      }
+
+      console.log(`Successfully fetched ${clients.length} clients`);
+      return clients;
+
+    } catch (error) {
+      console.error('Error fetching client data:', error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Fetch colors data from Google Sheets Colors tab
+   * @param {string} spreadsheetId - The Google Sheets ID
+   * @param {string} range - The range to fetch
+   * @returns {Promise<Array>} Array of colors data
+   */
+  async fetchColorsData(spreadsheetId, range = 'Colors!A1:Z1000') {
+    if (!this.isInitialized) {
+      await this.initialize();
+    }
+
+    try {
+      const response = await this.sheets.spreadsheets.values.get({
+        spreadsheetId,
+        range,
+      });
+
+      const rows = response.data.values;
+      if (!rows || rows.length === 0) {
+        console.log('No colors data found in the spreadsheet.');
+        return [];
+      }
+
+      // Assume first row contains headers
+      const headers = rows[0];
+      const colors = [];
+
+      // Convert rows to objects using headers
+      for (let i = 1; i < rows.length; i++) {
+        const row = rows[i];
+        const color = {};
+        
+        headers.forEach((header, index) => {
+          color[header] = row[index] || '';
+        });
+        
+        // Only add colors with the required 'colorname' field
+        if (color.colorname && color.colorname.trim() !== '') {
+          colors.push(color);
+        }
+      }
+
+      console.log(`Fetched ${colors.length} colors from Google Sheets Colors tab`);
+      return colors;
+    } catch (error) {
+      console.error('Error fetching colors data:', error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Fetch styles data from Google Sheets Styles tab
+   * @param {string} spreadsheetId - The ID of the Google Sheets spreadsheet
+   * @param {string} range - The range to fetch (default: 'Styles!A1:Z1000')
+   * @returns {Promise<Array>} Array of style objects
+   */
+  async fetchStylesData(spreadsheetId, range = 'Styles!A1:Z1000') {
+    if (!this.isInitialized) {
+      await this.initialize();
+    }
+
+    try {
+      const response = await this.sheets.spreadsheets.values.get({
+        spreadsheetId,
+        range,
+      });
+
+      const rows = response.data.values;
+      if (!rows || rows.length === 0) {
+        console.log('No styles data found in the spreadsheet.');
+        return [];
+      }
+
+      // Assume first row contains headers
+      const headers = rows[0];
+      const styles = [];
+
+      // Convert rows to objects using headers
+      for (let i = 1; i < rows.length; i++) {
+        const row = rows[i];
+        const style = {};
+        
+        headers.forEach((header, index) => {
+          style[header] = row[index] || '';
+        });
+        
+        // Only add styles with the required 'stylename' field
+        if (style.stylename && style.stylename.trim() !== '') {
+          styles.push(style);
+        }
+      }
+
+      console.log(`Fetched ${styles.length} styles from Google Sheets Styles tab`);
+      return styles;
+    } catch (error) {
+      console.error('Error fetching styles data:', error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Validate fetched data
    * @param {Array} data - Data to validate
    * @returns {boolean} True if data is valid
    */

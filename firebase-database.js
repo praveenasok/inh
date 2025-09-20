@@ -19,8 +19,14 @@ class FirebaseDatabase {
       // Initialize Firestore
       this.db = firebase.firestore();
       
-      // Initialize Storage
-      this.storage = firebase.storage();
+      // Initialize Storage (optional - continue if it fails)
+      try {
+        this.storage = firebase.storage();
+        console.log('Firebase Storage initialized successfully');
+      } catch (storageError) {
+        console.warn('Firebase Storage initialization failed, continuing without storage:', storageError.message);
+        this.storage = null;
+      }
       
       // Enable offline persistence - temporarily disabled to fix connection issues
       // await this.db.enablePersistence({ synchronizeTabs: true });
@@ -236,6 +242,71 @@ class FirebaseDatabase {
       
     } catch (error) {
       console.error('Error getting products:', error);
+      throw error;
+    }
+  }
+
+  // Colors Management Operations
+  async getColors(filters = {}) {
+    if (!this.isAvailable()) {
+      throw new Error('Firebase not available');
+    }
+
+    try {
+      let query = this.db.collection('colors');
+      
+      // Apply filters if needed
+      if (filters.category) {
+        query = query.where('Category', '==', filters.category);
+      }
+      
+      if (filters.product) {
+        query = query.where('Product', '==', filters.product);
+      }
+      
+      const snapshot = await query.get();
+      const colors = [];
+      
+      snapshot.forEach(doc => {
+        colors.push({ id: doc.id, ...doc.data() });
+      });
+      
+      return colors;
+      
+    } catch (error) {
+      console.error('Error getting colors:', error);
+      throw error;
+    }
+  }
+
+  async getStyles(filters = {}) {
+    if (!this.isAvailable()) {
+      throw new Error('Firebase not available');
+    }
+
+    try {
+      let query = this.db.collection('styles');
+      
+      // Apply filters if needed
+      if (filters.category) {
+        query = query.where('Category', '==', filters.category);
+      }
+      
+      if (filters.product) {
+        query = query.where('Product', '==', filters.product);
+      }
+      
+      const snapshot = await query.get();
+      const styles = [];
+      
+      snapshot.forEach(doc => {
+        styles.push({ id: doc.id, ...doc.data() });
+      });
+      
+      return styles;
+      
+    } catch (error) {
+      console.error('Error getting styles:', error);
       throw error;
     }
   }
@@ -578,6 +649,10 @@ class FirebaseDatabase {
       throw new Error('Firebase not available');
     }
 
+    if (!this.storage) {
+      throw new Error('Firebase Storage not available');
+    }
+
     try {
       const storageRef = this.storage.ref().child(path);
       const snapshot = await storageRef.put(file);
@@ -595,6 +670,10 @@ class FirebaseDatabase {
   async downloadFile(path) {
     if (!this.isAvailable()) {
       throw new Error('Firebase not available');
+    }
+
+    if (!this.storage) {
+      throw new Error('Firebase Storage not available');
     }
 
     try {
@@ -1051,17 +1130,21 @@ class FirebaseDatabase {
         salesmen: 0,
         priceLists: 0,
         categories: 0,
+        colors: 0,
+        styles: 0,
         quotes: 0,
         orders: 0,
         lastUpdated: 'Never'
       };
 
-      // Get products count and extract categories/price lists
+      // Get products count and extract categories/price lists/colors/styles
       const productsSnapshot = await this.db.collection('products').get();
       stats.products = productsSnapshot.size;
       
       const categories = new Set();
       const priceLists = new Set();
+      const colorsFromProducts = new Set();
+      const stylesFromProducts = new Set();
       let lastProductUpdate = null;
       
       productsSnapshot.forEach(doc => {
@@ -1070,6 +1153,16 @@ class FirebaseDatabase {
         if (data.PriceList || data['Price List Name']) {
           priceLists.add(data.PriceList || data['Price List Name']);
         }
+        
+        // Extract colors from products
+        if (data.Colors) colorsFromProducts.add(data.Colors);
+        if (data.Color) colorsFromProducts.add(data.Color);
+        if (data.color) colorsFromProducts.add(data.color);
+        
+        // Extract styles from products
+        if (data.Style) stylesFromProducts.add(data.Style);
+        if (data.style) stylesFromProducts.add(data.style);
+        
         if (data.updatedAt && (!lastProductUpdate || data.updatedAt > lastProductUpdate)) {
           lastProductUpdate = data.updatedAt;
         }
@@ -1077,6 +1170,24 @@ class FirebaseDatabase {
       
       stats.categories = categories.size;
       stats.priceLists = priceLists.size;
+
+      // Get colors count from dedicated colors collection
+      try {
+        const colorsSnapshot = await this.db.collection('colors').get();
+        stats.colors = colorsSnapshot.size;
+      } catch (error) {
+        console.warn('Could not fetch colors collection:', error);
+        stats.colors = 0;
+      }
+
+      // Get styles count from dedicated styles collection
+      try {
+        const stylesSnapshot = await this.db.collection('styles').get();
+        stats.styles = stylesSnapshot.size;
+      } catch (error) {
+        console.warn('Could not fetch styles collection:', error);
+        stats.styles = 0;
+      }
 
       // Get clients count
       const clientsSnapshot = await this.db.collection('clients').get();

@@ -35,6 +35,30 @@ async function initializeSyncServices() {
     // Start the scheduler automatically
     syncScheduler.startScheduler();
     
+    // Perform initial sync for colors and styles on startup
+    try {
+      console.log('Performing initial sync for colors and styles...');
+      const productSheetId = '1hlfrnZnNQ0u8idg5KDmkSY4zFhLyvjLqUwAZn6HmW3s';
+      
+      // Sync colors
+      const colorsResult = await syncService.syncColorsData(productSheetId);
+      console.log('Initial colors sync completed:', {
+        success: colorsResult.success,
+        operationCount: colorsResult.operationCount
+      });
+      
+      // Sync styles
+      const stylesResult = await syncService.syncStylesData(productSheetId);
+      console.log('Initial styles sync completed:', {
+        success: stylesResult.success,
+        operationCount: stylesResult.operationCount
+      });
+      
+    } catch (error) {
+      console.warn('Initial colors/styles sync failed:', error.message);
+      console.warn('Colors and styles will be synced during the next scheduled sync.');
+    }
+    
     console.log('Sync services initialized successfully');
     
     // Make scheduler globally available for graceful shutdown
@@ -178,6 +202,44 @@ const server = http.createServer(async (req, res) => {
     } catch (error) {
       res.writeHead(500, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ success: false, error: 'Failed to get data: ' + error.message }));
+    }
+    return;
+  }
+
+  // Get styles data from Firebase
+  if (pathname === '/api/get-styles' && req.method === 'GET') {
+    try {
+      if (syncService && syncService.db) {
+        console.log('🔍 API: Fetching styles from Firebase...');
+        const stylesSnapshot = await syncService.db.collection('styles').get();
+        const styles = [];
+        
+        stylesSnapshot.forEach(doc => {
+          styles.push({ id: doc.id, ...doc.data() });
+        });
+        
+        console.log(`📊 API: Found ${styles.length} styles in Firebase`);
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ 
+          success: true, 
+          data: styles,
+          count: styles.length 
+        }));
+      } else {
+        console.log('⚠️ API: Firebase not available');
+        res.writeHead(503, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ 
+          success: false, 
+          error: 'Firebase service not available' 
+        }));
+      }
+    } catch (error) {
+      console.error('❌ API: Error getting styles:', error);
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ 
+        success: false, 
+        error: 'Failed to get styles: ' + error.message 
+      }));
     }
     return;
   }
@@ -458,9 +520,28 @@ const server = http.createServer(async (req, res) => {
         }));
         return;
       }
-      const result = await syncScheduler.triggerManualSync();
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ success: true, result }));
+      
+      // Parse request body for sync options
+      let body = '';
+      req.on('data', chunk => {
+        body += chunk.toString();
+      });
+      
+      req.on('end', async () => {
+        try {
+          let options = {};
+          if (body) {
+            options = JSON.parse(body);
+          }
+          
+          const result = await syncScheduler.triggerManualSync(options);
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: true, result }));
+        } catch (parseError) {
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: false, error: parseError.message }));
+        }
+      });
     } catch (error) {
       // Check if it's a credential-related error
       const credentialErrorPatterns = [
@@ -520,6 +601,66 @@ const server = http.createServer(async (req, res) => {
         success: true, 
         result,
         totalSalesmen: result.salesmanResult ? result.salesmanResult.totalSalesmen : 0
+      }));
+    } catch (error) {
+      // Check if it's a credential-related error
+      const credentialErrorPatterns = [
+        'Failed to parse private key',
+        'Invalid PEM formatted message',
+        'service account key file not found',
+        'placeholder values',
+        'invalid json format',
+        'missing required fields',
+        'invalid credential type',
+        'invalid service account email',
+        'google sheets synchronization is not available'
+      ];
+      
+      const isCredentialError = credentialErrorPatterns.some(pattern => 
+        error.message.toLowerCase().includes(pattern.toLowerCase())
+      );
+      
+      if (isCredentialError) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ 
+          success: false, 
+          error: 'Google Sheets synchronization is not available. Please configure valid Google Sheets credentials to enable sync functionality.',
+          details: error.message,
+          setupGuide: 'See GOOGLE_SHEETS_CREDENTIALS_SETUP.md for detailed setup instructions.'
+        }));
+      } else {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: false, error: error.message }));
+      }
+    }
+    return;
+  }
+
+  // Companies-specific sync endpoint
+  if (pathname === '/api/sync/companies' && req.method === 'POST') {
+    try {
+      if (!syncService) {
+        await initializeSyncServices();
+      }
+      if (!syncScheduler) {
+        // Return error if sync scheduler is not available
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ 
+          success: false, 
+          error: 'Google Sheets synchronization is not available. Please configure valid Google Sheets credentials to enable sync functionality.',
+          details: 'Sync service not available. Please configure service account credentials.',
+          setupGuide: 'See GOOGLE_SHEETS_CREDENTIALS_SETUP.md for detailed setup instructions.'
+        }));
+        return;
+      }
+      
+      // Trigger companies-only sync
+      const result = await syncScheduler.triggerManualSync({ syncProducts: false, syncSalesmen: false, syncCompanies: true });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ 
+        success: true, 
+        result,
+        companiesData: result.companiesResult || { added: 0, updated: 0, deleted: 0, total: 0 }
       }));
     } catch (error) {
       // Check if it's a credential-related error
