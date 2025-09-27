@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Connection Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        .warning { background-color: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        pre { background-color: #f8f9fa; padding: 10px; border-radius: 5px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>Firebase Connection Test</h1>
+    <div id="test-results"></div>
+    <button onclick="runTests()">Run Tests</button>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    
+    <!-- Firebase Configuration -->
+    <script src="firebase-config.js"></script>
+    
+    <script>
+        const resultsDiv = document.getElementById('test-results');
+        
+        function addResult(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.innerHTML = message;
+            resultsDiv.appendChild(div);
+        }
+        
+        function addError(message, error) {
+            const div = document.createElement('div');
+            div.className = 'test-result error';
+            div.innerHTML = `
+                <strong>${message}</strong><br>
+                <pre>${error.message || error}</pre>
+                ${error.stack ? `<pre>${error.stack}</pre>` : ''}
+            `;
+            resultsDiv.appendChild(div);
+        }
+        
+        async function runTests() {
+            resultsDiv.innerHTML = '';
+            addResult('🔄 Starting Firebase connection tests...', 'info');
+            
+            try {
+                // Test 1: Check if Firebase SDK is loaded
+                addResult('Test 1: Checking Firebase SDK...', 'info');
+                if (typeof firebase === 'undefined') {
+                    throw new Error('Firebase SDK not loaded');
+                }
+                addResult('✅ Firebase SDK loaded successfully', 'success');
+                
+                // Test 2: Check Firebase configuration
+                addResult('Test 2: Checking Firebase configuration...', 'info');
+                if (!window.firebaseConfig) {
+                    throw new Error('Firebase configuration not found');
+                }
+                addResult(`✅ Firebase config found for project: ${window.firebaseConfig.projectId}`, 'success');
+                
+                // Test 3: Initialize Firebase app
+                addResult('Test 3: Initializing Firebase app...', 'info');
+                let app;
+                if (!firebase.apps.length) {
+                    // Use configuration that forces REST API instead of WebSocket
+                    const restConfig = {
+                        ...window.firebaseConfig,
+                        experimentalForceLongPolling: true,
+                        useFetchStreams: false
+                    };
+                    app = firebase.initializeApp(restConfig);
+                } else {
+                    app = firebase.app();
+                }
+                addResult('✅ Firebase app initialized successfully', 'success');
+                
+                // Test 4: Test authentication
+                addResult('Test 4: Testing authentication...', 'info');
+                const auth = firebase.auth();
+                
+                // Check current user
+                const currentUser = auth.currentUser;
+                if (currentUser) {
+                    addResult(`✅ User already authenticated: ${currentUser.uid} (${currentUser.isAnonymous ? 'anonymous' : 'regular'})`, 'success');
+                } else {
+                    addResult('⚠️ No current user, attempting anonymous sign-in...', 'warning');
+                    try {
+                        const userCredential = await auth.signInAnonymously();
+                        addResult(`✅ Anonymous authentication successful: ${userCredential.user.uid}`, 'success');
+                    } catch (authError) {
+                        addError('❌ Anonymous authentication failed', authError);
+                        return;
+                    }
+                }
+                
+                // Test 5: Test Firestore connection
+                addResult('Test 5: Testing Firestore connection...', 'info');
+                const db = firebase.firestore();
+                
+                // Configure Firestore to use REST API only
+                try {
+                    db.settings({
+                        experimentalForceLongPolling: true,
+                        merge: true
+                    });
+                    addResult('✅ Firestore configured for REST API mode', 'success');
+                } catch (settingsError) {
+                    addResult('⚠️ Could not configure Firestore settings (may already be configured)', 'warning');
+                }
+                
+                // Test basic connection with a simple query
+                try {
+                    const testDoc = await db.collection('products').limit(1).get();
+                    addResult(`✅ Firestore connection successful. Found ${testDoc.size} documents in products collection`, 'success');
+                } catch (firestoreError) {
+                    addError('❌ Firestore connection failed', firestoreError);
+                    
+                    // Try to get more specific error information
+                    if (firestoreError.code === 'permission-denied') {
+                        addResult('🔍 Permission denied error detected. Checking authentication state...', 'warning');
+                        const user = firebase.auth().currentUser;
+                        if (user) {
+                            addResult(`User is authenticated: ${user.uid} (anonymous: ${user.isAnonymous})`, 'info');
+                            
+                            // Try to get the user's token
+                            try {
+                                const token = await user.getIdToken();
+                                addResult('✅ User token retrieved successfully', 'success');
+                                
+                                // Decode token to see claims
+                                const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+                                addResult(`Token claims: <pre>${JSON.stringify(tokenPayload, null, 2)}</pre>`, 'info');
+                            } catch (tokenError) {
+                                addError('❌ Failed to get user token', tokenError);
+                            }
+                        } else {
+                            addResult('❌ No authenticated user found', 'error');
+                        }
+                    }
+                    return;
+                }
+                
+                // Test 6: Test specific collections
+                addResult('Test 6: Testing access to specific collections...', 'info');
+                const collections = ['products', 'clients', 'quotes', 'salesmen'];
+                
+                for (const collection of collections) {
+                    try {
+                        const snapshot = await db.collection(collection).limit(1).get();
+                        addResult(`✅ ${collection}: ${snapshot.size} documents accessible`, 'success');
+                    } catch (error) {
+                        addError(`❌ ${collection}: Access failed`, error);
+                    }
+                }
+                
+                addResult('🎉 All tests completed!', 'success');
+                
+            } catch (error) {
+                addError('❌ Test suite failed', error);
+            }
+        }
+        
+        // Auto-run tests on page load
+        window.addEventListener('load', () => {
+            setTimeout(runTests, 1000);
+        });
+    </script>
+</body>
+</html>

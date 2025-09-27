@@ -1,0 +1,502 @@
+<!--
+    DORMANT FILE - NOT CURRENTLY IN USE
+    Status: Dormant
+    Reason: Direct access to modules preferred over navigation hub
+    Last Active: Alternative navigation interface
+    
+    This file provided an alternative navigation interface but direct
+    access to individual modules is now the preferred approach.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InstaQuote - Business Hub (DORMANT)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* Custom gradient background */
+        .gradient-bg {
+            background: linear-gradient(135deg, #081249 0%, #1e3a8a 50%, #9b7952 100%);
+        }
+        
+        /* Navigation styles */
+        .nav-header {
+            background: linear-gradient(135deg, #081249 0%, #1e3a8a 50%, #9b7952 100%);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .nav-item {
+            transition: all 0.3s ease;
+            border-radius: 12px;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: rgba(255, 255, 255, 0.8);
+            font-weight: 500;
+            border: 2px solid transparent;
+        }
+        
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .nav-item.active {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+        
+        /* App card styles */
+        .app-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            cursor: pointer;
+            height: 100%;
+        }
+        
+        .app-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.15);
+            border-color: #3b82f6;
+        }
+        
+        .app-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            color: white;
+            margin-bottom: 16px;
+        }
+        
+        .app-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+        
+        .app-description {
+            color: #6b7280;
+            font-size: 14px;
+            line-height: 1.5;
+            margin-bottom: 16px;
+        }
+        
+        .app-features {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        
+        .feature-tag {
+            background: #f3f4f6;
+            color: #374151;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        /* Loading animation */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Content area */
+        .content-area {
+            min-height: calc(100vh - 120px);
+            background: #f8fafc;
+        }
+        
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            .nav-item span.nav-text {
+                display: none;
+            }
+            
+            .app-card {
+                padding: 16px;
+            }
+            
+            .app-icon {
+                width: 48px;
+                height: 48px;
+                font-size: 20px;
+            }
+        }
+        
+        /* Welcome section */
+        .welcome-section {
+            background: linear-gradient(135deg, #081249 0%, #1e3a8a 50%, #9b7952 100%);
+            color: white;
+            padding: 60px 20px;
+            text-align: center;
+        }
+        
+        /* Page content container */
+        .page-content {
+            display: none;
+            min-height: calc(100vh - 120px);
+        }
+        
+        .page-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation Header -->
+    <header class="nav-header sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <!-- Logo and Title Row -->
+            <div class="flex items-center justify-center py-4 border-b border-white/10">
+                <div class="flex items-center space-x-4">
+                    <img src="images/logo.png" alt="Company Logo" class="h-12 w-auto opacity-90">
+                    <h1 class="text-2xl sm:text-3xl font-bold text-white">
+                        <span style="color: #ffffff;">Insta</span><span style="color: #9b7952;">Q</span><span style="color: #ffffff;">uote</span>
+                    </h1>
+                </div>
+            </div>
+            
+            <!-- Navigation Menu Row -->
+            <div class="flex items-center justify-center py-3">
+                <nav class="flex items-center space-x-2 sm:space-x-4">
+                    <a href="#" class="nav-item active" data-page="quote-maker-v2-ver3.html">
+                        <i class="fas fa-file-invoice-dollar"></i>
+                        <span class="nav-text">Quote Maker</span>
+                    </a>
+                    <a href="#" class="nav-item" data-page="price-calculator.html">
+                        <i class="fas fa-calculator"></i>
+                        <span class="nav-text">Price Calculator</span>
+                    </a>
+                    <a href="#" class="nav-item" data-page="product-catalog.html">
+                        <i class="fas fa-th-large"></i>
+                        <span class="nav-text">Product Catalog</span>
+                    </a>
+                    <a href="#" class="nav-item" data-page="admin-panel.html">
+                        <i class="fas fa-cog"></i>
+                        <span class="nav-text">Admin Panel</span>
+                    </a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="text-center">
+            <div class="loading-spinner"></div>
+            <p class="text-white mt-4">Loading application...</p>
+        </div>
+    </div>
+
+    <!-- Welcome Content -->
+    <div id="welcomeContent" class="content-area">
+        <div class="welcome-section">
+            <div class="max-w-4xl mx-auto">
+                <h2 class="text-4xl sm:text-5xl font-bold mb-6">
+                    Welcome to InstaQuote Business Hub
+                </h2>
+                <p class="text-xl opacity-90 mb-8">
+                    Your comprehensive solution for quotes, pricing, and business management
+                </p>
+                <div class="flex flex-wrap justify-center gap-4">
+                    <div class="bg-white/10 backdrop-blur-sm rounded-lg px-6 py-3">
+                        <i class="fas fa-check text-green-300 mr-2"></i>
+                        Real-time Data Sync
+                    </div>
+                    <div class="bg-white/10 backdrop-blur-sm rounded-lg px-6 py-3">
+                        <i class="fas fa-check text-green-300 mr-2"></i>
+                        Professional Quotes
+                    </div>
+                    <div class="bg-white/10 backdrop-blur-sm rounded-lg px-6 py-3">
+                        <i class="fas fa-check text-green-300 mr-2"></i>
+                        Advanced Analytics
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Application Cards -->
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+            <div class="text-center mb-12">
+                <h3 class="text-3xl font-bold text-gray-900 mb-4">Choose Your Application</h3>
+                <p class="text-lg text-gray-600">Select from our suite of business tools</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <!-- Quote Maker Card -->
+                <div class="app-card" data-page="quote-maker-v2-ver3.html">
+                    <div class="app-icon gradient-bg">
+                        <i class="fas fa-file-invoice-dollar"></i>
+                    </div>
+                    <h4 class="app-title">Quote Maker</h4>
+                    <p class="app-description">
+                        Create professional quotes with real-time pricing, client management, and PDF generation.
+                    </p>
+                    <div class="app-features">
+                        <span class="feature-tag">PDF Export</span>
+                        <span class="feature-tag">Client Management</span>
+                        <span class="feature-tag">Real-time Pricing</span>
+                    </div>
+                </div>
+                
+                <!-- Price Calculator Card -->
+                <div class="app-card" data-page="price-calculator.html">
+                    <div class="app-icon" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                        <i class="fas fa-calculator"></i>
+                    </div>
+                    <h4 class="app-title">Price Calculator</h4>
+                    <p class="app-description">
+                        Advanced pricing calculations with multiple product configurations and bulk pricing.
+                    </p>
+                    <div class="app-features">
+                        <span class="feature-tag">Bulk Pricing</span>
+                        <span class="feature-tag">Multi-Product</span>
+                        <span class="feature-tag">Cost Analysis</span>
+                    </div>
+                </div>
+                
+                <!-- Product Catalog Card -->
+                <div class="app-card" data-page="product-catalog.html">
+                    <div class="app-icon" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+                        <i class="fas fa-th-large"></i>
+                    </div>
+                    <h4 class="app-title">Product Catalog</h4>
+                    <p class="app-description">
+                        Browse and manage your complete product inventory with detailed specifications.
+                    </p>
+                    <div class="app-features">
+                        <span class="feature-tag">Product Search</span>
+                        <span class="feature-tag">Categories</span>
+                        <span class="feature-tag">Specifications</span>
+                    </div>
+                </div>
+                
+                <!-- Admin Panel Card -->
+                <div class="app-card" data-page="admin-panel.html">
+                    <div class="app-icon" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">
+                        <i class="fas fa-cog"></i>
+                    </div>
+                    <h4 class="app-title">Admin Panel</h4>
+                    <p class="app-description">
+                        System administration, data management, and configuration settings.
+                    </p>
+                    <div class="app-features">
+                        <span class="feature-tag">Data Sync</span>
+                        <span class="feature-tag">User Management</span>
+                        <span class="feature-tag">System Config</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Page Content Container -->
+    <div id="pageContent" class="page-content"></div>
+
+    <script>
+        class NavigationHub {
+            constructor() {
+                this.currentPage = null;
+                this.isLoading = false;
+                this.init();
+                // Show welcome content by default
+                this.showWelcome();
+            }
+            
+            init() {
+                // Add click listeners to navigation items
+                document.querySelectorAll('.nav-item').forEach(item => {
+                    item.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const page = item.getAttribute('data-page');
+                        this.navigateTo(page);
+                    });
+                });
+                
+                // Add click listeners to app cards
+                document.querySelectorAll('.app-card').forEach(card => {
+                    card.addEventListener('click', (e) => {
+                        const page = card.getAttribute('data-page');
+                        this.navigateTo(page);
+                    });
+                });
+            }
+            
+            async navigateTo(page) {
+                if (this.isLoading || page === this.currentPage) return;
+                
+                // Update active navigation state
+                this.updateActiveNav(page);
+                
+                await this.loadExternalPage(page);
+                
+                this.currentPage = page;
+            }
+            
+            updateActiveNav(page) {
+                document.querySelectorAll('.nav-item').forEach(item => {
+                    item.classList.remove('active');
+                    if (item.getAttribute('data-page') === page) {
+                        item.classList.add('active');
+                    }
+                });
+            }
+            
+            showWelcome() {
+                document.getElementById('welcomeContent').style.display = 'block';
+                document.getElementById('pageContent').style.display = 'none';
+            }
+            
+            async loadExternalPage(page) {
+                this.showLoading();
+                
+                try {
+                    const response = await fetch(page);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    const html = await response.text();
+                    
+                    // Parse the HTML and extract body content
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    
+                    // Get the body content
+                    const bodyContent = doc.body.innerHTML;
+                    
+                    // Hide welcome and show page content
+                    document.getElementById('welcomeContent').style.display = 'none';
+                    const pageContentDiv = document.getElementById('pageContent');
+                    pageContentDiv.innerHTML = bodyContent;
+                    pageContentDiv.style.display = 'block';
+                    
+                    // Execute scripts from the loaded page
+                    this.executeScripts(pageContentDiv);
+                    
+                    // Wait for scripts to initialize
+                    setTimeout(() => {
+                        this.initializeLoadedPage(page);
+                    }, 500);
+                    
+                } catch (error) {
+                    this.showError(`Failed to load ${page}. Please try again.`);
+                } finally {
+                    this.hideLoading();
+                }
+            }
+            
+            executeScripts(container) {
+                const scripts = container.querySelectorAll('script');
+                scripts.forEach(script => {
+                    const newScript = document.createElement('script');
+                    if (script.src) {
+                        newScript.src = script.src;
+                        newScript.async = false;
+                    } else {
+                        newScript.textContent = script.textContent;
+                    }
+                    document.head.appendChild(newScript);
+                });
+            }
+            
+            initializeLoadedPage(page) {
+                // Trigger any page-specific initialization
+                const event = new CustomEvent('pageLoaded', { detail: { page } });
+                document.dispatchEvent(event);
+            }
+            
+            showLoading() {
+                this.isLoading = true;
+                document.getElementById('loadingOverlay').style.display = 'flex';
+            }
+            
+            hideLoading() {
+                this.isLoading = false;
+                document.getElementById('loadingOverlay').style.display = 'none';
+            }
+            
+            showError(message) {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'fixed top-24 right-4 bg-red-500 text-white px-6 py-4 rounded-lg shadow-lg z-50 max-w-sm';
+                errorDiv.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span>${message}</span>
+                        <button onclick="this.parentElement.parentElement.remove()" class="ml-auto text-white hover:text-red-200">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+                document.body.appendChild(errorDiv);
+                
+                setTimeout(() => {
+                    if (errorDiv.parentElement) {
+                        errorDiv.remove();
+                    }
+                }, 5000);
+            }
+        }
+        
+        // Initialize navigation when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            window.navigationHub = new NavigationHub();
+        });
+        
+        // Fallback initialization
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                if (!window.navigationHub) {
+                    window.navigationHub = new NavigationHub();
+                }
+            });
+        } else {
+            if (!window.navigationHub) {
+                window.navigationHub = new NavigationHub();
+            }
+        }
+    </script>
+</body>
+</html>

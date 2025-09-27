@@ -5,20 +5,37 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Panel - INH</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
-    <!-- Firebase SDKs -->
+    <!-- Firebase API Adapter (loads first to replace Firebase calls) -->
+    <script src="firebase-api-adapter.js"></script>
+    
+    <!-- Firebase SDKs (kept for compatibility, but will be overridden by adapter) -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
     
+    <!-- Firebase configuration -->
     <script src="firebase-config.js"></script>
+    
+    <!-- Firebase global initialization -->
+    <script src="firebase-global-init.js"></script>
     <script src="firebase-database.js"></script>
     <script src="firebase-error-handler.js"></script>
     <script src="client-management.js"></script>
+    
+    <!-- Universal Firebase Data Manager -->
+    <script src="js/universal-firebase-data-manager.js"></script>
+    
+    <!-- Fallback System Components -->
+    <script src="js/local-fallback-manager.js"></script>
+    <script src="js/fallback-detector.js"></script>
+    <script src="js/unified-data-access.js"></script>
+    
     <link rel="stylesheet" href="unified-button-system.css">
     <style>
         /* Responsive padding */
@@ -148,90 +165,65 @@
     </style>
 </head>
 <body class="bg-gray-50">
-  <!-- Top Menu Bar -->
-  <header class="bg-white shadow-soft mb-4 sticky top-0 z-50">
-    <div class="max-w-4xl mx-auto px-3 sm:px-6">
-      <!-- Header with InstaQuote flush left and logo flush right -->
-      <div class="flex items-center justify-between py-3">
-        <!-- InstaQuote heading flush left -->
-        <h1 class="text-xl sm:text-2xl lg:text-3xl font-bold" style="line-height: 0.7;">
-          <span style="color: #081249;">Insta</span><span style="color: #9b7952;">Q</span><span style="color: #081249;">uote</span>
-        </h1>
-        
-        <!-- Logo flush right -->
-        <div class="flex-shrink-0">
-          <img src="images/logo.png" alt="Company Logo" class="h-12 sm:h-16 w-auto opacity-75 hover:opacity-100 transition-opacity duration-200">
+
+    <!-- Navigation Component -->
+    <nav class="bg-gradient-to-r from-blue-900 via-blue-800 to-amber-700 text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo and Title -->
+                <div class="flex items-center space-x-3">
+                    <img src="images/logo.png" alt="Logo" class="h-8 w-auto opacity-90">
+                    <span class="text-lg font-bold">InstaQuote</span>
+                </div>
+                
+                <!-- Navigation Links -->
+                <div class="hidden md:flex items-center space-x-4">
+                    <a href="quote-maker-v2-ver3.html" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-white/10 transition-colors">
+                        <i class="fas fa-file-invoice-dollar mr-1"></i> Quote Maker
+                    </a>
+                    <a href="price-calculator.html" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-white/10 transition-colors">
+                        <i class="fas fa-calculator mr-1"></i> Calculator
+                    </a>
+                    <a href="product-catalog.html" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-white/10 transition-colors">
+                        <i class="fas fa-th-large mr-1"></i> Catalog
+                    </a>
+                    <span class="px-3 py-2 rounded-md text-sm font-medium bg-white/20">
+                        <i class="fas fa-cog mr-1"></i> Admin
+                    </span>
+                </div>
+                
+                <!-- Mobile Menu Button -->
+                <div class="md:hidden">
+                    <button id="mobile-menu-btn" class="p-2 rounded-md hover:bg-white/10 transition-colors">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Mobile Menu -->
+            <div id="mobile-menu" class="md:hidden hidden pb-3">
+                <div class="space-y-1">
+                    <a href="quote-maker-v2-ver3.html" class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-white/10 transition-colors">
+                        <i class="fas fa-file-invoice-dollar mr-2"></i> Quote Maker
+                    </a>
+                    <a href="price-calculator.html" class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-white/10 transition-colors">
+                        <i class="fas fa-calculator mr-2"></i> Price Calculator</a>
+                    <a href="product-catalog.html" class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-white/10 transition-colors">
+                        <i class="fas fa-th-large mr-2"></i> Product Catalog
+                    </a>
+                    <span class="block px-3 py-2 rounded-md text-sm font-medium bg-white/20">
+                        <i class="fas fa-cog mr-2"></i> Admin Panel
+                    </span>
+                </div>
+            </div>
         </div>
-      </div>
-      
-      <!-- Navigation Menu below header -->
-      <div class="pb-3">
-        <nav class="hidden md:flex gap-2 justify-center">
-          <a href="price-calculator.html" class="nav-btn px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 text-gray-700 hover:text-gray-900 no-underline">
-            <span>📊</span>
-            <span>PriceLists</span>
-          </a>
-          <a href="quote-maker.html" class="nav-btn px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 text-gray-700 hover:text-gray-900 no-underline">
-            <span class="text-lg">📋</span>
-            <span>Quote Maker</span>
-          </a>
-          <a href="product-catalog.html" class="nav-btn px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 text-gray-700 hover:text-gray-900 no-underline">
-            <span class="text-lg">📦</span>
-            <span>Product Catalog</span>
-          </a>
-          <a href="admin-panel.html" class="nav-btn nav-btn-active btn-primary px-4 py-2 rounded-lg font-medium hover:bg-emerald-700 transition-all duration-200 flex items-center gap-2 text-white no-underline">
-            <span class="text-lg">⚙️</span>
-            <span>Admin Panel</span>
-          </a>
-        </nav>
-      </div>
-      
-      <!-- Mobile Navigation Menu -->
-      <nav class="md:hidden pb-3">
-        <div class="flex flex-wrap justify-center gap-2">
-          <a href="price-calculator.html" class="nav-btn px-3 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-1 text-sm text-gray-700 hover:text-gray-900 no-underline">
-            <span>📊</span>
-            <span>PriceLists</span>
-          </a>
-          <a href="quote-maker.html" class="nav-btn px-3 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-1 text-sm text-gray-700 hover:text-gray-900 no-underline">
-            <span>📋</span>
-            <span>Quote</span>
-          </a>
-          <a href="product-catalog.html" class="nav-btn px-3 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-1 text-sm text-gray-700 hover:text-gray-900 no-underline">
-            <span>📦</span>
-            <span>Catalog</span>
-          </a>
-          <a href="admin-panel.html" class="nav-btn nav-btn-active btn-primary px-3 py-2 rounded-lg font-medium hover:bg-emerald-700 transition-all duration-200 flex items-center gap-1 text-sm text-white no-underline">
-            <span>⚙️</span>
-            <span>Admin</span>
-          </a>
-        </div>
-      </nav>
-    </div>
-  </header>
+    </nav>
 
     <!-- Admin Panel Module -->
     <div class="container mx-auto px-4 py-6">
         <!-- Enhanced Admin Panel Header -->
-        <div class="rounded-xl p-6 mb-8 text-white" style="background-color: #081249;">
-            <div class="flex flex-col md:flex-row md:items-center md:justify-between">
-                <div>
-                    <h1 class="text-3xl font-bold mb-2">Admin Panel</h1>
-                    <p class="text-purple-100">Manage your data, clients, and system settings</p>
-                </div>
-                <div class="mt-4 md:mt-0">
-                    <div class="flex items-center space-x-4">
-                        <div class="text-center">
-                            <div class="text-2xl font-bold" id="total-clients">0</div>
-                            <div class="text-sm text-purple-200">Total Clients</div>
-                        </div>
-                        <div class="text-center">
-                            <div class="text-2xl font-bold" id="month-clients">0</div>
-                            <div class="text-sm text-purple-200">This Month</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div class="text-left mb-8">
+            <h1 class="text-3xl font-bold mb-2" style="color: #081249;">Admin Panel</h1>
         </div>
 
         <!-- Admin Panel Tabs -->
@@ -239,8 +231,8 @@
             <!-- Tab Navigation -->
             <div class="border-b border-gray-200">
                 <nav class="flex space-x-8 px-6" aria-label="Tabs">
-                    <button onclick="showAdminTab('excel-management')" class="admin-tab-btn active border-b-2 border-blue-500 py-4 px-1 text-sm font-medium text-blue-600">
-                        Excel Data Management
+                    <button onclick="showAdminTab('sync-management')" class="admin-tab-btn active border-b-2 border-blue-500 py-4 px-1 text-sm font-medium text-blue-600">
+                        Data Synchronization
                     </button>
                     <button onclick="showAdminTab('client-management')" class="admin-tab-btn border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
                         Client Management
@@ -248,23 +240,66 @@
                 </nav>
             </div>
 
-            <!-- Excel Data Management Tab -->
-            <div id="excel-management" class="admin-tab-content p-6">
+            <!-- Data Synchronization Tab -->
+            <div id="sync-management" class="admin-tab-content p-6">
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <!-- Upload Section -->
-                    <div class="bg-white rounded-xl shadow-soft p-4 sm:p-6 mb-4 mobile-padding" style="background: #eef2ff;">
-                        <h3 class="section-heading">Upload Excel Data</h3>
+                    <!-- Firebase Sync Section -->
+                    <div class="bg-white rounded-xl shadow-soft p-4 sm:p-6 mb-4 mobile-padding" style="background: #fff3cd;">
+                        <h3 class="section-heading">🔥 Firebase Synchronization</h3>
                         <div class="space-y-4">
-                            <button onclick="openAdminModal()" class="w-full btn-primary font-medium py-3 px-4 rounded-lg transition-colors">
-                    Upload to Firebase
-                </button>
-                            <div class="text-sm text-gray-600">
-                                <p>• Upload product data, price lists, and salesmen information</p>
-                                <p>• Supports Excel (.xlsx) and CSV files</p>
-                                <p>• Data is automatically validated and processed</p>
+                            <!-- Firebase Status -->
+                            <div class="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-yellow-800 font-medium">Firebase Status</span>
+                                    <span id="firebase-sync-status" class="px-2 py-1 rounded-full text-xs font-medium bg-yellow-200 text-yellow-700">Checking...</span>
+                                </div>
+                                <div class="flex justify-between items-center mt-2">
+                                    <span class="text-yellow-700">Last Sync</span>
+                                    <span id="firebase-last-sync" class="text-sm text-yellow-600">Never</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Firebase Sync Controls -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <button onclick="performFirebaseSync()" class="btn-primary font-medium py-3 px-4 rounded-lg transition-colors">
+                                    🔄 Sync to Firebase
+                                </button>
+                                <button onclick="performFirebaseBackup()" class="btn-secondary font-medium py-3 px-4 rounded-lg transition-colors">
+                                    💾 Backup from Firebase
+                                </button>
+                                <button onclick="validateFirebaseData()" class="btn-warning font-medium py-3 px-4 rounded-lg transition-colors">
+                                    ✅ Validate Data
+                                </button>
+                                <button onclick="resetFirebaseConnection()" class="btn-danger font-medium py-3 px-4 rounded-lg transition-colors">
+                                    🔌 Reset Connection
+                                </button>
+                            </div>
+                            
+                            <div class="text-sm text-yellow-700">
+                                <p>• <strong>Admin-only Firebase access</strong></p>
+                                <p>• All other pages use local data first</p>
+                                <p>• Manual synchronization control</p>
+                                <p>• Data validation and backup</p>
                             </div>
                         </div>
                     </div>
+
+                    <!-- Google Sheets Sync Section -->
+                    <div class="bg-white rounded-xl shadow-soft p-4 sm:p-6 mb-4 mobile-padding" style="background: #eef2ff;">
+                        <h3 class="section-heading">📊 Google Sheets Synchronization</h3>
+                        <div class="space-y-4">
+                            <button onclick="openSyncModal()" class="w-full btn-primary font-medium py-3 px-4 rounded-lg transition-colors">
+                                📊 Open Sync Operations
+                            </button>
+                            <div class="text-sm text-gray-600">
+                                <p>• Two-way synchronization with Google Sheets</p>
+                                <p>• Automatic duplicate prevention</p>
+                                <p>• Real-time data validation</p>
+                            </div>
+                        </div>
+                    </div>
+
+
 
                     <!-- Database Statistics Section -->
                     <div class="bg-white rounded-xl shadow-soft p-4 sm:p-6 mb-4 mobile-padding" style="background: #f8fafc;">
@@ -487,99 +522,60 @@
         </div>
     </div>
 
-    <!-- Admin Panel Modal -->
-    <div id="admin-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <!-- Sync Operations Modal -->
+    <div id="sync-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
         <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
             <div class="mt-3">
                 <!-- Modal Header -->
                 <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-medium text-gray-900">Firebase Excel Upload</h3>
-                    <button onclick="closeAdminModal()" class="text-gray-400 hover:text-gray-600">
+                    <h3 class="text-lg font-medium text-gray-900">Data Synchronization</h3>
+                    <button onclick="closeSyncModal()" class="text-gray-400 hover:text-gray-600">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
                     </button>
                 </div>
                 
-                <!-- Authentication Status -->
-                <div id="auth-status" class="mb-4 p-3 rounded-lg bg-gray-100">
+                <!-- Sync Status -->
+                <div id="sync-status" class="mb-4 p-3 rounded-lg bg-gray-100">
                     <div class="flex items-center">
-                        <div id="auth-indicator" class="w-3 h-3 rounded-full bg-gray-400 mr-2"></div>
-                        <span id="auth-text" class="text-sm text-gray-600">Checking authentication...</span>
+                        <div id="sync-indicator" class="w-3 h-3 rounded-full bg-gray-400 mr-2"></div>
+                        <span id="sync-text" class="text-sm text-gray-600">Ready for synchronization</span>
                     </div>
                 </div>
                 
-                <!-- Login Section -->
-                <div id="login-section" class="mb-6 hidden">
-                    <h4 class="text-md font-medium text-gray-800 mb-3">Firebase Authentication</h4>
+                <!-- Sync Operations -->
+                <div id="sync-operations" class="mb-6">
+                    <h4 class="text-md font-medium text-gray-800 mb-3">Synchronization Operations</h4>
                     <div class="space-y-3">
-                        <input type="email" id="admin-email" placeholder="Email" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <input type="password" id="admin-password" placeholder="Password" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <div class="flex space-x-2">
-                            <button onclick="loginAdmin()" class="flex-1 btn-primary px-4 py-2 rounded-md transition-colors">Login</button>
-                            <button onclick="logoutAdmin()" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md transition-colors">Logout</button>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- File Upload Section -->
-                <div id="upload-section" class="mb-6">
-                    <h4 class="text-md font-medium text-gray-800 mb-3">Upload Excel File</h4>
-                    <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                        <input type="file" id="excel-file" accept=".xlsx,.xls,.csv" class="hidden" onchange="handleFileSelect(event)">
-                        <div id="file-drop-zone" class="cursor-pointer" onclick="document.getElementById('excel-file').click()">
-                            <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
-                                <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
-                            </svg>
-                            <p class="mt-2 text-sm text-gray-600">Click to select Excel file or drag and drop</p>
-                            <p class="text-xs text-gray-500">Supports .xlsx, .xls, and .csv files</p>
-                        </div>
-                        <div id="file-info" class="hidden mt-3 text-sm text-gray-600"></div>
-                    </div>
-                    
-                    <div class="mt-4">
-                        <button id="upload-btn" onclick="uploadToFirebase()" disabled class="w-full btn-success disabled:bg-gray-400 px-4 py-2 rounded-md transition-colors">
-                            Upload to Firebase
+                        <button onclick="performGoogleSheetsSync()" class="w-full btn-primary px-4 py-2 rounded-md transition-colors">
+                            📊 Sync with Google Sheets
+                        </button>
+                        <button onclick="performClientReverseSync()" class="w-full btn-success px-4 py-2 rounded-md transition-colors">
+                            🔄 Reverse Sync Clients to Google Sheets
+                        </button>
+                        <button onclick="performFirebaseRefresh()" class="w-full btn-secondary px-4 py-2 rounded-md transition-colors">
+                            🔥 Refresh Firebase Data
+                        </button>
+                        <button onclick="performDataValidation()" class="w-full btn-warning px-4 py-2 rounded-md transition-colors">
+                            ✅ Validate Data Integrity
                         </button>
                     </div>
                 </div>
                 
-                <!-- Database Status -->
-                <div id="database-status" class="mb-4">
-                    <h4 class="text-md font-medium text-gray-800 mb-3">Database Status</h4>
-                    <div class="space-y-2 text-sm">
-                        <div class="flex justify-between">
-                            <span>Products:</span>
-                            <span id="db-products-count" class="font-medium">0</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span>Price Lists:</span>
-                            <span id="db-pricelists-count" class="font-medium">0</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span>Salesmen:</span>
-                            <span id="db-salesmen-count" class="font-medium">0</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span>Last Updated:</span>
-                            <span id="db-last-updated" class="font-medium">Never</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Progress Bar -->
-                <div id="upload-progress" class="hidden mb-4">
+                <!-- Sync Progress -->
+                <div id="sync-progress" class="hidden mb-4">
                     <div class="flex justify-between text-sm text-gray-600 mb-1">
-                        <span>Uploading...</span>
-                        <span id="progress-text">0%</span>
+                        <span>Synchronizing...</span>
+                        <span id="sync-progress-text">0%</span>
                     </div>
                     <div class="w-full bg-gray-200 rounded-full h-2">
-                        <div id="progress-bar" class="h-2 rounded-full transition-all duration-300" style="width: 0%; background-color: #081249;"></div>
+                        <div id="sync-progress-bar" class="h-2 rounded-full transition-all duration-300" style="width: 0%; background-color: #081249;"></div>
                     </div>
                 </div>
                 
-                <!-- Messages -->
-                <div id="upload-messages" class="space-y-2"></div>
+                <!-- Sync Messages -->
+                <div id="sync-messages" class="space-y-2"></div>
             </div>
         </div>
     </div>
@@ -743,107 +739,41 @@
             }
         }
 
-        // Admin modal functions
-        function openAdminModal() {
-            document.getElementById('admin-modal').classList.remove('hidden');
-            initFirebaseUpload();
+        // Sync modal functions
+        function openSyncModal() {
+            document.getElementById('sync-modal').classList.remove('hidden');
+            initSyncOperations();
         }
 
-        function closeAdminModal() {
-            document.getElementById('admin-modal').classList.add('hidden');
+        function closeSyncModal() {
+            document.getElementById('sync-modal').classList.add('hidden');
         }
 
-        // Initialize Firebase upload functionality
-        function initFirebaseUpload() {
-            checkAuthStatus();
+        // Initialize sync functionality
+        function initSyncOperations() {
+            updateSyncStatus();
             updateDatabaseStatus();
         }
 
-        function checkAuthStatus() {
-            const authIndicator = document.getElementById('auth-indicator');
-            const authText = document.getElementById('auth-text');
-            const loginSection = document.getElementById('login-section');
+        function updateSyncStatus() {
+            const syncIndicator = document.getElementById('sync-indicator');
+            const syncText = document.getElementById('sync-text');
             
-            if (window.firebaseDB && window.firebaseDB.isAuthenticated()) {
-                authIndicator.className = 'w-3 h-3 rounded-full bg-green-400 mr-2';
-                authText.textContent = 'Authenticated and ready';
-                loginSection.classList.add('hidden');
+            const status = window.universalDataManager.getStatus();
+            if (status.isInitialized && status.isDataLoaded) {
+                syncIndicator.className = 'w-3 h-3 rounded-full bg-green-400 mr-2';
+                syncText.textContent = 'Ready for synchronization';
             } else {
-                authIndicator.className = 'w-3 h-3 rounded-full bg-red-400 mr-2';
-                authText.textContent = 'Not authenticated - login required';
-                loginSection.classList.remove('hidden');
+                syncIndicator.className = 'w-3 h-3 rounded-full bg-yellow-400 mr-2';
+                syncText.textContent = 'Initializing data access...';
             }
         }
 
-        async function loginAdmin() {
-            const email = document.getElementById('admin-email').value;
-            const password = document.getElementById('admin-password').value;
-            
-            if (!email || !password) {
-                alert('Please enter email and password');
-                return;
-            }
-            
-            try {
-                if (window.firebaseDB) {
-                    await window.firebaseDB.signIn(email, password);
-                    checkAuthStatus();
-                    updateDatabaseStatus();
-                    alert('Login successful!');
-                } else {
-                    alert('Firebase not available');
-                }
-            } catch (error) {
-                alert('Login failed: ' + error.message);
-            }
-        }
-
-        async function logoutAdmin() {
-            try {
-                if (window.firebaseDB) {
-                    await window.firebaseDB.signOut();
-                    checkAuthStatus();
-                    alert('Logged out successfully');
-                } else {
-                    alert('Firebase not available');
-                }
-            } catch (error) {
-                alert('Logout failed: ' + error.message);
-            }
-        }
-
-        function handleFileSelect(event) {
-            const file = event.target.files[0];
-            const fileInfo = document.getElementById('file-info');
-            const uploadBtn = document.getElementById('upload-btn');
-            
-            if (file) {
-                fileInfo.textContent = `Selected: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
-                fileInfo.classList.remove('hidden');
-                uploadBtn.disabled = false;
-                window.selectedFile = file;
-            } else {
-                fileInfo.classList.add('hidden');
-                uploadBtn.disabled = true;
-                window.selectedFile = null;
-            }
-        }
-
-        async function uploadToFirebase() {
-            if (!window.selectedFile) {
-                alert('Please select a file first');
-                return;
-            }
-            
-            if (!window.firebaseDB || !window.firebaseDB.isAuthenticated()) {
-                alert('Please login first');
-                return;
-            }
-            
-            const progressContainer = document.getElementById('upload-progress');
-            const progressBar = document.getElementById('progress-bar');
-            const progressText = document.getElementById('progress-text');
-            const messagesContainer = document.getElementById('upload-messages');
+        async function performGoogleSheetsSync() {
+            const progressContainer = document.getElementById('sync-progress');
+            const progressBar = document.getElementById('sync-progress-bar');
+            const progressText = document.getElementById('sync-progress-text');
+            const messagesContainer = document.getElementById('sync-messages');
             
             try {
                 progressContainer.classList.remove('hidden');
@@ -851,104 +781,405 @@
                 progressText.textContent = '0%';
                 messagesContainer.innerHTML = '';
                 
-                // Read and parse Excel file
-                const data = await readExcelFile(window.selectedFile);
-                progressBar.style.width = '25%';
-                progressText.textContent = '25%';
+                // Show initial message
+                addSyncMessage('Starting Google Sheets synchronization...', 'info');
+                progressBar.style.width = '10%';
+                progressText.textContent = '10%';
                 
-                // Validate data
-                const validatedData = validateExcelData(data);
+                // Sync products using server-side endpoints
+                addSyncMessage('Syncing products from Google Sheets...', 'info');
+                const productResponse = await fetch('/api/sync/products', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                if (!productResponse.ok) {
+                    const errorText = await productResponse.text();
+                    throw new Error(`Failed to sync products: ${errorText}`);
+                }
+                progressBar.style.width = '30%';
+                progressText.textContent = '30%';
+                
+                // Sync salespeople using server-side endpoints
+                addSyncMessage('Syncing salespeople from Google Sheets...', 'info');
+                const salesmenResponse = await fetch('/api/sync/salesmen', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                if (!salesmenResponse.ok) {
+                    const errorText = await salesmenResponse.text();
+                    throw new Error(`Failed to sync salespeople: ${errorText}`);
+                }
                 progressBar.style.width = '50%';
                 progressText.textContent = '50%';
                 
-                // Upload to Firebase
-                await window.firebaseDB.uploadExcelData(validatedData);
-                progressBar.style.width = '75%';
-                progressText.textContent = '75%';
+                // Update Firebase with new data
+                addSyncMessage('Updating Firebase with synced data...', 'info');
+                if (!window.universalDataManager) {
+                    throw new Error('Universal data manager not available');
+                }
+                await window.universalDataManager.refreshData();
+                progressBar.style.width = '70%';
+                progressText.textContent = '70%';
                 
-                // Update local storage and UI
+                // Update local fallback storage with synced data
+                addSyncMessage('Updating local fallback storage...', 'info');
+                if (window.unifiedDataAccess) {
+                    try {
+                        const syncResults = await window.unifiedDataAccess.syncAllCollections({
+                            source: 'google_sheets_sync'
+                        });
+                        
+                        let totalSynced = 0;
+                        for (const [collection, result] of Object.entries(syncResults)) {
+                            if (result.success) {
+                                totalSynced += result.count;
+                                addSyncMessage(`✓ ${collection}: ${result.count} items synced to local storage`, 'success');
+                            } else {
+                                addSyncMessage(`⚠ ${collection}: ${result.error}`, 'warning');
+                            }
+                        }
+                        
+                        addSyncMessage(`Local fallback updated with ${totalSynced} total items`, 'success');
+                    } catch (fallbackError) {
+                        addSyncMessage(`Warning: Local fallback update failed: ${fallbackError.message}`, 'warning');
+                        console.warn('Fallback sync failed:', fallbackError);
+                    }
+                } else if (window.localFallbackManager && window.universalDataManager && window.universalDataManager.isInitialized) {
+                    // Fallback to direct local storage update
+                    try {
+                        const firebaseData = {
+                            products: (window.universalDataManager.products && Array.isArray(window.universalDataManager.products)) ? window.universalDataManager.products : [],
+                            salespeople: (window.universalDataManager.salespeople && Array.isArray(window.universalDataManager.salespeople)) ? window.universalDataManager.salespeople : [],
+                            clients: (window.universalDataManager.clients && Array.isArray(window.universalDataManager.clients)) ? window.universalDataManager.clients : [],
+                            colors: (window.universalDataManager.colors && Array.isArray(window.universalDataManager.colors)) ? window.universalDataManager.colors : [],
+                            styles: (window.universalDataManager.styles && Array.isArray(window.universalDataManager.styles)) ? window.universalDataManager.styles : []
+                        };
+                        
+                        await window.localFallbackManager.syncFromFirebase(firebaseData, {
+                            overwrite: true
+                        });
+                        
+                        addSyncMessage('Local fallback storage updated successfully', 'success');
+                    } catch (fallbackError) {
+                        addSyncMessage(`Warning: Local fallback update failed: ${fallbackError.message}`, 'warning');
+                        console.warn('Direct fallback sync failed:', fallbackError);
+                    }
+                }
+                progressBar.style.width = '90%';
+                progressText.textContent = '90%';
+                
+                // Update UI and refresh statistics
                 await updateApplicationData();
                 progressBar.style.width = '100%';
                 progressText.textContent = '100%';
                 
-                // Show success message
-                const successMsg = document.createElement('div');
-                successMsg.className = 'p-3 bg-green-100 border border-green-400 text-green-700 rounded';
-                successMsg.textContent = 'Upload completed successfully!';
-                messagesContainer.appendChild(successMsg);
-                
-                // Update database status
+                addSyncMessage('Google Sheets synchronization completed successfully!', 'success');
+                addSyncMessage('Local fallback data is now fully synchronized', 'info');
                 updateDatabaseStatus();
                 
-                // Log audit event
-                logAuditEvent('excel_upload', {
-                    filename: window.selectedFile.name,
-                    filesize: window.selectedFile.size,
-                    recordCount: validatedData.products?.length || 0
+                logAuditEvent('google_sheets_sync', {
+                    timestamp: new Date().toISOString(),
+                    status: 'success',
+                    fallbackUpdated: true
                 });
                 
             } catch (error) {
-                console.error('Upload error:', error);
-                const errorMsg = document.createElement('div');
-                errorMsg.className = 'p-3 bg-red-100 border border-red-400 text-red-700 rounded';
-                errorMsg.textContent = 'Upload failed: ' + error.message;
-                messagesContainer.appendChild(errorMsg);
+                addSyncMessage('Google Sheets sync failed: ' + error.message, 'error');
+                
+                logAuditEvent('google_sheets_sync', {
+                    timestamp: new Date().toISOString(),
+                    status: 'error',
+                    error: error.message
+                });
             } finally {
                 setTimeout(() => {
                     progressContainer.classList.add('hidden');
-                }, 2000);
+                }, 3000);
             }
         }
 
-        async function readExcelFile(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    try {
-                        const data = new Uint8Array(e.target.result);
-                        const workbook = XLSX.read(data, { type: 'array' });
-                        
-                        const result = {};
-                        workbook.SheetNames.forEach(sheetName => {
-                            const worksheet = workbook.Sheets[sheetName];
-                            result[sheetName] = XLSX.utils.sheet_to_json(worksheet);
-                        });
-                        
-                        resolve(result);
-                    } catch (error) {
-                        reject(new Error('Failed to parse Excel file: ' + error.message));
-                    }
-                };
-                reader.onerror = () => reject(new Error('Failed to read file'));
-                reader.readAsArrayBuffer(file);
-            });
+        async function performFirebaseRefresh() {
+            const progressContainer = document.getElementById('sync-progress');
+            const progressBar = document.getElementById('sync-progress-bar');
+            const progressText = document.getElementById('sync-progress-text');
+            const messagesContainer = document.getElementById('sync-messages');
+            
+            try {
+                progressContainer.classList.remove('hidden');
+                progressBar.style.width = '0%';
+                progressText.textContent = '0%';
+                messagesContainer.innerHTML = '';
+                
+                addSyncMessage('Refreshing Firebase data...', 'info');
+                progressBar.style.width = '25%';
+                progressText.textContent = '25%';
+                
+                if (!window.universalDataManager) {
+                    throw new Error('Universal data manager not available');
+                }
+                
+                await window.universalDataManager.refreshData();
+                progressBar.style.width = '75%';
+                progressText.textContent = '75%';
+                
+                await updateApplicationData();
+                progressBar.style.width = '100%';
+                progressText.textContent = '100%';
+                
+                addSyncMessage('Firebase data refreshed successfully!', 'success');
+                updateDatabaseStatus();
+                
+                logAuditEvent('firebase_refresh', {
+                    timestamp: new Date().toISOString(),
+                    status: 'success'
+                });
+                
+            } catch (error) {
+                addSyncMessage('Firebase refresh failed: ' + error.message, 'error');
+                
+                logAuditEvent('firebase_refresh', {
+                    timestamp: new Date().toISOString(),
+                    status: 'error',
+                    error: error.message
+                });
+            } finally {
+                setTimeout(() => {
+                    progressContainer.classList.add('hidden');
+                }, 3000);
+            }
         }
 
-        function validateExcelData(data) {
-            const validated = {
-                products: [],
-                salesmen: [],
-                priceLists: []
-            };
+        async function performDataValidation() {
+            const progressContainer = document.getElementById('sync-progress');
+            const progressBar = document.getElementById('sync-progress-bar');
+            const progressText = document.getElementById('sync-progress-text');
+            const messagesContainer = document.getElementById('sync-messages');
             
-            // Process each sheet
-            Object.keys(data).forEach(sheetName => {
-                const sheetData = data[sheetName];
+            try {
+                progressContainer.classList.remove('hidden');
+                progressBar.style.width = '0%';
+                progressText.textContent = '0%';
+                messagesContainer.innerHTML = '';
                 
-                if (sheetName.toLowerCase().includes('product') || sheetName.toLowerCase().includes('price')) {
-                    validated.products = validated.products.concat(sheetData);
-                } else if (sheetName.toLowerCase().includes('sales')) {
-                    validated.salesmen = validated.salesmen.concat(sheetData);
+                addSyncMessage('Starting data integrity validation...', 'info');
+                progressBar.style.width = '20%';
+                progressText.textContent = '20%';
+                
+                // Validate products
+                addSyncMessage('Validating products data...', 'info');
+                try {
+                    const products = await window.unifiedDataAccess.getProducts();
+                    console.log('Products loaded from:', products.length > 0 ? 'unified data access' : 'fallback');
+                    const duplicateProducts = findDuplicates(products, 'id');
+                } catch (error) {
+                    console.error('Error loading products:', error);
+                    const products = await window.universalDataManager.getProducts();
+                    const duplicateProducts = findDuplicates(products, 'id');
+                }
+                progressBar.style.width = '40%';
+                progressText.textContent = '40%';
+                
+                // Validate salespeople
+                addSyncMessage('Validating salespeople data...', 'info');
+                try {
+                    const salespeople = await window.unifiedDataAccess.getSalespeople();
+                    console.log('Salespeople loaded from:', salespeople.length > 0 ? 'unified data access' : 'fallback');
+                    const duplicateSalespeople = findDuplicates(salespeople, 'name');
+                } catch (error) {
+                    console.error('Error loading salespeople:', error);
+                    const salespeople = await window.universalDataManager.getSalespeople();
+                    const duplicateSalespeople = findDuplicates(salespeople, 'name');
+                }
+                progressBar.style.width = '60%';
+                progressText.textContent = '60%';
+                
+                // Validate clients
+                addSyncMessage('Validating clients data...', 'info');
+                try {
+                    const clients = await window.unifiedDataAccess.getClients();
+                    console.log('Clients loaded from:', clients.length > 0 ? 'unified data access' : 'fallback');
+                } catch (error) {
+                    console.error('Error loading clients:', error);
+                    const clients = await window.universalDataManager.getClients();
+                }
+                const duplicateClients = findDuplicates(clients, 'id');
+                progressBar.style.width = '80%';
+                progressText.textContent = '80%';
+                
+                // Generate validation report
+                progressBar.style.width = '100%';
+                progressText.textContent = '100%';
+                
+                let validationResults = [];
+                if (duplicateProducts.length > 0) {
+                    validationResults.push(`Found ${duplicateProducts.length} duplicate products`);
+                }
+                if (duplicateSalespeople.length > 0) {
+                    validationResults.push(`Found ${duplicateSalespeople.length} duplicate salespeople`);
+                }
+                if (duplicateClients.length > 0) {
+                    validationResults.push(`Found ${duplicateClients.length} duplicate clients`);
+                }
+                
+                if (validationResults.length === 0) {
+                    addSyncMessage('Data validation completed - no issues found!', 'success');
+                } else {
+                    validationResults.forEach(result => {
+                        addSyncMessage(result, 'warning');
+                    });
+                }
+                
+                logAuditEvent('data_validation', {
+                    timestamp: new Date().toISOString(),
+                    status: 'completed',
+                    issues: validationResults
+                });
+                
+            } catch (error) {
+                addSyncMessage('Data validation failed: ' + error.message, 'error');
+                
+                logAuditEvent('data_validation', {
+                    timestamp: new Date().toISOString(),
+                    status: 'error',
+                    error: error.message
+                });
+            } finally {
+                setTimeout(() => {
+                    progressContainer.classList.add('hidden');
+                }, 5000);
+            }
+        }
+
+        async function performClientReverseSync() {
+            const progressContainer = document.getElementById('sync-progress');
+            const progressBar = document.getElementById('sync-progress-bar');
+            const progressText = document.getElementById('sync-progress-text');
+            const messagesContainer = document.getElementById('sync-messages');
+            
+            try {
+                progressContainer.classList.remove('hidden');
+                progressBar.style.width = '0%';
+                progressText.textContent = '0%';
+                messagesContainer.innerHTML = '';
+                
+                addSyncMessage('Starting client reverse synchronization to Google Sheets...', 'info');
+                progressBar.style.width = '10%';
+                progressText.textContent = '10%';
+                
+                // Check if Firebase database is available
+                if (!window.firebaseDatabase) {
+                    throw new Error('Firebase database not available');
+                }
+                
+                addSyncMessage('Retrieving clients from Firebase...', 'info');
+                progressBar.style.width = '30%';
+                progressText.textContent = '30%';
+                
+                // Get all clients from Firebase
+                const clients = await window.firebaseDatabase.getClients();
+                if (!clients || clients.length === 0) {
+                    addSyncMessage('No clients found in Firebase to sync', 'warning');
+                    progressBar.style.width = '100%';
+                    progressText.textContent = '100%';
+                    return;
+                }
+                
+                addSyncMessage(`Found ${clients.length} clients to sync to Google Sheets...`, 'info');
+                progressBar.style.width = '50%';
+                progressText.textContent = '50%';
+                
+                // Use server endpoint for sync (with service account authentication)
+                addSyncMessage('Syncing clients via server endpoint...', 'info');
+                const response = await fetch('/api/sync/manual', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        syncType: 'clients',
+                        direction: 'reverse', // Firebase to Google Sheets
+                        data: clients
+                    })
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `Server error: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                progressBar.style.width = '90%';
+                progressText.textContent = '90%';
+                
+                // Update UI
+                await updateApplicationData();
+                progressBar.style.width = '100%';
+                progressText.textContent = '100%';
+                
+                addSyncMessage(`Client reverse sync completed successfully! Synced ${clients.length} clients to Google Sheets.`, 'success');
+                updateDatabaseStatus();
+                
+                logAuditEvent('client_reverse_sync', {
+                    timestamp: new Date().toISOString(),
+                    status: 'success',
+                    clientCount: clients.length,
+                    serverResponse: result
+                });
+                
+            } catch (error) {
+                addSyncMessage('Client reverse sync failed: ' + error.message, 'error');
+                
+                logAuditEvent('client_reverse_sync', {
+                    timestamp: new Date().toISOString(),
+                    status: 'error',
+                    error: error.message
+                });
+            } finally {
+                setTimeout(() => {
+                    progressContainer.classList.add('hidden');
+                }, 3000);
+            }
+        }
+
+        function findDuplicates(array, key) {
+            const seen = new Set();
+            const duplicates = [];
+            
+            array.forEach(item => {
+                const value = item[key];
+                if (seen.has(value)) {
+                    duplicates.push(item);
+                } else {
+                    seen.add(value);
                 }
             });
             
-            return validated;
+            return duplicates;
+        }
+
+        function addSyncMessage(message, type) {
+            const messagesContainer = document.getElementById('sync-messages');
+            const messageDiv = document.createElement('div');
+            
+            const typeClasses = {
+                'info': 'p-3 bg-blue-100 border border-blue-400 text-blue-700 rounded',
+                'success': 'p-3 bg-green-100 border border-green-400 text-green-700 rounded',
+                'warning': 'p-3 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded',
+                'error': 'p-3 bg-red-100 border border-red-400 text-red-700 rounded'
+            };
+            
+            messageDiv.className = typeClasses[type] || typeClasses['info'];
+            messageDiv.textContent = message;
+            messagesContainer.appendChild(messageDiv);
+            
+            // Auto-scroll to bottom
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
 
         async function updateApplicationData() {
             // Refresh embedded data
-            if (window.dataManager) {
-                await window.dataManager.refreshData();
+            if (window.universalDataManager) {
+                await window.universalDataManager.refreshData();
             }
             
             // Update UI elements
@@ -960,14 +1191,30 @@
                 const firebaseStatus = document.getElementById('firebase-status');
                 const lastUpdate = document.getElementById('last-update');
                 
-                if (window.firebaseDB && window.firebaseDB.isAvailable()) {
-                    if (firebaseStatus) {
-                        firebaseStatus.textContent = 'Connected';
-                        firebaseStatus.className = 'px-2 py-1 rounded-full text-xs font-medium bg-green-200 text-green-700';
-                    }
+                // Wait for universal data manager to be ready
+                if (window.universalDataManager) {
+                    await window.universalDataManager.waitForReady();
+                    const status = window.universalDataManager.getStatus();
                     
-                    // Get and display database statistics
-                    await refreshDatabaseStats();
+                    if (status.isInitialized && status.isDataLoaded) {
+                        if (firebaseStatus) {
+                            if (Object.keys(status.errors).length === 0) {
+                                firebaseStatus.textContent = 'Connected (Firebase)';
+                                firebaseStatus.className = 'px-2 py-1 rounded-full text-xs font-medium bg-green-200 text-green-700';
+                            } else {
+                                firebaseStatus.textContent = 'Connected (Fallback)';
+                                firebaseStatus.className = 'px-2 py-1 rounded-full text-xs font-medium bg-yellow-200 text-yellow-700';
+                            }
+                        }
+                        
+                        // Get and display database statistics
+                        await refreshDatabaseStats();
+                    } else {
+                        if (firebaseStatus) {
+                            firebaseStatus.textContent = 'Loading...';
+                            firebaseStatus.className = 'px-2 py-1 rounded-full text-xs font-medium bg-blue-200 text-blue-700';
+                        }
+                    }
                 } else {
                     if (firebaseStatus) {
                         firebaseStatus.textContent = 'Disconnected';
@@ -979,7 +1226,7 @@
                     if (lastUpdate) lastUpdate.textContent = 'Never';
                 }
             } catch (error) {
-                console.error('Error updating database status:', error);
+                // Silent error handling for database status update
                 
                 // Fallback status
                 const firebaseStatus = document.getElementById('firebase-status');
@@ -997,60 +1244,131 @@
                 const loadingElement = document.getElementById('stats-loading');
                 if (loadingElement) loadingElement.style.display = 'block';
                 
-                // Check Firebase availability
-                if (!window.firebaseDB) {
-                    throw new Error('Firebase database service not initialized');
+                // Get statistics from unified data access if available
+                let stats = {};
+                let dataSource = 'Unknown';
+                let localStats = {};
+                let firebaseStats = {};
+                
+                if (window.unifiedDataAccess && window.unifiedDataAccess.isInitialized) {
+                    try {
+                        // Get comprehensive data statistics from unified access
+                        const dataStats = await window.unifiedDataAccess.getDataStatistics();
+                        
+                        // Determine current data source
+                        const fallbackStatus = window.fallbackDetector ? window.fallbackDetector.getStatus() : null;
+                        dataSource = fallbackStatus ? fallbackStatus.currentSource : 'firebase';
+                        
+                        // Extract counts for display
+                        for (const [collection, collectionStats] of Object.entries(dataStats)) {
+                            const localCount = collectionStats.local || 0;
+                            const firebaseCount = collectionStats.firebase || 0;
+                            
+                            localStats[collection] = localCount;
+                            firebaseStats[collection] = firebaseCount;
+                            
+                            // Use current source for main display
+                            stats[collection] = dataSource === 'local' ? localCount : firebaseCount;
+                        }
+                        
+                    } catch (unifiedError) {
+                        console.warn('Unified data access failed, falling back to universal data manager:', unifiedError);
+                        throw unifiedError;
+                    }
+                } else {
+                    // Fallback to universal data manager
+                    if (!window.universalDataManager) {
+                        throw new Error('No data access system available');
+                    }
+                    
+                    await window.universalDataManager.waitForReady();
+                    const status = window.universalDataManager.getStatus();
+                    
+                    if (!status.isInitialized || !status.isDataLoaded) {
+                        throw new Error('Data access not ready - check connection');
+                    }
+                    
+                    // Get data from universal data manager
+                    const [products, clients, salespeople, colors, styles, categories, pricelists, quotes, orders] = await Promise.all([
+                        window.universalDataManager.getProducts(),
+                        window.universalDataManager.getClients(),
+                        window.universalDataManager.getSalespeople(),
+                        window.universalDataManager.getColors(),
+                        window.universalDataManager.getStyles(),
+                        window.universalDataManager.getCategories(),
+                        window.universalDataManager.getPriceLists(),
+                        window.universalDataManager.getQuotes(),
+                        window.universalDataManager.getOrders()
+                    ]);
+                    
+                    stats = {
+                        products: products ? products.length : 0,
+                        clients: clients ? clients.length : 0,
+                        salespeople: salespeople ? salespeople.length : 0,
+                        colors: colors ? colors.length : 0,
+                        styles: styles ? styles.length : 0,
+                        categories: categories ? categories.length : 0,
+                        pricelists: pricelists ? pricelists.length : 0,
+                        quotes: quotes ? quotes.length : 0,
+                        orders: orders ? orders.length : 0
+                    };
+                    
+                    dataSource = 'firebase';
                 }
                 
-                if (!window.firebaseDB.isAvailable()) {
-                    throw new Error('Firebase not available - check connection and authentication');
-                }
-                
-                console.log('📊 Refreshing database statistics...');
-                
-                // Add timeout to prevent hanging
-                const timeoutPromise = new Promise((_, reject) => {
-                    setTimeout(() => reject(new Error('Database stats request timed out')), 30000);
-                });
-                
-                const statsPromise = window.firebaseDB.getDatabaseStats();
-                const stats = await Promise.race([statsPromise, timeoutPromise]);
-                
-                if (!stats) {
-                    throw new Error('No data returned from database stats');
-                }
-                
-                // Update all stat elements
+                // Update stat elements with Local Data/Firebase format
                 const elements = {
                     'products-count': stats.products || 0,
                     'clients-count': stats.clients || 0,
-                    'salesmen-count': stats.salesmen || 0,
-                    'pricelists-count': stats.priceLists || 0,
+                    'salesmen-count': stats.salespeople || stats.salesmen || 0,
+                    'pricelists-count': stats.pricelists || stats.priceLists || 0,
                     'categories-count': stats.categories || 0,
                     'colors-count': stats.colors || 0,
                     'styles-count': stats.styles || 0,
                     'quotes-count': stats.quotes || 0,
-                    'orders-count': stats.orders || 0,
-                    'last-update': stats.lastUpdated || 'Never'
+                    'orders-count': stats.orders || 0
                 };
                 
+                // Update elements with enhanced format showing both local and firebase counts
                 Object.entries(elements).forEach(([id, value]) => {
                     const element = document.getElementById(id);
                     if (element) {
-                        element.textContent = value;
+                        const collection = id.replace('-count', '').replace('salesmen', 'salespeople');
+                        const localCount = localStats[collection] || 0;
+                        const firebaseCount = firebaseStats[collection] || 0;
+                        
+                        if (window.unifiedDataAccess && window.unifiedDataAccess.isInitialized) {
+                            // Show format: "local/firebase (Source)"
+                            const sourceIndicator = dataSource === 'local' ? 'Local Data' : 'Firebase';
+                            element.innerHTML = `${localCount}/${firebaseCount} <span class="text-xs text-gray-500">(${sourceIndicator})</span>`;
+                        } else {
+                            // Fallback to simple count
+                            element.textContent = value;
+                        }
                     }
                 });
                 
-                console.log('✅ Database statistics updated:', stats);
+                // Update data source indicator
+                const firebaseStatus = document.getElementById('firebase-status');
+                if (firebaseStatus && window.fallbackDetector) {
+                    const status = window.fallbackDetector.getStatus();
+                    if (status.firebase === 'available') {
+                        firebaseStatus.textContent = 'Connected (Firebase)';
+                        firebaseStatus.className = 'px-2 py-1 rounded-full text-xs font-medium bg-green-200 text-green-700';
+                    } else {
+                        firebaseStatus.textContent = 'Connected (Local Data)';
+                        firebaseStatus.className = 'px-2 py-1 rounded-full text-xs font-medium bg-yellow-200 text-yellow-700';
+                    }
+                }
                 
-                // Update last update with success message
+                // Update last update timestamp
                 const lastUpdate = document.getElementById('last-update');
-                if (lastUpdate && stats.lastUpdated === 'Never') {
-                    lastUpdate.textContent = 'Just updated';
+                if (lastUpdate) {
+                    lastUpdate.textContent = new Date().toLocaleTimeString();
                 }
                 
             } catch (error) {
-                console.error('❌ Error refreshing database stats:', error);
+                // Silent error handling for database stats refresh
                 
                 // Show specific error message
                 const lastUpdate = document.getElementById('last-update');
@@ -1059,8 +1377,8 @@
                         lastUpdate.textContent = 'Request timeout - try again';
                     } else if (error.message.includes('permission')) {
                         lastUpdate.textContent = 'Permission denied - check auth';
-                    } else if (error.message.includes('not available')) {
-                        lastUpdate.textContent = 'Firebase not connected';
+                    } else if (error.message.includes('not ready')) {
+                        lastUpdate.textContent = 'Data not ready';
                     } else {
                         lastUpdate.textContent = 'Error loading stats';
                     }
@@ -1079,7 +1397,8 @@
         function resetDatabaseStats() {
             const statIds = [
                 'products-count', 'clients-count', 'salesmen-count',
-                'pricelists-count', 'categories-count', 'quotes-count', 'orders-count'
+                'pricelists-count', 'categories-count', 'colors-count', 'styles-count',
+                'quotes-count', 'orders-count'
             ];
             
             statIds.forEach(id => {
@@ -1116,16 +1435,18 @@
         }
 
         async function loadClientsFromFirebase() {
-            if (window.firebaseDB && window.firebaseDB.isAvailable()) {
+            if (window.universalDataManager) {
                 try {
-                    console.log('Loading clients from Firebase...');
-                    const firebaseClients = await window.firebaseDB.getClients();
-                    console.log('Loaded', firebaseClients.length, 'clients from Firebase');
+                    // Loading clients from universal data manager
+                    await window.universalDataManager.waitForReady();
+                    
+                    const clients = await window.universalDataManager.getClients();
+                    // Clients loaded successfully from centralized data access
                     
                     // Get localStorage clients
                     const localClients = window.clientManager.getAllClients();
                     
-                    // Merge clients (Firebase takes priority)
+                    // Merge clients (centralized data takes priority)
                     const mergedClients = new Map();
                     
                     // Add local clients first
@@ -1133,22 +1454,22 @@
                         mergedClients.set(client.id, { ...client, source: 'local' });
                     });
                     
-                    // Add Firebase clients (overwrites local if same ID)
-                    firebaseClients.forEach(client => {
-                        mergedClients.set(client.id, { ...client, source: 'firebase' });
+                    // Add centralized clients (overwrites local if same ID)
+                    clients.forEach(client => {
+                        mergedClients.set(client.id, { ...client, source: 'centralized' });
                     });
                     
                     // Update the client manager with merged data
                     window.clientManager.clients = Array.from(mergedClients.values());
                     
-                    console.log('Merged', mergedClients.size, 'total clients');
+                    // Clients merged successfully
                     
                 } catch (error) {
-                    console.warn('Failed to load clients from Firebase:', error);
+                    // Failed to load clients from centralized data access, continuing with localStorage
                     // Continue with localStorage data only
                 }
             } else {
-                console.log('Firebase not available, using localStorage only');
+                // Centralized data access not available, using localStorage only
             }
         }
 
@@ -1265,9 +1586,9 @@
                     if (window.firebaseDB && window.firebaseDB.isAvailable()) {
                         try {
                             savedClient = await window.firebaseDB.updateClient(clientId, clientData);
-                            console.log('Client updated in Firebase:', savedClient);
+                            // Client updated in Firebase successfully
                         } catch (firebaseError) {
-                            console.warn('Firebase update failed, using localStorage:', firebaseError);
+                            // Firebase update failed, using localStorage fallback
                             savedClient = window.clientManager.updateClient(clientId, clientData);
                         }
                     } else {
@@ -1288,13 +1609,13 @@
                             };
                             
                             savedClient = await window.firebaseDB.saveClient(enhancedClientData);
-                            console.log('Client saved to Firebase:', savedClient);
+                            // Client saved to Firebase successfully
                             
                             // Also save to localStorage as backup
                             window.clientManager.addClient(clientData, salesperson);
                             
                         } catch (firebaseError) {
-                            console.warn('Firebase save failed, using localStorage:', firebaseError);
+                            // Firebase save failed, using localStorage fallback
                             savedClient = window.clientManager.addClient(clientData, salesperson);
                         }
                     } else {
@@ -1308,7 +1629,7 @@
                 renderClientsTable();
                 
             } catch (error) {
-                console.error('Error saving client:', error);
+                // Silent error handling for client save
                 alert('Error saving client: ' + error.message);
             } finally {
                 // Reset button state
@@ -1327,9 +1648,9 @@
                 if (window.firebaseDB && window.firebaseDB.isAvailable()) {
                     try {
                         await window.firebaseDB.deleteClient(clientId);
-                        console.log('Client deleted from Firebase:', clientId);
+                        // Client deleted from Firebase successfully
                     } catch (firebaseError) {
-                        console.warn('Firebase delete failed, continuing with localStorage:', firebaseError);
+                        // Firebase delete failed, continuing with localStorage
                     }
                 }
                 
@@ -1382,13 +1703,139 @@
         }
 
         // Initialize on page load
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Initialize fallback system components
+            try {
+                console.log('🔄 Initializing fallback system...');
+                
+                // Initialize local fallback manager
+                if (typeof LocalFallbackManager !== 'undefined') {
+                    window.localFallbackManager = new LocalFallbackManager();
+                    await window.localFallbackManager.initialize();
+                    console.log('✅ Local fallback manager initialized');
+                }
+                
+                // Initialize fallback detector
+                if (typeof FallbackDetector !== 'undefined') {
+                    window.fallbackDetector = new FallbackDetector();
+                    await window.fallbackDetector.initialize();
+                    console.log('✅ Fallback detector initialized');
+                }
+                
+                // Initialize unified data access
+                if (typeof UnifiedDataAccess !== 'undefined' && window.localFallbackManager && window.fallbackDetector) {
+                    window.unifiedDataAccess = new UnifiedDataAccess(window.localFallbackManager, window.fallbackDetector);
+                    await window.unifiedDataAccess.initialize();
+                    console.log('✅ Unified data access initialized');
+                }
+                
+                console.log('✅ Fallback system fully initialized');
+            } catch (error) {
+                console.error('❌ Failed to initialize fallback system:', error);
+            }
+            
+            // Wait for universal data manager to be ready before initializing
+            if (window.universalDataManager) {
+                try {
+                    await window.universalDataManager.waitForReady();
+                    console.log('✅ Universal data manager is ready, initializing admin panel...');
+                } catch (error) {
+                    console.error('❌ Failed to initialize universal data manager:', error);
+                }
+            }
+            
             // Initialize Firebase status
-            updateDatabaseStatus();
+            await updateDatabaseStatus();
             
             // Initialize client management if available
             if (typeof window.clientManager !== 'undefined') {
-                initClientManagement();
+                await initClientManagement();
+            }
+            
+            // Add event handlers for sync buttons
+            const refreshDataBtn = document.getElementById('refreshDataBtn');
+            if (refreshDataBtn) {
+                refreshDataBtn.addEventListener('click', async function() {
+                    const refreshText = this.querySelector('.refresh-text');
+                    const refreshLoading = this.querySelector('.refresh-loading');
+                    
+                    refreshText.classList.add('hidden');
+                    refreshLoading.classList.remove('hidden');
+                    this.disabled = true;
+                    
+                    try {
+                        if (window.universalDataManager) {
+                            await window.universalDataManager.refreshData();
+                            await updateApplicationData();
+                            updateDatabaseStatus();
+                        }
+                    } catch (error) {
+                        // Silent error handling for refresh
+                        alert('Error refreshing data: ' + error.message);
+                    } finally {
+                        refreshText.classList.remove('hidden');
+                        refreshLoading.classList.add('hidden');
+                        this.disabled = false;
+                    }
+                });
+            }
+            
+            const syncProductsBtn = document.getElementById('syncProductsBtn');
+            if (syncProductsBtn) {
+                syncProductsBtn.addEventListener('click', async function() {
+                    const originalText = this.textContent;
+                    this.textContent = '⏳ Syncing...';
+                    this.disabled = true;
+                    
+                    try {
+                        const response = await fetch('/api/sync/products', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' }
+                        });
+                        
+                        if (!response.ok) {
+                            const errorData = await response.json();
+                            throw new Error(errorData.error || `Server error: ${response.status}`);
+                        }
+                        
+                        const result = await response.json();
+                        
+                        if (window.universalDataManager) {
+                            await window.universalDataManager.refreshData();
+                            await updateApplicationData();
+                            updateDatabaseStatus();
+                        }
+                        
+                        alert('Products synced successfully!');
+                    } catch (error) {
+                        // Silent error handling for product sync
+                        alert('Product sync failed: ' + error.message);
+                    } finally {
+                        this.textContent = originalText;
+                        this.disabled = false;
+                    }
+                });
+            }
+            
+            const syncClientsBtn = document.getElementById('syncClientsBtn');
+            if (syncClientsBtn) {
+                syncClientsBtn.addEventListener('click', async function() {
+                    const originalText = this.textContent;
+                    this.textContent = '⏳ Syncing...';
+                    this.disabled = true;
+                    
+                    try {
+                        // This button performs reverse sync (Firebase to Google Sheets)
+                        await performClientReverseSync();
+                        alert('Clients synced to Google Sheets successfully!');
+                    } catch (error) {
+                        // Silent error handling for client sync
+                        alert('Client sync failed: ' + error.message);
+                    } finally {
+                        this.textContent = originalText;
+                        this.disabled = false;
+                    }
+                });
             }
         });
         
@@ -1420,9 +1867,9 @@
              
              // Ensure elements exist
              if (!authStatus || !loginSection) {
-                 console.error('Auth elements not found');
-                 return;
-             }
+                // Auth elements not found
+                return;
+            }
              
              // Show login form by default
              loginSection.classList.remove('hidden');
@@ -1512,8 +1959,8 @@
                          await firebase.auth().signInWithEmailAndPassword(email, password);
                          adminPassword.value = ''; // Clear password
                      } catch (error) {
-                         console.error('Login error:', error);
-                         let errorMessage = 'Login failed';
+                        // Silent error handling for login
+                        let errorMessage = 'Login failed';
                          
                          if (error.code === 'auth/user-not-found') {
                              errorMessage = 'User not found';
@@ -1540,8 +1987,8 @@
                      try {
                          await firebase.auth().signOut();
                      } catch (error) {
-                         console.error('Logout error:', error);
-                         alert(`Logout failed: ${error.message}`);
+                        // Silent error handling for logout
+                        alert(`Logout failed: ${error.message}`);
                      }
                  });
              }
@@ -1555,6 +2002,220 @@
                  });
              }
          });
+
+        // Firebase Synchronization Functions
+        async function performFirebaseSync() {
+            const statusElement = document.getElementById('firebase-sync-status');
+            const lastSyncElement = document.getElementById('firebase-last-sync');
+            
+            try {
+                statusElement.textContent = 'Syncing...';
+                statusElement.className = 'px-2 py-1 rounded-full text-xs font-medium bg-blue-200 text-blue-700';
+                
+                // Check if unified data access is available
+                if (!window.unifiedDataAccess) {
+                    throw new Error('Unified data access not available');
+                }
+                
+                // Force sync all data to Firebase
+                const collections = ['products', 'clients', 'quotes', 'orders', 'salesmen', 'companies', 'colors'];
+                let syncedCount = 0;
+                
+                for (const collection of collections) {
+                    try {
+                        // Get local data
+                        const localData = await window.unifiedDataAccess.getData(collection, { forceLocal: true });
+                        
+                        if (localData && localData.length > 0) {
+                            // Save to Firebase
+                            for (const item of localData) {
+                                await window.unifiedDataAccess.saveData(collection, item, { forceFirebase: true });
+                            }
+                            syncedCount += localData.length;
+                        }
+                    } catch (error) {
+                        console.warn(`Failed to sync ${collection}:`, error);
+                    }
+                }
+                
+                statusElement.textContent = 'Sync Complete';
+                statusElement.className = 'px-2 py-1 rounded-full text-xs font-medium bg-green-200 text-green-700';
+                lastSyncElement.textContent = new Date().toLocaleString();
+                
+                alert(`Firebase sync completed! Synced ${syncedCount} items.`);
+                
+            } catch (error) {
+                statusElement.textContent = 'Sync Failed';
+                statusElement.className = 'px-2 py-1 rounded-full text-xs font-medium bg-red-200 text-red-700';
+                alert('Firebase sync failed: ' + error.message);
+            }
+        }
+
+        async function performFirebaseBackup() {
+            const statusElement = document.getElementById('firebase-sync-status');
+            
+            try {
+                statusElement.textContent = 'Backing up...';
+                statusElement.className = 'px-2 py-1 rounded-full text-xs font-medium bg-blue-200 text-blue-700';
+                
+                if (!window.unifiedDataAccess) {
+                    throw new Error('Unified data access not available');
+                }
+                
+                // Get all data from Firebase and save locally
+                const collections = ['products', 'clients', 'quotes', 'orders', 'salesmen', 'companies', 'colors'];
+                let backedUpCount = 0;
+                
+                for (const collection of collections) {
+                    try {
+                        // Get Firebase data
+                        const firebaseData = await window.unifiedDataAccess.getData(collection, { forceFirebase: true });
+                        
+                        if (firebaseData && firebaseData.length > 0) {
+                            // Save to local storage
+                            for (const item of firebaseData) {
+                                await window.unifiedDataAccess.saveData(collection, item, { forceLocal: true });
+                            }
+                            backedUpCount += firebaseData.length;
+                        }
+                    } catch (error) {
+                        console.warn(`Failed to backup ${collection}:`, error);
+                    }
+                }
+                
+                statusElement.textContent = 'Backup Complete';
+                statusElement.className = 'px-2 py-1 rounded-full text-xs font-medium bg-green-200 text-green-700';
+                
+                alert(`Firebase backup completed! Backed up ${backedUpCount} items to local storage.`);
+                
+            } catch (error) {
+                statusElement.textContent = 'Backup Failed';
+                statusElement.className = 'px-2 py-1 rounded-full text-xs font-medium bg-red-200 text-red-700';
+                alert('Firebase backup failed: ' + error.message);
+            }
+        }
+
+        async function validateFirebaseData() {
+            const statusElement = document.getElementById('firebase-sync-status');
+            
+            try {
+                statusElement.textContent = 'Validating...';
+                statusElement.className = 'px-2 py-1 rounded-full text-xs font-medium bg-blue-200 text-blue-700';
+                
+                if (!window.unifiedDataAccess) {
+                    throw new Error('Unified data access not available');
+                }
+                
+                const collections = ['products', 'clients', 'quotes', 'orders', 'salesmen', 'companies', 'colors'];
+                const validationResults = [];
+                
+                for (const collection of collections) {
+                    try {
+                        // Get data from both sources
+                        const localData = await window.unifiedDataAccess.getData(collection, { forceLocal: true });
+                        const firebaseData = await window.unifiedDataAccess.getData(collection, { forceFirebase: true });
+                        
+                        const localCount = localData ? localData.length : 0;
+                        const firebaseCount = firebaseData ? firebaseData.length : 0;
+                        
+                        validationResults.push({
+                            collection,
+                            localCount,
+                            firebaseCount,
+                            synced: localCount === firebaseCount
+                        });
+                        
+                    } catch (error) {
+                        validationResults.push({
+                            collection,
+                            error: error.message
+                        });
+                    }
+                }
+                
+                statusElement.textContent = 'Validation Complete';
+                statusElement.className = 'px-2 py-1 rounded-full text-xs font-medium bg-green-200 text-green-700';
+                
+                // Show validation results
+                let message = 'Data Validation Results:\n\n';
+                validationResults.forEach(result => {
+                    if (result.error) {
+                        message += `${result.collection}: Error - ${result.error}\n`;
+                    } else {
+                        message += `${result.collection}: Local(${result.localCount}) Firebase(${result.firebaseCount}) ${result.synced ? '✅' : '❌'}\n`;
+                    }
+                });
+                
+                alert(message);
+                
+            } catch (error) {
+                statusElement.textContent = 'Validation Failed';
+                statusElement.className = 'px-2 py-1 rounded-full text-xs font-medium bg-red-200 text-red-700';
+                alert('Data validation failed: ' + error.message);
+            }
+        }
+
+        async function resetFirebaseConnection() {
+            const statusElement = document.getElementById('firebase-sync-status');
+            
+            try {
+                statusElement.textContent = 'Resetting...';
+                statusElement.className = 'px-2 py-1 rounded-full text-xs font-medium bg-blue-200 text-blue-700';
+                
+                // Reset fallback detector
+                if (window.fallbackDetector) {
+                    await window.fallbackDetector.reset();
+                }
+                
+                // Reinitialize unified data access
+                if (window.unifiedDataAccess) {
+                    await window.unifiedDataAccess.initialize();
+                }
+                
+                // Update status
+                await updateDatabaseStatus();
+                
+                statusElement.textContent = 'Reset Complete';
+                statusElement.className = 'px-2 py-1 rounded-full text-xs font-medium bg-green-200 text-green-700';
+                
+                alert('Firebase connection reset successfully!');
+                
+            } catch (error) {
+                statusElement.textContent = 'Reset Failed';
+                statusElement.className = 'px-2 py-1 rounded-full text-xs font-medium bg-red-200 text-red-700';
+                alert('Firebase connection reset failed: ' + error.message);
+            }
+        }
+
+        // Update Firebase sync status on page load
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Update Firebase sync status
+            const statusElement = document.getElementById('firebase-sync-status');
+            const lastSyncElement = document.getElementById('firebase-last-sync');
+            
+            if (statusElement) {
+                try {
+                    if (window.fallbackDetector && window.fallbackDetector.isFirebaseAvailable()) {
+                        statusElement.textContent = 'Connected';
+                        statusElement.className = 'px-2 py-1 rounded-full text-xs font-medium bg-green-200 text-green-700';
+                    } else {
+                        statusElement.textContent = 'Disconnected';
+                        statusElement.className = 'px-2 py-1 rounded-full text-xs font-medium bg-red-200 text-red-700';
+                    }
+                } catch (error) {
+                    statusElement.textContent = 'Error';
+                    statusElement.className = 'px-2 py-1 rounded-full text-xs font-medium bg-red-200 text-red-700';
+                }
+            }
+            
+            // Check for last sync timestamp in localStorage
+            if (lastSyncElement) {
+                const lastSync = localStorage.getItem('firebase-last-sync');
+                if (lastSync) {
+                    lastSyncElement.textContent = new Date(lastSync).toLocaleString();
+                }
+            }
+        });
     </script>
     
     <!-- Admin Panel Modal -->
@@ -1570,74 +2231,59 @@
             </div>
             
             <div class="space-y-4">
-                <!-- Firebase Excel Upload Section -->
-                <div class="border rounded-lg p-4 bg-gradient-to-r from-orange-50 to-red-50 border-orange-200">
+                <!-- Firebase Data Sync Section -->
+                <div class="border rounded-lg p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
                     <h4 class="font-medium text-gray-700 mb-2 flex items-center gap-2">
-                        🔥 Firebase Excel Upload
-                        <span class="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full">SECURE</span>
+                        🔄 Firebase Data Sync
+                        <span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">REAL-TIME</span>
                     </h4>
-                    <p class="text-sm text-gray-600 mb-3">Upload Excel files to Firebase database with real-time synchronization</p>
+                    <p class="text-sm text-gray-600 mb-3">Manage Firebase data synchronization and monitor real-time updates</p>
                     
-                    <!-- Authentication Status -->
-                    <div id="authStatus" class="mb-3 p-2 rounded-lg text-sm">
+                    <!-- Sync Status -->
+                    <div id="syncStatus" class="mb-3 p-2 rounded-lg text-sm bg-green-50 border border-green-200">
                         <div class="flex items-center gap-2">
-                            <div id="authIndicator" class="w-2 h-2 rounded-full bg-gray-400"></div>
-                            <span id="authText">Checking authentication...</span>
+                            <div class="w-2 h-2 rounded-full bg-green-500"></div>
+                            <span>✅ Firebase sync active - All data loading directly from Firebase</span>
                         </div>
                     </div>
                     
-                    <!-- Firebase Login Section -->
-                    <div id="loginSection" class="hidden mb-3 p-3 bg-white rounded-lg border">
-                        <h5 class="font-medium text-gray-700 mb-2">Admin Login Required</h5>
-                        <div class="space-y-2">
-                            <input type="email" id="adminEmail" placeholder="Admin Email" value="info@indiannaturalhair.com" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-300">
-                            <input type="password" id="adminPassword" placeholder="Password" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-300">
-                            <div class="flex gap-2">
-                                <button id="loginBtn" class="flex-1 px-3 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition-all duration-200">
-                                    <span class="login-text">🔐 Login</span>
-                                    <span class="login-loading hidden">⏳ Logging in...</span>
-                                </button>
-                                <button id="logoutBtn" class="hidden flex-1 px-3 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg text-sm font-medium transition-all duration-200">
-                                    🚪 Logout
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- File Upload Section -->
-                    <div id="uploadSection" class="space-y-3">
-                        <div class="relative">
-                            <input type="file" id="excelFile" accept=".xlsx,.xls" class="hidden">
-                            <button id="selectFileBtn" class="w-full px-4 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition-all duration-200 hover:transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-orange-300 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] touch-manipulation">
-                                <span class="select-text">📁 Select Excel File</span>
+                    <!-- Sync Controls -->
+                    <div class="space-y-3">
+                        <button id="refreshDataBtn" class="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-all duration-200 hover:transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-300 active:scale-95">
+                            <span class="refresh-text">🔄 Refresh All Data</span>
+                            <span class="refresh-loading hidden">⏳ Refreshing...</span>
+                        </button>
+                        
+                        <div class="grid grid-cols-2 gap-2">
+                            <button id="syncProductsBtn" class="px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-all duration-200">
+                                📦 Sync Products
+                            </button>
+                            <button id="syncClientsBtn" class="px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium transition-all duration-200">
+                                👥 Sync Clients
                             </button>
                         </div>
                         
-                        <div id="fileInfo" class="hidden bg-white p-3 rounded-lg border">
-                            <div class="text-sm text-gray-600">
-                                <div><strong>File:</strong> <span id="fileName"></span></div>
-                                <div><strong>Size:</strong> <span id="fileSize"></span></div>
-                                <div><strong>Type:</strong> <span id="fileType"></span></div>
-                            </div>
-                        </div>
-                        
-                        <button id="uploadBtn" class="hidden w-full px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-all duration-200 hover:transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-300 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] touch-manipulation">
-                            <span class="upload-text">🚀 Upload to Firebase</span>
-                            <span class="upload-loading hidden">⏳ Uploading...</span>
-                        </button>
-                        
-                        <div id="uploadProgress" class="hidden">
-                            <div class="bg-gray-200 rounded-full h-2">
-                                <div id="progressBar" class="bg-orange-500 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
-                            </div>
-                            <div class="text-sm text-gray-600 mt-1 text-center">
-                                <span id="progressText">Preparing upload...</span>
-                            </div>
+                        <div class="text-xs text-gray-500 text-center mt-2">
+                            Data is automatically synchronized from Google Sheets to Firebase
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+    
+    <script>
+        // Mobile menu functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+            const mobileMenu = document.getElementById('mobile-menu');
+            
+            if (mobileMenuBtn && mobileMenu) {
+                mobileMenuBtn.addEventListener('click', function() {
+                    mobileMenu.classList.toggle('hidden');
+                });
+            }
+        });
+    </script>
 </body>
 </html>

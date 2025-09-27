@@ -1,3 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Client Management</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
+  
+  <!-- Firebase Configuration and Database -->
+  <script src="firebase-config.js"></script>
+  <script src="firebase-global-init.js"></script>
+  <script src="firebase-database.js"></script>
+  <script src="firebase-error-handler.js"></script>
+  <script src="client-management.js"></script>
+  
+  <!-- Universal Data Manager -->
+  <script src="js/universal-firebase-data-manager.js"></script>
+  
+  <!-- Fallback System Components -->
+  <script src="js/local-fallback-manager.js"></script>
+  <script src="js/fallback-detector.js"></script>
+  <script src="js/unified-data-access.js"></script>
+</head>
+<body>
+
 <!-- Client Management Admin Interface -->
 <div id="client-management-module" class="module hidden">
   <div class="container mx-auto p-6">
@@ -174,6 +206,7 @@
             <input type="text" id="tax-id" name="taxId" 
                    class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
           </div>
+
         </div>
         
         <!-- Modal Footer -->
@@ -368,9 +401,24 @@ function exportClients() {
 }
 
 // Initialize when DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
+  // Initialize fallback system first
+  try {
+    window.localFallbackManager = new LocalFallbackManager();
+    window.fallbackDetector = new FallbackDetector(window.localFallbackManager);
+    window.unifiedDataAccess = new UnifiedDataAccess(window.fallbackDetector, window.localFallbackManager);
+    
+    await window.fallbackDetector.initialize();
+    console.log('✅ Fallback system initialized for client admin UI');
+  } catch (fallbackError) {
+    console.warn('⚠️ Fallback system initialization failed, continuing with Firebase only:', fallbackError);
+  }
+  
   if (typeof window.clientManager !== 'undefined') {
     initClientManagement();
   }
 });
 </script>
+
+</body>
+</html>

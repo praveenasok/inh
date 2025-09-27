@@ -18,7 +18,7 @@
       "rewrites": [
         {
           "source": "**",
-          "destination": "/index.html"
+          "destination": "/quote-maker-v2-ver3.html"
         }
       ]
     }

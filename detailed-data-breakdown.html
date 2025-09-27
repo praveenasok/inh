@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detailed Data Breakdown - INH</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="js/unified-data-access.js"></script>
+    <style>
+        .data-category-card {
+            transition: all 0.3s ease;
+            border-left: 4px solid #3B82F6;
+        }
+        .data-category-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        .count-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .source-header {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+        .breakdown-table {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .breakdown-table::-webkit-scrollbar {
+            width: 6px;
+        }
+        .breakdown-table::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+        .breakdown-table::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 3px;
+        }
+        .breakdown-table::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center space-x-4">
+                    <h1 class="text-2xl font-bold text-gray-900">📊 Detailed Data Breakdown</h1>
+                    <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+                        Category Analysis
+                    </span>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <button id="refreshAllBtn" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2">
+                        <span>🔄</span>
+                        <span>Refresh All</span>
+                    </button>
+                    <button id="exportBtn" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2">
+                        <span>📊</span>
+                        <span>Export</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Summary Dashboard -->
+        <div class="mb-8">
+            <div class="bg-white rounded-xl shadow-sm p-6">
+                <h2 class="text-xl font-semibold text-gray-900 mb-4">📈 Summary Dashboard</h2>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-4 text-white">
+                        <div class="text-sm opacity-90">Total Categories</div>
+                        <div class="text-2xl font-bold" id="totalCategories">-</div>
+                    </div>
+                    <div class="bg-gradient-to-r from-green-500 to-green-600 rounded-lg p-4 text-white">
+                        <div class="text-sm opacity-90">Total Items</div>
+                        <div class="text-2xl font-bold" id="totalItems">-</div>
+                    </div>
+                    <div class="bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg p-4 text-white">
+                        <div class="text-sm opacity-90">Data Sources</div>
+                        <div class="text-2xl font-bold" id="activeSources">-</div>
+                    </div>
+                    <div class="bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg p-4 text-white">
+                        <div class="text-sm opacity-90">Last Updated</div>
+                        <div class="text-sm font-medium" id="lastUpdated">-</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Source Sections -->
+        <div class="space-y-8">
+            <!-- Local Storage Section -->
+            <section class="bg-white rounded-xl shadow-sm overflow-hidden">
+                <div class="source-header text-white p-6">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h2 class="text-2xl font-bold">💾 Local Storage Data</h2>
+                            <p class="opacity-90">Browser localStorage collections</p>
+                        </div>
+                        <button id="loadLocalBtn" class="px-4 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg transition-colors">
+                            Load Data
+                        </button>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <div id="localStorageBreakdown" class="category-grid">
+                        <div class="text-center text-gray-500 py-8">
+                            Click "Load Data" to analyze local storage
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Firebase Section -->
+            <section class="bg-white rounded-xl shadow-sm overflow-hidden">
+                <div class="bg-gradient-to-r from-orange-500 to-red-500 text-white p-6">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h2 class="text-2xl font-bold">🔥 Firebase Firestore</h2>
+                            <p class="opacity-90">Cloud database collections</p>
+                        </div>
+                        <button id="loadFirebaseBtn" class="px-4 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg transition-colors">
+                            Load Data
+                        </button>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <div id="firebaseBreakdown" class="category-grid">
+                        <div class="text-center text-gray-500 py-8">
+                            Click "Load Data" to analyze Firebase collections
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Google Sheets Section -->
+            <section class="bg-white rounded-xl shadow-sm overflow-hidden">
+                <div class="bg-gradient-to-r from-green-500 to-teal-500 text-white p-6">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h2 class="text-2xl font-bold">📊 Google Sheets</h2>
+                            <p class="opacity-90">Spreadsheet data collections</p>
+                        </div>
+                        <button id="loadSheetsBtn" class="px-4 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg transition-colors">
+                            Load Data
+                        </button>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <div id="sheetsBreakdown" class="category-grid">
+                        <div class="text-center text-gray-500 py-8">
+                            Click "Load Data" to analyze Google Sheets
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Comparison Table -->
+        <div class="mt-8 bg-white rounded-xl shadow-sm overflow-hidden">
+            <div class="bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-6">
+                <h2 class="text-2xl font-bold">🔍 Cross-Source Comparison</h2>
+                <p class="opacity-90">Side-by-side category comparison</p>
+            </div>
+            <div class="p-6">
+                <div class="overflow-x-auto">
+                    <table class="w-full border-collapse">
+                        <thead>
+                            <tr class="bg-gray-50">
+                                <th class="border border-gray-200 px-4 py-3 text-left font-semibold">Category</th>
+                                <th class="border border-gray-200 px-4 py-3 text-center font-semibold">Local Storage</th>
+                                <th class="border border-gray-200 px-4 py-3 text-center font-semibold">Firebase</th>
+                                <th class="border border-gray-200 px-4 py-3 text-center font-semibold">Google Sheets</th>
+                                <th class="border border-gray-200 px-4 py-3 text-center font-semibold">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="comparisonTableBody">
+                            <tr>
+                                <td colspan="5" class="border border-gray-200 px-4 py-8 text-center text-gray-500">
+                                    Load data from sources to see comparison
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Loading Modal -->
+    <div id="loadingModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 max-w-sm mx-4">
+            <div class="flex items-center space-x-3">
+                <div class="loading-spinner"></div>
+                <span class="text-gray-700">Loading data...</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class DetailedDataBreakdown {
+            constructor() {
+                this.dataAccess = new UnifiedDataAccess();
+                this.loadedData = {
+                    localStorage: {},
+                    firebase: {},
+                    googleSheets: {}
+                };
+                this.categoryStats = new Map();
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+                this.updateLastUpdated();
+            }
+
+            setupEventListeners() {
+                document.getElementById('loadLocalBtn').addEventListener('click', () => this.loadLocalStorageData());
+                document.getElementById('loadFirebaseBtn').addEventListener('click', () => this.loadFirebaseData());
+                document.getElementById('loadSheetsBtn').addEventListener('click', () => this.loadGoogleSheetsData());
+                document.getElementById('refreshAllBtn').addEventListener('click', () => this.refreshAllData());
+                document.getElementById('exportBtn').addEventListener('click', () => this.exportData());
+            }
+
+            showLoading() {
+                document.getElementById('loadingModal').classList.remove('hidden');
+                document.getElementById('loadingModal').classList.add('flex');
+            }
+
+            hideLoading() {
+                document.getElementById('loadingModal').classList.add('hidden');
+                document.getElementById('loadingModal').classList.remove('flex');
+            }
+
+            async loadLocalStorageData() {
+                this.showLoading();
+                try {
+                    const breakdown = this.analyzeLocalStorage();
+                    this.loadedData.localStorage = breakdown;
+                    this.renderDataBreakdown('localStorageBreakdown', breakdown, 'localStorage');
+                    this.updateComparisonTable();
+                    this.updateSummary();
+                } catch (error) {
+                    console.error('Error loading localStorage data:', error);
+                    this.showError('localStorageBreakdown', 'Failed to load localStorage data');
+                } finally {
+                    this.hideLoading();
+                }
+            }
+
+            async loadFirebaseData() {
+                this.showLoading();
+                try {
+                    const breakdown = await this.analyzeFirebaseData();
+                    this.loadedData.firebase = breakdown;
+                    this.renderDataBreakdown('firebaseBreakdown', breakdown, 'firebase');
+                    this.updateComparisonTable();
+                    this.updateSummary();
+                } catch (error) {
+                    console.error('Error loading Firebase data:', error);
+                    this.showError('firebaseBreakdown', 'Failed to load Firebase data');
+                } finally {
+                    this.hideLoading();
+                }
+            }
+
+            async loadGoogleSheetsData() {
+                this.showLoading();
+                try {
+                    const breakdown = await this.analyzeGoogleSheetsData();
+                    this.loadedData.googleSheets = breakdown;
+                    this.renderDataBreakdown('sheetsBreakdown', breakdown, 'googleSheets');
+                    this.updateComparisonTable();
+                    this.updateSummary();
+                } catch (error) {
+                    console.error('Error loading Google Sheets data:', error);
+                    this.showError('sheetsBreakdown', 'Failed to load Google Sheets data');
+                } finally {
+                    this.hideLoading();
+                }
+            }
+
+            analyzeLocalStorage() {
+                const breakdown = {};
+                
+                // Analyze localStorage keys
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    const value = localStorage.getItem(key);
+                    
+                    try {
+                        const parsedValue = JSON.parse(value);
+                        const category = this.categorizeData(key, parsedValue);
+                        
+                        if (!breakdown[category]) {
+                            breakdown[category] = {
+                                count: 0,
+                                items: [],
+                                totalSize: 0
+                            };
+                        }
+                        
+                        breakdown[category].count += this.getItemCount(parsedValue);
+                        breakdown[category].items.push({
+                            key: key,
+                            count: this.getItemCount(parsedValue),
+                            size: value.length
+                        });
+                        breakdown[category].totalSize += value.length;
+                    } catch (e) {
+                        // Handle non-JSON data
+                        const category = 'Raw Data';
+                        if (!breakdown[category]) {
+                            breakdown[category] = {
+                                count: 0,
+                                items: [],
+                                totalSize: 0
+                            };
+                        }
+                        breakdown[category].count += 1;
+                        breakdown[category].items.push({
+                            key: key,
+                            count: 1,
+                            size: value.length
+                        });
+                        breakdown[category].totalSize += value.length;
+                    }
+                }
+                
+                return breakdown;
+            }
+
+            async analyzeFirebaseData() {
+                const breakdown = {};
+                const collections = ['products', 'clients', 'salespeople', 'colors', 'styles', 'quotes', 'orders'];
+                
+                for (const collection of collections) {
+                    try {
+                        const data = await this.dataAccess.getData(collection);
+                        if (data && data.length > 0) {
+                            const category = this.categorizeCollection(collection);
+                            
+                            if (!breakdown[category]) {
+                                breakdown[category] = {
+                                    count: 0,
+                                    items: [],
+                                    totalSize: 0
+                                };
+                            }
+                            
+                            // Analyze subcategories within the data
+                            const subcategories = this.analyzeSubcategories(data, collection);
+                            
+                            breakdown[category].count += data.length;
+                            breakdown[category].items.push({
+                                key: collection,
+                                count: data.length,
+                                subcategories: subcategories
+                            });
+                        }
+                    } catch (error) {
+                        console.warn(`Failed to load ${collection}:`, error);
+                    }
+                }
+                
+                return breakdown;
+            }
+
+            async analyzeGoogleSheetsData() {
+                const breakdown = {};
+                
+                try {
+                    // Try to get data through the unified data access
+                    const collections = ['products', 'salespeople', 'colors', 'styles'];
+                    
+                    for (const collection of collections) {
+                        try {
+                            const data = await this.dataAccess.getData(collection, { source: 'sheets' });
+                            if (data && data.length > 0) {
+                                const category = this.categorizeCollection(collection);
+                                
+                                if (!breakdown[category]) {
+                                    breakdown[category] = {
+                                        count: 0,
+                                        items: [],
+                                        totalSize: 0
+                                    };
+                                }
+                                
+                                const subcategories = this.analyzeSubcategories(data, collection);
+                                
+                                breakdown[category].count += data.length;
+                                breakdown[category].items.push({
+                                    key: collection,
+                                    count: data.length,
+                                    subcategories: subcategories
+                                });
+                            }
+                        } catch (error) {
+                            console.warn(`Failed to load ${collection} from sheets:`, error);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error accessing Google Sheets:', error);
+                }
+                
+                return breakdown;
+            }
+
+            categorizeData(key, data) {
+                const keyLower = key.toLowerCase();
+                
+                if (keyLower.includes('product') || keyLower.includes('catalog')) return 'Products';
+                if (keyLower.includes('client') || keyLower.includes('customer')) return 'Clients';
+                if (keyLower.includes('sales') || keyLower.includes('agent')) return 'Salespeople';
+                if (keyLower.includes('color')) return 'Colors';
+                if (keyLower.includes('style')) return 'Styles';
+                if (keyLower.includes('quote') || keyLower.includes('estimate')) return 'Quotes';
+                if (keyLower.includes('order') || keyLower.includes('purchase')) return 'Orders';
+                if (keyLower.includes('price') || keyLower.includes('rate')) return 'Price Lists';
+                if (keyLower.includes('category') || keyLower.includes('type')) return 'Categories';
+                
+                return 'Other Data';
+            }
+
+            categorizeCollection(collection) {
+                const collectionMap = {
+                    'products': 'Products',
+                    'clients': 'Clients',
+                    'salespeople': 'Salespeople',
+                    'colors': 'Colors',
+                    'styles': 'Styles',
+                    'quotes': 'Quotes',
+                    'orders': 'Orders',
+                    'categories': 'Categories',
+                    'priceLists': 'Price Lists'
+                };
+                
+                return collectionMap[collection] || 'Other Data';
+            }
+
+            analyzeSubcategories(data, collection) {
+                const subcategories = {};
+                
+                if (collection === 'products' && data.length > 0) {
+                    // Analyze product categories, price lists, etc.
+                    const categories = new Set();
+                    const priceLists = new Set();
+                    const currencies = new Set();
+                    
+                    data.forEach(item => {
+                        if (item.Category) categories.add(item.Category);
+                        if (item['Price List Name'] || item.PriceListName) {
+                            priceLists.add(item['Price List Name'] || item.PriceListName);
+                        }
+                        if (item.Currency) currencies.add(item.Currency);
+                    });
+                    
+                    subcategories['Categories'] = categories.size;
+                    subcategories['Price Lists'] = priceLists.size;
+                    subcategories['Currencies'] = currencies.size;
+                }
+                
+                if (collection === 'colors' && data.length > 0) {
+                    // Count unique colors
+                    const uniqueColors = new Set(data.map(item => item.name || item.color || item));
+                    subcategories['Unique Colors'] = uniqueColors.size;
+                }
+                
+                if (collection === 'styles' && data.length > 0) {
+                    // Count unique styles
+                    const uniqueStyles = new Set(data.map(item => item.name || item.style || item));
+                    subcategories['Unique Styles'] = uniqueStyles.size;
+                }
+                
+                return subcategories;
+            }
+
+            getItemCount(data) {
+                if (Array.isArray(data)) return data.length;
+                if (typeof data === 'object' && data !== null) return Object.keys(data).length;
+                return 1;
+            }
+
+            renderDataBreakdown(containerId, breakdown, source) {
+                const container = document.getElementById(containerId);
+                
+                if (Object.keys(breakdown).length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center text-gray-500 py-8">
+                            No data found in ${source}
+                        </div>
+                    `;
+                    return;
+                }
+                
+                const cards = Object.entries(breakdown).map(([category, data]) => {
+                    const subcategoriesHtml = data.items.map(item => {
+                        if (item.subcategories) {
+                            const subCatList = Object.entries(item.subcategories)
+                                .map(([subCat, count]) => `<span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">${subCat}: ${count}</span>`)
+                                .join(' ');
+                            return `
+                                <div class="mb-2">
+                                    <div class="font-medium">${item.key}: ${item.count} items</div>
+                                    <div class="flex flex-wrap gap-1 mt-1">${subCatList}</div>
+                                </div>
+                            `;
+                        } else {
+                            return `<div class="text-sm">${item.key}: ${item.count} items</div>`;
+                        }
+                    }).join('');
+                    
+                    return `
+                        <div class="data-category-card bg-white rounded-lg p-6 shadow-sm">
+                            <div class="flex justify-between items-start mb-4">
+                                <h3 class="text-lg font-semibold text-gray-900">${category}</h3>
+                                <span class="count-badge text-white px-3 py-1 rounded-full text-sm font-medium">
+                                    ${data.count} items
+                                </span>
+                            </div>
+                            <div class="breakdown-table">
+                                ${subcategoriesHtml}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                
+                container.innerHTML = cards;
+            }
+
+            updateComparisonTable() {
+                const tbody = document.getElementById('comparisonTableBody');
+                const allCategories = new Set();
+                
+                // Collect all categories
+                Object.values(this.loadedData).forEach(sourceData => {
+                    Object.keys(sourceData).forEach(category => allCategories.add(category));
+                });
+                
+                if (allCategories.size === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="5" class="border border-gray-200 px-4 py-8 text-center text-gray-500">
+                                Load data from sources to see comparison
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                const rows = Array.from(allCategories).map(category => {
+                    const localCount = this.loadedData.localStorage[category]?.count || 0;
+                    const firebaseCount = this.loadedData.firebase[category]?.count || 0;
+                    const sheetsCount = this.loadedData.googleSheets[category]?.count || 0;
+                    const total = localCount + firebaseCount + sheetsCount;
+                    
+                    return `
+                        <tr class="hover:bg-gray-50">
+                            <td class="border border-gray-200 px-4 py-3 font-medium">${category}</td>
+                            <td class="border border-gray-200 px-4 py-3 text-center">${localCount || '-'}</td>
+                            <td class="border border-gray-200 px-4 py-3 text-center">${firebaseCount || '-'}</td>
+                            <td class="border border-gray-200 px-4 py-3 text-center">${sheetsCount || '-'}</td>
+                            <td class="border border-gray-200 px-4 py-3 text-center font-semibold">${total}</td>
+                        </tr>
+                    `;
+                }).join('');
+                
+                tbody.innerHTML = rows;
+            }
+
+            updateSummary() {
+                const allCategories = new Set();
+                let totalItems = 0;
+                let activeSources = 0;
+                
+                Object.entries(this.loadedData).forEach(([source, sourceData]) => {
+                    if (Object.keys(sourceData).length > 0) {
+                        activeSources++;
+                        Object.entries(sourceData).forEach(([category, data]) => {
+                            allCategories.add(category);
+                            totalItems += data.count;
+                        });
+                    }
+                });
+                
+                document.getElementById('totalCategories').textContent = allCategories.size;
+                document.getElementById('totalItems').textContent = totalItems.toLocaleString();
+                document.getElementById('activeSources').textContent = `${activeSources}/3`;
+            }
+
+            updateLastUpdated() {
+                document.getElementById('lastUpdated').textContent = new Date().toLocaleTimeString();
+            }
+
+            async refreshAllData() {
+                await Promise.all([
+                    this.loadLocalStorageData(),
+                    this.loadFirebaseData(),
+                    this.loadGoogleSheetsData()
+                ]);
+                this.updateLastUpdated();
+            }
+
+            showError(containerId, message) {
+                document.getElementById(containerId).innerHTML = `
+                    <div class="text-center text-red-500 py-8">
+                        <div class="text-4xl mb-2">⚠️</div>
+                        <div>${message}</div>
+                    </div>
+                `;
+            }
+
+            exportData() {
+                const exportData = {
+                    timestamp: new Date().toISOString(),
+                    summary: {
+                        totalCategories: document.getElementById('totalCategories').textContent,
+                        totalItems: document.getElementById('totalItems').textContent,
+                        activeSources: document.getElementById('activeSources').textContent
+                    },
+                    breakdown: this.loadedData
+                };
+                
+                const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `data-breakdown-${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', () => {
+            new DetailedDataBreakdown();
+        });
+    </script>
+</body>
+</html>

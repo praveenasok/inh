@@ -7,19 +7,35 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Firebase SDKs -->
+    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
     
+    <!-- Language Configuration (Load First) -->
+    <script src="js/language-config.js"></script>
+    
+    <!-- Firebase Configuration and Initialization -->
     <script src="firebase-config.js"></script>
+    <script src="firebase-global-init.js"></script>
     <script src="firebase-database.js"></script>
     <script src="firebase-error-handler.js"></script>
+    
+    <!-- Universal Firebase Data Manager -->
+    <script src="js/universal-firebase-data-manager.js"></script>
+    
+    <!-- Fallback System Components -->
+    <script src="js/local-fallback-manager.js?v=4"></script>
+    <script src="js/fallback-detector.js"></script>
+    <script src="js/unified-data-access.js?v=20"></script>
+    
+    <!-- New API Client (Server-based data access) -->
+    <script src="js/api-client.js"></script>
     
     <!-- Unified Button System -->
     <link rel="stylesheet" href="unified-button-system.css">
@@ -131,89 +147,84 @@
         .no-underline:hover {
             text-decoration: none !important;
         }
+        
+        /* Loading Overlay */
+        .loading {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #081249;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body class="bg-gray-50">
-  <!-- Top Menu Bar -->
-  <header class="bg-white shadow-soft mb-4 sticky top-0 z-50">
-    <div class="max-w-4xl mx-auto px-3 sm:px-6">
-      <!-- Header with InstaQuote flush left and logo flush right -->
-      <div class="flex items-center justify-between py-3">
-        <!-- InstaQuote heading flush left -->
-        <h1 class="text-xl sm:text-2xl lg:text-3xl font-bold" style="line-height: 0.7;">
-          <span style="color: #081249;">Insta</span><span style="color: #9b7952;">Q</span><span style="color: #081249;">uote</span>
-        </h1>
-        
-        <!-- Logo flush right -->
-        <div class="flex-shrink-0">
-          <img src="images/logo.png" alt="Company Logo" class="h-12 sm:h-16 w-auto opacity-75 hover:opacity-100 transition-opacity duration-200">
+
+    <!-- Navigation Component -->
+    <nav class="bg-gradient-to-r from-blue-900 via-blue-800 to-amber-700 text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo and Title -->
+                <div class="flex items-center space-x-3">
+                    <img src="images/logo.png" alt="Logo" class="h-8 w-auto opacity-90">
+                    <span class="text-lg font-bold">InstaQuote</span>
+                </div>
+                
+                <!-- Navigation Links -->
+                <div class="hidden md:flex items-center space-x-4">
+                    <a href="quote-maker-v2-ver3.html" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-white/10 transition-colors">
+                        <i class="fas fa-file-invoice-dollar mr-1"></i> Quote Maker
+                    </a>
+                    <a href="price-calculator.html" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-white/10 transition-colors">
+                        <i class="fas fa-calculator mr-1"></i> Calculator
+                    </a>
+                    <span class="px-3 py-2 rounded-md text-sm font-medium bg-white/20">
+                        <i class="fas fa-th-large mr-1"></i> Catalog
+                    </span>
+                    <a href="admin-panel.html" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-white/10 transition-colors">
+                        <i class="fas fa-cog mr-1"></i> Admin
+                    </a>
+                </div>
+                
+                <!-- Mobile Menu Button -->
+                <div class="md:hidden">
+                    <button id="mobile-menu-btn" class="p-2 rounded-md hover:bg-white/10 transition-colors">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Mobile Menu -->
+            <div id="mobile-menu" class="md:hidden hidden pb-3">
+                <div class="space-y-1">
+                    <a href="quote-maker-v2-ver3.html" class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-white/10 transition-colors">
+                        <i class="fas fa-file-invoice-dollar mr-2"></i> Quote Maker
+                    </a>
+                    <a href="price-calculator.html" class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-white/10 transition-colors">
+                        <i class="fas fa-calculator mr-2"></i> Price Calculator
+                    </a>
+                    <span class="block px-3 py-2 rounded-md text-sm font-medium bg-white/20">
+                        <i class="fas fa-th-large mr-2"></i> Product Catalog
+                    </span>
+                    <a href="admin-panel.html" class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-white/10 transition-colors">
+                        <i class="fas fa-cog mr-2"></i> Admin Panel
+                    </a>
+                </div>
+            </div>
         </div>
-      </div>
-      
-      <!-- Navigation Menu below header -->
-      <div class="pb-3">
-        <nav class="hidden md:flex gap-2 justify-center">
-          <a href="price-calculator.html" class="nav-btn px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 text-gray-700 hover:text-gray-900 no-underline">
-            <span>📊</span>
-            <span>PriceLists</span>
-          </a>
-          <a href="quote-maker.html" class="nav-btn px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 text-gray-700 hover:text-gray-900 no-underline">
-            <span class="text-lg">📋</span>
-            <span>Quote Maker</span>
-          </a>
-          <a href="product-catalog.html" class="nav-btn nav-btn-active btn-primary px-4 py-2 rounded-lg font-medium hover:bg-emerald-700 transition-all duration-200 flex items-center gap-2 text-white no-underline">
-            <span class="text-lg">📦</span>
-            <span>Product Catalog</span>
-          </a>
-          <a href="admin-panel.html" class="nav-btn px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 text-gray-700 hover:text-gray-900 no-underline">
-            <span class="text-lg">⚙️</span>
-            <span>Admin Panel</span>
-          </a>
-        </nav>
-      </div>
-      
-      <!-- Mobile Navigation Menu -->
-      <nav class="md:hidden pb-3">
-        <div class="flex flex-wrap justify-center gap-2">
-          <a href="price-calculator.html" class="nav-btn px-3 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-1 text-sm text-gray-700 hover:text-gray-900 no-underline">
-            <span>📊</span>
-            <span>PriceLists</span>
-          </a>
-          <a href="quote-maker.html" class="nav-btn px-3 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-1 text-sm text-gray-700 hover:text-gray-900 no-underline">
-            <span>📋</span>
-            <span>Quote</span>
-          </a>
-          <a href="product-catalog.html" class="nav-btn nav-btn-active btn-primary px-3 py-2 rounded-lg font-medium hover:bg-emerald-700 transition-all duration-200 flex items-center gap-1 text-sm text-white no-underline">
-            <span>📦</span>
-            <span>Catalog</span>
-          </a>
-          <a href="admin-panel.html" class="nav-btn px-3 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-1 text-sm text-gray-700 hover:text-gray-900 no-underline">
-            <span>⚙️</span>
-            <span>Admin</span>
-          </a>
-        </div>
-      </nav>
-    </div>
-  </header>
+    </nav>
 
     <!-- Main Content -->
     <div class="container mx-auto px-4 py-6">
         <!-- Page Header -->
-        <div class="rounded-xl p-6 mb-8 text-white" style="background-color: #081249;">
-            <div class="flex flex-col md:flex-row md:items-center md:justify-between">
-                <div>
-                    <h1 class="text-3xl font-bold mb-2">Product Catalog</h1>
-                    <p class="text-purple-100">Browse and explore our comprehensive product collection with advanced filtering</p>
-                </div>
-                <div class="mt-4 md:mt-0">
-                    <div class="flex items-center space-x-4">
-                        <div class="text-center">
-                            <div class="text-2xl font-bold" id="total-products">0</div>
-                            <div class="text-sm text-purple-200">Products</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div class="text-left mb-8">
+            <h1 class="text-3xl font-bold mb-2" style="color: #081249;">Product Catalog</h1>
         </div>
 
         <!-- Product Catalog Module -->
@@ -235,28 +246,16 @@
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     <!-- Category Filter -->
-                    <div class="space-y-2">
-                        <label class="text-sm font-medium text-gray-700 flex items-center">
-                            <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-                            </svg>
-                            Category
-                        </label>
+                    <div>
                         <select id="catalog-category" class="w-full border-2 border-gray-200 rounded-lg px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 bg-gray-50 hover:bg-white">
                             <option value="">All Categories</option>
                         </select>
                     </div>
                     
                     <!-- Search Filter -->
-                    <div class="space-y-2">
-                        <label class="text-sm font-medium text-gray-700 flex items-center">
-                            <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                            </svg>
-                            Search
-                        </label>
+                    <div>
                         <div class="relative">
-                            <input type="text" id="catalog-search" placeholder="Search products by name..." class="w-full border-2 border-gray-200 rounded-lg px-4 py-1 pl-10 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 bg-gray-50 hover:bg-white" />
+                            <input type="text" id="catalog-search" placeholder="Search products by name..." class="w-full border-2 border-gray-200 rounded-lg px-4 py-3 pl-10 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 bg-gray-50 hover:bg-white" />
                             <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                             </svg>
@@ -518,20 +517,143 @@
       updatedAt: null, mode:'auto'
     };
 
-    // Mobile menu toggle functionality (if mobile menu button exists)
-    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-    if (mobileMenuBtn) {
-      mobileMenuBtn.addEventListener('click', function() {
-        const mobileMenu = document.getElementById('mobile-menu');
-        if (mobileMenu) {
-          mobileMenu.classList.toggle('hidden');
+    // Global variables for Firebase collections
+    let firebaseColors = [];
+    let firebaseStyles = [];
+
+    // Function to get collections data via API client
+    async function loadFirebaseCollections() {
+        try {
+            // Use API client for data access if available
+            if (window.apiClient && typeof window.apiClient.isAvailable === 'function' && window.apiClient.isAvailable()) {
+                // Load colors collection
+                const colors = await window.apiClient.getColors();
+                if (colors && colors.length > 0) {
+                    firebaseColors = colors;
+                    console.log(`📦 Loaded ${firebaseColors.length} colors from API client`);
+                }
+                
+                // Load styles collection
+                const styles = await window.apiClient.getStyles();
+                if (styles && styles.length > 0) {
+                    firebaseStyles = styles;
+                    console.log(`📦 Loaded ${firebaseStyles.length} styles from API client`);
+                }
+                return;
+            }
+            
+            // Fallback: Try unified data access if API client is not available
+            console.warn('⚠️ API client not available or API endpoints not found, falling back to legacy methods...');
+            
+            if (window.unifiedDataAccess) {
+                try {
+                    // Load colors collection
+                    const colors = await window.unifiedDataAccess.getColors();
+                    if (colors && colors.length > 0) {
+                        firebaseColors = colors;
+                        console.log(`📦 Loaded ${firebaseColors.length} colors from unified data access (fallback)`);
+                    }
+                    
+                    // Load styles collection
+                    const styles = await window.unifiedDataAccess.getStyles();
+                    if (styles && styles.length > 0) {
+                        firebaseStyles = styles;
+                        console.log(`📦 Loaded ${firebaseStyles.length} styles from unified data access (fallback)`);
+                    }
+                } catch (unifiedError) {
+                    console.warn('⚠️ Unified data access failed:', unifiedError);
+                }
+            }
+        } catch (error) {
+            console.error('Error loading Firebase collections:', error);
         }
-      });
+    }
+
+    // Function to get product image based on category
+    function getCategoryImage(category) {
+        const categoryImageMap = {
+            'Bulk': 'images/Products/Bulk.png',
+            'Weaves': 'images/Products/Weaves-SD.png',
+            'Weaves DD': 'images/Products/Weaves-DD.png',
+            'Weaves SDD': 'images/Products/Weaves-SDD.png',
+            'Tapes': 'images/Products/Tapes.png',
+            'ClipOn': 'images/Products/ClipOn.png',
+            'Closures': 'images/Products/Closure.png',
+            'Frontals': 'images/Products/Frontal.png',
+            'Frontline': 'images/Products/Frontline.png',
+            'Tips': 'images/Products/ITIPS.png',
+            'I Tips': 'images/Products/ITIPS.png',
+            'U Tips': 'images/Products/UTIPS.png',
+            'Y Tips': 'images/Products/YTIPS.png',
+            'Flat Tips': 'images/Products/FlatTips.png',
+            'Nano': 'images/Products/Nano.png',
+            'PonyTail': 'images/Products/PonyTail.png',
+            'BUN': 'images/Products/BUN.png',
+            'Curly Bun': 'images/Products/CurlyBun.png',
+            'Clutch Bun': 'images/Products/ClutchBun.png',
+            'Bangs': 'images/Products/Bangs.png',
+            'Halo': 'images/Products/Halo.png',
+            'Highlights': 'images/Products/Highlights.png',
+            'Cover Patch': 'images/Products/CoverPatch.png',
+            'Genius': 'images/Products/Genius.png',
+            'Genius Weaves': 'images/Products/Genius.png',
+            'Wigs': 'images/Products/WIGFRONTAL.png',
+            'Wig Closure': 'images/Products/WIGCLOSURE.png',
+            'Wig Frontal': 'images/Products/WIGFRONTAL.png',
+            'Silk Topper': 'images/Products/SILKTOPPER.png',
+            'Toppers': 'images/Products/SILKTOPPER.png',
+            'Flat Clip Ponytail': 'images/Products/FLATCLIPPONYTAIL.png',
+            'Hair Extensions': 'images/Products/Weaves-SD.png'
+        };
+        
+        return categoryImageMap[category] || 'images/template.png';
+    }
+
+    // Function to calculate ranges for a category
+    function calculateCategoryRanges(category) {
+        const categoryProducts = productData.filter(p => p.Category === category);
+        
+        if (categoryProducts.length === 0) {
+            return {
+                priceRange: 'N/A',
+                lengthRange: 'N/A',
+                colorRange: 'N/A',
+                styleRange: 'N/A'
+            };
+        }
+        
+        // Calculate price range
+        const prices = categoryProducts.map(p => p.Rate).filter(Boolean);
+        const priceRange = prices.length > 1 ? 
+            `${SYMBOL[categoryProducts[0].Currency] || ''}${Math.min(...prices)} - ${SYMBOL[categoryProducts[0].Currency] || ''}${Math.max(...prices)}` :
+            `${SYMBOL[categoryProducts[0].Currency] || ''}${prices[0] || 'N/A'}`;
+        
+        // Calculate length range
+        const lengths = categoryProducts.map(p => p.Length).filter(Boolean);
+        const lengthRange = lengths.length > 1 ? 
+            `${Math.min(...lengths)}" - ${Math.max(...lengths)}"` :
+            `${lengths[0] || 'N/A'}"`;
+        
+        // Use Firebase collections for color and style counts
+        const colorRange = firebaseColors.length > 0 ? 
+            `${firebaseColors.length} colors available` :
+            'Colors available';
+        
+        const styleRange = firebaseStyles.length > 0 ? 
+            `${firebaseStyles.length} styles available` :
+            'Styles available';
+        
+        return { priceRange, lengthRange, colorRange, styleRange };
     }
 
     // Product rendering function
-    function renderProducts(products = productData) {
+    async function renderProducts(products = productData) {
         const grid = document.getElementById('catalog-products-grid');
+        
+        // Load Firebase collections if not already loaded
+        if (firebaseColors.length === 0 || firebaseStyles.length === 0) {
+            await loadFirebaseCollections();
+        }
         
         if (!products || products.length === 0) {
             document.getElementById('catalog-empty').classList.remove('hidden');
@@ -541,58 +663,447 @@
         
         document.getElementById('catalog-empty').classList.add('hidden');
         
-        grid.innerHTML = products.map(product => `
-             <div class="bg-white rounded-lg shadow-soft overflow-hidden card-hover flex flex-col h-full">
-                 <div class="aspect-w-16 aspect-h-9 bg-gray-200">
-                     <img src="${product.image || 'images/template.png'}" 
-                           alt="${product.Product}" 
-                           class="w-full h-48 object-contain"
-                           onerror="this.onerror=null; this.src='https://via.placeholder.com/300x200/6B7280/FFFFFF?text=Product+Image+Not+Found'; this.style.opacity='0.7';"
-                           onload="this.style.opacity='1';">
-                 </div>
-                 <div class="p-4 flex flex-col flex-grow">
-                     <h3 class="font-semibold text-gray-900 mb-2 line-clamp-2">${product.Product}</h3>
-                     <p class="text-sm text-gray-600 mb-2">${product.Category}</p>
-                     <div class="flex items-center justify-between mb-3">
-                         <span class="text-lg font-bold text-blue-600">${SYMBOL[product.Currency] || ''}${product.Rate}</span>
-                         <span class="text-sm text-gray-500">${product.Length}\"</span>
-                     </div>
-                     <div class="flex items-center justify-between mt-auto">
-                         <span class="text-xs text-gray-500">${product.Colors}</span>
-                         <button onclick="viewProductDetails('${product.Product}')" 
-                                 class="text-white px-3 py-1 rounded text-sm transition-colors duration-200" 
-                                 style="background-color: #081249;" 
-                                 onmouseover="this.style.backgroundColor='#0a1a5c'" 
-                                 onmouseout="this.style.backgroundColor='#081249'">
-                             View Details
-                         </button>
-                     </div>
-                 </div>
-             </div>
-         `).join('');
+        // Group products by category to show ranges
+        const productsByCategory = {};
+        products.forEach(product => {
+            if (!productsByCategory[product.Category]) {
+                productsByCategory[product.Category] = [];
+            }
+            productsByCategory[product.Category].push(product);
+        });
         
-        document.getElementById('catalog-results-count').textContent = `${products.length} products found`;
-        document.getElementById('catalog-results-count-display').textContent = `${products.length} products`;
+        grid.innerHTML = Object.entries(productsByCategory).map(([category, categoryProducts]) => {
+            const ranges = calculateCategoryRanges(category);
+            const representativeProduct = categoryProducts[0]; // Use first product as representative
+            const categoryImage = getCategoryImage(category);
+            
+            return `
+                <div class="bg-white rounded-lg shadow-soft overflow-hidden card-hover flex flex-col h-full">
+                    <div class="aspect-w-16 aspect-h-9 bg-gray-200">
+                        <img src="${representativeProduct.image || categoryImage}" 
+                              alt="${category}" 
+                              class="w-full h-48 object-contain"
+                              onerror="this.onerror=null; this.src='https://via.placeholder.com/300x200/6B7280/FFFFFF?text=Product+Image+Not+Found'; this.style.opacity='0.7';"
+                              onload="this.style.opacity='1';">
+                    </div>
+                    <div class="p-4 flex flex-col flex-grow">
+                        <h3 class="font-semibold text-gray-900 mb-3 text-center">${category}</h3>
+                        <div class="space-y-2 mb-4">
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm font-medium text-gray-700">Price:</span>
+                                <span class="text-sm font-bold text-blue-600">${ranges.priceRange}</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm font-medium text-gray-700">Length:</span>
+                                <span class="text-sm text-gray-600">${ranges.lengthRange}</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm font-medium text-gray-700">Colors:</span>
+                                <span class="text-sm text-gray-600">${ranges.colorRange}</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm font-medium text-gray-700">Styles:</span>
+                                <span class="text-sm text-gray-600">${ranges.styleRange}</span>
+                            </div>
+                        </div>
+                        <div class="mt-auto text-center">
+                            <button onclick="viewCategoryDetails('${category}')" 
+                                    class="text-white px-4 py-2 rounded text-sm transition-colors duration-200 w-full" 
+                                    style="background-color: #081249;" 
+                                    onmouseover="this.style.backgroundColor='#0a1a5c'" 
+                                    onmouseout="this.style.backgroundColor='#081249'">
+                                View Details
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        
+        document.getElementById('catalog-results-count').textContent = `${Object.keys(productsByCategory).length} categories found`;
+        document.getElementById('catalog-results-count-display').textContent = `${Object.keys(productsByCategory).length} categories`;
     }
     
-    // View product details function
-    function viewProductDetails(productName) {
-        const product = productData.find(p => p.Product === productName);
-        if (product) {
-            alert(`Product Details:\n\nName: ${product.Product}\nCategory: ${product.Category}\nPrice: ${SYMBOL[product.Currency] || ''}${product.Rate}\nLength: ${product.Length}\"\nColors: ${product.Colors}\nDensity: ${product.Density}`);
-        }
+    // View category details function - shows all products in that category
+    function viewCategoryDetails(category) {
+        const categoryProducts = productData.filter(p => p.Category === category);
+        showProductModal(categoryProducts, category);
+    }
+
+    // Show product modal with detailed information
+    function showProductModal(products, categoryName) {
+        const modal = document.getElementById('productModal');
+        const modalContent = document.getElementById('modalProductList');
+        
+        modalContent.innerHTML = products.map(product => {
+            // Get the appropriate image for the product
+            const productImage = product.image || getCategoryImage(product.Category);
+            
+            return `
+            <div class="bg-gray-50 rounded-lg p-4 mb-4">
+                <div class="flex flex-col md:flex-row gap-4">
+                    <div class="md:w-1/2">
+                         <img src="${productImage}" 
+                              alt="${product.Product}" 
+                              class="w-full h-96 object-contain rounded-lg bg-white shadow-lg"
+                              style="max-height: 576px; min-height: 400px;"
+                              onerror="this.onerror=null; this.src='https://via.placeholder.com/600x450/6B7280/FFFFFF?text=Product+Image+Not+Found'; this.style.opacity='0.7';"
+                              onload="this.style.opacity='1';">
+                     </div>
+                    <div class="md:w-1/2">
+                        <h3 class="text-xl font-bold text-gray-900 mb-3">${product.Product}</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div class="flex justify-between items-center py-2 border-b border-gray-200">
+                                <span class="font-medium text-gray-700">Category:</span>
+                                <span class="text-gray-600">${product.Category}</span>
+                            </div>
+                            <div class="flex justify-between items-center py-2 border-b border-gray-200">
+                                <span class="font-medium text-gray-700">Price:</span>
+                                <span class="text-lg font-bold text-blue-600">${SYMBOL[product.Currency] || ''}${product.Rate}</span>
+                            </div>
+                            <div class="flex justify-between items-center py-2 border-b border-gray-200">
+                                <span class="font-medium text-gray-700">Length:</span>
+                                <span class="text-gray-600">${product.Length}"</span>
+                            </div>
+                            <div class="flex justify-between items-center py-2 border-b border-gray-200">
+                                <span class="font-medium text-gray-700">Colors:</span>
+                                <span class="text-gray-600">${firebaseColors.length > 0 ? `${firebaseColors.length} colors available` : (product.Colors || 'N/A')}</span>
+                            </div>
+                            <div class="flex justify-between items-center py-2 border-b border-gray-200">
+                                <span class="font-medium text-gray-700">Styles:</span>
+                                <span class="text-gray-600">${firebaseStyles.length > 0 ? `${firebaseStyles.length} styles available` : (product.Density || 'N/A')}</span>
+                            </div>
+                            <div class="flex justify-between items-center py-2 border-b border-gray-200">
+                                <span class="font-medium text-gray-700">Currency:</span>
+                                <span class="text-gray-600">${product.Currency}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            `;
+        }).join('');
+        
+        document.getElementById('modalCategoryTitle').textContent = categoryName;
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    // Close modal function
+    function closeProductModal() {
+        const modal = document.getElementById('productModal');
+        modal.classList.add('hidden');
+        document.body.style.overflow = 'auto';
     }
     
     // Initialize products on page load
-    document.addEventListener('DOMContentLoaded', function() {
-        renderProducts();
+    document.addEventListener('DOMContentLoaded', async function() {
+        try {
+            showLoading(true);
+            
+            // Initialize fallback system components (fallback-first strategy)
+            try {
+                console.log('🔄 Initializing fallback system with fallback-first strategy...');
+                
+                // Initialize local fallback manager
+                if (typeof LocalFallbackManager !== 'undefined') {
+                    window.localFallbackManager = new LocalFallbackManager();
+                    await window.localFallbackManager.initialize();
+                    console.log('✅ Local fallback manager initialized');
+                }
+                
+                // Initialize fallback detector
+                if (typeof FallbackDetector !== 'undefined') {
+                    window.fallbackDetector = new FallbackDetector();
+                    await window.fallbackDetector.initialize();
+                    console.log('✅ Fallback detector initialized');
+                }
+                
+                // Initialize unified data access with fallback-first priority
+                if (typeof UnifiedDataAccess !== 'undefined') {
+                    window.unifiedDataAccess = new UnifiedDataAccess();
+                    await window.unifiedDataAccess.initialize();
+                    console.log('✅ Unified data access initialized (fallback-first)');
+                }
+                
+                console.log('✅ Fallback system fully initialized with fallback-first strategy');
+            } catch (error) {
+                console.warn('⚠️ Fallback system initialization failed:', error);
+            }
+            
+            // Initialize Firebase as auxiliary data source
+            try {
+                if (window.universalDataManager) {
+                    console.log('🔄 Initializing Firebase as auxiliary data source...');
+                    await window.universalDataManager.waitForReady();
+                    
+                    const status = window.universalDataManager.getStatus();
+                    if (status.isInitialized && status.isDataLoaded) {
+                        console.log('✅ Firebase auxiliary data source ready');
+                    } else {
+                        console.warn('⚠️ Firebase auxiliary data source not ready');
+                    }
+                }
+            } catch (firebaseError) {
+                console.warn('⚠️ Firebase auxiliary initialization failed:', firebaseError);
+            }
+            
+            // Check API client availability
+            if (window.apiClient && typeof window.apiClient.isAvailable === 'function') {
+                console.log(`🔗 API Client available: ${window.apiClient.isAvailable()}`);
+            } else {
+                console.warn('⚠️ API Client not properly loaded or missing isAvailable method');
+            }
+            
+            // Load Firebase collections first
+            await loadFirebaseCollections();
+            
+            // Load product data from Firebase
+            await loadProductData();
+            
+            // Populate category dropdown after data is loaded
+            populateCatalogCategories();
+            
+            // Render products after data is loaded
+            renderProducts();
+            
+            console.log('Product catalog initialized successfully');
+            
+        } catch (error) {
+            console.error('Error initializing product catalog:', error);
+            // Show error message to user
+            showErrorMessage('Failed to load product catalog. Please check your internet connection and try again.');
+        } finally {
+            showLoading(false);
+        }
     });
+
+    // Load product data using API client
+    async function loadProductData() {
+        try {
+            console.log('🔄 Loading products via API client...');
+            
+            // Use the new API client for data access if available
+            if (window.apiClient && typeof window.apiClient.isAvailable === 'function' && window.apiClient.isAvailable()) {
+                productData = await window.apiClient.getProducts();
+                console.log(`📦 Loaded ${productData.length} products from API client`);
+                return;
+            }
+            
+            // Fallback: If API client is not available, try the old methods
+            console.warn('⚠️ API client not available or API endpoints not found, falling back to legacy methods...');
+            
+            // Try unified data access as fallback
+            if (window.unifiedDataAccess) {
+                try {
+                    const products = await window.unifiedDataAccess.getData('products');
+                    if (products && products.length > 0) {
+                        productData = products;
+                        console.log(`📦 Loaded ${products.length} products from unified data access (fallback)`);
+                        return;
+                    }
+                } catch (unifiedError) {
+                    console.warn('⚠️ Unified data access failed:', unifiedError);
+                }
+            }
+            
+            // Try local fallback manager as last resort
+            if (window.localFallbackManager) {
+                try {
+                    const products = await window.localFallbackManager.getData('products');
+                    if (products && products.length > 0) {
+                        productData = products;
+                        console.log(`📦 Loaded ${products.length} products from local fallback (last resort)`);
+                        return;
+                    }
+                } catch (fallbackError) {
+                    console.warn('⚠️ Local fallback failed:', fallbackError);
+                }
+            }
+            
+            // If all methods fail, set empty array
+            console.warn('⚠️ No products data available from any source, using empty array');
+            productData = [];
+            
+        } catch (error) {
+            console.error('❌ Error loading product data:', error);
+            productData = [];
+            throw error;
+        }
+    }
+
+    // Populate category dropdown with unique categories from product data
+    function populateCatalogCategories() {
+        const categorySelect = document.getElementById('catalog-category');
+        if (!categorySelect) return;
         
+        // Get unique categories from product data
+        const categories = [...new Set(productData.map(product => product.Category))].filter(Boolean).sort();
+        
+        // Clear existing options except "All Categories"
+        categorySelect.innerHTML = '<option value="">All Categories</option>';
+        
+        // Add category options
+        categories.forEach(category => {
+            const option = document.createElement('option');
+            option.value = category;
+            option.textContent = category;
+            categorySelect.appendChild(option);
+        });
+        
+        console.log(`📋 Populated ${categories.length} categories in dropdown`);
+    }
+
+    // Show/hide loading indicator
+    function showLoading(show) {
+        const loadingElement = document.getElementById('loading-indicator');
+        if (loadingElement) {
+            loadingElement.style.display = show ? 'flex' : 'none';
+        }
+    }
+
+    // Show error message to user
+    function showErrorMessage(message) {
+        const catalogGrid = document.getElementById('catalog-grid');
+        if (catalogGrid) {
+            catalogGrid.innerHTML = `
+                <div class="col-span-full flex flex-col items-center justify-center py-12 text-center">
+                    <div class="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md">
+                        <div class="flex items-center justify-center w-12 h-12 mx-auto mb-4 bg-red-100 rounded-full">
+                            <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
+                        </div>
+                        <h3 class="text-lg font-semibold text-red-800 mb-2">Connection Error</h3>
+                        <p class="text-red-700 mb-4">${message}</p>
+                        <button onclick="location.reload()" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors">
+                            Try Again
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+    }
+        
+    // Apply catalog filters
+    async function applyCatalogFilters() {
+        const category = document.getElementById('catalog-category').value;
+        const search = document.getElementById('catalog-search').value.toLowerCase();
+        
+        let filteredProducts = productData;
+        
+        // Filter by category
+        if (category) {
+            filteredProducts = filteredProducts.filter(product => product.Category === category);
+        }
+        
+        // Filter by search term
+        if (search) {
+            filteredProducts = filteredProducts.filter(product => 
+                product.Product.toLowerCase().includes(search) ||
+                product.Category.toLowerCase().includes(search) ||
+                (product.Colors && product.Colors.toLowerCase().includes(search))
+            );
+        }
+        
+        await renderProducts(filteredProducts);
+    }
+    
     function clearCatalogFilters() {
         document.getElementById('catalog-category').value = '';
         document.getElementById('catalog-search').value = '';
         renderProducts();
     }
+    
+    // Firebase Readiness Check
+    function waitForFirebase() {
+        return new Promise((resolve) => {
+            if (window.globalFirebase && window.globalFirebase.isAvailable()) {
+                resolve();
+            } else {
+                // Wait for global Firebase to be ready
+                const checkInterval = setInterval(() => {
+                    if (window.globalFirebase && window.globalFirebase.isAvailable()) {
+                        clearInterval(checkInterval);
+                        resolve();
+                    }
+                }, 100);
+                
+                // Fallback timeout
+                setTimeout(() => {
+                    clearInterval(checkInterval);
+                    console.warn('⚠️ Global Firebase not ready, proceeding with local initialization');
+                    resolve();
+                }, 5000);
+            }
+        });
+    }
+
+    // Add event listeners for filters
+    document.addEventListener('DOMContentLoaded', async function() {
+        await waitForFirebase();
+        console.log('✅ Firebase ready for product catalog');
+        // Category filter
+        const categorySelect = document.getElementById('catalog-category');
+        if (categorySelect) {
+            categorySelect.addEventListener('change', applyCatalogFilters);
+        }
+        
+        // Search filter
+        const searchInput = document.getElementById('catalog-search');
+        if (searchInput) {
+            searchInput.addEventListener('input', applyCatalogFilters);
+        }
+        
+        // Filter button
+        const filterBtn = document.getElementById('catalog-filter-btn');
+        if (filterBtn) {
+            filterBtn.addEventListener('click', applyCatalogFilters);
+        }
+        
+        // Clear button
+        const clearBtn = document.getElementById('catalog-clear-btn');
+        if (clearBtn) {
+            clearBtn.addEventListener('click', clearCatalogFilters);
+        }
+    });
+    </script>
+
+    <!-- Product Details Modal -->
+    <div id="productModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg max-w-6xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="sticky top-0 bg-white border-b border-gray-200 p-6 flex justify-between items-center">
+                <h2 id="modalCategoryTitle" class="text-2xl font-bold text-gray-900">Product Details</h2>
+                <button onclick="closeProductModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div id="modalProductList" class="p-6">
+                <!-- Product details will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-indicator" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg p-6 flex flex-col items-center">
+            <div class="loading"></div>
+            <span class="text-gray-700 font-medium mt-4">Loading products...</span>
+        </div>
+    </div>
+    
+    <script>
+        // Mobile menu functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+            const mobileMenu = document.getElementById('mobile-menu');
+            
+            if (mobileMenuBtn && mobileMenu) {
+                mobileMenuBtn.addEventListener('click', function() {
+                    mobileMenu.classList.toggle('hidden');
+                });
+            }
+        });
     </script>
 </body>
 </html>

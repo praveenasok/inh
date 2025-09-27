@@ -20,11 +20,7 @@ service firebase.storage {
       return isAuthenticated() && request.auth.uid == userId;
     }
     
-    function isValidExcelFile() {
-      return resource.contentType.matches('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') ||
-             resource.contentType.matches('application/vnd.ms-excel') ||
-             request.resource.name.matches('.*\\.(xlsx|xls)$');
-    }
+
     
     function isValidImageFile() {
       return resource.contentType.matches('image/.*') ||
@@ -47,22 +43,16 @@ service firebase.storage {
       allow read, write: if isAuthenticated();
     }
     
-    // Admin-only Excel imports with validation
-    match /imports/{fileName} {
+    // Admin-only data sync and backup files
+    match /sync/{fileName} {
       allow read: if isAdminEmail() || isAdmin();
-      allow write: if (isAdminEmail() || isAdmin()) && isValidExcelFile() && 
-                      request.resource.size < 50 * 1024 * 1024; // 50MB limit
+      allow write: if (isAdminEmail() || isAdmin()) && 
+                      request.resource.size < 10 * 1024 * 1024; // 10MB limit
     }
     
     // Admin-only backup files
     match /backups/{fileName} {
       allow read, write: if isAdmin();
-    }
-    
-    // Admin-only upload staging area
-    match /uploads/{uploadId}/{fileName} {
-      allow read, write: if (isAdminEmail() || isAdmin()) && isValidExcelFile() &&
-                          request.resource.size < 50 * 1024 * 1024; // 50MB limit
     }
     
     // User profile images

@@ -51,6 +51,7 @@ node_modules/
 
 # Service account credentials
 service-account-key.json
+inhsuite-c3aebc444588.json
 backup_*/
 
 # Optional npm cache directory

@@ -1,6 +1,3 @@
-// Google Sheets API Configuration
-// Handles integration with Google Sheets for order management
-
 class GoogleSheetsIntegration {
   constructor() {
     this.SHEET_ID = '1hlfrnZnNQ0u8idg5KDmkSY4zFhLyvjLqUwAZn6HmW3s';
@@ -10,22 +7,16 @@ class GoogleSheetsIntegration {
     this.initialized = false;
   }
 
-  // Get API key from environment or configuration
   getApiKey() {
-    // In production, this should be loaded from a secure configuration
-    // For now, we'll use a placeholder that needs to be configured
     if (typeof process !== 'undefined' && process.env) {
       return process.env.GOOGLE_SHEETS_API_KEY || 'YOUR_GOOGLE_SHEETS_API_KEY';
     }
-    // Browser fallback - API key should be configured here or loaded from a config service
     return window.GOOGLE_SHEETS_API_KEY || 'YOUR_GOOGLE_SHEETS_API_KEY';
   }
 
-  // Initialize Google Sheets API
   async initialize() {
     try {
       if (typeof gapi === 'undefined') {
-        console.warn('Google API library not loaded');
         return false;
       }
 
@@ -36,25 +27,25 @@ class GoogleSheetsIntegration {
         });
         
         this.initialized = true;
-        console.log('Google Sheets API initialized successfully');
       });
       
       return true;
     } catch (error) {
-      console.error('Error initializing Google Sheets API:', error);
       return false;
     }
   }
 
-  // Check if API is available and initialized
   isAvailable() {
     return this.initialized && typeof gapi !== 'undefined' && gapi.client;
   }
 
-  // Append order data to Google Sheets
   async appendOrderData(orderData) {
     if (!this.isAvailable()) {
-      throw new Error('Google Sheets API not available');
+      throw new Error('Google Sheets API not available. Please check your API configuration.');
+    }
+
+    if (this.getApiKey() === 'YOUR_GOOGLE_SHEETS_API_KEY') {
+      throw new Error('Google Sheets API key not configured. Please set GOOGLE_SHEETS_API_KEY environment variable or window.GOOGLE_SHEETS_API_KEY.');
     }
 
     try {
@@ -62,60 +53,56 @@ class GoogleSheetsIntegration {
       
       const response = await gapi.client.sheets.spreadsheets.values.append({
         spreadsheetId: this.SHEET_ID,
-        range: 'Orders!A:N', // Adjust range based on your sheet structure
+        range: 'Orders!A:N',
         valueInputOption: 'RAW',
         resource: {
           values: [values]
         }
       });
 
-      console.log('Order data appended to Google Sheets:', response);
       return response;
     } catch (error) {
-      console.error('Error appending to Google Sheets:', error);
-      throw error;
+      if (error.status === 403) {
+        throw new Error('Google Sheets API access denied. Please check your API key and permissions.');
+      } else if (error.status === 404) {
+        throw new Error('Google Sheets spreadsheet not found. Please check your SHEET_ID.');
+      } else if (error.status === 400) {
+        throw new Error('Invalid request to Google Sheets API. Please check your data format.');
+      }
+      
+      throw new Error(`Failed to sync products: ${error.message || error}`);
     }
   }
 
-  // Format order data for Google Sheets
   formatOrderForSheet(orderData) {
     const now = new Date();
     return [
       orderData.orderNumber || orderData.id,
-      now.toISOString().split('T')[0], // Date
-      now.toTimeString().split(' ')[0], // Time
+      now.toISOString().split('T')[0],
+      now.toTimeString().split(' ')[0],
       orderData.clientName || '',
-      orderData.clientContact || '',
-      orderData.salesman || '',
-      orderData.items ? orderData.items.length : 0,
-      orderData.items ? this.formatItemsForSheet(orderData.items) : '',
-      orderData.subtotal || 0,
-      orderData.discount ? orderData.discount.value || 0 : 0,
-      orderData.tax ? orderData.tax.rate || 0 : 0,
-      orderData.shipping ? orderData.shipping.cost || 0 : 0,
-      orderData.total || 0,
-      orderData.currency || 'INR',
-      orderData.status || 'pending',
+      orderData.clientCode || '',
+      orderData.salesmanName || '',
+      orderData.totalAmount || 0,
+      orderData.status || 'Pending',
+      this.formatItemsForSheet(orderData.items || []),
       orderData.notes || '',
-      orderData.originalQuoteId || '',
-      orderData.deviceId || ''
+      orderData.deliveryDate || '',
+      orderData.paymentTerms || '',
+      orderData.discount || 0,
+      orderData.tax || 0
     ];
   }
 
-  // Format items for sheet display
   formatItemsForSheet(items) {
-    return items.map(item => {
-      const product = item.product || item.name || 'Unknown';
-      const quantity = item.quantity || 1;
-      const price = item.price || 0;
-      return `${product} (Qty: ${quantity}, Price: ${price})`;
-    }).join('; ');
+    return items.map(item => 
+      `${item.productCode || ''} - ${item.description || ''} (Qty: ${item.quantity || 0})`
+    ).join('; ');
   }
 
-  // Create sheet headers if needed
   async createHeaders() {
     if (!this.isAvailable()) {
-      throw new Error('Google Sheets API not available');
+      return false;
     }
 
     try {
@@ -124,64 +111,48 @@ class GoogleSheetsIntegration {
         'Date',
         'Time',
         'Client Name',
-        'Client Contact',
+        'Client Code',
         'Salesman',
-        'Item Count',
-        'Items',
-        'Subtotal',
-        'Discount',
-        'Tax Rate',
-        'Shipping',
-        'Total',
-        'Currency',
+        'Total Amount',
         'Status',
+        'Items',
         'Notes',
-        'Original Quote ID',
-        'Device ID'
+        'Delivery Date',
+        'Payment Terms',
+        'Discount',
+        'Tax'
       ];
 
-      const response = await gapi.client.sheets.spreadsheets.values.update({
+      await gapi.client.sheets.spreadsheets.values.update({
         spreadsheetId: this.SHEET_ID,
-        range: 'Orders!A1:R1',
+        range: 'Orders!A1:N1',
         valueInputOption: 'RAW',
         resource: {
           values: [headers]
         }
       });
 
-      console.log('Headers created in Google Sheets:', response);
-      return response;
+      return true;
     } catch (error) {
-      console.error('Error creating headers:', error);
-      throw error;
+      return false;
     }
   }
 
-  // Validate sheet access
   async validateSheetAccess() {
     if (!this.isAvailable()) {
-      return { valid: false, error: 'API not available' };
+      return false;
     }
 
     try {
-      const response = await gapi.client.sheets.spreadsheets.get({
+      await gapi.client.sheets.spreadsheets.get({
         spreadsheetId: this.SHEET_ID
       });
-
-      return {
-        valid: true,
-        sheetTitle: response.result.properties.title,
-        sheets: response.result.sheets.map(sheet => sheet.properties.title)
-      };
+      return true;
     } catch (error) {
-      return {
-        valid: false,
-        error: error.message
-      };
+      return false;
     }
   }
 
-  // Batch update multiple orders
   async batchUpdateOrders(orders) {
     if (!this.isAvailable()) {
       throw new Error('Google Sheets API not available');
@@ -190,73 +161,203 @@ class GoogleSheetsIntegration {
     try {
       const values = orders.map(order => this.formatOrderForSheet(order));
       
-      const response = await gapi.client.sheets.spreadsheets.values.append({
+      await gapi.client.sheets.spreadsheets.values.append({
         spreadsheetId: this.SHEET_ID,
-        range: 'Orders!A:R',
+        range: 'Orders!A:N',
         valueInputOption: 'RAW',
         resource: {
           values: values
         }
       });
 
-      console.log(`Batch updated ${orders.length} orders to Google Sheets`);
-      return response;
+      return true;
     } catch (error) {
-      console.error('Error batch updating orders:', error);
       throw error;
     }
   }
 
-  // Sync pending orders from Firebase to Google Sheets
   async syncPendingOrders() {
     try {
-      if (!window.firebaseDB || !window.firebaseDB.isAvailable()) {
-        throw new Error('Firebase not available');
+      if (!this.isAvailable()) {
+        return { success: false, error: 'Google Sheets API not available' };
       }
 
-      // Get orders that haven't been synced to Google Sheets
-      const pendingOrders = await window.firebaseDB.getAllData('orders', {
-        googleSheetSynced: false
+      const pendingOrders = JSON.parse(localStorage.getItem('pendingGoogleSheetsOrders') || '[]');
+      
+      if (pendingOrders.length === 0) {
+        return { success: true, synced: 0 };
+      }
+
+      await this.batchUpdateOrders(pendingOrders);
+      
+      localStorage.removeItem('pendingGoogleSheetsOrders');
+      
+      return { success: true, synced: pendingOrders.length };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  }
+
+  async appendClientData(clientData) {
+    if (!this.isAvailable()) {
+      throw new Error('Google Sheets API not available. Please check your API configuration.');
+    }
+
+    if (this.getApiKey() === 'YOUR_GOOGLE_SHEETS_API_KEY') {
+      throw new Error('Google Sheets API key not configured.');
+    }
+
+    try {
+      const values = this.formatClientForSheet(clientData);
+      
+      const response = await gapi.client.sheets.spreadsheets.values.append({
+        spreadsheetId: this.SHEET_ID,
+        range: 'Clients!A:M',
+        valueInputOption: 'RAW',
+        resource: {
+          values: [values]
+        }
       });
 
-      if (pendingOrders.length === 0) {
-        console.log('No pending orders to sync');
-        return { synced: 0, failed: 0 };
-      }
-
-      let synced = 0;
-      let failed = 0;
-
-      for (const order of pendingOrders) {
-        try {
-          await this.appendOrderData(order);
-          
-          // Mark as synced in Firebase
-          await window.firebaseDB.updateAllData('orders', order.id, {
-            googleSheetSynced: true,
-            googleSheetSyncedAt: new Date().toISOString()
-          });
-          
-          synced++;
-        } catch (error) {
-          console.error('Failed to sync order:', order.id, error);
-          failed++;
-        }
-      }
-
-      console.log(`Sync completed: ${synced} synced, ${failed} failed`);
-      return { synced, failed };
+      return response;
     } catch (error) {
-      console.error('Error syncing pending orders:', error);
+      if (error.status === 403) {
+        throw new Error('Google Sheets API access denied. Please check your API key and permissions.');
+      } else if (error.status === 404) {
+        throw new Error('Google Sheets spreadsheet not found. Please check your SHEET_ID.');
+      }
+      
+      throw new Error(`Failed to sync client: ${error.message || error}`);
+    }
+  }
+
+  formatClientForSheet(clientData) {
+    const now = new Date();
+    return [
+      clientData.clientCode || '',
+      clientData.companyName || '',
+      clientData.contactPerson || '',
+      clientData.phone || '',
+      clientData.email || '',
+      this.formatAddressForSheet(clientData.address || {}),
+      clientData.gstNumber || '',
+      clientData.panNumber || '',
+      clientData.creditLimit || 0,
+      clientData.paymentTerms || '',
+      clientData.salesmanCode || '',
+      now.toISOString().split('T')[0],
+      clientData.status || 'Active'
+    ];
+  }
+
+  formatAddressForSheet(address) {
+    const parts = [
+      address.street || '',
+      address.city || '',
+      address.state || '',
+      address.pincode || '',
+      address.country || ''
+    ].filter(part => part.trim() !== '');
+    
+    return parts.join(', ');
+  }
+
+  async batchUpdateClients(clients) {
+    if (!this.isAvailable()) {
+      throw new Error('Google Sheets API not available');
+    }
+
+    try {
+      const values = clients.map(client => this.formatClientForSheet(client));
+      
+      await gapi.client.sheets.spreadsheets.values.append({
+        spreadsheetId: this.SHEET_ID,
+        range: 'Clients!A:M',
+        valueInputOption: 'RAW',
+        resource: {
+          values: values
+        }
+      });
+
+      return true;
+    } catch (error) {
       throw error;
+    }
+  }
+
+  async createClientHeaders() {
+    if (!this.isAvailable()) {
+      return false;
+    }
+
+    try {
+      const headers = [
+        'Client Code',
+        'Company Name',
+        'Contact Person',
+        'Phone',
+        'Email',
+        'Address',
+        'GST Number',
+        'PAN Number',
+        'Credit Limit',
+        'Payment Terms',
+        'Salesman Code',
+        'Created Date',
+        'Status'
+      ];
+
+      await gapi.client.sheets.spreadsheets.values.update({
+        spreadsheetId: this.SHEET_ID,
+        range: 'Clients!A1:M1',
+        valueInputOption: 'RAW',
+        resource: {
+          values: [headers]
+        }
+      });
+
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  async syncClientsToGoogleSheets(clients) {
+    try {
+      if (!this.isAvailable()) {
+        return { success: false, error: 'Google Sheets API not available' };
+      }
+
+      if (!Array.isArray(clients) || clients.length === 0) {
+        return { success: true, synced: 0 };
+      }
+
+      await this.batchUpdateClients(clients);
+      
+      return { success: true, synced: clients.length };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  }
+
+  async syncSingleClientToGoogleSheets(clientData) {
+    try {
+      if (!this.isAvailable()) {
+        return { success: false, error: 'Google Sheets API not available' };
+      }
+
+      await this.appendClientData(clientData);
+      
+      return { success: true, synced: 1 };
+    } catch (error) {
+      return { success: false, error: error.message };
     }
   }
 }
 
-// Alternative implementation using fetch API (for when gapi is not available)
 class GoogleSheetsFetchAPI {
   constructor() {
-    this.SHEET_ID = '199EnMjmbc6idiOLnaEs8diG8h9vNHhkSH3xK4cyPrsU';
+    this.SHEET_ID = '1hlfrnZnNQ0u8idg5KDmkSY4zFhLyvjLqUwAZn6HmW3s';
     this.API_KEY = this.getApiKey();
   }
 
@@ -268,11 +369,15 @@ class GoogleSheetsFetchAPI {
   }
 
   async appendOrderData(orderData) {
+    if (this.getApiKey() === 'YOUR_GOOGLE_SHEETS_API_KEY') {
+      throw new Error('Google Sheets API key not configured.');
+    }
+
     try {
       const values = this.formatOrderForSheet(orderData);
       
       const response = await fetch(
-        `https://sheets.googleapis.com/v4/spreadsheets/${this.SHEET_ID}/values/Orders:append?valueInputOption=RAW&key=${this.API_KEY}`,
+        `https://sheets.googleapis.com/v4/spreadsheets/${this.SHEET_ID}/values/Orders!A:N:append?valueInputOption=RAW&key=${this.API_KEY}`,
         {
           method: 'POST',
           headers: {
@@ -289,53 +394,201 @@ class GoogleSheetsFetchAPI {
       }
 
       const result = await response.json();
-      console.log('Order appended via fetch API:', result);
       return result;
     } catch (error) {
-      console.error('Error appending via fetch API:', error);
-      throw error;
+      throw new Error(`Failed to append order data: ${error.message}`);
     }
   }
 
   formatOrderForSheet(orderData) {
-    // Same formatting as the main class
     const now = new Date();
     return [
       orderData.orderNumber || orderData.id,
       now.toISOString().split('T')[0],
       now.toTimeString().split(' ')[0],
       orderData.clientName || '',
-      orderData.clientContact || '',
-      orderData.salesman || '',
-      orderData.items ? orderData.items.length : 0,
-      orderData.items ? orderData.items.map(item => `${item.product} (${item.quantity})`).join('; ') : '',
-      orderData.subtotal || 0,
-      orderData.discount ? orderData.discount.value || 0 : 0,
-      orderData.tax ? orderData.tax.rate || 0 : 0,
-      orderData.shipping ? orderData.shipping.cost || 0 : 0,
-      orderData.total || 0,
-      orderData.currency || 'INR',
-      orderData.status || 'pending',
-      orderData.notes || ''
+      orderData.clientCode || '',
+      orderData.salesmanName || '',
+      orderData.totalAmount || 0,
+      orderData.status || 'Pending',
+      this.formatItemsForSheet(orderData.items || []),
+      orderData.notes || '',
+      orderData.deliveryDate || '',
+      orderData.paymentTerms || '',
+      orderData.discount || 0,
+      orderData.tax || 0
     ];
+  }
+
+  async appendClientData(clientData) {
+    if (this.getApiKey() === 'YOUR_GOOGLE_SHEETS_API_KEY') {
+      throw new Error('Google Sheets API key not configured.');
+    }
+
+    try {
+      const values = this.formatClientForSheet(clientData);
+      
+      const response = await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${this.SHEET_ID}/values/Clients!A:M:append?valueInputOption=RAW&key=${this.API_KEY}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            values: [values]
+          })
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      return result;
+    } catch (error) {
+      throw new Error(`Failed to append client data: ${error.message}`);
+    }
+  }
+
+  formatClientForSheet(clientData) {
+    const now = new Date();
+    return [
+      clientData.clientCode || '',
+      clientData.companyName || '',
+      clientData.contactPerson || '',
+      clientData.phone || '',
+      clientData.email || '',
+      this.formatAddressForSheet(clientData.address || {}),
+      clientData.gstNumber || '',
+      clientData.panNumber || '',
+      clientData.creditLimit || 0,
+      clientData.paymentTerms || '',
+      clientData.salesmanCode || '',
+      now.toISOString().split('T')[0],
+      clientData.status || 'Active'
+    ];
+  }
+
+  formatAddressForSheet(address) {
+    const parts = [
+      address.street || '',
+      address.city || '',
+      address.state || '',
+      address.pincode || '',
+      address.country || ''
+    ].filter(part => part.trim() !== '');
+    
+    return parts.join(', ');
+  }
+
+  async batchUpdateClients(clients) {
+    if (this.getApiKey() === 'YOUR_GOOGLE_SHEETS_API_KEY') {
+      throw new Error('Google Sheets API key not configured.');
+    }
+
+    try {
+      const values = clients.map(client => this.formatClientForSheet(client));
+      
+      const response = await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${this.SHEET_ID}/values/Clients!A:M:append?valueInputOption=RAW&key=${this.API_KEY}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            values: values
+          })
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return true;
+    } catch (error) {
+      throw new Error(`Failed to batch update clients: ${error.message}`);
+    }
+  }
+
+  async createClientHeaders() {
+    if (this.getApiKey() === 'YOUR_GOOGLE_SHEETS_API_KEY') {
+      return false;
+    }
+
+    try {
+      const headers = [
+        'Client Code',
+        'Company Name',
+        'Contact Person',
+        'Phone',
+        'Email',
+        'Address',
+        'GST Number',
+        'PAN Number',
+        'Credit Limit',
+        'Payment Terms',
+        'Salesman Code',
+        'Created Date',
+        'Status'
+      ];
+
+      const response = await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${this.SHEET_ID}/values/Clients!A1:M1?valueInputOption=RAW&key=${this.API_KEY}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            values: [headers]
+          })
+        }
+      );
+
+      return response.ok;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  async syncClientsToGoogleSheets(clients) {
+    try {
+      if (!Array.isArray(clients) || clients.length === 0) {
+        return { success: true, synced: 0 };
+      }
+
+      await this.batchUpdateClients(clients);
+      
+      return { success: true, synced: clients.length };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  }
+
+  async syncSingleClientToGoogleSheets(clientData) {
+    try {
+      await this.appendClientData(clientData);
+      
+      return { success: true, synced: 1 };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
   }
 }
 
-// Initialize Google Sheets integration
 window.googleSheets = new GoogleSheetsIntegration();
 window.googleSheetsFetch = new GoogleSheetsFetchAPI();
 
-// Auto-initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', async () => {
-  try {
+  if (window.googleSheets) {
     await window.googleSheets.initialize();
-    console.log('Google Sheets integration ready');
-  } catch (error) {
-    console.warn('Google Sheets integration failed to initialize:', error);
   }
 });
 
-// Export for module systems
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = { GoogleSheetsIntegration, GoogleSheetsFetchAPI };
 }

@@ -228,7 +228,7 @@ npm run deploy
 ```
 
 **Automatic Steps**:
-1. ✅ Excel data validation and embedding
+1. ✅ Firebase data synchronization
 2. ✅ Client management system inclusion
 3. ✅ Git commit and push
 4. ✅ Firebase hosting deployment

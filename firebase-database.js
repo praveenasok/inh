@@ -1,6 +1,3 @@
-// Firebase Database Service
-// Handles all database operations for the Indian Natural Hair application
-
 class FirebaseDatabase {
   constructor() {
     this.db = null;
@@ -8,45 +5,60 @@ class FirebaseDatabase {
     this.initialized = false;
   }
 
-  // Initialize Firebase services
   async initialize() {
     try {
-      // Check if Firebase is available
       if (typeof firebase === 'undefined') {
         throw new Error('Firebase SDK not loaded');
       }
 
-      // Initialize Firestore
       this.db = firebase.firestore();
       
-      // Initialize Storage (optional - continue if it fails)
+      try {
+        this.db.settings({
+          cacheSizeBytes: 40000000,
+          ignoreUndefinedProperties: true,
+          experimentalForceLongPolling: false,
+          merge: true
+        });
+      } catch (settingsError) {
+      }
+
+      try {
+        await this.db.disableNetwork();
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        await this.db.enableNetwork();
+      } catch (networkError) {
+      }
+      
       try {
         this.storage = firebase.storage();
-        console.log('Firebase Storage initialized successfully');
       } catch (storageError) {
-        console.warn('Firebase Storage initialization failed, continuing without storage:', storageError.message);
         this.storage = null;
       }
       
-      // Enable offline persistence - temporarily disabled to fix connection issues
-      // await this.db.enablePersistence({ synchronizeTabs: true });
+      try {
+        await this.db.collection('test').limit(1).get();
+      } catch (testError) {
+      }
       
       this.initialized = true;
-      console.log('Firebase Database initialized successfully');
       
     } catch (error) {
-      console.error('Firebase initialization error:', error);
-      // Fallback to localStorage if Firebase fails
       this.initialized = false;
     }
   }
 
-  // Check if Firebase is available
   isAvailable() {
     return this.initialized && this.db !== null;
   }
 
-  // Client Management Operations
+  getCurrentUser() {
+    if (window.globalFirebase && window.globalFirebase.getCurrentUser) {
+      return window.globalFirebase.getCurrentUser();
+    }
+    return null;
+  }
+
   async saveClient(clientData) {
     if (!this.isAvailable()) {
       throw new Error('Firebase not available');
@@ -59,11 +71,9 @@ class FirebaseDatabase {
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       });
       
-      console.log('Client saved with ID:', docRef.id);
       return { id: docRef.id, ...clientData };
       
     } catch (error) {
-      console.error('Error saving client:', error);
       throw error;
     }
   }
@@ -76,7 +86,6 @@ class FirebaseDatabase {
     try {
       let query = this.db.collection('clients');
       
-      // Apply filters
       if (filters.salesperson) {
         query = query.where('salesperson', '==', filters.salesperson);
       }
@@ -86,7 +95,6 @@ class FirebaseDatabase {
                     .where('createdAt', '<=', filters.endDate);
       }
       
-      // Order by creation date
       query = query.orderBy('createdAt', 'desc');
       
       const snapshot = await query.get();
@@ -99,7 +107,6 @@ class FirebaseDatabase {
       return clients;
       
     } catch (error) {
-      console.error('Error getting clients:', error);
       throw error;
     }
   }
@@ -115,11 +122,9 @@ class FirebaseDatabase {
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       });
       
-      console.log('Client updated:', clientId);
       return { id: clientId, ...clientData };
       
     } catch (error) {
-      console.error('Error updating client:', error);
       throw error;
     }
   }
@@ -131,10 +136,8 @@ class FirebaseDatabase {
 
     try {
       await this.db.collection('clients').doc(clientId).delete();
-      console.log('Client deleted:', clientId);
       
     } catch (error) {
-      console.error('Error deleting client:', error);
       throw error;
     }
   }
@@ -189,229 +192,131 @@ class FirebaseDatabase {
   }
 
   async saveProducts(products) {
-    if (!this.isAvailable()) {
-      throw new Error('Firebase not available');
+    if (!this.db) {
+        throw new Error('Firebase not initialized');
     }
 
     try {
-      const batch = this.db.batch();
-      
-      products.forEach(product => {
-        const docRef = this.db.collection('products').doc();
-        const transformedProduct = this.transformProductData(product);
-        batch.set(docRef, {
-          ...transformedProduct,
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        const transformedProducts = products.map(product => this.transformProductData(product));
+        
+        const batch = writeBatch(this.db);
+        transformedProducts.forEach((product, index) => {
+            const docRef = doc(this.db, 'products', `product_${index}`);
+            batch.set(docRef, product);
         });
-      });
-      
-      await batch.commit();
-      console.log('Products saved successfully with 10-column structure');
-      
+        
+        await batch.commit();
+        return true;
     } catch (error) {
-      console.error('Error saving products:', error);
-      throw error;
+        throw error;
     }
   }
 
   async getProducts(filters = {}) {
-    if (!this.isAvailable()) {
-      throw new Error('Firebase not available');
+    if (!this.db) {
+        return [];
     }
 
     try {
-      let query = this.db.collection('products');
-      
-      // Apply filters
-      if (filters.category) {
-        query = query.where('Category', '==', filters.category);
-      }
-      
-      if (filters.priceList) {
-        query = query.where('PriceListName', '==', filters.priceList);
-      }
-      
-      const snapshot = await query.get();
-      const products = [];
-      
-      snapshot.forEach(doc => {
-        products.push({ id: doc.id, ...doc.data() });
-      });
-      
-      return products;
-      
+        const querySnapshot = await getDocs(collection(this.db, 'products'));
+        const products = [];
+        querySnapshot.forEach((doc) => {
+            products.push({ id: doc.id, ...doc.data() });
+        });
+        return products;
     } catch (error) {
-      console.error('Error getting products:', error);
-      throw error;
+        throw error;
     }
   }
 
   // Colors Management Operations
   async getColors(filters = {}) {
-    if (!this.isAvailable()) {
-      throw new Error('Firebase not available');
+    if (!this.db) {
+        return [];
     }
 
     try {
-      let query = this.db.collection('colors');
-      
-      // Apply filters if needed
-      if (filters.category) {
-        query = query.where('Category', '==', filters.category);
-      }
-      
-      if (filters.product) {
-        query = query.where('Product', '==', filters.product);
-      }
-      
-      const snapshot = await query.get();
-      const colors = [];
-      
-      snapshot.forEach(doc => {
-        colors.push({ id: doc.id, ...doc.data() });
-      });
-      
-      return colors;
-      
+        const querySnapshot = await getDocs(collection(this.db, 'colors'));
+        const colors = [];
+        querySnapshot.forEach((doc) => {
+            colors.push({ id: doc.id, ...doc.data() });
+        });
+        return colors;
     } catch (error) {
-      console.error('Error getting colors:', error);
-      throw error;
+        throw error;
     }
   }
 
   async getStyles(filters = {}) {
-    if (!this.isAvailable()) {
-      throw new Error('Firebase not available');
+    if (!this.db) {
+        return [];
     }
 
     try {
-      let query = this.db.collection('styles');
-      
-      // Apply filters if needed
-      if (filters.category) {
-        query = query.where('Category', '==', filters.category);
-      }
-      
-      if (filters.product) {
-        query = query.where('Product', '==', filters.product);
-      }
-      
-      const snapshot = await query.get();
-      const styles = [];
-      
-      snapshot.forEach(doc => {
-        styles.push({ id: doc.id, ...doc.data() });
-      });
-      
-      return styles;
-      
+        const querySnapshot = await getDocs(collection(this.db, 'styles'));
+        const styles = [];
+        querySnapshot.forEach((doc) => {
+            styles.push({ id: doc.id, ...doc.data() });
+        });
+        return styles;
     } catch (error) {
-      console.error('Error getting styles:', error);
-      throw error;
+        throw error;
     }
   }
 
   // Quote Management Operations
   async saveQuote(quoteData) {
-    if (!this.isAvailable()) {
-      throw new Error('Firebase not available');
+    if (!this.db) {
+        throw new Error('Firebase not initialized');
     }
 
     try {
-      const docRef = await this.db.collection('quotes').add({
-        ...quoteData,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-        status: quoteData.status || 'draft'
-      });
-      
-      console.log('Quote saved with ID:', docRef.id);
-      return { id: docRef.id, ...quoteData };
-      
+        const docRef = await addDoc(collection(this.db, 'quotes'), quoteData);
+        return docRef.id;
     } catch (error) {
-      console.error('Error saving quote:', error);
-      throw error;
+        throw error;
     }
   }
 
   // Order Management Operations
   async saveOrder(orderData) {
-    if (!this.isAvailable()) {
-      throw new Error('Firebase not available');
+    if (!this.db) {
+        throw new Error('Firebase not initialized');
     }
 
     try {
-      const docRef = await this.db.collection('orders').add({
-        ...orderData,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-        status: orderData.status || 'pending',
-        googleSheetSynced: false
-      });
-      
-      console.log('Order saved with ID:', docRef.id);
-      
-      // Sync to Google Sheets
-      try {
-        await this.syncOrderToGoogleSheets({ id: docRef.id, ...orderData });
-        await this.db.collection('orders').doc(docRef.id).update({
-          googleSheetSynced: true,
-          googleSheetSyncedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-      } catch (sheetError) {
-        console.warn('Google Sheets sync failed:', sheetError);
-        // Order is still saved to Firebase even if Google Sheets sync fails
-      }
-      
-      return { id: docRef.id, ...orderData };
-      
+        const docRef = await addDoc(collection(this.db, 'orders'), orderData);
+        
+        if (window.googleSheetsIntegration && window.googleSheetsIntegration.isConfigured()) {
+            try {
+                await window.googleSheetsIntegration.appendOrderData(orderData);
+            } catch (sheetError) {
+            }
+        }
+        
+        return docRef.id;
     } catch (error) {
-      console.error('Error saving order:', error);
-      throw error;
+        throw error;
     }
   }
 
   // Convert Quote to Order
-  async convertQuoteToOrder(quoteId, additionalOrderData = {}) {
-    if (!this.isAvailable()) {
-      throw new Error('Firebase not available');
+  async convertQuoteToOrder(quoteId, orderData) {
+    if (!this.db) {
+        throw new Error('Firebase not initialized');
     }
 
     try {
-      // Get the quote data
-      const quoteDoc = await this.db.collection('quotes').doc(quoteId).get();
-      if (!quoteDoc.exists) {
-        throw new Error('Quote not found');
-      }
-
-      const quoteData = quoteDoc.data();
-      
-      // Create order data from quote
-      const orderData = {
-        ...quoteData,
-        ...additionalOrderData,
-        originalQuoteId: quoteId,
-        orderNumber: additionalOrderData.orderNumber || this.generateOrderNumber(), // Use provided orderNumber or generate new one
-        status: 'pending',
-        orderType: 'converted_from_quote'
-      };
-
-      // Remove quote-specific fields
-      delete orderData.quoteId;
-      delete orderData.quoteNumber;
-      
-      // Save the order
-      const savedOrder = await this.saveOrder(orderData);
-      
-      // Delete the quote from database after successful conversion
-      await this.db.collection('quotes').doc(quoteId).delete();
-      console.log('Quote deleted from database after conversion to order:', quoteId);
-      
-      return savedOrder;
-      
+        const orderId = await this.saveOrder(orderData);
+        
+        try {
+            await deleteDoc(doc(this.db, 'quotes', quoteId));
+        } catch (deleteError) {
+        }
+        
+        return orderId;
     } catch (error) {
-      console.error('Error converting quote to order:', error);
-      throw error;
+        throw error;
     }
   }
 
@@ -429,21 +334,16 @@ class FirebaseDatabase {
   // Google Sheets Integration
   async syncOrderToGoogleSheets(orderData) {
     try {
-      // Use the Google Sheets integration class if available
       if (window.googleSheetsFetch) {
         const result = await window.googleSheetsFetch.appendOrderData(orderData);
-        console.log('Order synced to Google Sheets via fetch API');
         return result;
       } else if (window.googleSheets && window.googleSheets.isAvailable()) {
         const result = await window.googleSheets.appendOrderData(orderData);
-        console.log('Order synced to Google Sheets via gapi');
         return result;
       } else {
-        // Fallback to direct fetch implementation
         return await this.fallbackGoogleSheetsSync(orderData);
       }
     } catch (error) {
-      console.error('Error syncing to Google Sheets:', error);
       throw error;
     }
   }
@@ -456,7 +356,6 @@ class FirebaseDatabase {
                     window.GOOGLE_SHEETS_API_KEY || 'YOUR_GOOGLE_SHEETS_API_KEY';
     
     if (API_KEY === 'YOUR_GOOGLE_SHEETS_API_KEY') {
-      console.warn('Google Sheets API key not configured');
       throw new Error('Google Sheets API key not configured');
     }
     
@@ -481,11 +380,9 @@ class FirebaseDatabase {
         throw new Error(`Google Sheets API error: ${response.status} - ${errorText}`);
       }
       
-      console.log('Order synced to Google Sheets successfully (fallback)');
       return await response.json();
       
     } catch (error) {
-      console.error('Error in fallback Google Sheets sync:', error);
       throw error;
     }
   }
@@ -508,6 +405,174 @@ class FirebaseDatabase {
       orderData.currency || 'INR',
       orderData.status || 'pending',
       orderData.notes || ''
+    ];
+  }
+
+  // Client Google Sheets Integration
+  async syncClientToGoogleSheets(clientData) {
+    try {
+      // Use the Google Sheets integration class if available
+      if (window.googleSheetsFetch) {
+        const result = await window.googleSheetsFetch.appendClientData(clientData);
+        return result;
+      } else if (window.googleSheets && window.googleSheets.isAvailable()) {
+        const result = await window.googleSheets.appendClientData(clientData);
+        return result;
+      } else {
+        return await this.fallbackClientGoogleSheetsSync(clientData);
+      }
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Sync all clients to Google Sheets
+  async syncAllClientsToGoogleSheets() {
+    try {
+      const clients = await this.getClients();
+      
+      if (window.googleSheetsFetch) {
+        const result = await window.googleSheetsFetch.syncClientsToGoogleSheets(clients);
+        return result;
+      } else if (window.googleSheets && window.googleSheets.isAvailable()) {
+        const result = await window.googleSheets.syncClientsToGoogleSheets(clients);
+        return result;
+      } else {
+        return await this.fallbackAllClientsGoogleSheetsSync(clients);
+      }
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Fallback client Google Sheets sync implementation
+  async fallbackClientGoogleSheetsSync(clientData) {
+    const GOOGLE_SHEET_ID = '199EnMjmbc6idiOLnaEs8diG8h9vNHhkSH3xK4cyPrsU';
+    const API_KEY = (typeof process !== 'undefined' && process.env) ? 
+                    process.env.GOOGLE_SHEETS_API_KEY || 'YOUR_GOOGLE_SHEETS_API_KEY' :
+                    window.GOOGLE_SHEETS_API_KEY || 'YOUR_GOOGLE_SHEETS_API_KEY';
+    
+    if (API_KEY === 'YOUR_GOOGLE_SHEETS_API_KEY') {
+      throw new Error('Google Sheets API key not configured');
+    }
+    
+    try {
+      const sheetData = this.formatClientForGoogleSheets(clientData);
+      
+      const response = await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SHEET_ID}/values/clients:append?valueInputOption=RAW&key=${API_KEY}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            values: [sheetData]
+          })
+        }
+      );
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Google Sheets API error: ${response.status} - ${errorText}`);
+      }
+      
+      return await response.json();
+      
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Fallback all clients Google Sheets sync implementation
+  async fallbackAllClientsGoogleSheetsSync(clients) {
+    const GOOGLE_SHEET_ID = '199EnMjmbc6idiOLnaEs8diG8h9vNHhkSH3xK4cyPrsU';
+    const API_KEY = (typeof process !== 'undefined' && process.env) ? 
+                    process.env.GOOGLE_SHEETS_API_KEY || 'YOUR_GOOGLE_SHEETS_API_KEY' :
+                    window.GOOGLE_SHEETS_API_KEY || 'YOUR_GOOGLE_SHEETS_API_KEY';
+    
+    if (API_KEY === 'YOUR_GOOGLE_SHEETS_API_KEY') {
+      throw new Error('Google Sheets API key not configured');
+    }
+    
+    try {
+      // First, create headers if they don't exist
+      await this.createClientHeaders();
+      
+      // Format all client data
+      const sheetData = clients.map(client => this.formatClientForGoogleSheets(client));
+      
+      // Clear existing data and update with new data
+      const response = await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SHEET_ID}/values/clients!A2:L?valueInputOption=RAW&key=${API_KEY}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            values: sheetData
+          })
+        }
+      );
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Google Sheets API error: ${response.status} - ${errorText}`);
+      }
+      
+      return await response.json();
+      
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Create client headers in Google Sheets
+  async createClientHeaders() {
+    try {
+      const headers = [
+        'Client ID', 'Client Name', 'Company', 'Contact Person', 'Phone', 'Email', 
+        'Address', 'City', 'State', 'Postal Code', 'Country', 'GST Number', 
+        'PAN Number', 'Credit Limit', 'Payment Terms', 'Salesman', 'Notes', 
+        'Created Date', 'Updated Date'
+      ];
+
+      const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${window.GOOGLE_SHEETS_CONFIG.spreadsheetId}/values/Clients!A1:S1?valueInputOption=RAW&key=${window.GOOGLE_SHEETS_CONFIG.apiKey}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          values: [headers]
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+      } else {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Format client data for Google Sheets
+  formatClientForGoogleSheets(clientData) {
+    return [
+      clientData.id || '',
+      clientData.clientName || '',
+      clientData.companyName || '',
+      clientData.phone1 || '',
+      clientData.phone2 || '',
+      clientData.email || '',
+      clientData.address?.line1 || '',
+      clientData.address?.line2 || '',
+      clientData.address?.city || '',
+      clientData.address?.state || '',
+      clientData.address?.postalCode || '',
+      clientData.address?.country || ''
     ];
   }
 
@@ -541,7 +606,6 @@ class FirebaseDatabase {
       return quotes;
       
     } catch (error) {
-      console.error('Error getting quotes:', error);
       throw error;
     }
   }
@@ -581,7 +645,6 @@ class FirebaseDatabase {
       return orders;
       
     } catch (error) {
-      console.error('Error getting orders:', error);
       throw error;
     }
   }
@@ -594,11 +657,9 @@ class FirebaseDatabase {
 
     try {
       await this.db.collection('quotes').doc(quoteId).delete();
-      console.log('Quote deleted successfully:', quoteId);
       return true;
       
     } catch (error) {
-      console.error('Error deleting quote:', error);
       throw error;
     }
   }
@@ -615,10 +676,7 @@ class FirebaseDatabase {
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       });
       
-      console.log('Salesmen data saved successfully');
-      
     } catch (error) {
-      console.error('Error saving salesmen:', error);
       throw error;
     }
   }
@@ -638,7 +696,6 @@ class FirebaseDatabase {
       }
       
     } catch (error) {
-      console.error('Error getting salesmen:', error);
       throw error;
     }
   }
@@ -658,11 +715,9 @@ class FirebaseDatabase {
       const snapshot = await storageRef.put(file);
       const downloadURL = await snapshot.ref.getDownloadURL();
       
-      console.log('File uploaded successfully:', downloadURL);
       return downloadURL;
       
     } catch (error) {
-      console.error('Error uploading file:', error);
       throw error;
     }
   }
@@ -683,7 +738,6 @@ class FirebaseDatabase {
       return downloadURL;
       
     } catch (error) {
-      console.error('Error downloading file:', error);
       throw error;
     }
   }
@@ -705,9 +759,6 @@ class FirebaseDatabase {
         sessionId: options.sessionId || this.getSessionId()
       });
       
-      console.log(`${dataType} saved with ID:`, docRef.id);
-      
-      // Trigger real-time sync if enabled
       if (this.isRealTimeSyncActive()) {
         this.notifyDataChange(dataType, 'create', { id: docRef.id, ...data });
       }
@@ -716,11 +767,8 @@ class FirebaseDatabase {
       
     } catch (error) {
       if (error.code === 'permission-denied' || error.message.includes('insufficient permissions')) {
-        console.warn(`Firebase permission denied for saving ${dataType}, operation skipped`);
-        // Return a mock response to prevent breaking the application flow
         return { id: 'local_' + Date.now(), ...data, source: 'local' };
       }
-      console.error(`Error saving ${dataType}:`, error);
       throw error;
     }
   }
@@ -751,15 +799,12 @@ class FirebaseDatabase {
         data.push({ id: doc.id, ...doc.data() });
       });
       
-      console.log(`Retrieved ${data.length} ${dataType} records`);
       return data;
       
     } catch (error) {
       if (error.code === 'permission-denied' || error.message.includes('insufficient permissions')) {
-        console.warn(`Firebase permission denied for getting ${dataType}, returning empty array`);
         return [];
       }
-      console.error(`Error getting ${dataType}:`, error);
       throw error;
     }
   }
@@ -776,9 +821,6 @@ class FirebaseDatabase {
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       });
       
-      console.log(`${dataType} updated:`, id);
-      
-      // Trigger real-time sync if enabled
       if (this.isRealTimeSyncActive()) {
         this.notifyDataChange(dataType, 'update', { id, ...updateData });
       }
@@ -787,10 +829,8 @@ class FirebaseDatabase {
       
     } catch (error) {
       if (error.code === 'permission-denied' || error.message.includes('insufficient permissions')) {
-        console.warn(`Firebase permission denied for updating ${dataType}, operation skipped`);
         return { id, ...updateData, source: 'local' };
       }
-      console.error(`Error updating ${dataType}:`, error);
       throw error;
     }
   }
@@ -804,19 +844,14 @@ class FirebaseDatabase {
       const collection = this.getCollectionName(dataType);
       await this.db.collection(collection).doc(id).delete();
       
-      console.log(`${dataType} deleted:`, id);
-      
-      // Trigger real-time sync if enabled
       if (this.isRealTimeSyncActive()) {
         this.notifyDataChange(dataType, 'delete', { id });
       }
       
     } catch (error) {
       if (error.code === 'permission-denied' || error.message.includes('insufficient permissions')) {
-        console.warn(`Firebase permission denied for deleting ${dataType}, operation skipped`);
         return { success: false, reason: 'permission-denied' };
       }
-      console.error(`Error deleting ${dataType}:`, error);
       throw error;
     }
   }
@@ -910,7 +945,6 @@ class FirebaseDatabase {
       };
       
     } catch (error) {
-      console.error('Error validating data consistency:', error);
       throw error;
     }
   }
@@ -924,9 +958,9 @@ class FirebaseDatabase {
     try {
       const batch = this.db.batch();
       const syncResults = {
-        clients: { success: 0, failed: 0 },
-        quotes: { success: 0, failed: 0 },
-        orders: { success: 0, failed: 0 }
+        clients: { synced: 0, failed: 0 },
+        quotes: { synced: 0, failed: 0 },
+        orders: { synced: 0, failed: 0 }
       };
       
       // Sync clients
@@ -941,7 +975,6 @@ class FirebaseDatabase {
             });
             syncResults.clients.success++;
           } catch (error) {
-            console.error('Error syncing client:', error);
             syncResults.clients.failed++;
           }
         }
@@ -959,19 +992,16 @@ class FirebaseDatabase {
             });
             syncResults.quotes.success++;
           } catch (error) {
-            console.error('Error syncing quote:', error);
             syncResults.quotes.failed++;
           }
         }
       }
       
       await batch.commit();
-      console.log('Local data synced to cloud successfully:', syncResults);
       
       return syncResults;
       
     } catch (error) {
-      console.error('Error syncing local data to cloud:', error);
       throw error;
     }
   }
@@ -993,11 +1023,9 @@ class FirebaseDatabase {
       localStorage.setItem('cloudQuotes', JSON.stringify(quotes));
       localStorage.setItem('cloudSalesmen', JSON.stringify(salesmen));
       
-      console.log('Cloud data synced to local successfully');
       return { clients, quotes, salesmen };
       
     } catch (error) {
-      console.error('Error syncing data from cloud:', error);
       throw error;
     }
   }
@@ -1008,21 +1036,29 @@ class FirebaseDatabase {
       return () => {}; // Return empty unsubscribe function
     }
 
-    return this.db.collection('clients')
-      .orderBy('createdAt', 'desc')
-      .onSnapshot(snapshot => {
-        const clients = [];
-        snapshot.forEach(doc => {
-          clients.push({ id: doc.id, ...doc.data() });
+    try {
+      return this.db.collection('clients')
+        .orderBy('createdAt', 'desc')
+        .onSnapshot(snapshot => {
+          const clients = [];
+          snapshot.forEach(doc => {
+            clients.push({ id: doc.id, ...doc.data() });
+          });
+          callback(clients);
+        }, error => {
+          console.warn('⚠️ Clients real-time listener error:', error.message);
+          if (error.code === 'permission-denied' || error.message.includes('insufficient permissions')) {
+            return;
+          }
+          // For network errors, try to fallback to one-time read
+          if (error.code === 'unavailable' || error.message.includes('network')) {
+            this.getClients().then(clients => callback(clients)).catch(() => {});
+          }
         });
-        callback(clients);
-      }, error => {
-        if (error.code === 'permission-denied' || error.message.includes('insufficient permissions')) {
-          console.warn('Clients listener permission denied, real-time sync disabled for clients');
-          return;
-        }
-        console.error('Error listening to clients:', error);
-      });
+    } catch (error) {
+      console.warn('⚠️ Failed to setup clients listener:', error.message);
+      return () => {};
+    }
   }
 
   onQuotesChange(callback) {
@@ -1030,90 +1066,98 @@ class FirebaseDatabase {
       return () => {}; // Return empty unsubscribe function
     }
 
-    return this.db.collection('quotes')
-      .orderBy('createdAt', 'desc')
-      .onSnapshot(snapshot => {
-        const quotes = [];
-        snapshot.forEach(doc => {
-          quotes.push({ id: doc.id, ...doc.data() });
+    try {
+      return this.db.collection('quotes')
+        .orderBy('createdAt', 'desc')
+        .onSnapshot(snapshot => {
+          const quotes = [];
+          snapshot.forEach(doc => {
+            quotes.push({ id: doc.id, ...doc.data() });
+          });
+          callback(quotes);
+        }, error => {
+          console.warn('⚠️ Quotes real-time listener error:', error.message);
+          if (error.code === 'permission-denied' || error.message.includes('insufficient permissions')) {
+            return;
+          }
+          // For network errors, try to fallback to one-time read
+          if (error.code === 'unavailable' || error.message.includes('network')) {
+            this.getQuotes().then(quotes => callback(quotes)).catch(() => {});
+          }
         });
-        callback(quotes);
-      }, error => {
-        if (error.code === 'permission-denied' || error.message.includes('insufficient permissions')) {
-          console.warn('Quotes listener permission denied, real-time sync disabled for quotes');
-          return;
-        }
-        console.error('Error listening to quotes:', error);
-      });
+    } catch (error) {
+      console.warn('⚠️ Failed to setup quotes listener:', error.message);
+      return () => {};
+    }
   }
   
   // Real-time Products Synchronization
   onProductsChange(callback) {
     if (!this.isAvailable()) {
-      throw new Error('Firebase not available');
+      return () => {}; // Return empty unsubscribe function
     }
 
     try {
-      console.log('🔄 Setting up real-time products listener...');
       return this.db.collection('products')
+        .orderBy('createdAt', 'desc')
         .onSnapshot(snapshot => {
           const products = [];
           snapshot.forEach(doc => {
-            const data = doc.data();
-            // Remove Firebase-specific fields for compatibility
-            const { uploadId, createdAt, updatedAt, ...productData } = data;
-            products.push({
-              id: doc.id,
-              ...productData
+            const productData = doc.data();
+            const transformedProduct = this.transformProductData(productData);
+            products.push({ 
+              id: doc.id, 
+              ...transformedProduct 
             });
           });
-          
-          console.log(`🔄 Products updated: ${products.length} items`);
           callback(products);
         }, error => {
+          console.warn('⚠️ Products real-time listener error:', error.message);
           if (error.code === 'permission-denied' || error.message.includes('insufficient permissions')) {
-            console.warn('❌ Products listener permission denied, real-time sync disabled for products');
             return;
           }
-          console.error('❌ Products listener error:', error);
+          // For network errors, try to fallback to one-time read
+          if (error.code === 'unavailable' || error.message.includes('network')) {
+            this.getProducts().then(products => callback(products)).catch(() => {});
+          }
         });
-      
     } catch (error) {
-      console.error('Error setting up products listener:', error);
-      throw error;
+      console.warn('⚠️ Failed to setup products listener:', error.message);
+      return () => {};
     }
   }
   
   // Real-time Salesmen Synchronization
   onSalesmenChange(callback) {
     if (!this.isAvailable()) {
-      throw new Error('Firebase not available');
+      return () => {}; // Return empty unsubscribe function
     }
 
     try {
-      console.log('🔄 Setting up real-time salesmen listener...');
       return this.db.collection('config').doc('salesmen')
         .onSnapshot(doc => {
           if (doc.exists) {
             const data = doc.data();
             const salesmen = data.list || [];
-            console.log(`🔄 Salesmen updated: ${salesmen.length} items`);
+
             callback(salesmen);
           } else {
-            console.warn('🔄 Salesmen document does not exist');
             callback([]);
           }
         }, error => {
+          console.warn('⚠️ Salesmen real-time listener error:', error.message);
           if (error.code === 'permission-denied' || error.message.includes('insufficient permissions')) {
-            console.warn('❌ Salesmen listener permission denied, real-time sync disabled for salesmen');
             return;
           }
-          console.error('❌ Salesmen listener error:', error);
+          // For network errors, try to fallback to one-time read
+          if (error.code === 'unavailable' || error.message.includes('network')) {
+            this.getSalesmen().then(salesmen => callback(salesmen)).catch(() => {});
+          }
         });
       
     } catch (error) {
-      console.error('Error setting up salesmen listener:', error);
-      throw error;
+      console.warn('⚠️ Failed to setup salesmen listener:', error.message);
+      return () => {};
     }
   }
   
@@ -1176,7 +1220,6 @@ class FirebaseDatabase {
         const colorsSnapshot = await this.db.collection('colors').get();
         stats.colors = colorsSnapshot.size;
       } catch (error) {
-        console.warn('Could not fetch colors collection:', error);
         stats.colors = 0;
       }
 
@@ -1185,7 +1228,6 @@ class FirebaseDatabase {
         const stylesSnapshot = await this.db.collection('styles').get();
         stats.styles = stylesSnapshot.size;
       } catch (error) {
-        console.warn('Could not fetch styles collection:', error);
         stats.styles = 0;
       }
 
@@ -1209,7 +1251,6 @@ class FirebaseDatabase {
           stats.salesmen = (salesmenData.list || []).length;
         }
       } catch (error) {
-        console.warn('Could not fetch salesmen count:', error);
       }
 
       // Set last updated time
@@ -1217,30 +1258,27 @@ class FirebaseDatabase {
         try {
           // Handle Firebase Timestamp objects
           if (lastProductUpdate && typeof lastProductUpdate.toDate === 'function') {
-            stats.lastUpdated = lastProductUpdate.toDate().toLocaleString();
+            stats.lastUpdated = lastProductUpdate.toDate().toLocaleString('en-US');
           } else if (lastProductUpdate && typeof lastProductUpdate.seconds === 'number') {
             // Handle Firestore Timestamp format
-            stats.lastUpdated = new Date(lastProductUpdate.seconds * 1000).toLocaleString();
+            stats.lastUpdated = new Date(lastProductUpdate.seconds * 1000).toLocaleString('en-US');
           } else {
             // Handle regular date strings or numbers
             const date = new Date(lastProductUpdate);
             if (!isNaN(date.getTime())) {
-              stats.lastUpdated = date.toLocaleString();
+              stats.lastUpdated = date.toLocaleString('en-US');
             } else {
               stats.lastUpdated = 'Invalid date format';
             }
           }
         } catch (error) {
-          console.warn('Error formatting last update time:', error);
           stats.lastUpdated = 'Date formatting error';
         }
       }
 
-      console.log('📊 Database stats retrieved:', stats);
       return stats;
       
     } catch (error) {
-      console.error('Error getting database stats:', error);
       throw error;
     }
   }
@@ -1248,11 +1286,8 @@ class FirebaseDatabase {
   // Enable Real-time Synchronization
   enableRealTimeSync() {
     if (!this.isAvailable()) {
-      console.warn('🔄 Firebase not available, real-time sync disabled');
       return;
     }
-    
-    console.log('🔄 Enabling real-time synchronization...');
     
     // Set up products listener
     this.productsUnsubscribe = this.onProductsChange((products) => {
@@ -1297,10 +1332,8 @@ class FirebaseDatabase {
           localStorage.setItem('firebaseProductData', JSON.stringify(firebaseData));
           localStorage.setItem('firebaseDataTimestamp', Date.now().toString());
           
-          console.log('✅ Products synchronized and UI updated');
         }
       } catch (error) {
-        console.error('❌ Error updating products in real-time:', error);
       }
     });
     
@@ -1316,36 +1349,25 @@ class FirebaseDatabase {
           populateSalesmanOptions(salesmen);
         }
         
-        console.log('✅ Salesmen synchronized and UI updated');
       } catch (error) {
-        console.error('❌ Error updating salesmen in real-time:', error);
       }
     });
     
     // Set up quotes listener for real-time updates
     this.quotesUnsubscribe = this.onQuotesChange((quotes) => {
       try {
-        console.log('🔄 Quotes updated in real-time, count:', quotes.length);
-        
         // Update quotes list UI if function is available
         if (typeof renderSavedQuotesList === 'function') {
-          console.log('🔄 Refreshing quotes list due to real-time update...');
           renderSavedQuotesList();
         }
-        
-        console.log('✅ Quotes synchronized and UI updated');
       } catch (error) {
-        console.error('❌ Error updating quotes in real-time:', error);
       }
     });
     
-    console.log('✅ Real-time synchronization enabled (products, salesmen, quotes)');
   }
   
   // Disable Real-time Synchronization
   disableRealTimeSync() {
-    console.log('🔄 Disabling real-time synchronization...');
-    
     if (this.productsUnsubscribe) {
       this.productsUnsubscribe();
       this.productsUnsubscribe = null;
@@ -1365,8 +1387,6 @@ class FirebaseDatabase {
       this.quotesUnsubscribe();
       this.quotesUnsubscribe = null;
     }
-    
-    console.log('✅ Real-time synchronization disabled');
   }
   
   // Check if real-time sync is active
@@ -1385,7 +1405,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       await window.firebaseDB.initialize();
     } catch (error) {
-      console.warn('Firebase initialization failed, using localStorage fallback');
     }
   }
 });

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Sheets API Test</title>
+    <script src="https://apis.google.com/js/api.js"></script>
+</head>
+<body>
+    <h1>Google Sheets API Test</h1>
+    <button onclick="testGoogleSheetsAPI()">Test Google Sheets API</button>
+    <div id="results"></div>
+
+    <script>
+        // Set the API key (same as in admin-sync-panel)
+        window.GOOGLE_SHEETS_API_KEY = '35bbf27b0bf3abb0a9fec63e815006a5785ec7bb';
+
+        async function testGoogleSheetsAPI() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<p>Testing Google Sheets API...</p>';
+
+            try {
+                console.log('Loading Google API...');
+                
+                await new Promise((resolve, reject) => {
+                    gapi.load('client', {
+                        callback: resolve,
+                        onerror: reject
+                    });
+                });
+
+                console.log('Initializing Google API client...');
+                
+                await gapi.client.init({
+                    apiKey: window.GOOGLE_SHEETS_API_KEY,
+                    discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4']
+                });
+
+                console.log('Testing with your spreadsheet...');
+                
+                // Test with your actual spreadsheet
+                const spreadsheetId = '1hlfrnZnNQ0u8idg5KDmkSY4zFhLyvjLqUwAZn6HmW3s';
+                
+                // Test salesmen data
+                const salesmenResponse = await gapi.client.sheets.spreadsheets.values.get({
+                    spreadsheetId: spreadsheetId,
+                    range: 'salesmen!A:Z'
+                });
+
+                console.log('Salesmen response:', salesmenResponse);
+                
+                // Test pricelists data
+                const pricelistsResponse = await gapi.client.sheets.spreadsheets.values.get({
+                    spreadsheetId: spreadsheetId,
+                    range: 'pricelists!A:Z'
+                });
+
+                console.log('Pricelists response:', pricelistsResponse);
+
+                const salesmenData = salesmenResponse.result.values || [];
+                const pricelistsData = pricelistsResponse.result.values || [];
+
+                // Count salesmen (excluding header)
+                const salesmenCount = salesmenData.length > 1 ? 
+                    salesmenData.slice(1).filter(row => row && row.length > 0 && row[0] && row[0].trim()).length : 0;
+
+                // Count unique pricelists
+                const pricelistNames = new Set();
+                if (pricelistsData.length > 1) {
+                    const headers = pricelistsData[0];
+                    const pricelistColumnIndex = headers.findIndex(header => 
+                        header && header.toLowerCase().includes('pricelist')
+                    );
+                    
+                    if (pricelistColumnIndex !== -1) {
+                        pricelistsData.slice(1).forEach(row => {
+                            if (row[pricelistColumnIndex] && row[pricelistColumnIndex].trim()) {
+                                pricelistNames.add(row[pricelistColumnIndex].trim());
+                            }
+                        });
+                    }
+                }
+
+                resultsDiv.innerHTML = `
+                    <h2>Test Results:</h2>
+                    <p><strong>API Status:</strong> ✅ Working</p>
+                    <p><strong>Salesmen Count:</strong> ${salesmenCount}</p>
+                    <p><strong>Pricelists Count:</strong> ${pricelistNames.size}</p>
+                    <p><strong>Salesmen Data:</strong> ${salesmenData.length} rows total</p>
+                    <p><strong>Pricelists Data:</strong> ${pricelistsData.length} rows total</p>
+                    <h3>Raw Data Preview:</h3>
+                    <h4>Salesmen (first 3 rows):</h4>
+                    <pre>${JSON.stringify(salesmenData.slice(0, 3), null, 2)}</pre>
+                    <h4>Pricelists (first 3 rows):</h4>
+                    <pre>${JSON.stringify(pricelistsData.slice(0, 3), null, 2)}</pre>
+                `;
+
+            } catch (error) {
+                console.error('Google Sheets API test failed:', error);
+                resultsDiv.innerHTML = `
+                    <h2>Test Results:</h2>
+                    <p><strong>API Status:</strong> ❌ Failed</p>
+                    <p><strong>Error:</strong> ${error.message}</p>
+                    <p><strong>Details:</strong> ${JSON.stringify(error, null, 2)}</p>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

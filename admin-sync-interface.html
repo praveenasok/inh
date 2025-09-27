@@ -14,9 +14,22 @@
     
     <!-- Firebase Configuration -->
     <script src="firebase-config.js"></script>
+    <!-- Firebase global initialization -->
+    <script src="firebase-global-init.js"></script>
     
     <!-- Firebase Database Helper -->
     <script src="firebase-database.js"></script>
+    
+    <!-- Firebase Error Handler -->
+    <script src="firebase-error-handler.js"></script>
+    
+    <!-- Universal Data Manager -->
+    <script src="js/universal-firebase-data-manager.js"></script>
+    
+    <!-- Fallback System Components -->
+    <script src="js/local-fallback-manager.js"></script>
+    <script src="js/fallback-detector.js"></script>
+    <script src="js/unified-data-access.js"></script>
     
     <!-- Unified Button System -->
     <link rel="stylesheet" href="unified-button-system.css">
@@ -301,7 +314,7 @@
         };
 
         function addLog(message, type = 'info') {
-            const timestamp = new Date().toLocaleString();
+            const timestamp = new Date().toLocaleString('en-US');
             const logEntry = {
                 timestamp,
                 message,
@@ -332,8 +345,15 @@
                     'warning': 'text-yellow-600'
                 }[log.type] || 'text-gray-600';
                 
+                const borderColor = {
+                    'error': 'red',
+                    'success': 'green',
+                    'warning': 'yellow',
+                    'info': 'blue'
+                }[log.type] || 'blue';
+                
                 return `
-                    <div class="log-entry mb-2 p-2 border-l-4 border-${log.type === 'error' ? 'red' : log.type === 'success' ? 'green' : log.type === 'warning' ? 'yellow' : 'blue'}-400 bg-gray-50">
+                    <div class="log-entry mb-2 p-2 border-l-4 border-${borderColor}-400 bg-gray-50">
                         <div class="flex justify-between items-start">
                             <span class="${statusClass} font-medium">${log.message}</span>
                             <span class="text-xs text-gray-500">${log.timestamp}</span>
@@ -505,7 +525,7 @@
                 
                 if (status.lastSync) {
                     lastSyncIndicator.className = 'status-indicator status-success';
-                    lastSyncTime.textContent = new Date(status.lastSync).toLocaleString();
+                    lastSyncTime.textContent = new Date(status.lastSync).toLocaleString('en-US');
                     lastSyncResult.textContent = `${status.totalSynced || 0} items synced`;
                 } else {
                     lastSyncIndicator.className = 'status-indicator status-warning';
@@ -518,7 +538,7 @@
                 document.getElementById('salesmen-count').textContent = `Salesmen: ${status.salesmenCount || 0}`;
                 
             } catch (error) {
-                console.error('Failed to update sync status:', error);
+                // Silent error handling
             }
         }
 
@@ -543,7 +563,6 @@
                 }
                 renderClientsTable();
             } catch (error) {
-                console.error('Error loading clients:', error);
                 addLog(`Error loading clients: ${error.message}`, 'error');
             }
         }
@@ -623,7 +642,6 @@
                 closeClientModal();
                 await loadClients();
             } catch (error) {
-                console.error('Error saving client:', error);
                 addLog(`Error saving client: ${error.message}`, 'error');
             }
         }
@@ -665,7 +683,6 @@
                 addLog('Client deleted successfully', 'warning');
                 await loadClients();
             } catch (error) {
-                console.error('Error deleting client:', error);
                 addLog(`Error deleting client: ${error.message}`, 'error');
             }
         }
@@ -736,7 +753,41 @@
         }
 
         // Initialize on page load
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Initialize fallback system components
+            try {
+                console.log('🔄 Initializing fallback system...');
+                
+                // Initialize local fallback manager
+                if (typeof LocalFallbackManager !== 'undefined') {
+                    window.localFallbackManager = new LocalFallbackManager();
+                    await window.localFallbackManager.initialize();
+                    console.log('✅ Local fallback manager initialized');
+                }
+                
+                // Initialize fallback detector
+                if (typeof FallbackDetector !== 'undefined') {
+                    window.fallbackDetector = new FallbackDetector();
+                    await window.fallbackDetector.initialize();
+                    console.log('✅ Fallback detector initialized');
+                }
+                
+                // Initialize unified data access
+                if (typeof UnifiedDataAccess !== 'undefined' && window.localFallbackManager && window.fallbackDetector) {
+                    // Use the existing global instance or create a new one without parameters
+                    if (!window.unifiedDataAccess) {
+                        window.unifiedDataAccess = new UnifiedDataAccess();
+                    }
+                    await window.unifiedDataAccess.initialize();
+                    console.log('✅ Unified data access initialized');
+                }
+                
+                console.log('✅ Fallback system fully initialized');
+            } catch (error) {
+                console.error('❌ Failed to initialize fallback system:', error);
+                // Continue with Firebase initialization
+            }
+            
             addLog('Admin dashboard initialized', 'info');
             updateSyncStatus();
             loadClients();

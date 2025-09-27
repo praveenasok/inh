@@ -249,7 +249,7 @@ Firebase Storage
 │   │   ├── pdf/
 │   │   └── images/
 ├── imports/
-│   ├── excel-files/
+│   ├── google-sheets-sync/
 │   └── data-backups/
 └── backups/
     ├── daily/

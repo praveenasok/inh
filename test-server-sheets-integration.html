@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Server Google Sheets Integration Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #fafafa;
+        }
+        .test-button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background-color: #45a049;
+        }
+        .test-button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .results {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        .loading {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+        .data-preview {
+            max-height: 300px;
+            overflow-y: auto;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            margin-top: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔗 Server Google Sheets Integration Test</h1>
+        <p>This tool tests the server-side Google Sheets integration using service account authentication.</p>
+        
+        <div class="test-section">
+            <h3>📊 Test Server API Endpoints</h3>
+            <button class="test-button" onclick="testProductsAPI()">Test Products API</button>
+            <button class="test-button" onclick="testSalesmenAPI()">Test Salesmen API</button>
+            <button class="test-button" onclick="testClientsAPI()">Test Clients API</button>
+            <button class="test-button" onclick="testColorsAPI()">Test Colors API</button>
+            <button class="test-button" onclick="testStylesAPI()">Test Styles API</button>
+            <button class="test-button" onclick="testAllAPIs()">Test All APIs</button>
+            <div id="apiResults" class="results" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔄 Test Sync Operations</h3>
+            <button class="test-button" onclick="testSyncProducts()">Sync Products</button>
+            <button class="test-button" onclick="testSyncSalesmen()">Sync Salesmen</button>
+            <button class="test-button" onclick="testSyncClients()">Sync Clients</button>
+            <button class="test-button" onclick="testSyncColors()">Sync Colors</button>
+            <button class="test-button" onclick="testSyncStyles()">Sync Styles</button>
+            <button class="test-button" onclick="testFullSync()">Full Sync</button>
+            <div id="syncResults" class="results" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>📈 Sync Status</h3>
+            <button class="test-button" onclick="getSyncStatus()">Get Sync Status</button>
+            <button class="test-button" onclick="getSyncLogs()">Get Sync Logs</button>
+            <div id="statusResults" class="results" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        function showResults(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.style.display = 'block';
+            element.className = `results ${type}`;
+            element.textContent = message;
+        }
+
+        function showLoading(elementId, message = 'Loading...') {
+            showResults(elementId, message, 'loading');
+        }
+
+        async function makeAPICall(endpoint, method = 'GET', body = null) {
+            try {
+                const options = {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                };
+                
+                if (body) {
+                    options.body = JSON.stringify(body);
+                }
+
+                const response = await fetch(endpoint, options);
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${data.error || 'Unknown error'}`);
+                }
+                
+                return data;
+            } catch (error) {
+                throw error;
+            }
+        }
+
+        async function testProductsAPI() {
+            showLoading('apiResults', 'Testing Products API...');
+            try {
+                const data = await makeAPICall('/api/products');
+                showResults('apiResults', `✅ Products API Success!\nFound ${data.length} products\n\nFirst few products:\n${JSON.stringify(data.slice(0, 3), null, 2)}`, 'success');
+            } catch (error) {
+                showResults('apiResults', `❌ Products API Failed:\n${error.message}`, 'error');
+            }
+        }
+
+        async function testSalesmenAPI() {
+            showLoading('apiResults', 'Testing Salesmen API...');
+            try {
+                const data = await makeAPICall('/api/salesmen');
+                showResults('apiResults', `✅ Salesmen API Success!\nFound ${data.length} salesmen\n\nSalesmen:\n${JSON.stringify(data, null, 2)}`, 'success');
+            } catch (error) {
+                showResults('apiResults', `❌ Salesmen API Failed:\n${error.message}`, 'error');
+            }
+        }
+
+        async function testClientsAPI() {
+            showLoading('apiResults', 'Testing Clients API...');
+            try {
+                const data = await makeAPICall('/api/clients');
+                showResults('apiResults', `✅ Clients API Success!\nFound ${data.length} clients\n\nFirst few clients:\n${JSON.stringify(data.slice(0, 3), null, 2)}`, 'success');
+            } catch (error) {
+                showResults('apiResults', `❌ Clients API Failed:\n${error.message}`, 'error');
+            }
+        }
+
+        async function testColorsAPI() {
+            showLoading('apiResults', 'Testing Colors API...');
+            try {
+                const data = await makeAPICall('/api/colors');
+                showResults('apiResults', `✅ Colors API Success!\nFound ${data.length} colors\n\nColors:\n${JSON.stringify(data, null, 2)}`, 'success');
+            } catch (error) {
+                showResults('apiResults', `❌ Colors API Failed:\n${error.message}`, 'error');
+            }
+        }
+
+        async function testStylesAPI() {
+            showLoading('apiResults', 'Testing Styles API...');
+            try {
+                const data = await makeAPICall('/api/styles');
+                showResults('apiResults', `✅ Styles API Success!\nFound ${data.length} styles\n\nStyles:\n${JSON.stringify(data, null, 2)}`, 'success');
+            } catch (error) {
+                showResults('apiResults', `❌ Styles API Failed:\n${error.message}`, 'error');
+            }
+        }
+
+        async function testAllAPIs() {
+            showLoading('apiResults', 'Testing all APIs...');
+            const results = [];
+            
+            const apis = [
+                { name: 'Products', endpoint: '/api/products' },
+                { name: 'Salesmen', endpoint: '/api/salesmen' },
+                { name: 'Clients', endpoint: '/api/clients' },
+                { name: 'Colors', endpoint: '/api/colors' },
+                { name: 'Styles', endpoint: '/api/styles' }
+            ];
+
+            for (const api of apis) {
+                try {
+                    const data = await makeAPICall(api.endpoint);
+                    results.push(`✅ ${api.name}: ${data.length} items`);
+                } catch (error) {
+                    results.push(`❌ ${api.name}: ${error.message}`);
+                }
+            }
+
+            showResults('apiResults', `API Test Results:\n${results.join('\n')}`, 'info');
+        }
+
+        async function testSyncProducts() {
+            showLoading('syncResults', 'Syncing products...');
+            try {
+                const data = await makeAPICall('/api/sync/products', 'POST');
+                showResults('syncResults', `✅ Products Sync Success!\n${JSON.stringify(data, null, 2)}`, 'success');
+            } catch (error) {
+                showResults('syncResults', `❌ Products Sync Failed:\n${error.message}`, 'error');
+            }
+        }
+
+        async function testSyncSalesmen() {
+            showLoading('syncResults', 'Syncing salesmen...');
+            try {
+                const data = await makeAPICall('/api/sync/salesmen', 'POST');
+                showResults('syncResults', `✅ Salesmen Sync Success!\n${JSON.stringify(data, null, 2)}`, 'success');
+            } catch (error) {
+                showResults('syncResults', `❌ Salesmen Sync Failed:\n${error.message}`, 'error');
+            }
+        }
+
+        async function testSyncClients() {
+            showLoading('syncResults', 'Syncing clients...');
+            try {
+                const data = await makeAPICall('/api/sync/clients', 'POST');
+                showResults('syncResults', `✅ Clients Sync Success!\n${JSON.stringify(data, null, 2)}`, 'success');
+            } catch (error) {
+                showResults('syncResults', `❌ Clients Sync Failed:\n${error.message}`, 'error');
+            }
+        }
+
+        async function testSyncColors() {
+            showLoading('syncResults', 'Syncing colors...');
+            try {
+                const data = await makeAPICall('/api/sync/colors', 'POST');
+                showResults('syncResults', `✅ Colors Sync Success!\n${JSON.stringify(data, null, 2)}`, 'success');
+            } catch (error) {
+                showResults('syncResults', `❌ Colors Sync Failed:\n${error.message}`, 'error');
+            }
+        }
+
+        async function testSyncStyles() {
+            showLoading('syncResults', 'Syncing styles...');
+            try {
+                const data = await makeAPICall('/api/sync/styles', 'POST');
+                showResults('syncResults', `✅ Styles Sync Success!\n${JSON.stringify(data, null, 2)}`, 'success');
+            } catch (error) {
+                showResults('syncResults', `❌ Styles Sync Failed:\n${error.message}`, 'error');
+            }
+        }
+
+        async function testFullSync() {
+            showLoading('syncResults', 'Running full sync...');
+            try {
+                const data = await makeAPICall('/api/sync/all', 'POST');
+                showResults('syncResults', `✅ Full Sync Success!\n${JSON.stringify(data, null, 2)}`, 'success');
+            } catch (error) {
+                showResults('syncResults', `❌ Full Sync Failed:\n${error.message}`, 'error');
+            }
+        }
+
+        async function getSyncStatus() {
+            showLoading('statusResults', 'Getting sync status...');
+            try {
+                const data = await makeAPICall('/api/sync/status');
+                showResults('statusResults', `📊 Sync Status:\n${JSON.stringify(data, null, 2)}`, 'info');
+            } catch (error) {
+                showResults('statusResults', `❌ Failed to get sync status:\n${error.message}`, 'error');
+            }
+        }
+
+        async function getSyncLogs() {
+            showLoading('statusResults', 'Getting sync logs...');
+            try {
+                const data = await makeAPICall('/api/sync/logs');
+                showResults('statusResults', `📋 Sync Logs:\n${JSON.stringify(data, null, 2)}`, 'info');
+            } catch (error) {
+                showResults('statusResults', `❌ Failed to get sync logs:\n${error.message}`, 'error');
+            }
+        }
+
+        // Auto-test on page load
+        window.addEventListener('load', () => {
+            console.log('🔗 Server Google Sheets Integration Test loaded');
+            console.log('Click any button to test the server-side Google Sheets integration');
+        });
+    </script>
+</body>
+</html>

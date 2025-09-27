@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Source Comparison</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .source-section {
+            background: white;
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .source-title {
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .data-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .collection-card {
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 15px;
+            background: #f9f9f9;
+        }
+        .collection-title {
+            font-weight: bold;
+            color: #007bff;
+            margin-bottom: 10px;
+        }
+        .data-content {
+            background: white;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        .error {
+            color: #dc3545;
+            background: #f8d7da;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .loading {
+            color: #007bff;
+            font-style: italic;
+        }
+        .stats {
+            background: #e9ecef;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            font-size: 12px;
+        }
+        .comparison-summary {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .mismatch {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+        }
+        .data-structure {
+            background: #e3f2fd;
+            border: 1px solid #90caf9;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Data Source Comparison Tool</h1>
+        <p>Comparing data across Local Storage, Firebase, and Google Sheets</p>
+        
+        <div id="comparisonSummary" class="comparison-summary">
+            <h3>Data Source Analysis</h3>
+            <div id="summaryContent">Analyzing data sources...</div>
+        </div>
+
+        <!-- Local Data Section -->
+        <div class="source-section">
+            <h2 class="source-title">🗄️ Local Data Sources</h2>
+            <div id="localData" class="data-grid">
+                <div class="loading">Analyzing local data...</div>
+            </div>
+        </div>
+
+        <!-- Firebase Data Section -->
+        <div class="source-section">
+            <h2 class="source-title">🔥 Firebase Data Structure</h2>
+            <div id="firebaseData" class="data-grid">
+                <div class="loading">Analyzing Firebase configuration...</div>
+            </div>
+        </div>
+
+        <!-- Google Sheets Data Section -->
+        <div class="source-section">
+            <h2 class="source-title">📊 Google Sheets Data Structure</h2>
+            <div id="sheetsData" class="data-grid">
+                <div class="loading">Analyzing Google Sheets configuration...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class DataComparison {
+            constructor() {
+                this.localData = {};
+                this.firebaseStructure = {};
+                this.sheetsStructure = {};
+                this.analysis = {};
+            }
+
+            async initialize() {
+                console.log('🔄 Starting data source analysis...');
+                
+                try {
+                    await this.analyzeLocalData();
+                    await this.analyzeFirebaseStructure();
+                    await this.analyzeSheetsStructure();
+                    this.generateAnalysis();
+                    this.displayResults();
+                    
+                } catch (error) {
+                    console.error('❌ Error during analysis:', error);
+                    this.displayError('Analysis failed: ' + error.message);
+                }
+            }
+
+            async analyzeLocalData() {
+                console.log('📁 Analyzing local data sources...');
+                
+                // Check localStorage
+                const localStorageData = {};
+                const localStorageKeys = [];
+                
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    localStorageKeys.push(key);
+                    
+                    if (key && (key.includes('fallback_') || key.includes('data_') || key.includes('cache_'))) {
+                        try {
+                            const value = localStorage.getItem(key);
+                            localStorageData[key] = JSON.parse(value);
+                        } catch (e) {
+                            localStorageData[key] = value;
+                        }
+                    }
+                }
+
+                // Check if LocalFallbackManager is available
+                let fallbackManagerStatus = 'Not Available';
+                let fallbackCollections = [];
+                
+                if (typeof window !== 'undefined' && window.localFallbackManager) {
+                    fallbackManagerStatus = 'Available';
+                    if (window.localFallbackManager.supportedCollections) {
+                        fallbackCollections = Array.from(window.localFallbackManager.supportedCollections);
+                    }
+                }
+
+                this.localData = {
+                    localStorage: {
+                        totalKeys: localStorage.length,
+                        dataKeys: Object.keys(localStorageData),
+                        data: localStorageData,
+                        size: this.calculateStorageSize()
+                    },
+                    fallbackManager: {
+                        status: fallbackManagerStatus,
+                        supportedCollections: fallbackCollections
+                    }
+                };
+
+                // Try to load data.json
+                try {
+                    const response = await fetch('./data.json');
+                    if (response.ok) {
+                        this.localData.dataJson = await response.json();
+                    }
+                } catch (error) {
+                    this.localData.dataJson = { error: 'Could not load data.json' };
+                }
+            }
+
+            calculateStorageSize() {
+                let total = 0;
+                for (let key in localStorage) {
+                    if (localStorage.hasOwnProperty(key)) {
+                        total += localStorage[key].length + key.length;
+                    }
+                }
+                return total;
+            }
+
+            async analyzeFirebaseStructure() {
+                console.log('🔥 Analyzing Firebase structure...');
+                
+                // Analyze Firebase configuration from indexes
+                this.firebaseStructure = {
+                    collections: [
+                        'clients',
+                        'products', 
+                        'quotes',
+                        'orders',
+                        'salespeople',
+                        'colors',
+                        'styles'
+                    ],
+                    indexes: {
+                        clients: ['salesperson + createdAt'],
+                        products: ['BundledSalesKG + Category', 'Category + Product', 'PriceListName + Rate'],
+                        quotes: ['clientId + createdAt', 'salesperson + createdAt']
+                    },
+                    features: [
+                        'Real-time sync',
+                        'Offline caching',
+                        'Authentication',
+                        'File storage',
+                        'Batch operations'
+                    ]
+                };
+            }
+
+            async analyzeSheetsStructure() {
+                console.log('📊 Analyzing Google Sheets structure...');
+                
+                this.sheetsStructure = {
+                    spreadsheetId: '1hlfrnZnNQ0u8idg5KDmkSY4zFhLyvjLqUwAZn6HmW3s',
+                    sheets: [
+                        'pricelists',
+                        'salesmen', 
+                        'clients',
+                        'Colors',
+                        'Styles',
+                        'Orders'
+                    ],
+                    dataTypes: {
+                        products: 'pricelists sheet',
+                        salespeople: 'salesmen sheet',
+                        clients: 'clients sheet',
+                        colors: 'Colors sheet',
+                        styles: 'Styles sheet',
+                        orders: 'Orders sheet'
+                    },
+                    features: [
+                        'Read-only access',
+                        'Batch data import',
+                        'Service account authentication',
+                        'Real-time collaboration'
+                    ]
+                };
+            }
+
+            generateAnalysis() {
+                console.log('🔍 Generating analysis...');
+                
+                this.analysis = {
+                    dataSources: {
+                        local: {
+                            primary: 'LocalFallbackManager',
+                            secondary: 'localStorage',
+                            tertiary: 'data.json',
+                            strengths: ['Fast access', 'Offline availability', 'No API limits'],
+                            weaknesses: ['Limited storage', 'Browser dependent', 'No sync across devices']
+                        },
+                        firebase: {
+                            primary: 'Firestore collections',
+                            features: ['Real-time sync', 'Scalable', 'Multi-device'],
+                            strengths: ['Real-time updates', 'Scalable', 'Secure', 'Cross-platform'],
+                            weaknesses: ['Requires internet', 'API costs', 'Complexity']
+                        },
+                        sheets: {
+                            primary: 'Google Sheets API',
+                            features: ['Human readable', 'Easy editing', 'Collaboration'],
+                            strengths: ['Easy to edit', 'Collaborative', 'Familiar interface'],
+                            weaknesses: ['Read-only in app', 'API limits', 'Slower access']
+                        }
+                    },
+                    dataFlow: {
+                        priority: ['Local (fastest)', 'Firebase (real-time)', 'Sheets (backup)'],
+                        syncStrategy: 'Fallback-first with Firebase sync',
+                        consistency: 'Eventually consistent across sources'
+                    },
+                    recommendations: [
+                        'Local data should be primary for performance',
+                        'Firebase provides real-time sync and backup',
+                        'Google Sheets serves as human-readable master data',
+                        'Implement periodic sync between all sources',
+                        'Use local cache expiration to ensure freshness'
+                    ]
+                };
+            }
+
+            displayResults() {
+                this.displayLocalData();
+                this.displayFirebaseData();
+                this.displaySheetsData();
+                this.displaySummary();
+            }
+
+            displayLocalData() {
+                const container = document.getElementById('localData');
+                let html = '';
+
+                // LocalStorage analysis
+                html += this.createCollectionCard(
+                    'LocalStorage Analysis',
+                    {
+                        totalKeys: this.localData.localStorage.totalKeys,
+                        dataKeys: this.localData.localStorage.dataKeys,
+                        sizeBytes: this.localData.localStorage.size,
+                        sizeFormatted: this.formatBytes(this.localData.localStorage.size)
+                    },
+                    `${this.localData.localStorage.totalKeys} total keys, ${this.localData.localStorage.dataKeys.length} data keys`
+                );
+
+                // Fallback Manager analysis
+                html += this.createCollectionCard(
+                    'LocalFallbackManager',
+                    {
+                        status: this.localData.fallbackManager.status,
+                        supportedCollections: this.localData.fallbackManager.supportedCollections
+                    },
+                    `Status: ${this.localData.fallbackManager.status}`
+                );
+
+                // data.json analysis
+                html += this.createCollectionCard(
+                    'data.json',
+                    this.localData.dataJson,
+                    this.localData.dataJson.error ? 'Error loading' : 'Loaded successfully'
+                );
+
+                container.innerHTML = html;
+            }
+
+            displayFirebaseData() {
+                const container = document.getElementById('firebaseData');
+                let html = '';
+
+                html += this.createCollectionCard(
+                    'Firebase Collections',
+                    this.firebaseStructure.collections,
+                    `${this.firebaseStructure.collections.length} collections configured`
+                );
+
+                html += this.createCollectionCard(
+                    'Firebase Indexes',
+                    this.firebaseStructure.indexes,
+                    'Optimized query indexes'
+                );
+
+                html += this.createCollectionCard(
+                    'Firebase Features',
+                    this.firebaseStructure.features,
+                    'Available Firebase features'
+                );
+
+                container.innerHTML = html;
+            }
+
+            displaySheetsData() {
+                const container = document.getElementById('sheetsData');
+                let html = '';
+
+                html += this.createCollectionCard(
+                    'Google Sheets Configuration',
+                    {
+                        spreadsheetId: this.sheetsStructure.spreadsheetId,
+                        sheets: this.sheetsStructure.sheets
+                    },
+                    `${this.sheetsStructure.sheets.length} sheets configured`
+                );
+
+                html += this.createCollectionCard(
+                    'Data Type Mapping',
+                    this.sheetsStructure.dataTypes,
+                    'Sheet to data type mapping'
+                );
+
+                html += this.createCollectionCard(
+                    'Sheets Features',
+                    this.sheetsStructure.features,
+                    'Available Google Sheets features'
+                );
+
+                container.innerHTML = html;
+            }
+
+            displaySummary() {
+                const summaryContainer = document.getElementById('summaryContent');
+                
+                let summary = '<div class="data-structure">';
+                summary += '<h4>📊 Data Architecture Overview</h4>';
+                summary += '<p><strong>Data Flow Priority:</strong> ' + this.analysis.dataFlow.priority.join(' → ') + '</p>';
+                summary += '<p><strong>Sync Strategy:</strong> ' + this.analysis.dataFlow.syncStrategy + '</p>';
+                summary += '<p><strong>Consistency Model:</strong> ' + this.analysis.dataFlow.consistency + '</p>';
+                summary += '</div>';
+
+                summary += '<h4>🔍 Source Comparison</h4>';
+                
+                for (const [source, details] of Object.entries(this.analysis.dataSources)) {
+                    summary += `
+                        <div style="margin: 10px 0; padding: 10px; border-left: 4px solid #007bff;">
+                            <strong>${source.toUpperCase()}</strong><br>
+                            <em>Primary:</em> ${details.primary}<br>
+                            <em>Strengths:</em> ${details.strengths.join(', ')}<br>
+                            <em>Weaknesses:</em> ${details.weaknesses.join(', ')}
+                        </div>
+                    `;
+                }
+
+                summary += '<h4>💡 Recommendations</h4>';
+                summary += '<ul>';
+                for (const rec of this.analysis.recommendations) {
+                    summary += `<li>${rec}</li>`;
+                }
+                summary += '</ul>';
+
+                summaryContainer.innerHTML = summary;
+            }
+
+            createCollectionCard(title, data, stats) {
+                return `
+                    <div class="collection-card">
+                        <div class="collection-title">${title}</div>
+                        <div class="data-content">${JSON.stringify(data, null, 2)}</div>
+                        <div class="stats">${stats}</div>
+                    </div>
+                `;
+            }
+
+            formatBytes(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+
+            displayError(message) {
+                document.getElementById('summaryContent').innerHTML = `<div class="error">${message}</div>`;
+            }
+        }
+
+        // Initialize comparison when page loads
+        document.addEventListener('DOMContentLoaded', async () => {
+            const comparison = new DataComparison();
+            await comparison.initialize();
+        });
+    </script>
+</body>
+</html>

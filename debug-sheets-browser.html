@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Sheets Debug - Browser Test</title>
+    <script src="https://apis.google.com/js/api.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .warning { background-color: #fff3cd; border-color: #ffeaa7; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+        button { padding: 10px 20px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <h1>Google Sheets API Debug Test</h1>
+    
+    <div class="test-section">
+        <h2>Step 1: API Initialization</h2>
+        <button onclick="testInitialization()">Test API Initialization</button>
+        <div id="init-results"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Step 2: Data Fetching</h2>
+        <button onclick="testDataFetching()">Test Data Fetching</button>
+        <div id="data-results"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Step 3: Simulate Admin Panel Logic</h2>
+        <button onclick="simulateAdminPanel()">Simulate Admin Panel</button>
+        <div id="admin-results"></div>
+    </div>
+
+    <script>
+        // Set the API key (same as in admin-sync-panel)
+        window.GOOGLE_SHEETS_API_KEY = '35bbf27b0bf3abb0a9fec63e815006a5785ec7bb';
+        const SPREADSHEET_ID = '1hlfrnZnNQ0u8idg5KDmkSY4zFhLyvjLqUwAZn6HmW3s';
+
+        async function testInitialization() {
+            const resultsDiv = document.getElementById('init-results');
+            resultsDiv.innerHTML = '<p>Testing API initialization...</p>';
+
+            try {
+                console.log('=== INITIALIZATION TEST ===');
+                
+                // Check if gapi is loaded
+                if (typeof gapi === 'undefined') {
+                    throw new Error('Google API client library (gapi) not loaded');
+                }
+                console.log('✓ gapi library loaded');
+                
+                // Load client
+                await new Promise((resolve, reject) => {
+                    gapi.load('client', {
+                        callback: resolve,
+                        onerror: reject
+                    });
+                });
+                console.log('✓ gapi.client loaded');
+                
+                // Initialize client
+                await gapi.client.init({
+                    apiKey: window.GOOGLE_SHEETS_API_KEY,
+                    discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4']
+                });
+                console.log('✓ gapi.client initialized');
+                
+                // Check if sheets API is available
+                if (typeof gapi.client.sheets === 'undefined') {
+                    throw new Error('Google Sheets API client not available');
+                }
+                console.log('✓ Google Sheets API client available');
+                
+                resultsDiv.innerHTML = `
+                    <div class="success">
+                        <h3>✓ Initialization Successful</h3>
+                        <p><strong>API Key:</strong> ${window.GOOGLE_SHEETS_API_KEY ? 'Present' : 'Missing'}</p>
+                        <p><strong>gapi.client.sheets:</strong> Available</p>
+                    </div>
+                `;
+                
+                return true;
+            } catch (error) {
+                console.error('Initialization failed:', error);
+                resultsDiv.innerHTML = `
+                    <div class="error">
+                        <h3>✗ Initialization Failed</h3>
+                        <p><strong>Error:</strong> ${error.message}</p>
+                        <pre>${JSON.stringify(error, null, 2)}</pre>
+                    </div>
+                `;
+                return false;
+            }
+        }
+
+        async function testDataFetching() {
+            const resultsDiv = document.getElementById('data-results');
+            resultsDiv.innerHTML = '<p>Testing data fetching...</p>';
+
+            try {
+                console.log('=== DATA FETCHING TEST ===');
+                
+                // Test salesmen data
+                console.log('Fetching salesmen data...');
+                const salesmenResponse = await gapi.client.sheets.spreadsheets.values.get({
+                    spreadsheetId: SPREADSHEET_ID,
+                    range: 'salesmen!A:Z'
+                });
+                const salesmenData = salesmenResponse.result.values || [];
+                console.log('Salesmen data:', salesmenData);
+                
+                // Test pricelists data
+                console.log('Fetching pricelists data...');
+                const pricelistsResponse = await gapi.client.sheets.spreadsheets.values.get({
+                    spreadsheetId: SPREADSHEET_ID,
+                    range: 'pricelists!A:Z'
+                });
+                const pricelistsData = pricelistsResponse.result.values || [];
+                console.log('Pricelists data:', pricelistsData);
+                
+                // Process salesmen count (same logic as admin panel)
+                let salesmenCount = 0;
+                if (Array.isArray(salesmenData) && salesmenData.length > 1) {
+                    const dataRows = salesmenData.slice(1).filter(row => row && row.length > 0 && row[0] && row[0].trim());
+                    salesmenCount = dataRows.length;
+                }
+                
+                // Process pricelists count (same logic as admin panel)
+                let pricelistsCount = 0;
+                if (pricelistsData.length > 0) {
+                    const headers = pricelistsData[0];
+                    const priceListIndex = headers.findIndex(h => 
+                        h && (h.toLowerCase().includes('pricelist') || h.toLowerCase().includes('price list'))
+                    );
+                    
+                    if (priceListIndex !== -1) {
+                        const priceLists = new Set();
+                        for (let i = 1; i < pricelistsData.length; i++) {
+                            const row = pricelistsData[i];
+                            if (row && row[priceListIndex] && row[priceListIndex].trim()) {
+                                priceLists.add(row[priceListIndex].trim());
+                            }
+                        }
+                        pricelistsCount = priceLists.size;
+                    }
+                }
+                
+                resultsDiv.innerHTML = `
+                    <div class="success">
+                        <h3>✓ Data Fetching Successful</h3>
+                        <p><strong>Salesmen Count:</strong> ${salesmenCount}</p>
+                        <p><strong>Pricelists Count:</strong> ${pricelistsCount}</p>
+                        <p><strong>Raw Salesmen Data:</strong> ${salesmenData.length} rows</p>
+                        <p><strong>Raw Pricelists Data:</strong> ${pricelistsData.length} rows</p>
+                        
+                        <h4>Salesmen Data Preview:</h4>
+                        <pre>${JSON.stringify(salesmenData.slice(0, 3), null, 2)}</pre>
+                        
+                        <h4>Pricelists Data Preview:</h4>
+                        <pre>${JSON.stringify(pricelistsData.slice(0, 3), null, 2)}</pre>
+                    </div>
+                `;
+                
+            } catch (error) {
+                console.error('Data fetching failed:', error);
+                resultsDiv.innerHTML = `
+                    <div class="error">
+                        <h3>✗ Data Fetching Failed</h3>
+                        <p><strong>Error:</strong> ${error.message}</p>
+                        <pre>${JSON.stringify(error, null, 2)}</pre>
+                    </div>
+                `;
+            }
+        }
+
+        async function simulateAdminPanel() {
+            const resultsDiv = document.getElementById('admin-results');
+            resultsDiv.innerHTML = '<p>Simulating admin panel logic...</p>';
+
+            try {
+                console.log('=== ADMIN PANEL SIMULATION ===');
+                
+                // Create the same googleSheetsService as in admin panel
+                window.googleSheetsService = {
+                    async fetchSalesmanData(spreadsheetId = SPREADSHEET_ID, range = 'salesmen!A:Z') {
+                        try {
+                            const response = await gapi.client.sheets.spreadsheets.values.get({
+                                spreadsheetId: spreadsheetId,
+                                range: range
+                            });
+                            return response.result.values || [];
+                        } catch (error) {
+                            console.error('Error fetching salesman data:', error);
+                            return [];
+                        }
+                    },
+                    async fetchPriceListsData(spreadsheetId = SPREADSHEET_ID, range = 'pricelists!A:Z') {
+                        try {
+                            const response = await gapi.client.sheets.spreadsheets.values.get({
+                                spreadsheetId: spreadsheetId,
+                                range: range
+                            });
+                            // Extract unique price lists from products data
+                            const data = response.result.values || [];
+                            if (data.length === 0) return [];
+                            
+                            const headers = data[0];
+                            const priceListIndex = headers.findIndex(h => 
+                                h && (h.toLowerCase().includes('pricelist') || h.toLowerCase().includes('price list'))
+                            );
+                            
+                            if (priceListIndex === -1) return [];
+                            
+                            const priceLists = new Set();
+                            for (let i = 1; i < data.length; i++) {
+                                const row = data[i];
+                                if (row && row[priceListIndex] && row[priceListIndex].trim()) {
+                                    priceLists.add(row[priceListIndex].trim());
+                                }
+                            }
+                            
+                            return Array.from(priceLists);
+                        } catch (error) {
+                            console.error('Error fetching price lists data:', error);
+                            return [];
+                        }
+                    }
+                };
+                
+                // Simulate the exact logic from fetchGoogleSheetsData
+                const data = {};
+                
+                // Salesmen
+                try {
+                    const salesmenData = await window.googleSheetsService.fetchSalesmanData();
+                    console.log('Salesmen service result:', salesmenData);
+                    if (Array.isArray(salesmenData) && salesmenData.length > 1) {
+                        const dataRows = salesmenData.slice(1).filter(row => row && row.length > 0 && row[0] && row[0].trim());
+                        data.salesmen = dataRows.length;
+                        console.log('Processed salesmen count:', data.salesmen);
+                    } else {
+                        data.salesmen = 0;
+                    }
+                } catch (error) {
+                    console.warn('Google Sheets salesmen error:', error);
+                    data.salesmen = 0;
+                }
+                
+                // Pricelists
+                try {
+                    const priceListsData = await window.googleSheetsService.fetchPriceListsData();
+                    console.log('Pricelists service result:', priceListsData);
+                    data.pricelists = Array.isArray(priceListsData) ? priceListsData.length : 0;
+                    console.log('Processed pricelists count:', data.pricelists);
+                } catch (error) {
+                    console.warn('Google Sheets pricelists error:', error);
+                    data.pricelists = 0;
+                }
+                
+                resultsDiv.innerHTML = `
+                    <div class="success">
+                        <h3>✓ Admin Panel Simulation Complete</h3>
+                        <p><strong>Final Salesmen Count:</strong> ${data.salesmen}</p>
+                        <p><strong>Final Pricelists Count:</strong> ${data.pricelists}</p>
+                        
+                        <h4>Service Test Results:</h4>
+                        <p>✓ googleSheetsService created successfully</p>
+                        <p>✓ fetchSalesmanData function working</p>
+                        <p>✓ fetchPriceListsData function working</p>
+                        
+                        <h4>Expected vs Actual:</h4>
+                        <p>Expected Salesmen: 2 (IND, Rupa)</p>
+                        <p>Actual Salesmen: ${data.salesmen}</p>
+                        <p>Expected Pricelists: 2 (INDIA25, USA25)</p>
+                        <p>Actual Pricelists: ${data.pricelists}</p>
+                    </div>
+                `;
+                
+            } catch (error) {
+                console.error('Admin panel simulation failed:', error);
+                resultsDiv.innerHTML = `
+                    <div class="error">
+                        <h3>✗ Admin Panel Simulation Failed</h3>
+                        <p><strong>Error:</strong> ${error.message}</p>
+                        <pre>${JSON.stringify(error, null, 2)}</pre>
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

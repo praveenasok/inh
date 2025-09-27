@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Sheets Integration Tests</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://apis.google.com/js/api.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen py-8">
+    <div class="max-w-4xl mx-auto px-4">
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h1 class="text-3xl font-bold text-gray-800 mb-6">🧪 Google Sheets Integration Tests</h1>
+            
+            <div class="mb-6">
+                <button id="runTests" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg">
+                    🚀 Run All Tests
+                </button>
+                <button id="clearConsole" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg ml-2">
+                    🗑️ Clear Console
+                </button>
+            </div>
+
+            <div class="bg-gray-900 text-green-400 p-4 rounded-lg font-mono text-sm overflow-auto" style="height: 500px;">
+                <div id="console">
+                    <div class="text-yellow-400">Google Sheets Integration Test Console</div>
+                    <div class="text-gray-400">Click "Run All Tests" to start comprehensive testing...</div>
+                    <div class="text-gray-400">Open browser console (F12) for detailed logs.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="test-google-sheets-integration.js"></script>
+    <script>
+        // Set the API key for consistency
+        window.GOOGLE_SHEETS_API_KEY = '35bbf27b0bf3abb0a9fec63e815006a5785ec7bb';
+
+        const consoleDiv = document.getElementById('console');
+        
+        function addToConsole(message, type = 'info') {
+            const colors = {
+                'info': 'text-white',
+                'success': 'text-green-400',
+                'error': 'text-red-400',
+                'warning': 'text-yellow-400'
+            };
+            
+            const div = document.createElement('div');
+            div.className = colors[type] || 'text-white';
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            consoleDiv.appendChild(div);
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+        }
+
+        // Override console.log to display in our custom console
+        const originalConsoleLog = console.log;
+        console.log = function(...args) {
+            originalConsoleLog.apply(console, args);
+            const message = args.join(' ');
+            
+            let type = 'info';
+            if (message.includes('[SUCCESS]')) type = 'success';
+            else if (message.includes('[ERROR]')) type = 'error';
+            else if (message.includes('[WARNING]')) type = 'warning';
+            
+            addToConsole(message, type);
+        };
+
+        document.getElementById('runTests').addEventListener('click', async () => {
+            addToConsole('Starting comprehensive Google Sheets integration tests...', 'info');
+            
+            try {
+                const results = await window.runGoogleSheetsTests();
+                
+                const successCount = Object.values(results).filter(Boolean).length;
+                const totalTests = Object.keys(results).length;
+                
+                if (successCount === totalTests) {
+                    addToConsole(`🎉 ALL TESTS PASSED! (${successCount}/${totalTests})`, 'success');
+                } else if (successCount > 0) {
+                    addToConsole(`⚠️ PARTIAL SUCCESS: ${successCount}/${totalTests} tests passed`, 'warning');
+                } else {
+                    addToConsole(`💥 ALL TESTS FAILED: 0/${totalTests} tests passed`, 'error');
+                }
+                
+                addToConsole('Test execution completed. Check browser console for detailed results.', 'info');
+            } catch (error) {
+                addToConsole(`Error running tests: ${error.message}`, 'error');
+            }
+        });
+
+        document.getElementById('clearConsole').addEventListener('click', () => {
+            consoleDiv.innerHTML = `
+                <div class="text-yellow-400">Google Sheets Integration Test Console</div>
+                <div class="text-gray-400">Console cleared. Ready for new tests...</div>
+            `;
+        });
+
+        // Initial message
+        addToConsole('Test environment ready. API key configured.', 'success');
+    </script>
+</body>
+</html>

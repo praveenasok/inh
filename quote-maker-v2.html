@@ -1,22 +1,41 @@
+<!--
+    DORMANT FILE - NOT CURRENTLY IN USE
+    Status: Dormant
+    Reason: Earlier version superseded by ver3 with enhanced features
+    Last Active: Quote maker v2 base version
+    
+    This version has been superseded by quote-maker-v2-ver3.html which
+    includes improved functionality and better Firebase integration.
+-->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quote Maker v2 - Indian Natural Hair</title>
+    <title>Quote Maker v2 - Indian Natural Hair (DORMANT)</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
+    
+    <!-- Firebase Configuration -->
+    <script src="firebase-config.js"></script>
+    <script src="firebase-global-init.js"></script>
+    <script src="firebase-database.js"></script>
+    
+    <!-- jsPDF for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
     <!-- Custom Styles -->
     <style>
         .gradient-bg {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #081249 0%, #0a1555 100%);
         }
         
         .card {
@@ -31,7 +50,7 @@
         }
         
         .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #081249 0%, #0a1555 100%);
             color: white;
             border: none;
             padding: 12px 24px;
@@ -43,13 +62,13 @@
         
         .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 4px 12px rgba(8, 18, 73, 0.4);
         }
         
         .btn-secondary {
             background: white;
-            color: #667eea;
-            border: 2px solid #667eea;
+            color: #081249;
+            border: 2px solid #081249;
             padding: 10px 22px;
             border-radius: 8px;
             font-weight: 600;
@@ -58,7 +77,7 @@
         }
         
         .btn-secondary:hover {
-            background: #667eea;
+            background: #081249;
             color: white;
         }
         
@@ -113,8 +132,8 @@
             background: #f8fafc;
             border: 1px solid #e2e8f0;
             border-radius: 8px;
-            padding: 16px;
-            margin-bottom: 12px;
+            padding: 8px;
+            margin-bottom: 8px;
             transition: all 0.3s ease;
         }
         
@@ -145,6 +164,193 @@
             background: #d1fae5;
             color: #065f46;
         }
+
+        /* Action buttons */
+        .action-btn {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-width: 80px;
+            font-size: 11px;
+            gap: 6px;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .action-btn-text {
+            font-weight: 500;
+            line-height: 1;
+            white-space: nowrap;
+        }
+
+        .action-btn-icon {
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+        }
+
+        .action-btn-recall {
+            border-color: #3b82f6;
+            color: #3b82f6;
+        }
+
+        .action-btn-recall:hover {
+            background: #eff6ff;
+            border-color: #2563eb;
+        }
+
+        .action-btn-preview {
+            border-color: #10b981;
+            color: #10b981;
+        }
+
+        .action-btn-preview:hover {
+            background: #ecfdf5;
+            border-color: #059669;
+        }
+
+        .action-btn-delete {
+            border-color: #ef4444;
+            color: #ef4444;
+        }
+
+        .action-btn-delete:hover {
+            background: #fef2f2;
+            border-color: #dc2626;
+        }
+
+        .action-btn-convert {
+            border-color: #8b5cf6;
+            color: #8b5cf6;
+        }
+
+        .action-btn-convert:hover {
+            background: #f5f3ff;
+            border-color: #7c3aed;
+        }
+
+        /* Compact action buttons for saved quotes */
+        .action-btn-compact {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4px 6px;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-width: 24px;
+            height: 24px;
+            font-size: 10px;
+        }
+
+        .action-btn-compact:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+        }
+
+        .action-btn-compact.action-btn-recall {
+            border-color: #3b82f6;
+            color: #3b82f6;
+        }
+
+        .action-btn-compact.action-btn-recall:hover {
+            background: #eff6ff;
+            border-color: #2563eb;
+        }
+
+        .action-btn-compact.action-btn-preview {
+            border-color: #10b981;
+            color: #10b981;
+        }
+
+        .action-btn-compact.action-btn-preview:hover {
+            background: #ecfdf5;
+            border-color: #059669;
+        }
+
+        .action-btn-compact.action-btn-delete {
+            border-color: #ef4444;
+            color: #ef4444;
+        }
+
+        .action-btn-compact.action-btn-delete:hover {
+            background: #fef2f2;
+            border-color: #dc2626;
+        }
+
+        .action-btn-compact.action-btn-convert {
+            border-color: #8b5cf6;
+            color: #8b5cf6;
+        }
+
+        .action-btn-compact.action-btn-convert:hover {
+            background: #f5f3ff;
+            border-color: #7c3aed;
+        }
+
+        /* Enhanced tooltips for compact buttons */
+        .action-btn-compact {
+            position: relative;
+        }
+
+        .action-btn-compact::before {
+            content: attr(title);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 6px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+            pointer-events: none;
+            z-index: 1000;
+            margin-bottom: 5px;
+        }
+
+        .action-btn-compact::after {
+            content: '';
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 4px solid transparent;
+            border-top-color: rgba(0, 0, 0, 0.9);
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+            pointer-events: none;
+            z-index: 1000;
+            margin-bottom: 1px;
+        }
+
+        .action-btn-compact:hover::before,
+        .action-btn-compact:hover::after {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Remove default browser tooltip */
+        .action-btn-compact[title] {
+            position: relative;
+        }
         
         @media print {
             .no-print {
@@ -163,17 +369,14 @@
     <header class="gradient-bg text-white shadow-lg">
         <div class="container mx-auto px-4 py-6">
             <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-4">
+                <div class="flex items-center">
                     <h1 class="text-2xl font-bold">Quote Maker v2</h1>
-                    <span class="status-badge bg-green-100 text-green-800">Firebase Connected</span>
                 </div>
-                <div class="flex items-center space-x-4">
-                    <button id="save-quote-btn" class="btn-secondary">
-                        <span class="mr-2">💾</span> Save Quote
-                    </button>
-                    <button id="export-quote-btn" class="btn-secondary">
-                        <span class="mr-2">📄</span> Export PDF
-                    </button>
+                <div class="status-indicator" title="Firebase Connection Status">
+                    <svg class="w-9 h-9 text-green-500" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M5.803 21.803l5.678-10.44L9.189 6.81l-3.386 14.993zm7.078-11.013L11.189 8.8l1.292-2.49L10.189 3.81l2.692 6.98zm3.908 8.15L14.481 8.8l2.308 10.14z"/>
+                        <path d="M18.75 18.94L12 22.5l-6.75-3.56L12 2.5l6.75 16.44z" fill-opacity="0.3"/>
+                    </svg>
                 </div>
             </div>
         </div>
@@ -181,32 +384,28 @@
 
     <!-- Main Content -->
     <main class="container mx-auto px-4 py-8">
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="max-w-4xl mx-auto">
             
-            <!-- Left Column: Quote Builder -->
-            <div class="lg:col-span-2 space-y-6">
+            <!-- Quote Builder -->
+            <div class="space-y-6">
                 
                 <!-- Quote Information -->
-                <div class="card p-6">
-                    <h2 class="text-xl font-semibold mb-4 text-gray-800">Quote Information</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="card p-4">
+                    <h2 class="text-xl font-semibold mb-3 text-gray-800">Quote Information</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Quote Number</label>
-                            <input type="text" id="quote-number" class="form-input" placeholder="Auto-generated" readonly>
+                            <input type="text" id="quote-number" class="form-input" placeholder="Quote Number (Auto-generated)" readonly>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Date</label>
-                            <input type="date" id="quote-date" class="form-input">
+                            <input type="date" id="quote-date" class="form-input" placeholder="Date">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Client</label>
                             <select id="client-selector" class="form-select">
                                 <option value="">Select Client</option>
                                 <option value="add-new">+ Add New Client</option>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Salesperson</label>
                             <select id="salesperson-selector" class="form-select">
                                 <option value="">Select Salesperson</option>
                             </select>
@@ -215,85 +414,77 @@
                 </div>
 
                 <!-- Product Selection -->
-                <div class="card p-6">
-                    <h2 class="text-xl font-semibold mb-4 text-gray-800">Add Products</h2>
+                <div class="card p-4">
+                    <h2 class="text-xl font-semibold mb-3 text-gray-800">Add Products</h2>
                     
                     <!-- Price List and Currency -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Price List</label>
                             <select id="price-list-selector" class="form-select">
                                 <option value="">Select Price List</option>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Currency</label>
                             <select id="currency-selector" class="form-select">
                                 <option value="INR">INR (₹)</option>
                                 <option value="USD">USD ($)</option>
                                 <option value="EUR">EUR (€)</option>
                                 <option value="GBP">GBP (£)</option>
+                                <option value="AUD">AUD (A$)</option>
+                                <option value="AED">AED (د.إ)</option>
+                                <option value="NGN">NGN (₦)</option>
                             </select>
                         </div>
                     </div>
 
                     <!-- Product Selectors -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
                             <select id="category-selector" class="form-select" disabled>
-                                <option value="">Select Category</option>
+                                <option value="">Category</option>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Product</label>
                             <select id="product-selector" class="form-select" disabled>
-                                <option value="">Select Product</option>
+                                <option value="">Product</option>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Density</label>
                             <select id="density-selector" class="form-select" disabled>
-                                <option value="">Select Density</option>
+                                <option value="">Density</option>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Length</label>
                             <select id="length-selector" class="form-select" disabled>
-                                <option value="">Select Length</option>
+                                <option value="">Length</option>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Color Type</label>
                             <select id="color-type-selector" class="form-select" disabled>
-                                <option value="">Select Color Type</option>
+                                <option value="">Color Type</option>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Color</label>
                             <select id="color-selector" class="form-select" disabled>
-                                <option value="">Select Color</option>
+                                <option value="">Color</option>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Style</label>
                             <select id="style-selector" class="form-select" disabled>
-                                <option value="">Select Style</option>
+                                <option value="">Style</option>
                             </select>
                         </div>
                     </div>
 
                     <!-- Quantity and Price -->
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Quantity</label>
-                            <input type="number" id="quantity-input" class="form-input" min="1" value="1">
+                            <input type="number" id="quantity-input" class="form-input" min="1" value="1" placeholder="Quantity">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Unit Price</label>
-                            <input type="number" id="unit-price-input" class="form-input" step="0.01" placeholder="Auto-calculated">
+                            <input type="number" id="unit-price-input" class="form-input" step="0.01" placeholder="Unit Price (Auto-calculated)">
                         </div>
-                        <div class="flex items-end">
+                        <div class="md:col-span-2">
                             <button id="add-item-btn" class="btn-primary w-full" disabled>
                                 <span class="mr-2">➕</span> Add Item
                             </button>
@@ -318,72 +509,77 @@
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Right Column: Quote Summary -->
-            <div class="space-y-6">
-                
                 <!-- Quote Summary -->
-                <div class="card p-6">
+                <div class="card p-4">
                     <h2 class="text-xl font-semibold mb-4 text-gray-800">Quote Summary</h2>
                     
                     <div class="space-y-3">
-                        <div class="flex justify-between">
-                            <span class="text-gray-600">Subtotal:</span>
-                            <span id="subtotal-amount" class="font-semibold">₹0.00</span>
+                        <!-- Subtotal Row -->
+                        <div class="flex justify-between items-center py-1">
+                            <span class="text-gray-600 font-medium">Subtotal</span>
+                            <span id="subtotal-amount" class="font-semibold text-right">₹0.00</span>
                         </div>
                         
-                        <div class="flex justify-between items-center">
-                            <span class="text-gray-600">Discount:</span>
-                            <div class="flex items-center space-x-2">
-                                <input type="number" id="discount-input" class="form-input w-20 text-sm" min="0" max="100" value="0">
-                                <span class="text-sm text-gray-500">%</span>
+                        <!-- Discount Field -->
+                        <div class="flex justify-between items-center py-1">
+                            <div class="flex-1">
+                                <input type="text" id="discount-input" class="form-input text-left text-sm w-full" value="0" placeholder="Enter discount (0 or 0%)">
+                            </div>
+                            <div class="ml-3 text-right min-w-20">
+                                <span id="discount-amount" class="text-sm text-gray-600 font-medium">₹0.00</span>
                             </div>
                         </div>
                         
-                        <div class="flex justify-between items-center">
-                            <span class="text-gray-600">Tax:</span>
-                            <div class="flex items-center space-x-2">
-                                <input type="number" id="tax-input" class="form-input w-20 text-sm" min="0" max="100" value="18">
-                                <span class="text-sm text-gray-500">%</span>
+                        <!-- Tax Field -->
+                        <div class="flex justify-between items-center py-1">
+                            <div class="flex-1">
+                                <select id="tax-input" class="form-input text-left text-sm w-full">
+                                    <option value="0">Tax: 0%</option>
+                                    <option value="5">Tax: 5%</option>
+                                    <option value="12">Tax: 12%</option>
+                                    <option value="18" selected>Tax: 18%</option>
+                                </select>
+                            </div>
+                            <div class="ml-3 text-right min-w-20">
+                                <span id="tax-amount" class="text-sm text-gray-600 font-medium">₹0.00</span>
                             </div>
                         </div>
                         
-                        <hr class="my-3">
+                        <!-- Shipping Field -->
+                        <div class="flex justify-between items-center py-1">
+                            <div class="flex-1">
+                                <input type="number" id="shipping-input" class="form-input text-left text-sm w-full" min="0" step="0.01" value="0" placeholder="Enter shipping amount">
+                            </div>
+                            <div class="ml-3 text-right min-w-20">
+                                <span id="shipping-currency-symbol" class="text-sm text-gray-600 font-medium">₹</span>
+                            </div>
+                        </div>
                         
-                        <div class="flex justify-between text-lg font-bold">
-                            <span>Total:</span>
-                            <span id="total-amount" class="text-blue-600">₹0.00</span>
+                        <hr class="my-3 border-gray-300">
+                        
+                        <!-- Total Row -->
+                        <div class="flex justify-between items-center py-2 bg-blue-50 px-3 rounded-lg">
+                            <span class="text-lg font-bold text-gray-800">Total</span>
+                            <span id="total-amount" class="text-lg font-bold text-blue-600 text-right">₹0.00</span>
                         </div>
                     </div>
-                </div>
-
-                <!-- Quick Actions -->
-                <div class="card p-6">
-                    <h2 class="text-xl font-semibold mb-4 text-gray-800">Quick Actions</h2>
                     
-                    <div class="space-y-3">
-                        <button id="clear-quote-btn" class="btn-secondary w-full">
-                            <span class="mr-2">🗑️</span> Clear Quote
-                        </button>
-                        
-                        <button id="duplicate-quote-btn" class="btn-secondary w-full">
-                            <span class="mr-2">📋</span> Duplicate Quote
-                        </button>
-                        
-                        <button id="load-quote-btn" class="btn-secondary w-full">
-                            <span class="mr-2">📂</span> Load Quote
+                    <!-- Save Quote Button -->
+                    <div class="mt-6 pt-4 border-t border-gray-200">
+                        <button id="save-quote-btn" class="btn-primary w-full">
+                            <span class="mr-2">💾</span> Save Quote
                         </button>
                     </div>
                 </div>
 
-                <!-- Recent Quotes -->
+                <!-- Saved Quotes -->
                 <div class="card p-6">
-                    <h2 class="text-xl font-semibold mb-4 text-gray-800">Recent Quotes</h2>
-                    <div id="recent-quotes-container">
+                    <h2 class="text-xl font-semibold mb-4 text-gray-800">Saved Quotes</h2>
+                    <div id="saved-quotes-container">
                         <div class="text-center text-gray-500 py-4">
                             <div class="loading mx-auto mb-2"></div>
-                            <p class="text-sm">Loading recent quotes...</p>
+                            <p class="text-sm">Loading saved quotes...</p>
                         </div>
                     </div>
                 </div>
@@ -451,8 +647,7 @@
     </div>
 
     <!-- Scripts -->
-    <script src="firebase-config.js"></script>
-    <script src="firebase-database.js"></script>
+    <script src="firebase-error-handler.js"></script>
     <script src="client-management.js"></script>
     
     <script>
@@ -486,9 +681,108 @@
             'EUR': '€',
             'GBP': '£',
             'AUD': 'A$',
+            'AED': 'د.إ ',
+            'NGN': '₦',
             'CAD': 'C$',
             'JPY': '¥'
         };
+
+        // Exchange rates (base: INR)
+        let exchangeRates = {
+            'INR': 1,
+            'USD': 0.012,
+            'EUR': 0.011,
+            'GBP': 0.0095,
+            'AUD': 0.018,
+            'AED': 0.044,
+            'NGN': 19.5,
+            'CAD': 0.016,
+            'JPY': 1.8
+        };
+
+        // Fetch real-time exchange rates
+        async function fetchExchangeRates() {
+            try {
+                // Using multiple APIs for better reliability
+                let data = null;
+                
+                // Try primary API first
+                try {
+                    const response = await fetch('https://api.exchangerate-api.com/v4/latest/INR');
+                    data = await response.json();
+                } catch (e) {
+                    console.warn('Primary API failed, trying backup...');
+                    // Backup API
+                    const response = await fetch('https://api.fixer.io/latest?base=INR&access_key=YOUR_API_KEY');
+                    data = await response.json();
+                }
+                
+                if (data && data.rates) {
+                    const newRates = {
+                        'INR': 1,
+                        'USD': data.rates.USD || exchangeRates.USD,
+                        'EUR': data.rates.EUR || exchangeRates.EUR,
+                        'GBP': data.rates.GBP || exchangeRates.GBP,
+                        'AUD': data.rates.AUD || exchangeRates.AUD,
+                        'AED': data.rates.AED || exchangeRates.AED,
+                        'NGN': data.rates.NGN || exchangeRates.NGN,
+                        'CAD': data.rates.CAD || exchangeRates.CAD,
+                        'JPY': data.rates.JPY || exchangeRates.JPY
+                    };
+                    
+                    // Update rates and recalculate all prices if rates changed
+                    const ratesChanged = JSON.stringify(exchangeRates) !== JSON.stringify(newRates);
+                    exchangeRates = newRates;
+                    
+                    if (ratesChanged && currentQuote.items.length > 0) {
+                        updatePricing();
+                        updateQuoteSummary();
+                    }
+                    
+                    console.log('✅ Exchange rates updated successfully', exchangeRates);
+                }
+            } catch (error) {
+                console.warn('⚠️ Failed to fetch exchange rates, using default rates:', error);
+            }
+        }
+
+        // Convert amount between currencies
+        function convertCurrency(amount, fromCurrency, toCurrency) {
+            if (fromCurrency === toCurrency) return amount;
+            
+            // Convert to INR first, then to target currency
+            const inrAmount = amount / exchangeRates[fromCurrency];
+            return inrAmount * exchangeRates[toCurrency];
+        }
+
+        // Start periodic exchange rate updates
+        function startExchangeRateUpdates() {
+            // Update rates every 30 minutes
+            setInterval(async () => {
+                console.log('🔄 Updating exchange rates...');
+                await fetchExchangeRates();
+                // Recalculate current quote with new rates
+                recalculateWithCurrentRates();
+            }, 30 * 60 * 1000);
+        }
+
+        // Recalculate all prices with current exchange rates
+        function recalculateWithCurrentRates() {
+            if (currentQuote && currentQuote.items && currentQuote.items.length > 0) {
+                console.log('🔄 Recalculating quote with current exchange rates...');
+                
+                // Update pricing for current product selection
+                updatePricing();
+                
+                // Update quote summary
+                updateQuoteSummary();
+                
+                // Update quote items display
+                updateQuoteItemsDisplay();
+                
+                console.log('✅ Quote recalculated with current exchange rates');
+            }
+        }
 
         // Initialize the application
         document.addEventListener('DOMContentLoaded', async function() {
@@ -498,6 +792,12 @@
                 // Initialize Firebase
                 await initializeFirebase();
                 
+                // Fetch real-time exchange rates
+                await fetchExchangeRates();
+                
+                // Start periodic exchange rate updates
+                startExchangeRateUpdates();
+                
                 // Load initial data
                 await loadAllData();
                 
@@ -506,6 +806,9 @@
                 
                 // Initialize quote
                 initializeQuote();
+                
+                // Load saved quotes
+                await loadSavedQuotes();
                 
                 console.log('✅ Quote Maker v2 initialized successfully');
                 
@@ -519,16 +822,26 @@
 
         // Initialize Firebase
         async function initializeFirebase() {
-            if (window.firebaseDB) {
-                await window.firebaseDB.initialize();
-                
-                if (window.firebaseDB.isAvailable()) {
-                    updateConnectionStatus(true);
-                    console.log('✅ Firebase connected successfully');
+            try {
+                if (window.firebaseDB) {
+                    console.log('🔄 Initializing Firebase...');
+                    await window.firebaseDB.initialize();
+                    
+                    if (window.firebaseDB.isAvailable()) {
+                        updateConnectionStatus(true);
+                        console.log('✅ Firebase connected successfully');
+                    } else {
+                        updateConnectionStatus(false);
+                        console.warn('⚠️ Firebase not available, using fallback data');
+                    }
                 } else {
+                    console.warn('⚠️ Firebase database module not found, using fallback data');
                     updateConnectionStatus(false);
-                    console.warn('⚠️ Firebase not available, using fallback data');
                 }
+            } catch (error) {
+                console.error('❌ Firebase initialization failed:', error);
+                updateConnectionStatus(false);
+                // Continue with fallback data instead of failing
             }
         }
 
@@ -777,12 +1090,38 @@
             document.getElementById('discount-input').addEventListener('input', updateQuoteSummary);
             document.getElementById('tax-input').addEventListener('input', updateQuoteSummary);
             
+            // Shipping input with error handling
+            const shippingInput = document.getElementById('shipping-input');
+            if (shippingInput) {
+                shippingInput.addEventListener('input', updateQuoteSummary);
+            } else {
+                console.error('❌ Shipping input element not found');
+            }
+            
             // Action buttons
             document.getElementById('save-quote-btn').addEventListener('click', saveQuote);
-            document.getElementById('export-quote-btn').addEventListener('click', exportQuote);
-            document.getElementById('clear-quote-btn').addEventListener('click', clearQuote);
-            document.getElementById('duplicate-quote-btn').addEventListener('click', duplicateQuote);
-            document.getElementById('load-quote-btn').addEventListener('click', loadQuote);
+            
+            // Optional buttons with null checks
+            const clearQuoteBtn = document.getElementById('clear-quote-btn');
+            if (clearQuoteBtn) {
+                clearQuoteBtn.addEventListener('click', clearQuote);
+            } else {
+                console.log('ℹ️ Clear quote button not found - feature not available');
+            }
+            
+            const duplicateQuoteBtn = document.getElementById('duplicate-quote-btn');
+            if (duplicateQuoteBtn) {
+                duplicateQuoteBtn.addEventListener('click', duplicateQuote);
+            } else {
+                console.log('ℹ️ Duplicate quote button not found - feature not available');
+            }
+            
+            const loadQuoteBtn = document.getElementById('load-quote-btn');
+            if (loadQuoteBtn) {
+                loadQuoteBtn.addEventListener('click', loadQuote);
+            } else {
+                console.log('ℹ️ Load quote button not found - feature not available');
+            }
             
             // Modal events
             document.getElementById('close-modal-btn').addEventListener('click', closeAddClientModal);
@@ -822,6 +1161,14 @@
                 selector.appendChild(option);
             });
             
+            // Auto-select if only one option is available
+            if (categories.length === 1) {
+                selector.value = categories[0];
+                console.log(`🎯 Auto-selected category: ${categories[0]}`);
+                // Trigger the change event to populate dependent dropdowns
+                onCategoryChange();
+            }
+            
             console.log(`📂 Populated ${categories.length} categories for ${priceList}`);
         }
 
@@ -859,6 +1206,14 @@
                 option.textContent = product;
                 selector.appendChild(option);
             });
+            
+            // Auto-select if only one option is available
+            if (products.length === 1) {
+                selector.value = products[0];
+                console.log(`🎯 Auto-selected product: ${products[0]}`);
+                // Trigger the change event to populate dependent dropdowns
+                onProductChange();
+            }
             
             console.log(`📦 Populated ${products.length} products for ${category}`);
         }
@@ -914,6 +1269,13 @@
                 selector.appendChild(option);
             });
             
+            // Auto-select if only one option is available
+            if (densities.length === 1) {
+                selector.value = densities[0];
+                console.log(`🎯 Auto-selected density: ${densities[0]}`);
+                updatePricing();
+            }
+            
             console.log(`⚖️ Populated ${densities.length} densities for ${product}`);
         }
 
@@ -944,6 +1306,13 @@
                 selector.appendChild(option);
             });
             
+            // Auto-select if only one option is available
+            if (lengths.length === 1) {
+                selector.value = lengths[0];
+                console.log(`🎯 Auto-selected length: ${lengths[0]}`);
+                updatePricing();
+            }
+            
             console.log(`📏 Populated ${lengths.length} lengths for ${product}`);
         }
 
@@ -971,6 +1340,13 @@
                 option.textContent = color;
                 selector.appendChild(option);
             });
+            
+            // Auto-select if only one option is available
+            if (colors.length === 1) {
+                selector.value = colors[0];
+                console.log(`🎯 Auto-selected color type: ${colors[0]}`);
+                onColorTypeChange();
+            }
             
             console.log(`🎨 Populated ${colors.length} color types for ${product}`);
         }
@@ -1078,18 +1454,32 @@
                 
                 if (matchingProduct) {
                     const calculatedPrice = parseFloat(matchingProduct.Rate || matchingProduct.Price || matchingProduct.price || 0);
+                    const productCurrency = matchingProduct.Currency || 'INR';
+                    const selectedCurrency = document.getElementById('currency-selector').value;
+                    
                     console.log('💰 Found matching product for pricing:', {
                         product: matchingProduct,
-                        calculatedPrice: calculatedPrice
+                        calculatedPrice: calculatedPrice,
+                        productCurrency: productCurrency,
+                        selectedCurrency: selectedCurrency
                     });
                     
-                    // Use override price if manually entered, otherwise use calculated price
+                    // Apply currency conversion to the calculated price
+                    const convertedPrice = convertCurrency(calculatedPrice, productCurrency, selectedCurrency);
+                    
+                    // Use override price if manually entered, otherwise use converted calculated price
                      if (isManualPriceEntry && overridePrice && overridePrice > 0) {
                          unitPrice = overridePrice;
                          console.log('🔧 Using manual override price:', overridePrice);
                      } else {
-                         unitPrice = calculatedPrice;
-                         // Update the input field with calculated price only if not manually entered
+                         unitPrice = convertedPrice;
+                         console.log('💱 Applied currency conversion:', {
+                             original: calculatedPrice,
+                             converted: convertedPrice,
+                             from: productCurrency,
+                             to: selectedCurrency
+                         });
+                         // Update the input field with converted price only if not manually entered
                          if (!isManualPriceEntry) {
                              document.getElementById('unit-price-input').value = unitPrice > 0 ? unitPrice.toFixed(2) : '';
                          }
@@ -1143,10 +1533,67 @@
         }
 
         // Currency change handler
-        function onCurrencyChange() {
-            const currency = document.getElementById('currency-selector').value;
-            currentQuote.currency = currency;
+        async function onCurrencyChange() {
+            const newCurrency = document.getElementById('currency-selector').value;
+            const oldCurrency = currentQuote.currency || 'INR';
+            
+            if (newCurrency !== oldCurrency) {
+                // Convert existing quote values to new currency
+                if (currentQuote.items && currentQuote.items.length > 0) {
+                    currentQuote.items.forEach(item => {
+                        if (item.unitPrice) {
+                            item.unitPrice = convertCurrency(item.unitPrice, oldCurrency, newCurrency);
+                            item.totalPrice = item.unitPrice * item.quantity;
+                        }
+                      });
+                }
+                
+                // Convert summary amounts
+                if (currentQuote.subtotal) {
+                    currentQuote.subtotal = convertCurrency(currentQuote.subtotal, oldCurrency, newCurrency);
+                }
+                if (currentQuote.discountAmount) {
+                    currentQuote.discountAmount = convertCurrency(currentQuote.discountAmount, oldCurrency, newCurrency);
+                }
+                if (currentQuote.taxAmount) {
+                    currentQuote.taxAmount = convertCurrency(currentQuote.taxAmount, oldCurrency, newCurrency);
+                }
+                if (currentQuote.shipping) {
+                    currentQuote.shipping = convertCurrency(currentQuote.shipping, oldCurrency, newCurrency);
+                }
+                if (currentQuote.total) {
+                    currentQuote.total = convertCurrency(currentQuote.total, oldCurrency, newCurrency);
+                }
+                
+                // Update shipping input field
+                const shippingInput = document.getElementById('shipping-input');
+                if (shippingInput && shippingInput.value) {
+                    const convertedShipping = convertCurrency(parseFloat(shippingInput.value), oldCurrency, newCurrency);
+                    shippingInput.value = convertedShipping.toFixed(2);
+                }
+                
+                // Update discount input field (only if it's a fixed amount, not percentage)
+                const discountInput = document.getElementById('discount-input');
+                if (discountInput && discountInput.value && !discountInput.value.includes('%')) {
+                    const convertedDiscount = convertCurrency(parseFloat(discountInput.value), oldCurrency, newCurrency);
+                    discountInput.value = convertedDiscount.toFixed(2);
+                }
+                
+                // Update shipping currency symbol
+                const shippingSymbol = document.getElementById('shipping-currency-symbol');
+                if (shippingSymbol) {
+                    shippingSymbol.textContent = currencySymbols[newCurrency] || newCurrency + ' ';
+                }
+                
+                // Update shipping input placeholder
+                if (shippingInput) {
+                    shippingInput.placeholder = `Enter shipping amount in ${newCurrency}`;
+                }
+            }
+            
+            currentQuote.currency = newCurrency;
             updatePricing();
+            updateQuoteItemsDisplay();
             updateQuoteSummary();
         }
 
@@ -1219,6 +1666,13 @@
             
             // Clear selectors except price list
             clearCascadeSelectors(['category-selector', 'product-selector', 'density-selector', 'length-selector', 'color-type-selector', 'color-selector']);
+            
+            // Re-enable category selector if price list is selected
+            const priceList = document.getElementById('price-list-selector').value;
+            if (priceList) {
+                document.getElementById('category-selector').disabled = false;
+                populateCategories(priceList);
+            }
         }
 
         // Update quote items display
@@ -1277,24 +1731,45 @@
             // Calculate subtotal
             const subtotal = currentQuote.items.reduce((sum, item) => sum + item.totalPrice, 0);
             
-            // Get discount and tax
-            const discountPercent = parseFloat(document.getElementById('discount-input').value) || 0;
+            // Get discount input and determine if it's percentage or amount
+            const discountInput = document.getElementById('discount-input').value.trim();
+            let discountAmount = 0;
+            let discountType = 'amount';
+            
+            if (discountInput.includes('%')) {
+                // Percentage discount
+                const discountPercent = parseFloat(discountInput.replace('%', '')) || 0;
+                discountAmount = subtotal * (discountPercent / 100);
+                discountType = 'percentage';
+            } else {
+                // Amount discount
+                discountAmount = parseFloat(discountInput) || 0;
+                discountType = 'amount';
+            }
+            
+            // Get tax and shipping
             const taxPercent = parseFloat(document.getElementById('tax-input').value) || 0;
+            const shippingAmount = parseFloat(document.getElementById('shipping-input').value) || 0;
             
             // Calculate amounts
-            const discountAmount = subtotal * (discountPercent / 100);
             const taxableAmount = subtotal - discountAmount;
             const taxAmount = taxableAmount * (taxPercent / 100);
-            const total = taxableAmount + taxAmount;
+            const total = taxableAmount + taxAmount + shippingAmount;
             
             // Update display
             document.getElementById('subtotal-amount').textContent = `${symbol}${subtotal.toFixed(2)}`;
+            document.getElementById('discount-amount').textContent = `${symbol}${discountAmount.toFixed(2)}`;
+            document.getElementById('tax-amount').textContent = `${symbol}${taxAmount.toFixed(2)}`;
             document.getElementById('total-amount').textContent = `${symbol}${total.toFixed(2)}`;
             
             // Update current quote
             currentQuote.subtotal = subtotal;
-            currentQuote.discount = discountPercent;
+            currentQuote.discountAmount = discountAmount;
+            currentQuote.discountType = discountType;
+            currentQuote.discountInput = discountInput;
             currentQuote.tax = taxPercent;
+            currentQuote.taxAmount = taxAmount;
+            currentQuote.shipping = shippingAmount;
             currentQuote.total = total;
         }
 
@@ -1317,13 +1792,25 @@
         }
 
         function updateConnectionStatus(connected) {
-            const badge = document.querySelector('.status-badge');
+            const indicator = document.querySelector('.status-indicator');
             if (connected) {
-                badge.textContent = 'Firebase Connected';
-                badge.className = 'status-badge bg-green-100 text-green-800';
+                // Green Firebase logo for connected state
+                indicator.innerHTML = `
+                    <svg class="w-9 h-9 text-green-500" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M5.803 21.803l5.678-10.44L9.189 6.81l-3.386 14.993zm7.078-11.013L11.189 8.8l1.292-2.49L10.189 3.81l2.692 6.98zm3.908 8.15L14.481 8.8l2.308 10.14z"/>
+                        <path d="M18.75 18.94L12 22.5l-6.75-3.56L12 2.5l6.75 16.44z" fill-opacity="0.3"/>
+                    </svg>
+                `;
+                indicator.title = "Firebase Connected";
             } else {
-                badge.textContent = 'Offline Mode';
-                badge.className = 'status-badge bg-yellow-100 text-yellow-800';
+                // Red Firebase logo for disconnected state
+                indicator.innerHTML = `
+                    <svg class="w-9 h-9 text-red-500" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M5.803 21.803l5.678-10.44L9.189 6.81l-3.386 14.993zm7.078-11.013L11.189 8.8l1.292-2.49L10.189 3.81l2.692 6.98zm3.908 8.15L14.481 8.8l2.308 10.14z"/>
+                        <path d="M18.75 18.94L12 22.5l-6.75-3.56L12 2.5l6.75 16.44z" fill-opacity="0.3"/>
+                    </svg>
+                `;
+                indicator.title = "Firebase Disconnected";
             }
         }
 
@@ -1358,6 +1845,19 @@
             // Update form
             document.getElementById('quote-number').value = currentQuote.number;
             document.getElementById('quote-date').value = currentQuote.date;
+            
+            // Initialize shipping currency symbol
+            const defaultCurrency = currentQuote.currency || 'INR';
+            const shippingSymbol = document.getElementById('shipping-currency-symbol');
+            if (shippingSymbol) {
+                shippingSymbol.textContent = currencySymbols[defaultCurrency] || defaultCurrency + ' ';
+            }
+            
+            // Initialize shipping input placeholder
+            const shippingInput = document.getElementById('shipping-input');
+            if (shippingInput) {
+                shippingInput.placeholder = `Enter shipping amount in ${defaultCurrency}`;
+            }
         }
 
         // Modal functions
@@ -1445,19 +1945,44 @@
                 showLoading(true);
                 
                 // Update quote data from form
-                currentQuote.number = document.getElementById('quote-number').value;
-                currentQuote.date = document.getElementById('quote-date').value;
-                currentQuote.salesperson = document.getElementById('salesperson-selector').value;
+                const quoteData = {
+                    ...currentQuote,
+                    number: document.getElementById('quote-number').value || generateQuoteNumber(),
+                    date: document.getElementById('quote-date').value || new Date().toISOString().split('T')[0],
+                    salesperson: document.getElementById('salesperson-selector').value,
+                    discount: parseFloat(document.getElementById('discount-input').value) || 0,
+                    tax: parseFloat(document.getElementById('tax-input').value) || 18,
+                    shipping: parseFloat(document.getElementById('shipping-input').value) || 0,
+                    subtotal: calculateSubtotal(),
+                    total: calculateTotal(),
+                    status: 'draft',
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                };
                 
                 if (window.firebaseDB && window.firebaseDB.isAvailable()) {
-                    await window.firebaseDB.saveQuote(currentQuote);
-                    showSuccess('Quote saved successfully!');
+                    // Save to Firebase quotes collection
+                    const savedQuote = await window.firebaseDB.saveQuote(quoteData);
+                    showSuccess('Quote saved successfully to Firebase!');
+                    
+                    // Update current quote with saved data
+                    currentQuote = { ...quoteData, id: savedQuote.id };
+                    
+                    // Refresh saved quotes list
+                    await loadSavedQuotes();
                 } else {
                     // Save to localStorage as fallback
                     const savedQuotes = JSON.parse(localStorage.getItem('savedQuotes') || '[]');
-                    savedQuotes.push(currentQuote);
+                    quoteData.id = Date.now().toString();
+                    savedQuotes.push(quoteData);
                     localStorage.setItem('savedQuotes', JSON.stringify(savedQuotes));
                     showSuccess('Quote saved locally!');
+                    
+                    // Update current quote
+                    currentQuote = quoteData;
+                    
+                    // Refresh saved quotes list
+                    loadSavedQuotesFromLocal();
                 }
                 
             } catch (error) {
@@ -1468,10 +1993,222 @@
             }
         }
 
-        // Export quote (placeholder)
-        function exportQuote() {
-            showError('Export functionality will be implemented soon.');
+        // Load saved quotes from Firebase
+        async function loadSavedQuotes() {
+            try {
+                const container = document.getElementById('saved-quotes-container');
+                
+                if (window.firebaseDB && window.firebaseDB.isAvailable()) {
+                    const quotes = await window.firebaseDB.getQuotes();
+                    displaySavedQuotes(quotes);
+                } else {
+                    loadSavedQuotesFromLocal();
+                }
+                
+            } catch (error) {
+                console.error('Error loading saved quotes:', error);
+                const container = document.getElementById('saved-quotes-container');
+                container.innerHTML = '<div class="text-center text-red-500 py-4"><p class="text-sm">Error loading quotes</p></div>';
+            }
         }
+
+        // Load saved quotes from localStorage
+        function loadSavedQuotesFromLocal() {
+            try {
+                const savedQuotes = JSON.parse(localStorage.getItem('savedQuotes') || '[]');
+                displaySavedQuotes(savedQuotes);
+            } catch (error) {
+                console.error('Error loading local quotes:', error);
+                const container = document.getElementById('saved-quotes-container');
+                container.innerHTML = '<div class="text-center text-red-500 py-4"><p class="text-sm">Error loading local quotes</p></div>';
+            }
+        }
+
+        // Display saved quotes in the UI
+        function displaySavedQuotes(quotes) {
+            const container = document.getElementById('saved-quotes-container');
+            
+            if (!quotes || quotes.length === 0) {
+                container.innerHTML = '<div class="text-center text-gray-500 py-4"><p class="text-sm">No saved quotes yet</p></div>';
+                return;
+            }
+            
+            // Sort quotes by creation date (newest first)
+            const sortedQuotes = quotes.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            
+            container.innerHTML = sortedQuotes.slice(0, 5).map(quote => {
+                // Calculate total amount with currency symbol
+                const total = quote.total || 0;
+                const currency = quote.currency || 'INR';
+                const symbol = currencySymbols[currency] || currency + ' ';
+                const totalDisplay = `${symbol}${total.toFixed(2)}`;
+                
+                return `
+                <div class="quote-item border rounded-lg p-1 mb-1 hover:bg-gray-50">
+                    <div class="flex justify-between items-center">
+                        <div class="flex-1">
+                            <div class="text-xs text-gray-700">
+                                <span class="font-semibold">${quote.number || 'No Number'}</span>
+                                <span class="mx-1">-</span>
+                                <span>${quote.client ? quote.client.clientName : 'No Client'}</span>
+                                <span class="mx-1">-</span>
+                                <span>${quote.items ? quote.items.length : 0} items</span>
+                                <span class="mx-1">-</span>
+                                <span class="font-semibold text-green-600">${totalDisplay}</span>
+                                <span class="mx-1">-</span>
+                                <span class="text-gray-500">${formatDate(quote.createdAt)}</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Action Buttons -->
+                        <div class="flex items-center space-x-1">
+                            <button onclick="recallQuote('${quote.id}')" class="action-btn-compact action-btn-recall" title="Recall for editing">
+                                <span class="text-xs">📝</span>
+                            </button>
+                            <button onclick="previewQuote('${quote.id}')" class="action-btn-compact action-btn-preview" title="Generate proforma invoice">
+                                <span class="text-xs">👁️</span>
+                            </button>
+                            <button onclick="deleteQuote('${quote.id}')" class="action-btn-compact action-btn-delete" title="Delete quote">
+                                <span class="text-xs">🗑️</span>
+                            </button>
+                            <button onclick="convertToOrder('${quote.id}')" class="action-btn-compact action-btn-convert" title="Convert to order">
+                                <span class="text-xs">📦</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+
+        // Load quote data into the form
+        async function loadQuoteData(quoteId) {
+            try {
+                showLoading(true);
+                
+                let quote = null;
+                
+                if (window.firebaseDB && window.firebaseDB.isAvailable()) {
+                    const quotes = await window.firebaseDB.getQuotes();
+                    quote = quotes.find(q => q.id === quoteId);
+                } else {
+                    const savedQuotes = JSON.parse(localStorage.getItem('savedQuotes') || '[]');
+                    quote = savedQuotes.find(q => q.id === quoteId);
+                }
+                
+                if (quote) {
+                    // Load quote data into form
+                    currentQuote = { ...quote };
+                    
+                    // Set currency selector and apply conversion if needed
+                    const quoteCurrency = quote.currency || 'INR';
+                    const currentCurrency = document.getElementById('currency-selector').value;
+                    document.getElementById('currency-selector').value = quoteCurrency;
+                    
+                    // Apply currency conversion to all quote items if currency has changed
+                    if (quoteCurrency !== currentCurrency && currentQuote.items) {
+                        console.log('💱 Converting loaded quote from', quoteCurrency, 'to', currentCurrency);
+                        currentQuote.items.forEach(item => {
+                            if (item.unitPrice) {
+                                item.unitPrice = convertCurrency(item.unitPrice, quoteCurrency, currentCurrency);
+                                item.totalPrice = item.unitPrice * item.quantity;
+                            }
+                        });
+                        
+                        // Convert summary amounts
+                        if (currentQuote.subtotal) {
+                            currentQuote.subtotal = convertCurrency(currentQuote.subtotal, quoteCurrency, currentCurrency);
+                        }
+                        if (currentQuote.discountAmount) {
+                            currentQuote.discountAmount = convertCurrency(currentQuote.discountAmount, quoteCurrency, currentCurrency);
+                        }
+                        if (currentQuote.taxAmount) {
+                            currentQuote.taxAmount = convertCurrency(currentQuote.taxAmount, quoteCurrency, currentCurrency);
+                        }
+                        if (currentQuote.shipping) {
+                            currentQuote.shipping = convertCurrency(currentQuote.shipping, quoteCurrency, currentCurrency);
+                        }
+                        if (currentQuote.total) {
+                            currentQuote.total = convertCurrency(currentQuote.total, quoteCurrency, currentCurrency);
+                        }
+                        
+                        // Update currency in quote
+                        currentQuote.currency = currentCurrency;
+                    }
+                    
+                    // Update form fields
+                    document.getElementById('quote-number').value = quote.number || '';
+                    document.getElementById('quote-date').value = quote.date || '';
+                    document.getElementById('salesperson-selector').value = quote.salesperson || '';
+                    document.getElementById('discount-input').value = quote.discount || 0;
+                    document.getElementById('tax-input').value = quote.tax || 18;
+                    document.getElementById('shipping-input').value = quote.shipping || 0;
+                    
+                    // Set client if available
+                    if (quote.client) {
+                        document.getElementById('client-selector').value = quote.client.id || '';
+                    }
+                    
+                    // Update displays
+                    updateQuoteItemsDisplay();
+                    updateQuoteSummary();
+                    
+                    showSuccess('Quote loaded successfully!');
+                } else {
+                    showError('Quote not found.');
+                }
+                
+            } catch (error) {
+                console.error('Error loading quote:', error);
+                showError('Failed to load quote.');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Helper function to calculate subtotal
+        function calculateSubtotal() {
+            return currentQuote.items.reduce((sum, item) => sum + item.totalPrice, 0);
+        }
+
+        // Helper function to calculate total
+        function calculateTotal() {
+            const subtotal = calculateSubtotal();
+            const discount = parseFloat(document.getElementById('discount-input').value) || 0;
+            const tax = parseFloat(document.getElementById('tax-input').value) || 0;
+            const shipping = parseFloat(document.getElementById('shipping-input').value) || 0;
+            
+            const discountAmount = subtotal * (discount / 100);
+            const taxableAmount = subtotal - discountAmount;
+            const taxAmount = taxableAmount * (tax / 100);
+            
+            return taxableAmount + taxAmount + shipping;
+        }
+
+        // Helper function to format currency
+        function formatCurrency(amount, currency) {
+            const symbol = currencySymbols[currency] || currency + ' ';
+            return `${symbol}${amount.toFixed(2)}`;
+        }
+
+        // Helper function to format date
+        function formatDate(dateString) {
+            if (!dateString) return 'Unknown';
+            const date = new Date(dateString);
+            return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        }
+
+        // Generate quote number
+        function generateQuoteNumber() {
+            const date = new Date();
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const time = String(date.getHours()).padStart(2, '0') + String(date.getMinutes()).padStart(2, '0');
+            return `INH-${year}${month}${day}-${time}`;
+        }
+
+
 
         // Clear quote
         function clearQuote() {
@@ -1485,6 +2222,7 @@
                 document.getElementById('price-list-selector').value = '';
                 document.getElementById('discount-input').value = '0';
                 document.getElementById('tax-input').value = '18';
+                document.getElementById('shipping-input').value = '0';
                 
                 clearProductForm();
                 updateQuoteItemsDisplay();
@@ -1504,6 +2242,578 @@
             showError('Load quote functionality will be implemented soon.');
         }
 
+        // Quote Management Actions
+
+        // Recall quote for editing
+        async function recallQuote(quoteId) {
+            try {
+                showLoading(true);
+                
+                let quote = null;
+                
+                if (window.firebaseDB && window.firebaseDB.isAvailable()) {
+                    const quotes = await window.firebaseDB.getQuotes();
+                    quote = quotes.find(q => q.id === quoteId);
+                } else {
+                    const savedQuotes = JSON.parse(localStorage.getItem('savedQuotes') || '[]');
+                    quote = savedQuotes.find(q => q.id === quoteId);
+                }
+                
+                if (quote) {
+                    // Load quote data into form
+                    currentQuote = { ...quote };
+                    
+                    // Update form fields
+                    document.getElementById('quote-number').value = quote.number || '';
+                    document.getElementById('quote-date').value = quote.date || '';
+                    document.getElementById('salesperson-selector').value = quote.salesperson || '';
+                    document.getElementById('discount-input').value = quote.discount || 0;
+                    document.getElementById('tax-input').value = quote.tax || 18;
+                    document.getElementById('shipping-input').value = quote.shipping || 0;
+                    
+                    // Set client if available
+                    if (quote.client) {
+                        document.getElementById('client-selector').value = quote.client.id || '';
+                    }
+                    
+                    // Update displays
+                    updateQuoteItemsDisplay();
+                    updateQuoteSummary();
+                    
+                    showSuccess('Quote recalled for editing!');
+                    
+                    // Scroll to top for better UX
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                } else {
+                    showError('Quote not found.');
+                }
+                
+            } catch (error) {
+                console.error('Error recalling quote:', error);
+                showError('Failed to recall quote.');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Preview quote (generate proforma invoice)
+        async function previewQuote(quoteId) {
+            try {
+                showLoading(true);
+                
+                let quote = null;
+                
+                if (window.firebaseDB && window.firebaseDB.isAvailable()) {
+                    const quotes = await window.firebaseDB.getQuotes();
+                    quote = quotes.find(q => q.id === quoteId);
+                } else {
+                    const savedQuotes = JSON.parse(localStorage.getItem('savedQuotes') || '[]');
+                    quote = savedQuotes.find(q => q.id === quoteId);
+                }
+                
+                if (quote) {
+                    // Generate proforma invoice preview (thermal printer format)
+                    const proformaWindow = window.open('', '_blank', 'width=400,height=800');
+                    const proformaHTML = generateProformaHTML(quote);
+                    
+                    proformaWindow.document.write(proformaHTML);
+                    proformaWindow.document.close();
+                    
+                    // Pass quote data to the preview window for PDF generation
+                    setTimeout(() => {
+                        proformaWindow.postMessage({ type: 'QUOTE_DATA', quote: quote }, '*');
+                    }, 100);
+                    
+                    showSuccess('Proforma invoice generated!');
+                } else {
+                    showError('Quote not found.');
+                }
+                
+            } catch (error) {
+                console.error('Error generating preview:', error);
+                showError('Failed to generate preview.');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Delete quote (update status to 'hold')
+        async function deleteQuote(quoteId) {
+            if (!confirm('Are you sure you want to delete this quote? It will be marked as "hold" status.')) {
+                return;
+            }
+            
+            try {
+                showLoading(true);
+                
+                if (window.firebaseDB && window.firebaseDB.isAvailable()) {
+                    // Update quote status to 'hold' in Firebase
+                    await window.firebaseDB.updateAllData('quotes', quoteId, { status: 'hold', updatedAt: new Date().toISOString() });
+                    showSuccess('Quote moved to hold status!');
+                    
+                    // Refresh saved quotes list
+                    await loadSavedQuotes();
+                } else {
+                    // Update in localStorage
+                    const savedQuotes = JSON.parse(localStorage.getItem('savedQuotes') || '[]');
+                    const quoteIndex = savedQuotes.findIndex(q => q.id === quoteId);
+                    
+                    if (quoteIndex !== -1) {
+                        savedQuotes[quoteIndex].status = 'hold';
+                        savedQuotes[quoteIndex].updatedAt = new Date().toISOString();
+                        localStorage.setItem('savedQuotes', JSON.stringify(savedQuotes));
+                        showSuccess('Quote moved to hold status!');
+                        
+                        // Refresh saved quotes list
+                        loadSavedQuotesFromLocal();
+                    } else {
+                        showError('Quote not found.');
+                    }
+                }
+                
+            } catch (error) {
+                console.error('Error deleting quote:', error);
+                showError('Failed to delete quote.');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Convert quote to order
+        async function convertToOrder(quoteId) {
+            if (!confirm('Are you sure you want to convert this quote to an order? This action cannot be undone.')) {
+                return;
+            }
+            
+            try {
+                showLoading(true);
+                
+                let quote = null;
+                
+                if (window.firebaseDB && window.firebaseDB.isAvailable()) {
+                    const quotes = await window.firebaseDB.getQuotes();
+                    quote = quotes.find(q => q.id === quoteId);
+                } else {
+                    const savedQuotes = JSON.parse(localStorage.getItem('savedQuotes') || '[]');
+                    quote = savedQuotes.find(q => q.id === quoteId);
+                }
+                
+                if (quote) {
+                    // Create order data from quote
+                    const orderData = {
+                        ...quote,
+                        id: undefined, // Remove quote ID
+                        orderId: generateOrderNumber(),
+                        quoteId: quote.id,
+                        status: 'pending',
+                        orderDate: new Date().toISOString(),
+                        type: 'order'
+                    };
+                    
+                    if (window.firebaseDB && window.firebaseDB.isAvailable()) {
+                        // Save to orders collection
+                        await window.firebaseDB.saveOrder(orderData);
+                        
+                        // Update quote status to 'converted'
+                        await window.firebaseDB.updateAllData('quotes', quoteId, { status: 'converted', updatedAt: new Date().toISOString() });
+                        
+                        showSuccess(`Quote converted to order ${orderData.orderId}!`);
+                        
+                        // Refresh saved quotes list
+                        await loadSavedQuotes();
+                    } else {
+                        // Save to localStorage orders
+                        const savedOrders = JSON.parse(localStorage.getItem('savedOrders') || '[]');
+                        savedOrders.push(orderData);
+                        localStorage.setItem('savedOrders', JSON.stringify(savedOrders));
+                        
+                        // Update quote status
+                        const savedQuotes = JSON.parse(localStorage.getItem('savedQuotes') || '[]');
+                        const quoteIndex = savedQuotes.findIndex(q => q.id === quoteId);
+                        if (quoteIndex !== -1) {
+                            savedQuotes[quoteIndex].status = 'converted';
+                            savedQuotes[quoteIndex].updatedAt = new Date().toISOString();
+                            localStorage.setItem('savedQuotes', JSON.stringify(savedQuotes));
+                        }
+                        
+                        showSuccess(`Quote converted to order ${orderData.orderId}!`);
+                        
+                        // Refresh saved quotes list
+                        loadSavedQuotesFromLocal();
+                    }
+                } else {
+                    showError('Quote not found.');
+                }
+                
+            } catch (error) {
+                console.error('Error converting to order:', error);
+                showError('Failed to convert quote to order.');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Generate proforma invoice HTML
+        function generateProformaHTML(quote) {
+            return `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Proforma Invoice - ${quote.number}</title>
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <style>
+                        /* Thermal Printer Optimized Styles */
+                        * { box-sizing: border-box; }
+                        body { 
+                            font-family: 'Courier New', monospace; 
+                            margin: 0; 
+                            padding: 8px; 
+                            max-width: 380px; 
+                            width: 100%; 
+                            font-size: 11px; 
+                            line-height: 1.2; 
+                            color: #000; 
+                            background: #fff;
+                        }
+                        
+                        .header { 
+                            text-align: center; 
+                            margin-bottom: 15px; 
+                            border-bottom: 1px solid #000;
+                            padding-bottom: 8px;
+                        }
+                        .header h1 { 
+                            font-size: 14px; 
+                            margin: 0 0 4px 0; 
+                            font-weight: bold; 
+                        }
+                        .header h2 { 
+                            font-size: 12px; 
+                            margin: 0; 
+                            font-weight: normal; 
+                        }
+                        
+                        .quote-info { 
+                            margin-bottom: 15px; 
+                            font-size: 10px;
+                        }
+                        .quote-info p { 
+                            margin: 2px 0; 
+                            word-wrap: break-word;
+                        }
+                        
+                        /* Thermal printer friendly item list */
+                        .items-section {
+                            margin-bottom: 15px;
+                            border-top: 1px solid #000;
+                            border-bottom: 1px solid #000;
+                            padding: 8px 0;
+                        }
+                        .items-header {
+                            font-weight: bold;
+                            font-size: 11px;
+                            margin-bottom: 8px;
+                            text-align: center;
+                        }
+                        .item {
+                            margin-bottom: 8px;
+                            padding-bottom: 6px;
+                            border-bottom: 1px dashed #000;
+                        }
+                        .item:last-child {
+                            border-bottom: none;
+                            margin-bottom: 0;
+                        }
+                        .item-line {
+                            margin: 1px 0;
+                            font-size: 10px;
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: center;
+                        }
+                        .item-details {
+                            flex: 1;
+                            margin-right: 10px;
+                        }
+                        .item-calculation {
+                            text-align: right;
+                            font-weight: bold;
+                            white-space: nowrap;
+                        }
+                        .item-price {
+                            text-align: right;
+                            font-weight: bold;
+                        }
+                        
+                        .totals { 
+                            font-size: 10px;
+                            border-top: 2px solid #000;
+                            padding-top: 8px;
+                        }
+                        .totals p { 
+                            margin: 2px 0; 
+                            display: flex; 
+                            justify-content: space-between;
+                        }
+                        .total-row { 
+                            font-weight: bold; 
+                            font-size: 12px; 
+                            border-top: 1px solid #000;
+                            padding-top: 4px;
+                            margin-top: 4px;
+                        }
+                        
+                        /* Print optimizations */
+                        @media print {
+                            body { margin: 0; padding: 4px; }
+                            .header { page-break-inside: avoid; }
+                            .item { page-break-inside: avoid; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1>PROFORMA INVOICE</h1>
+                        <h2>Indian Natural Hair</h2>
+                    </div>
+                    
+                    <div class="quote-info">
+                        <p><strong>Quote #:</strong> ${quote.number || 'N/A'}</p>
+                        <p><strong>Date:</strong> ${quote.date || 'N/A'}</p>
+                        <p><strong>Client:</strong> ${quote.client ? quote.client.clientName : 'N/A'}</p>
+                        <p><strong>Salesperson:</strong> ${quote.salesperson || 'N/A'}</p>
+                    </div>
+                    
+                    <div class="items-section">
+                        <div class="items-header">ITEMS</div>
+                        ${quote.items ? quote.items.map((item, index) => 
+                            '<div class="item">' +
+                                '<div class="item-line">' +
+                                    '<span class="item-details">' +
+                                        '<strong>' + (item.product || 'N/A') + '</strong> | ' +
+                                        (item.category || 'N/A') + ' | ' +
+                                        (item.density || 'N/A') + ' | ' +
+                                        (item.length || 'N/A') + ' | ' +
+                                        (item.color || 'N/A') + ' | ' +
+                                        (item.style || 'N/A') +
+                                    '</span>' +
+                                    '<span class="item-calculation">' +
+                                        'Qty: ' + (item.quantity || 0) + ' x ' + formatCurrency(item.unitPrice || 0, quote.currency || 'INR') + ' = ' +
+                                        formatCurrency(item.totalPrice || 0, quote.currency || 'INR') +
+                                    '</span>' +
+                                '</div>' +
+                            '</div>'
+                        ).join('') : '<div class="item">No items</div>'}
+                    </div>
+                    
+                    <div class="totals">
+                        <p><span>Subtotal:</span><span>${formatCurrency(quote.subtotal || 0, quote.currency || 'INR')}</span></p>
+                        <p><span>Discount:</span><span>${formatCurrency(quote.discountAmount || 0, quote.currency || 'INR')}</span></p>
+                        <p><span>Tax (${quote.tax || 0}%):</span><span>${formatCurrency(quote.taxAmount || 0, quote.currency || 'INR')}</span></p>
+                        <p><span>Shipping:</span><span>${formatCurrency(quote.shipping || 0, quote.currency || 'INR')}</span></p>
+                        <p class="total-row"><span>TOTAL:</span><span>${formatCurrency(quote.total || 0, quote.currency || 'INR')}</span></p>
+                    </div>
+                    
+                    <div style="margin-top: 20px; text-align: center; border-top: 1px solid #000; padding-top: 15px;">
+                        <button onclick="downloadPDF()" style="background-color: #081249; color: white; padding: 10px 20px; border: none; border-radius: 5px; font-size: 12px; cursor: pointer; margin-right: 10px;">
+                            📄 Download PDF
+                        </button>
+                        <button onclick="window.print()" style="background-color: #666; color: white; padding: 10px 20px; border: none; border-radius: 5px; font-size: 12px; cursor: pointer;">
+                            🖨️ Print
+                        </button>
+                    </div>
+                    
+                    <scr` + `ipt>
+                        // Include jsPDF in the preview window
+                        const script = document.createElement('script');
+                        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+                        document.head.appendChild(script);
+                        
+                        // Quote data will be received via postMessage
+                        let quoteData = null;
+                        
+                        // Listen for quote data from parent window
+                        window.addEventListener('message', function(event) {
+                            if (event.data.type === 'QUOTE_DATA') {
+                                quoteData = event.data.quote;
+                            }
+                        });
+                        
+                        // Format currency function
+                        function formatCurrency(amount, currency = 'INR') {
+                            const symbols = {
+                                'INR': '₹',
+                                'USD': '$',
+                                'EUR': '€',
+                                'GBP': '£'
+                            };
+                            const symbol = symbols[currency] || currency;
+                            return symbol + ' ' + parseFloat(amount || 0).toFixed(2);
+                        }
+                        
+                        // Download PDF function
+                        async function downloadPDF() {
+                            try {
+                                // Wait for jsPDF to load
+                                if (!window.jspdf) {
+                                    alert('PDF library is loading, please try again in a moment.');
+                                    return;
+                                }
+                                
+                                const { jsPDF } = window.jspdf;
+                                const doc = new jsPDF({
+                                    orientation: 'portrait',
+                                    unit: 'mm',
+                                    format: 'a4'
+                                });
+
+                                // Set font
+                                doc.setFont('helvetica');
+                                
+                                // Header
+                                doc.setFontSize(18);
+                                doc.setFont('helvetica', 'bold');
+                                doc.text('PROFORMA INVOICE', 105, 20, { align: 'center' });
+                                
+                                doc.setFontSize(14);
+                                doc.setFont('helvetica', 'normal');
+                                doc.text('Indian Natural Hair', 105, 30, { align: 'center' });
+                                
+                                // Quote information
+                                let yPos = 50;
+                                doc.setFontSize(10);
+                                doc.setFont('helvetica', 'bold');
+                                doc.text('Quote #:', 20, yPos);
+                                doc.setFont('helvetica', 'normal');
+                                doc.text(quoteData.number || 'N/A', 50, yPos);
+                                
+                                yPos += 7;
+                                doc.setFont('helvetica', 'bold');
+                                doc.text('Date:', 20, yPos);
+                                doc.setFont('helvetica', 'normal');
+                                doc.text(quoteData.date || 'N/A', 50, yPos);
+                                
+                                yPos += 7;
+                                doc.setFont('helvetica', 'bold');
+                                doc.text('Client:', 20, yPos);
+                                doc.setFont('helvetica', 'normal');
+                                doc.text(quoteData.client ? quoteData.client.clientName : 'N/A', 50, yPos);
+                                
+                                yPos += 7;
+                                doc.setFont('helvetica', 'bold');
+                                doc.text('Salesperson:', 20, yPos);
+                                doc.setFont('helvetica', 'normal');
+                                doc.text(quoteData.salesperson || 'N/A', 50, yPos);
+                                
+                                // Items section
+                                yPos += 15;
+                                doc.setFont('helvetica', 'bold');
+                                doc.setFontSize(12);
+                                doc.text('ITEMS', 20, yPos);
+                                
+                                yPos += 10;
+                                doc.setFontSize(9);
+                                
+                                // Table headers
+                                doc.setFont('helvetica', 'bold');
+                                doc.text('Product', 20, yPos);
+                                doc.text('Details', 60, yPos);
+                                doc.text('Qty', 130, yPos);
+                                doc.text('Unit Price', 150, yPos);
+                                doc.text('Total', 180, yPos);
+                                
+                                yPos += 5;
+                                doc.line(20, yPos, 190, yPos);
+                                yPos += 5;
+                                
+                                // Items
+                                doc.setFont('helvetica', 'normal');
+                                if (quoteData.items && quoteData.items.length > 0) {
+                                    quoteData.items.forEach((item) => {
+                                        if (yPos > 250) {
+                                            doc.addPage();
+                                            yPos = 20;
+                                        }
+                                        
+                                        doc.text(item.product || 'N/A', 20, yPos);
+                                        
+                                        const details = [
+                                            item.category || '',
+                                            item.density || '',
+                                            item.length || '',
+                                            item.color || '',
+                                            item.style || ''
+                                        ].filter(d => d).join(' | ');
+                                        
+                                        const detailsLines = doc.splitTextToSize(details, 65);
+                                        doc.text(detailsLines, 60, yPos);
+                                        
+                                        doc.text(String(item.quantity || 0), 130, yPos);
+                                        doc.text(formatCurrency(item.unitPrice || 0, quoteData.currency || 'INR'), 150, yPos);
+                                        doc.text(formatCurrency(item.totalPrice || 0, quoteData.currency || 'INR'), 180, yPos);
+                                        
+                                        yPos += Math.max(7, detailsLines.length * 4);
+                                    });
+                                } else {
+                                    doc.text('No items', 20, yPos);
+                                    yPos += 7;
+                                }
+                                
+                                // Totals section
+                                yPos += 10;
+                                doc.line(20, yPos, 190, yPos);
+                                yPos += 10;
+                                
+                                doc.setFont('helvetica', 'normal');
+                                doc.text('Subtotal:', 130, yPos);
+                                doc.text(formatCurrency(quoteData.subtotal || 0, quoteData.currency || 'INR'), 180, yPos);
+                                
+                                yPos += 7;
+                                doc.text('Discount:', 130, yPos);
+                                doc.text(formatCurrency(quoteData.discountAmount || 0, quoteData.currency || 'INR'), 180, yPos);
+                                
+                                yPos += 7;
+                                doc.text('Tax (' + (quoteData.tax || 0) + '%):', 130, yPos);
+                                doc.text(formatCurrency(quoteData.taxAmount || 0, quoteData.currency || 'INR'), 180, yPos);
+                                
+                                yPos += 7;
+                                doc.text('Shipping:', 130, yPos);
+                                doc.text(formatCurrency(quoteData.shipping || 0, quoteData.currency || 'INR'), 180, yPos);
+                                
+                                yPos += 10;
+                                doc.line(130, yPos, 190, yPos);
+                                yPos += 7;
+                                
+                                doc.setFont('helvetica', 'bold');
+                                doc.setFontSize(12);
+                                doc.text('TOTAL:', 130, yPos);
+                                doc.text(formatCurrency(quoteData.total || 0, quoteData.currency || 'INR'), 180, yPos);
+                                
+                                // Save the PDF
+                                const fileName = 'Proforma_Invoice_' + (quoteData.number || 'Quote') + '.pdf';
+                                doc.save(fileName);
+                                
+                            } catch (error) {
+                                console.error('Error generating PDF:', error);
+                                alert('Error generating PDF. Please try again.');
+                            }
+                         }
+                     });
+    </scr` + `ipt>
+                </body>
+                </html>
+            `;
+        }
+
+        // Generate order number
+        function generateOrderNumber() {
+            const date = new Date();
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const time = String(date.getHours()).padStart(2, '0') + String(date.getMinutes()).padStart(2, '0');
+            return `ORD-${year}${month}${day}-${time}`;
+        }
 
     </script>
 </body>

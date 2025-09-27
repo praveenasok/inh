@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comprehensive Data Synchronization</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Firebase Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    
+    <!-- Firebase Configuration -->
+    <script src="firebase-config.js"></script>
+    <script src="firebase-global-init.js"></script>
+    <script src="firebase-database.js"></script>
+    <script src="firebase-error-handler.js"></script>
+    
+    <!-- Data Access Components -->
+    <script src="js/universal-firebase-data-manager.js"></script>
+    <script src="js/local-fallback-manager.js"></script>
+    <script src="js/fallback-detector.js"></script>
+    <script src="js/unified-data-access.js"></script>
+    <script src="js/comprehensive-data-sync-service.js"></script>
+    <script src="google-sheets-config.js"></script>
+    
+    <style>
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        .status-success { background-color: #10b981; }
+        .status-error { background-color: #ef4444; }
+        .status-warning { background-color: #f59e0b; }
+        .status-info { background-color: #3b82f6; }
+        .status-running { 
+            background-color: #3b82f6;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .data-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+        }
+        .comparison-table {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .missing-data {
+            background-color: #fef2f2;
+            border-left: 4px solid #ef4444;
+        }
+        .sync-progress {
+            transition: width 0.3s ease;
+        }
+        .missing-data-report {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+
+        .missing-data-report h4 {
+            color: #856404;
+            margin: 0 0 10px 0;
+        }
+
+        .sync-report {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+
+        .sync-report h3 {
+            color: #495057;
+            margin: 0 0 15px 0;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 5px;
+        }
+
+        .report-summary {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
+
+        .report-summary p {
+            margin: 5px 0;
+            font-weight: 500;
+        }
+
+        .collections-report h4 {
+            color: #495057;
+            margin: 15px 0 10px 0;
+        }
+
+        .collection-status {
+            padding: 8px 12px;
+            margin: 5px 0;
+            border-radius: 4px;
+            border-left: 4px solid #6c757d;
+        }
+
+        .collection-status.synced {
+            background: #d4edda;
+            border-left-color: #28a745;
+            color: #155724;
+        }
+
+        .collection-status.partial {
+            background: #fff3cd;
+            border-left-color: #ffc107;
+            color: #856404;
+        }
+
+        .counts {
+            font-size: 0.9em;
+            color: #6c757d;
+            margin-left: 10px;
+        }
+
+        .recommendations {
+            margin-top: 15px;
+        }
+
+        .recommendations h4 {
+            color: #dc3545;
+            margin: 15px 0 10px 0;
+        }
+
+        .recommendation {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+        }
+
+        .recommendation.warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+
+        .recommendation.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <!-- Header -->
+    <div class="bg-white shadow-sm border-b">
+        <div class="container mx-auto px-6 py-4">
+            <h1 class="text-3xl font-bold text-gray-800">Comprehensive Data Synchronization</h1>
+            <p class="text-gray-600 mt-2">Analyze, compare, and synchronize data across all sources</p>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container mx-auto p-6">
+        <!-- Data Source Status -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Data Source Status</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Firebase Status -->
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <div class="flex items-center mb-2">
+                        <span id="firebase-status-indicator" class="status-indicator status-info"></span>
+                        <span class="text-blue-600 font-medium">Firebase</span>
+                    </div>
+                    <div class="text-sm text-gray-600" id="firebase-status">Checking...</div>
+                    <div class="text-xs text-gray-500 mt-1" id="firebase-count">Records: --</div>
+                </div>
+                
+                <!-- Google Sheets Status -->
+                <div class="bg-green-50 p-4 rounded-lg">
+                    <div class="flex items-center mb-2">
+                        <span id="sheets-status-indicator" class="status-indicator status-info"></span>
+                        <span class="text-green-600 font-medium">Google Sheets</span>
+                    </div>
+                    <div class="text-sm text-gray-600" id="sheets-status">Checking...</div>
+                    <div class="text-xs text-gray-500 mt-1" id="sheets-count">Records: --</div>
+                </div>
+                
+                <!-- Local Storage Status -->
+                <div class="bg-purple-50 p-4 rounded-lg">
+                    <div class="flex items-center mb-2">
+                        <span id="local-status-indicator" class="status-indicator status-info"></span>
+                        <span class="text-purple-600 font-medium">Local Storage</span>
+                    </div>
+                    <div class="text-sm text-gray-600" id="local-status">Checking...</div>
+                    <div class="text-xs text-gray-500 mt-1" id="local-count">Records: --</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analysis Controls -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Data Analysis & Synchronization</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <button onclick="analyzeAllSources()" id="analyze-btn" 
+                        class="btn-primary flex items-center justify-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                    </svg>
+                    Analyze Data
+                </button>
+                
+                <button onclick="compareAllSources()" id="compare-btn" 
+                        class="btn-success flex items-center justify-center" disabled>
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v6a2 2 0 002 2h2m0-8h2a2 2 0 012 2v6a2 2 0 01-2 2H9m0-8v8"></path>
+                    </svg>
+                    Compare Sources
+                </button>
+                
+                <button onclick="identifyMissingData()" id="missing-btn" 
+                        class="btn-warning flex items-center justify-center" disabled>
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                    </svg>
+                    Find Missing
+                </button>
+                
+                <button onclick="synchronizeAllData()" id="sync-btn" 
+                        class="btn-danger flex items-center justify-center" disabled>
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                    Synchronize All
+                </button>
+            </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div id="progress-container" class="bg-white rounded-lg shadow-md p-6 mb-6 hidden">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Synchronization Progress</h3>
+            <div class="w-full bg-gray-200 rounded-full h-4 mb-2">
+                <div id="progress-bar" class="bg-blue-600 h-4 rounded-full sync-progress" style="width: 0%"></div>
+            </div>
+            <div class="flex justify-between text-sm text-gray-600">
+                <span id="progress-text">Initializing...</span>
+                <span id="progress-percent">0%</span>
+            </div>
+        </div>
+
+        <!-- Data Comparison Results -->
+        <div id="comparison-results" class="bg-white rounded-lg shadow-md p-6 mb-6 hidden">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Data Comparison Results</h2>
+            <div class="data-grid">
+                <!-- Products Comparison -->
+                <div class="border rounded-lg p-4">
+                    <h3 class="font-semibold text-gray-700 mb-2">Products</h3>
+                    <div id="products-comparison" class="comparison-table">
+                        <div class="text-gray-500 text-center">No data analyzed yet</div>
+                    </div>
+                </div>
+                
+                <!-- Clients Comparison -->
+                <div class="border rounded-lg p-4">
+                    <h3 class="font-semibold text-gray-700 mb-2">Clients</h3>
+                    <div id="clients-comparison" class="comparison-table">
+                        <div class="text-gray-500 text-center">No data analyzed yet</div>
+                    </div>
+                </div>
+                
+                <!-- Colors Comparison -->
+                <div class="border rounded-lg p-4">
+                    <h3 class="font-semibold text-gray-700 mb-2">Colors</h3>
+                    <div id="colors-comparison" class="comparison-table">
+                        <div class="text-gray-500 text-center">No data analyzed yet</div>
+                    </div>
+                </div>
+                
+                <!-- Salespeople Comparison -->
+                <div class="border rounded-lg p-4">
+                    <h3 class="font-semibold text-gray-700 mb-2">Salespeople</h3>
+                    <div id="salespeople-comparison" class="comparison-table">
+                        <div class="text-gray-500 text-center">No data analyzed yet</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Missing Data Report -->
+        <div id="missing-data-report" class="bg-white rounded-lg shadow-md p-6 mb-6 hidden">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Missing Data Report</h2>
+            <div id="missing-data-content">
+                <div class="text-gray-500 text-center">No missing data analysis performed yet</div>
+            </div>
+        </div>
+
+        <!-- Synchronization Log -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold text-gray-800">Synchronization Log</h2>
+                <button onclick="clearLog()" class="btn-secondary text-sm">Clear Log</button>
+            </div>
+            <div id="sync-log" class="bg-gray-50 rounded-lg p-4 h-64 overflow-y-auto">
+                <div class="text-gray-500 text-center">Ready to begin synchronization...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let dataAnalysis = {
+            firebase: {},
+            sheets: {},
+            local: {},
+            comparison: {},
+            missing: {}
+        };
+
+        class ComprehensiveDataSync {
+            constructor() {
+                this.syncService = new ComprehensiveDataSyncService();
+                this.dataAccess = new UnifiedDataAccess();
+                this.collections = ['products', 'clients', 'colors', 'salespeople', 'styles'];
+                this.analysisResults = {};
+                this.comparisonResults = {};
+                this.missingDataReport = {};
+                this.syncResults = {};
+                
+                this.setupEventListeners();
+                this.initializeDataSources();
+            }
+
+            setupEventListeners() {
+                // Event listeners for sync service
+                if (this.syncService) {
+                    this.syncService.addEventListener('progress', (data) => {
+                        const percent = Math.round((data.step / data.total) * 100);
+                        updateProgress(percent, data.message);
+                    });
+                    
+                    this.syncService.addEventListener('log', (data) => {
+                        logMessage(data.message, data.type);
+                    });
+                    
+                    this.syncService.addEventListener('syncStarted', (data) => {
+                        logMessage(data.message, 'info');
+                    });
+                    
+                    this.syncService.addEventListener('syncCompleted', (data) => {
+                        logMessage('Synchronization completed successfully', 'success');
+                    });
+                    
+                    this.syncService.addEventListener('syncError', (data) => {
+                        logMessage(`Synchronization error: ${data.error}`, 'error');
+                    });
+                }
+            }
+
+            async initializeDataSources() {
+                await checkDataSources();
+            }
+        }
+
+        // Initialize comprehensive sync system
+        let comprehensiveSync;
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            comprehensiveSync = new ComprehensiveDataSync();
+        });
+
+        // Check status of all data sources
+        async function checkDataSources() {
+            logMessage('Checking data source availability...', 'info');
+            
+            // Check Firebase
+            try {
+                if (window.firebase && window.firebase.apps.length > 0) {
+                    updateStatus('firebase', 'Connected', 'success');
+                    logMessage('Firebase: Connected', 'success');
+                } else {
+                    updateStatus('firebase', 'Not Available', 'error');
+                    logMessage('Firebase: Not available', 'error');
+                }
+            } catch (error) {
+                updateStatus('firebase', 'Error', 'error');
+                logMessage('Firebase: ' + error.message, 'error');
+            }
+
+            // Check Google Sheets
+            try {
+                const sheetsConfig = window.GoogleSheetsIntegration || window.GoogleSheetsFetchAPI;
+                if (sheetsConfig && sheetsConfig.SHEET_ID && sheetsConfig.SHEET_ID !== 'YOUR_GOOGLE_SHEETS_ID') {
+                    updateStatus('sheets', 'Configured', 'success');
+                    logMessage('Google Sheets: Configured', 'success');
+                } else {
+                    updateStatus('sheets', 'Not Configured', 'warning');
+                    logMessage('Google Sheets: Not configured', 'warning');
+                }
+            } catch (error) {
+                updateStatus('sheets', 'Error', 'error');
+                logMessage('Google Sheets: ' + error.message, 'error');
+            }
+
+            // Check Local Storage
+            try {
+                const localData = localStorage.getItem('products') || localStorage.getItem('clients');
+                if (localData) {
+                    updateStatus('local', 'Data Available', 'success');
+                    logMessage('Local Storage: Data available', 'success');
+                } else {
+                    updateStatus('local', 'No Data', 'warning');
+                    logMessage('Local Storage: No data found', 'warning');
+                }
+            } catch (error) {
+                updateStatus('local', 'Error', 'error');
+                logMessage('Local Storage: ' + error.message, 'error');
+            }
+        }
+
+        // Update status indicators
+        function updateStatus(source, message, status) {
+            const indicator = document.getElementById(`${source}-status-indicator`);
+            const statusText = document.getElementById(`${source}-status`);
+            
+            if (indicator && statusText) {
+                indicator.className = `status-indicator status-${status}`;
+                statusText.textContent = message;
+            }
+        }
+
+        // Analyze all data sources
+        async function analyzeAllSources() {
+            const btn = document.getElementById('analyze-btn');
+            btn.disabled = true;
+            btn.innerHTML = '<div class="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>Analyzing...';
+            
+            showProgress('Analyzing data sources...', 0);
+            
+            try {
+                // Analyze Firebase data
+                logMessage('Analyzing Firebase data...', 'info');
+                await analyzeFirebaseData();
+                updateProgress(33, 'Firebase analysis complete');
+                
+                // Analyze Google Sheets data
+                logMessage('Analyzing Google Sheets data...', 'info');
+                await analyzeSheetsData();
+                updateProgress(66, 'Google Sheets analysis complete');
+                
+                // Analyze Local Storage data
+                logMessage('Analyzing Local Storage data...', 'info');
+                await analyzeLocalData();
+                updateProgress(100, 'All data sources analyzed');
+                
+                // Enable next steps
+                document.getElementById('compare-btn').disabled = false;
+                logMessage('Data analysis completed successfully!', 'success');
+                
+            } catch (error) {
+                logMessage('Analysis failed: ' + error.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>Analyze Data';
+                hideProgress();
+            }
+        }
+
+        // Analyze Firebase data
+        async function analyzeFirebaseData() {
+            try {
+                if (!window.firebase || window.firebase.apps.length === 0) {
+                    throw new Error('Firebase not available');
+                }
+
+                const db = window.firebase.firestore();
+                const collections = ['products', 'clients', 'colors', 'salespeople', 'styles'];
+                
+                dataAnalysis.firebase = {};
+                let totalRecords = 0;
+
+                for (const collection of collections) {
+                    try {
+                        const snapshot = await db.collection(collection).get();
+                        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                        dataAnalysis.firebase[collection] = data;
+                        totalRecords += data.length;
+                        logMessage(`Firebase ${collection}: ${data.length} records`, 'info');
+                    } catch (error) {
+                        logMessage(`Firebase ${collection}: Error - ${error.message}`, 'error');
+                        dataAnalysis.firebase[collection] = [];
+                    }
+                }
+
+                document.getElementById('firebase-count').textContent = `Records: ${totalRecords}`;
+                
+            } catch (error) {
+                logMessage('Firebase analysis failed: ' + error.message, 'error');
+                dataAnalysis.firebase = {};
+            }
+        }
+
+        // Analyze Google Sheets data
+        async function analyzeSheetsData() {
+            try {
+                const sheetsConfig = window.GoogleSheetsIntegration || window.GoogleSheetsFetchAPI;
+                if (!sheetsConfig || !sheetsConfig.SHEET_ID || sheetsConfig.SHEET_ID === 'YOUR_GOOGLE_SHEETS_ID') {
+                    throw new Error('Google Sheets not configured');
+                }
+
+                // Try to fetch data from Google Sheets
+                dataAnalysis.sheets = {};
+                let totalRecords = 0;
+
+                // For now, we'll simulate the analysis since we need proper API setup
+                // In a real implementation, this would fetch from Google Sheets API
+                logMessage('Google Sheets API key not configured - using simulated data', 'warning');
+                
+                const collections = ['products', 'clients', 'colors', 'salespeople'];
+                for (const collection of collections) {
+                    dataAnalysis.sheets[collection] = [];
+                }
+
+                document.getElementById('sheets-count').textContent = `Records: ${totalRecords}`;
+                
+            } catch (error) {
+                logMessage('Google Sheets analysis failed: ' + error.message, 'error');
+                dataAnalysis.sheets = {};
+            }
+        }
+
+        // Analyze Local Storage data
+        async function analyzeLocalData() {
+            try {
+                dataAnalysis.local = {};
+                let totalRecords = 0;
+
+                const collections = ['products', 'clients', 'colors', 'salespeople', 'styles'];
+                
+                for (const collection of collections) {
+                    try {
+                        const data = localStorage.getItem(collection);
+                        if (data) {
+                            const parsed = JSON.parse(data);
+                            dataAnalysis.local[collection] = Array.isArray(parsed) ? parsed : [parsed];
+                            totalRecords += dataAnalysis.local[collection].length;
+                            logMessage(`Local ${collection}: ${dataAnalysis.local[collection].length} records`, 'info');
+                        } else {
+                            dataAnalysis.local[collection] = [];
+                            logMessage(`Local ${collection}: No data found`, 'warning');
+                        }
+                    } catch (error) {
+                        logMessage(`Local ${collection}: Error - ${error.message}`, 'error');
+                        dataAnalysis.local[collection] = [];
+                    }
+                }
+
+                document.getElementById('local-count').textContent = `Records: ${totalRecords}`;
+                
+            } catch (error) {
+                logMessage('Local Storage analysis failed: ' + error.message, 'error');
+                dataAnalysis.local = {};
+            }
+        }
+
+        // Compare all data sources
+        async function compareAllSources() {
+            const btn = document.getElementById('compare-btn');
+            btn.disabled = true;
+            btn.innerHTML = '<div class="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>Comparing...';
+            
+            showProgress('Comparing data sources...', 0);
+            
+            try {
+                const collections = ['products', 'clients', 'colors', 'salespeople'];
+                dataAnalysis.comparison = {};
+                
+                for (let i = 0; i < collections.length; i++) {
+                    const collection = collections[i];
+                    logMessage(`Comparing ${collection} across all sources...`, 'info');
+                    
+                    const firebase = dataAnalysis.firebase[collection] || [];
+                    const sheets = dataAnalysis.sheets[collection] || [];
+                    const local = dataAnalysis.local[collection] || [];
+                    
+                    dataAnalysis.comparison[collection] = {
+                        firebase: firebase.length,
+                        sheets: sheets.length,
+                        local: local.length,
+                        total: Math.max(firebase.length, sheets.length, local.length)
+                    };
+                    
+                    updateProgress((i + 1) / collections.length * 100, `${collection} comparison complete`);
+                }
+                
+                displayComparisonResults();
+                document.getElementById('missing-btn').disabled = false;
+                logMessage('Data comparison completed successfully!', 'success');
+                
+            } catch (error) {
+                logMessage('Comparison failed: ' + error.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v6a2 2 0 002 2h2m0-8h2a2 2 0 012 2v6a2 2 0 01-2 2H9m0-8v8"></path></svg>Compare Sources';
+                hideProgress();
+            }
+        }
+
+        // Display comparison results
+        function displayComparisonResults() {
+            document.getElementById('comparison-results').classList.remove('hidden');
+            
+            const collections = ['products', 'clients', 'colors', 'salespeople'];
+            
+            collections.forEach(collection => {
+                const container = document.getElementById(`${collection}-comparison`);
+                const data = dataAnalysis.comparison[collection];
+                
+                if (data) {
+                    container.innerHTML = `
+                        <div class="space-y-2">
+                            <div class="flex justify-between">
+                                <span>Firebase:</span>
+                                <span class="font-semibold">${data.firebase}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Google Sheets:</span>
+                                <span class="font-semibold">${data.sheets}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Local Storage:</span>
+                                <span class="font-semibold">${data.local}</span>
+                            </div>
+                            <hr class="my-2">
+                            <div class="flex justify-between font-bold">
+                                <span>Max Records:</span>
+                                <span>${data.total}</span>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+        }
+
+        // Identify missing data
+        async function identifyMissingData() {
+            const btn = document.getElementById('missing-btn');
+            btn.disabled = true;
+            btn.innerHTML = '<div class="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>Finding Missing...';
+            
+            showProgress('Identifying missing data...', 0);
+            
+            try {
+                const collections = ['products', 'clients', 'colors', 'salespeople'];
+                dataAnalysis.missing = {};
+                
+                for (let i = 0; i < collections.length; i++) {
+                    const collection = collections[i];
+                    logMessage(`Identifying missing ${collection}...`, 'info');
+                    
+                    const firebase = dataAnalysis.firebase[collection] || [];
+                    const sheets = dataAnalysis.sheets[collection] || [];
+                    const local = dataAnalysis.local[collection] || [];
+                    
+                    // Find missing records (simplified comparison by count)
+                    const maxCount = Math.max(firebase.length, sheets.length, local.length);
+                    
+                    dataAnalysis.missing[collection] = {
+                        firebaseMissing: maxCount - firebase.length,
+                        sheetsMissing: maxCount - sheets.length,
+                        localMissing: maxCount - local.length
+                    };
+                    
+                    updateProgress((i + 1) / collections.length * 100, `${collection} missing data identified`);
+                }
+                
+                displayMissingDataReport();
+                document.getElementById('sync-btn').disabled = false;
+                logMessage('Missing data identification completed!', 'success');
+                
+            } catch (error) {
+                logMessage('Missing data identification failed: ' + error.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path></svg>Find Missing';
+                hideProgress();
+            }
+        }
+
+        // Display missing data report
+        function displayMissingDataReport() {
+            document.getElementById('missing-data-report').classList.remove('hidden');
+            
+            const container = document.getElementById('missing-data-content');
+            const collections = ['products', 'clients', 'colors', 'salespeople'];
+            
+            let html = '<div class="space-y-4">';
+            
+            collections.forEach(collection => {
+                const data = dataAnalysis.missing[collection];
+                if (data) {
+                    const hasMissing = data.firebaseMissing > 0 || data.sheetsMissing > 0 || data.localMissing > 0;
+                    
+                    html += `
+                        <div class="border rounded-lg p-4 ${hasMissing ? 'missing-data' : ''}">
+                            <h3 class="font-semibold text-gray-700 mb-2 capitalize">${collection}</h3>
+                            <div class="grid grid-cols-3 gap-4 text-sm">
+                                <div>
+                                    <span class="text-gray-600">Firebase Missing:</span>
+                                    <span class="font-semibold ${data.firebaseMissing > 0 ? 'text-red-600' : 'text-green-600'}">${data.firebaseMissing}</span>
+                                </div>
+                                <div>
+                                    <span class="text-gray-600">Sheets Missing:</span>
+                                    <span class="font-semibold ${data.sheetsMissing > 0 ? 'text-red-600' : 'text-green-600'}">${data.sheetsMissing}</span>
+                                </div>
+                                <div>
+                                    <span class="text-gray-600">Local Missing:</span>
+                                    <span class="font-semibold ${data.localMissing > 0 ? 'text-red-600' : 'text-green-600'}">${data.localMissing}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+            
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        // Synchronize all data
+        async function synchronizeAllData() {
+            const btn = document.getElementById('sync-btn');
+            btn.disabled = true;
+            btn.innerHTML = '<div class="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>Synchronizing...';
+            
+            showProgress('Starting comprehensive synchronization...', 0);
+            
+            try {
+                logMessage('Starting comprehensive data synchronization...', 'info');
+                
+                // Use the comprehensive sync service
+                const results = await comprehensiveSync.syncService.performComprehensiveSync();
+                
+                // Store results for reporting
+                comprehensiveSync.syncResults = results;
+                
+                // Generate and display report
+                const report = comprehensiveSync.syncService.generateSyncReport(results);
+                displaySyncReport(report);
+                
+                updateProgress(100, 'Synchronization completed successfully!');
+                logMessage('Comprehensive data synchronization completed successfully!', 'success');
+                
+                // Re-analyze to show updated results
+                setTimeout(() => {
+                    analyzeAllSources();
+                }, 2000);
+                
+            } catch (error) {
+                logMessage('Synchronization failed: ' + error.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>Synchronize All';
+                hideProgress();
+            }
+        }
+
+        function displaySyncReport(report) {
+            const reportHtml = `
+                <div class="sync-report">
+                    <h3>Synchronization Report</h3>
+                    <div class="report-summary">
+                        <p><strong>Timestamp:</strong> ${new Date(report.timestamp).toLocaleString()}</p>
+                        <p><strong>Total Operations:</strong> ${report.summary.totalOperations}</p>
+                        <p><strong>Successful Operations:</strong> ${report.summary.successfulOperations}</p>
+                        <p><strong>Errors:</strong> ${report.summary.errors}</p>
+                        <p><strong>Backup Created:</strong> ${report.summary.backupCreated ? 'Yes' : 'No'}</p>
+                    </div>
+                    <div class="collections-report">
+                        <h4>Collection Status</h4>
+                        ${Object.entries(report.collections).map(([collection, status]) => `
+                            <div class="collection-status ${status.synchronized ? 'synced' : 'partial'}">
+                                <strong>${collection}:</strong> ${status.status}
+                                <span class="counts">(${Object.entries(status.counts).map(([source, count]) => `${source}: ${count}`).join(', ')})</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                    ${report.recommendations.length > 0 ? `
+                        <div class="recommendations">
+                            <h4>Recommendations</h4>
+                            ${report.recommendations.map(rec => `
+                                <div class="recommendation ${rec.type}">
+                                    <strong>${rec.collection}:</strong> ${rec.message}
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+            
+            document.getElementById('sync-report').innerHTML = reportHtml;
+        }
+
+        // Create data backups
+        async function createDataBackups() {
+            logMessage('Creating data backups...', 'info');
+            
+            const timestamp = new Date().toISOString();
+            const backup = {
+                timestamp,
+                firebase: dataAnalysis.firebase,
+                local: dataAnalysis.local
+            };
+            
+            localStorage.setItem('dataBackup_' + timestamp, JSON.stringify(backup));
+            logMessage('Data backup created successfully', 'success');
+        }
+
+        // Sync individual collection
+        async function syncCollection(collection) {
+            logMessage(`Synchronizing ${collection}...`, 'info');
+            
+            const firebase = dataAnalysis.firebase[collection] || [];
+            const local = dataAnalysis.local[collection] || [];
+            
+            // Determine the most complete source
+            let sourceData = firebase.length >= local.length ? firebase : local;
+            let sourceName = firebase.length >= local.length ? 'Firebase' : 'Local Storage';
+            
+            logMessage(`Using ${sourceName} as source for ${collection} (${sourceData.length} records)`, 'info');
+            
+            // Sync to Firebase if local has more data
+            if (local.length > firebase.length && window.firebase && window.firebase.apps.length > 0) {
+                try {
+                    const db = window.firebase.firestore();
+                    const batch = db.batch();
+                    
+                    local.forEach(item => {
+                        const docRef = db.collection(collection).doc();
+                        batch.set(docRef, item);
+                    });
+                    
+                    await batch.commit();
+                    logMessage(`Synced ${local.length} ${collection} records to Firebase`, 'success');
+                } catch (error) {
+                    logMessage(`Failed to sync ${collection} to Firebase: ${error.message}`, 'error');
+                }
+            }
+            
+            // Sync to Local Storage if Firebase has more data
+            if (firebase.length > local.length) {
+                try {
+                    localStorage.setItem(collection, JSON.stringify(firebase));
+                    logMessage(`Synced ${firebase.length} ${collection} records to Local Storage`, 'success');
+                } catch (error) {
+                    logMessage(`Failed to sync ${collection} to Local Storage: ${error.message}`, 'error');
+                }
+            }
+        }
+
+        // Verify synchronization
+        async function verifySynchronization() {
+            logMessage('Verifying synchronization...', 'info');
+            
+            // Re-analyze data to verify sync
+            await analyzeFirebaseData();
+            await analyzeLocalData();
+            
+            const collections = ['products', 'clients', 'colors', 'salespeople'];
+            let allSynced = true;
+            
+            collections.forEach(collection => {
+                const firebase = dataAnalysis.firebase[collection] || [];
+                const local = dataAnalysis.local[collection] || [];
+                
+                if (Math.abs(firebase.length - local.length) > 0) {
+                    allSynced = false;
+                    logMessage(`${collection}: Firebase(${firebase.length}) vs Local(${local.length}) - Not fully synced`, 'warning');
+                } else {
+                    logMessage(`${collection}: Synchronized (${firebase.length} records)`, 'success');
+                }
+            });
+            
+            if (allSynced) {
+                logMessage('All collections are synchronized!', 'success');
+            } else {
+                logMessage('Some collections may need manual review', 'warning');
+            }
+        }
+
+        // Progress bar functions
+        function showProgress(message, percent) {
+            const container = document.getElementById('progress-container');
+            container.classList.remove('hidden');
+            updateProgress(percent, message);
+        }
+
+        function updateProgress(percent, message) {
+            const bar = document.getElementById('progress-bar');
+            const text = document.getElementById('progress-text');
+            const percentText = document.getElementById('progress-percent');
+            
+            bar.style.width = percent + '%';
+            text.textContent = message;
+            percentText.textContent = Math.round(percent) + '%';
+        }
+
+        function hideProgress() {
+            setTimeout(() => {
+                document.getElementById('progress-container').classList.add('hidden');
+            }, 3000);
+        }
+
+        // Logging functions
+        function logMessage(message, type = 'info') {
+            const log = document.getElementById('sync-log');
+            const timestamp = new Date().toLocaleTimeString();
+            
+            const colors = {
+                info: 'text-blue-600',
+                success: 'text-green-600',
+                warning: 'text-yellow-600',
+                error: 'text-red-600'
+            };
+            
+            const entry = document.createElement('div');
+            entry.className = `text-sm mb-1 ${colors[type] || colors.info}`;
+            entry.innerHTML = `<span class="text-gray-500">[${timestamp}]</span> ${message}`;
+            
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        function clearLog() {
+            document.getElementById('sync-log').innerHTML = '<div class="text-gray-500 text-center">Log cleared...</div>';
+        }
+    </script>
+</body>
+</html>

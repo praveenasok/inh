@@ -1,0 +1,1205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InstaQuote - Quote Maker</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
+    
+    <!-- Language Configuration (Load First) -->
+    <script src="js/language-config.js"></script>
+    
+    <!-- Firebase global initialization -->
+    <script src="firebase-global-init.js"></script>
+    <script src="firebase-database.js"></script>
+    <script src="firebase-error-handler.js"></script>
+    <script src="client-management.js"></script>
+    
+    <!-- jsPDF for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <!-- HTML2Canvas for image generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <!-- Unified Button System -->
+    <link rel="stylesheet" href="unified-button-system.css">
+    
+    <!-- Custom Styles -->
+    <style>
+        /* Custom CSS for responsive design and styling */
+        .mobile-padding { padding: 1rem; }
+        .shadow-soft { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+        
+        /* Mobile-first responsive design */
+        @media (max-width: 640px) {
+            .mobile-padding { padding: 0.75rem; }
+        }
+        
+        @media (max-width: 480px) {
+            .mobile-padding { padding: 0.5rem; }
+        }
+        
+        /* Header styles matching reference files */
+        .page-header {
+            background: linear-gradient(135deg, #081249 0%, #1e3a8a 50%, #9b7952 100%);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* Navigation back button */
+        .nav-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+            margin-bottom: 1rem;
+        }
+        
+        .nav-back:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            transform: translateX(-2px);
+        }
+        
+        /* Card hover effects matching reference files */
+        .card-hover {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        
+        /* Button styles now handled by unified-button-system.css */
+        .btn-primary {
+            background: linear-gradient(135deg, #081249 0%, #1e3a8a 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        /* Enhanced Custom Container Styles */
+        .custom-color-container, .custom-style-container {
+            margin-top: 8px;
+            padding: 16px;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: translateY(-5px);
+            opacity: 0;
+            max-height: 0;
+            overflow: hidden;
+            min-width: 320px;
+        }
+        
+        .custom-color-container.show, .custom-style-container.show {
+            opacity: 1;
+            max-height: 120px;
+            transform: translateY(0);
+        }
+        
+        /* Collapsed state when content is present - higher specificity */
+        .custom-color-container.show.collapsed, .custom-style-container.show.collapsed {
+            opacity: 1;
+            max-height: 60px !important;
+            padding: 12px 16px;
+            transform: translateY(0);
+        }
+        
+        /* Expanded state when image is uploaded */
+        .custom-color-container.show.has-image, .custom-style-container.show.has-image {
+            max-height: 240px;
+            min-height: 180px;
+        }
+        
+        /* Ensure smooth transition when expanding for images */
+        .custom-color-container.has-image, .custom-style-container.has-image {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .custom-color-container.show.collapsed textarea, 
+        .custom-style-container.show.collapsed textarea {
+            min-height: 32px !important;
+            padding: 8px 12px !important;
+            font-size: 14px !important;
+        }
+        
+        .custom-color-container:hover, .custom-style-container:hover {
+            border-color: #3b82f6;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+        }
+        
+        /* Enhanced Custom Input Field Styling */
+        .custom-color-container textarea, 
+        .custom-style-container textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            font-family: inherit;
+            transition: all 0.3s ease;
+            background: white;
+            margin-bottom: 0;
+            min-height: 40px;
+            resize: vertical;
+            line-height: 1.4;
+        }
+        
+        .custom-color-container textarea:focus, 
+        .custom-style-container textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        /* Image Upload Button Styling */
+        .custom-color-container button, 
+        .custom-style-container button {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .custom-color-container button:hover, 
+        .custom-style-container button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(99, 102, 241, 0.3);
+        }
+        
+        .custom-color-container button:disabled, 
+        .custom-style-container button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        /* Enhanced Image Preview Styling */
+        .custom-color-container .image-preview, 
+        .custom-style-container .image-preview {
+            position: relative;
+            margin-top: 12px;
+            padding: 12px;
+            background: linear-gradient(145deg, #ffffff, #f8f9fa);
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            text-align: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+        
+        .custom-color-container .image-preview:hover, 
+        .custom-style-container .image-preview:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            border-color: #007bff;
+        }
+        
+        .custom-color-container .image-preview img, 
+        .custom-style-container .image-preview img {
+            max-width: 120px;
+            max-height: 120px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+        }
+        
+        .custom-color-container .image-preview:hover img, 
+        .custom-style-container .image-preview:hover img {
+            transform: scale(1.05);
+        }
+        
+        /* Remove Image Button */
+        .remove-image-btn {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            border: 2px solid white;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 3px 8px rgba(239, 68, 68, 0.4);
+            transition: all 0.2s ease;
+            z-index: 10;
+        }
+        
+        .remove-image-btn:hover {
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+            transform: scale(1.15);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.6);
+        }
+        
+        .remove-image-btn:active {
+            transform: scale(0.95);
+        }
+        
+        /* Image Upload Loading State */
+        .image-upload-loading {
+            position: relative;
+            pointer-events: none;
+        }
+        
+        .image-upload-loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 16px;
+            height: 16px;
+            margin: -8px 0 0 -8px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #ffffff;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        
+        /* Validation Error Styling */
+        .custom-input-error {
+            border-color: #ef4444 !important;
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
+        }
+        
+        .error-message {
+            color: #ef4444;
+            font-size: 12px;
+            margin-top: 4px;
+            display: none;
+        }
+        
+        /* Enhanced Tooltip Styling */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 220px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: left;
+            border-radius: 8px;
+            padding: 12px 16px;
+            position: absolute;
+            z-index: 1000;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -110px;
+            opacity: 0;
+            transition: all 0.3s ease;
+            font-size: 13px;
+            font-weight: 500;
+            line-height: 1.4;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .tooltip .tooltiptext::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -6px;
+            border-width: 6px;
+            border-style: solid;
+            border-color: #667eea transparent transparent transparent;
+        }
+        
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+            transform: translateY(-5px);
+        }
+
+        /* Responsive tooltip positioning */
+        @media (max-width: 768px) {
+            .tooltip .tooltiptext {
+                width: 180px;
+                margin-left: -90px;
+                font-size: 12px;
+                padding: 10px 12px;
+            }
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(8, 18, 73, 0.4);
+        }
+        
+        .btn-secondary {
+            background: white;
+            color: #081249;
+            border: 2px solid #081249;
+            padding: 10px 22px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .btn-secondary:hover {
+            background: #081249;
+            color: white;
+        }
+        
+        .form-input {
+            border: 2px solid #d1d5db;
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            transition: all 0.3s ease;
+            background: white;
+            width: 100%;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .form-select {
+            border: 2px solid #d1d5db;
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            transition: all 0.3s ease;
+            background: white;
+            width: 100%;
+        }
+        
+        .form-select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .quote-item {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 8px;
+            margin-bottom: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .quote-item:hover {
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+        }
+        
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .status-draft {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .status-sent {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .status-accepted {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        /* Action buttons */
+        .action-btn {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-width: 80px;
+            font-size: 11px;
+            gap: 6px;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .action-btn-text {
+            font-weight: 500;
+            line-height: 1;
+            white-space: nowrap;
+        }
+
+        .action-btn-icon {
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+        }
+
+        .action-btn-recall {
+            border-color: #3b82f6;
+            color: #3b82f6;
+        }
+
+        .action-btn-recall:hover {
+            background: #eff6ff;
+            border-color: #2563eb;
+        }
+
+        .action-btn-preview {
+            border-color: #10b981;
+            color: #10b981;
+        }
+
+        .action-btn-preview:hover {
+            background: #ecfdf5;
+            border-color: #059669;
+        }
+
+        .action-btn-delete {
+            border-color: #ef4444;
+            color: #ef4444;
+        }
+
+        .action-btn-delete:hover {
+            background: #fef2f2;
+            border-color: #dc2626;
+        }
+
+        .action-btn-convert {
+            border-color: #8b5cf6;
+            color: #8b5cf6;
+        }
+
+        .action-btn-convert:hover {
+            background: #f5f3ff;
+            border-color: #7c3aed;
+        }
+
+        /* Compact action buttons for saved quotes */
+        .action-btn-compact {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4px 6px;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-width: 24px;
+            height: 24px;
+            font-size: 10px;
+        }
+
+        .action-btn-compact:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+        }
+
+        .action-btn-compact.action-btn-recall {
+            border-color: #3b82f6;
+            color: #3b82f6;
+        }
+        
+        /* Mobile responsive design matching other pages */
+        @media (max-width: 768px) {
+            .page-header {
+                padding: 1.5rem 0;
+            }
+            
+            .page-header h1 {
+                font-size: 2rem;
+            }
+            
+            .page-header p {
+                font-size: 1rem;
+            }
+            
+            .container {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+            
+            .card {
+                margin-bottom: 1rem;
+            }
+            
+            .grid {
+                gap: 0.75rem;
+            }
+            
+            .btn-primary {
+                padding: 10px 20px;
+                font-size: 0.875rem;
+            }
+        }
+        
+        /* Shadow effects matching other pages */
+        .shadow-soft {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        
+        /* Card hover effects matching other pages */
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        .action-btn-compact.action-btn-recall:hover {
+            background: #eff6ff;
+            border-color: #2563eb;
+        }
+
+        .action-btn-compact.action-btn-preview {
+            border-color: #10b981;
+            color: #10b981;
+        }
+
+        .action-btn-compact.action-btn-preview:hover {
+            background: #ecfdf5;
+            border-color: #059669;
+        }
+
+        .action-btn-compact.action-btn-delete {
+            border-color: #ef4444;
+            color: #ef4444;
+        }
+
+        .action-btn-compact.action-btn-delete:hover {
+            background: #fef2f2;
+            border-color: #dc2626;
+        }
+
+        .action-btn-compact.action-btn-convert {
+            border-color: #8b5cf6;
+            color: #8b5cf6;
+        }
+
+        .action-btn-compact.action-btn-convert:hover {
+            background: #f5f3ff;
+            border-color: #7c3aed;
+        }
+
+        /* Enhanced tooltips for compact buttons */
+        .action-btn-compact {
+            position: relative;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header Section -->
+    <div class="page-header">
+        <div class="container mx-auto px-4">
+            <a href="main-menu.html" class="nav-back">
+                <i class="fas fa-arrow-left"></i>
+                <span data-lang="back_to_menu">Back to Menu</span>
+            </a>
+            <h1 class="text-4xl font-bold mb-2" data-lang="quote_maker_title">Quote Maker v2</h1>
+            <p class="text-xl opacity-90" data-lang="quote_maker_subtitle">Create professional quotes with ease</p>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container mx-auto px-4 pb-8">
+        <!-- Quote Creation Form -->
+        <div class="bg-white rounded-lg shadow-soft p-6 mb-6">
+            <h2 class="text-2xl font-bold mb-6 text-gray-800" data-lang="create_new_quote">Create New Quote</h2>
+            
+            <!-- Client Information -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2" data-lang="client_name">Client Name</label>
+                    <input type="text" id="clientName" class="form-input" placeholder="Enter client name">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2" data-lang="client_email">Client Email</label>
+                    <input type="email" id="clientEmail" class="form-input" placeholder="Enter client email">
+                </div>
+            </div>
+
+            <!-- Quote Items Section -->
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold mb-4 text-gray-800" data-lang="quote_items">Quote Items</h3>
+                <div id="quoteItems" class="space-y-4">
+                    <!-- Quote items will be added here dynamically -->
+                </div>
+                <button type="button" id="addItemBtn" class="btn-primary mt-4">
+                    <i class="fas fa-plus mr-2"></i>
+                    <span data-lang="add_item">Add Item</span>
+                </button>
+            </div>
+
+            <!-- Quote Actions -->
+            <div class="flex flex-wrap gap-4">
+                <button type="button" id="saveQuoteBtn" class="btn-primary">
+                    <i class="fas fa-save mr-2"></i>
+                    <span data-lang="save_quote">Save Quote</span>
+                </button>
+                <button type="button" id="previewQuoteBtn" class="btn-secondary">
+                    <i class="fas fa-eye mr-2"></i>
+                    <span data-lang="preview_quote">Preview Quote</span>
+                </button>
+                <button type="button" id="generatePdfBtn" class="btn-secondary">
+                    <i class="fas fa-file-pdf mr-2"></i>
+                    <span data-lang="generate_pdf">Generate PDF</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Saved Quotes Section -->
+        <div class="bg-white rounded-lg shadow-soft p-6">
+            <h2 class="text-2xl font-bold mb-6 text-gray-800" data-lang="saved_quotes">Saved Quotes</h2>
+            <div id="savedQuotes" class="space-y-4">
+                <!-- Saved quotes will be displayed here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Quote Preview Modal -->
+    <div id="quotePreviewModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg max-w-4xl w-full max-h-screen overflow-y-auto">
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xl font-bold" data-lang="quote_preview">Quote Preview</h3>
+                        <button id="closePreviewBtn" class="text-gray-500 hover:text-gray-700">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+                    <div id="quotePreviewContent">
+                        <!-- Preview content will be inserted here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        // Initialize the application when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeQuoteMaker();
+        });
+
+        // Global variables
+        let currentQuoteItems = [];
+        let savedQuotes = [];
+        let quoteCounter = 1;
+
+        // Initialize Quote Maker
+        function initializeQuoteMaker() {
+            setupEventListeners();
+            loadSavedQuotes();
+            addInitialQuoteItem();
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            document.getElementById('addItemBtn').addEventListener('click', addQuoteItem);
+            document.getElementById('saveQuoteBtn').addEventListener('click', saveQuote);
+            document.getElementById('previewQuoteBtn').addEventListener('click', previewQuote);
+            document.getElementById('generatePdfBtn').addEventListener('click', generatePDF);
+            document.getElementById('closePreviewBtn').addEventListener('click', closePreview);
+        }
+
+        // Add initial quote item
+        function addInitialQuoteItem() {
+            addQuoteItem();
+        }
+
+        // Add new quote item
+        function addQuoteItem() {
+            const itemId = 'item_' + Date.now();
+            const itemHtml = `
+                <div class="quote-item" data-item-id="${itemId}">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Product</label>
+                            <input type="text" class="form-input item-product" placeholder="Product name">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
+                            <input type="number" class="form-input item-quantity" placeholder="1" min="1" value="1">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Unit Price</label>
+                            <input type="number" class="form-input item-price" placeholder="0.00" min="0" step="0.01">
+                        </div>
+                        <div class="flex items-end">
+                            <button type="button" class="btn-secondary w-full remove-item-btn" onclick="removeQuoteItem('${itemId}')">
+                                <i class="fas fa-trash mr-2"></i>
+                                Remove
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('quoteItems').insertAdjacentHTML('beforeend', itemHtml);
+            
+            // Add event listeners for price calculation
+            const newItem = document.querySelector(`[data-item-id="${itemId}"]`);
+            const quantityInput = newItem.querySelector('.item-quantity');
+            const priceInput = newItem.querySelector('.item-price');
+            
+            quantityInput.addEventListener('input', calculateTotal);
+            priceInput.addEventListener('input', calculateTotal);
+        }
+
+        // Remove quote item
+        function removeQuoteItem(itemId) {
+            const item = document.querySelector(`[data-item-id="${itemId}"]`);
+            if (item) {
+                item.remove();
+                calculateTotal();
+            }
+        }
+
+        // Calculate total
+        function calculateTotal() {
+            let total = 0;
+            const items = document.querySelectorAll('.quote-item');
+            
+            items.forEach(item => {
+                const quantity = parseFloat(item.querySelector('.item-quantity').value) || 0;
+                const price = parseFloat(item.querySelector('.item-price').value) || 0;
+                total += quantity * price;
+            });
+            
+            return total;
+        }
+
+        // Save quote
+        function saveQuote() {
+            const clientName = document.getElementById('clientName').value.trim();
+            const clientEmail = document.getElementById('clientEmail').value.trim();
+            
+            if (!clientName) {
+                alert('Please enter client name');
+                return;
+            }
+            
+            const items = [];
+            const quoteItems = document.querySelectorAll('.quote-item');
+            
+            quoteItems.forEach(item => {
+                const product = item.querySelector('.item-product').value.trim();
+                const quantity = parseFloat(item.querySelector('.item-quantity').value) || 0;
+                const price = parseFloat(item.querySelector('.item-price').value) || 0;
+                
+                if (product && quantity > 0 && price > 0) {
+                    items.push({
+                        product,
+                        quantity,
+                        price,
+                        total: quantity * price
+                    });
+                }
+            });
+            
+            if (items.length === 0) {
+                alert('Please add at least one valid item');
+                return;
+            }
+            
+            const quote = {
+                id: 'quote_' + Date.now(),
+                clientName,
+                clientEmail,
+                items,
+                total: items.reduce((sum, item) => sum + item.total, 0),
+                createdAt: new Date().toISOString(),
+                status: 'draft'
+            };
+            
+            savedQuotes.push(quote);
+            localStorage.setItem('savedQuotes', JSON.stringify(savedQuotes));
+            
+            displaySavedQuotes();
+            clearForm();
+            
+            alert('Quote saved successfully!');
+        }
+
+        // Preview quote
+        function previewQuote() {
+            const clientName = document.getElementById('clientName').value.trim();
+            const clientEmail = document.getElementById('clientEmail').value.trim();
+            
+            if (!clientName) {
+                alert('Please enter client name');
+                return;
+            }
+            
+            const items = [];
+            const quoteItems = document.querySelectorAll('.quote-item');
+            
+            quoteItems.forEach(item => {
+                const product = item.querySelector('.item-product').value.trim();
+                const quantity = parseFloat(item.querySelector('.item-quantity').value) || 0;
+                const price = parseFloat(item.querySelector('.item-price').value) || 0;
+                
+                if (product && quantity > 0 && price > 0) {
+                    items.push({
+                        product,
+                        quantity,
+                        price,
+                        total: quantity * price
+                    });
+                }
+            });
+            
+            if (items.length === 0) {
+                alert('Please add at least one valid item');
+                return;
+            }
+            
+            const total = items.reduce((sum, item) => sum + item.total, 0);
+            
+            const previewHtml = generateQuoteHTML({
+                clientName,
+                clientEmail,
+                items,
+                total,
+                createdAt: new Date().toISOString()
+            });
+            
+            document.getElementById('quotePreviewContent').innerHTML = previewHtml;
+            document.getElementById('quotePreviewModal').classList.remove('hidden');
+        }
+
+        // Generate quote HTML
+        function generateQuoteHTML(quote) {
+            const itemsHtml = quote.items.map(item => `
+                <tr class="border-b">
+                    <td class="py-2 px-4">${item.product}</td>
+                    <td class="py-2 px-4 text-center">${item.quantity}</td>
+                    <td class="py-2 px-4 text-right">$${item.price.toFixed(2)}</td>
+                    <td class="py-2 px-4 text-right font-semibold">$${item.total.toFixed(2)}</td>
+                </tr>
+            `).join('');
+            
+            return `
+                <div class="max-w-4xl mx-auto bg-white p-8 border">
+                    <div class="text-center mb-8">
+                        <h1 class="text-3xl font-bold text-gray-800 mb-2">QUOTE</h1>
+                        <p class="text-gray-600">Indian Natural Hair</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-8 mb-8">
+                        <div>
+                            <h3 class="font-semibold text-gray-800 mb-2">Quote To:</h3>
+                            <p class="text-gray-700">${quote.clientName}</p>
+                            ${quote.clientEmail ? `<p class="text-gray-700">${quote.clientEmail}</p>` : ''}
+                        </div>
+                        <div class="text-right">
+                            <p class="text-gray-700"><strong>Date:</strong> ${new Date(quote.createdAt).toLocaleDateString()}</p>
+                        </div>
+                    </div>
+                    
+                    <table class="w-full mb-8">
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th class="py-3 px-4 text-left">Product</th>
+                                <th class="py-3 px-4 text-center">Quantity</th>
+                                <th class="py-3 px-4 text-right">Unit Price</th>
+                                <th class="py-3 px-4 text-right">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${itemsHtml}
+                        </tbody>
+                        <tfoot class="bg-gray-50">
+                            <tr>
+                                <td colspan="3" class="py-3 px-4 text-right font-semibold">Total:</td>
+                                <td class="py-3 px-4 text-right font-bold text-lg">$${quote.total.toFixed(2)}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                    
+                    <div class="text-center text-gray-600 text-sm">
+                        <p>Thank you for your business!</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Generate PDF
+        function generatePDF() {
+            const clientName = document.getElementById('clientName').value.trim();
+            
+            if (!clientName) {
+                alert('Please enter client name');
+                return;
+            }
+            
+            const items = [];
+            const quoteItems = document.querySelectorAll('.quote-item');
+            
+            quoteItems.forEach(item => {
+                const product = item.querySelector('.item-product').value.trim();
+                const quantity = parseFloat(item.querySelector('.item-quantity').value) || 0;
+                const price = parseFloat(item.querySelector('.item-price').value) || 0;
+                
+                if (product && quantity > 0 && price > 0) {
+                    items.push({
+                        product,
+                        quantity,
+                        price,
+                        total: quantity * price
+                    });
+                }
+            });
+            
+            if (items.length === 0) {
+                alert('Please add at least one valid item');
+                return;
+            }
+            
+            const quote = {
+                clientName,
+                clientEmail: document.getElementById('clientEmail').value.trim(),
+                items,
+                total: items.reduce((sum, item) => sum + item.total, 0),
+                createdAt: new Date().toISOString()
+            };
+            
+            // Create a temporary div for PDF generation
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = generateQuoteHTML(quote);
+            tempDiv.style.position = 'absolute';
+            tempDiv.style.left = '-9999px';
+            document.body.appendChild(tempDiv);
+            
+            // Generate PDF using html2canvas and jsPDF
+            html2canvas(tempDiv.firstElementChild, {
+                scale: 2,
+                useCORS: true,
+                allowTaint: true
+            }).then(canvas => {
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new jspdf.jsPDF('p', 'mm', 'a4');
+                const imgWidth = 210;
+                const pageHeight = 295;
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                let heightLeft = imgHeight;
+                
+                let position = 0;
+                
+                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+                
+                while (heightLeft >= 0) {
+                    position = heightLeft - imgHeight;
+                    pdf.addPage();
+                    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                }
+                
+                pdf.save(`quote-${clientName.replace(/\s+/g, '-').toLowerCase()}-${Date.now()}.pdf`);
+                
+                // Clean up
+                document.body.removeChild(tempDiv);
+            }).catch(error => {
+                alert('Error generating PDF. Please try again.');
+                document.body.removeChild(tempDiv);
+            });
+        }
+
+        // Close preview modal
+        function closePreview() {
+            document.getElementById('quotePreviewModal').classList.add('hidden');
+        }
+
+        // Clear form
+        function clearForm() {
+            document.getElementById('clientName').value = '';
+            document.getElementById('clientEmail').value = '';
+            document.getElementById('quoteItems').innerHTML = '';
+            addInitialQuoteItem();
+        }
+
+        // Load saved quotes
+        function loadSavedQuotes() {
+            const saved = localStorage.getItem('savedQuotes');
+            if (saved) {
+                savedQuotes = JSON.parse(saved);
+                displaySavedQuotes();
+            }
+        }
+
+        // Display saved quotes
+        function displaySavedQuotes() {
+            const container = document.getElementById('savedQuotes');
+            
+            if (savedQuotes.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center py-8">No saved quotes yet.</p>';
+                return;
+            }
+            
+            const quotesHtml = savedQuotes.map(quote => `
+                <div class="quote-item">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h4 class="font-semibold text-gray-800">${quote.clientName}</h4>
+                            <p class="text-sm text-gray-600">${quote.clientEmail || 'No email'}</p>
+                            <p class="text-sm text-gray-500">Created: ${new Date(quote.createdAt).toLocaleDateString()}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-lg font-bold text-gray-800">$${quote.total.toFixed(2)}</p>
+                            <span class="status-badge status-${quote.status}">${quote.status}</span>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex gap-2">
+                        <button class="action-btn action-btn-recall" onclick="recallQuote('${quote.id}')">
+                            <i class="action-btn-icon fas fa-edit"></i>
+                            <span class="action-btn-text">Edit</span>
+                        </button>
+                        <button class="action-btn action-btn-preview" onclick="previewSavedQuote('${quote.id}')">
+                            <i class="action-btn-icon fas fa-eye"></i>
+                            <span class="action-btn-text">Preview</span>
+                        </button>
+                        <button class="action-btn action-btn-delete" onclick="deleteSavedQuote('${quote.id}')">
+                            <i class="action-btn-icon fas fa-trash"></i>
+                            <span class="action-btn-text">Delete</span>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+            
+            container.innerHTML = quotesHtml;
+        }
+
+        // Recall quote for editing
+        function recallQuote(quoteId) {
+            const quote = savedQuotes.find(q => q.id === quoteId);
+            if (!quote) return;
+            
+            // Fill form with quote data
+            document.getElementById('clientName').value = quote.clientName;
+            document.getElementById('clientEmail').value = quote.clientEmail || '';
+            
+            // Clear existing items
+            document.getElementById('quoteItems').innerHTML = '';
+            
+            // Add quote items
+            quote.items.forEach(item => {
+                addQuoteItem();
+                const lastItem = document.querySelector('.quote-item:last-child');
+                lastItem.querySelector('.item-product').value = item.product;
+                lastItem.querySelector('.item-quantity').value = item.quantity;
+                lastItem.querySelector('.item-price').value = item.price;
+            });
+            
+            // Remove the quote from saved quotes
+            savedQuotes = savedQuotes.filter(q => q.id !== quoteId);
+            localStorage.setItem('savedQuotes', JSON.stringify(savedQuotes));
+            displaySavedQuotes();
+            
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Preview saved quote
+        function previewSavedQuote(quoteId) {
+            const quote = savedQuotes.find(q => q.id === quoteId);
+            if (!quote) return;
+            
+            const previewHtml = generateQuoteHTML(quote);
+            document.getElementById('quotePreviewContent').innerHTML = previewHtml;
+            document.getElementById('quotePreviewModal').classList.remove('hidden');
+        }
+
+        // Delete saved quote
+        function deleteSavedQuote(quoteId) {
+            if (confirm('Are you sure you want to delete this quote?')) {
+                savedQuotes = savedQuotes.filter(q => q.id !== quoteId);
+                localStorage.setItem('savedQuotes', JSON.stringify(savedQuotes));
+                displaySavedQuotes();
+            }
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('quotePreviewModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closePreview();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Key Verification - Google Sheets Integration</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://apis.google.com/js/api.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen py-8">
+    <div class="max-w-6xl mx-auto px-4">
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h1 class="text-3xl font-bold text-gray-800 mb-6">🔑 API Key Verification Dashboard</h1>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <h2 class="text-lg font-semibold text-blue-800 mb-2">Current Configuration</h2>
+                    <div id="configInfo" class="text-sm text-blue-700">
+                        Loading configuration...
+                    </div>
+                </div>
+                
+                <div class="bg-green-50 p-4 rounded-lg">
+                    <h2 class="text-lg font-semibold text-green-800 mb-2">Test Status</h2>
+                    <div id="testStatus" class="text-sm text-green-700">
+                        Ready to test
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-6">
+                <div class="flex flex-wrap gap-2">
+                    <button id="testBasicApi" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                        Test Basic API
+                    </button>
+                    <button id="testSheetAccess" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+                        Test Sheet Access
+                    </button>
+                    <button id="testGapiInit" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded">
+                        Test GAPI Init
+                    </button>
+                    <button id="testFullIntegration" class="bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded">
+                        Full Integration Test
+                    </button>
+                    <button id="clearResults" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
+                        Clear Results
+                    </button>
+                </div>
+            </div>
+
+            <div id="results" class="space-y-4"></div>
+        </div>
+    </div>
+
+    <script>
+        // Get API key from the same source as the main application
+        const API_KEY = window.GOOGLE_SHEETS_API_KEY || '35bbf27b0bf3abb0a9fec63e815006a5785ec7bb';
+        const SHEET_ID = '1hlfrnZnNQ0u8idg5KDmkSY4zFhLyvjLqUwAZn6HmW3s';
+        const PUBLIC_SHEET_ID = '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms';
+
+        let testResults = [];
+
+        function updateConfigInfo() {
+            const configDiv = document.getElementById('configInfo');
+            configDiv.innerHTML = `
+                <strong>API Key:</strong> ${API_KEY.substring(0, 10)}...${API_KEY.substring(API_KEY.length - 4)}<br>
+                <strong>Sheet ID:</strong> ${SHEET_ID.substring(0, 10)}...<br>
+                <strong>GAPI Loaded:</strong> ${typeof gapi !== 'undefined' ? '✅ Yes' : '❌ No'}<br>
+                <strong>Window API Key:</strong> ${window.GOOGLE_SHEETS_API_KEY ? '✅ Set' : '❌ Not Set'}
+            `;
+        }
+
+        function updateTestStatus(status, color = 'green') {
+            const statusDiv = document.getElementById('testStatus');
+            statusDiv.innerHTML = `<span class="text-${color}-700">${status}</span>`;
+        }
+
+        function addResult(test, status, message, details = '') {
+            const result = { test, status, message, details, timestamp: new Date().toLocaleTimeString() };
+            testResults.push(result);
+            displayResult(result);
+        }
+
+        function displayResult(result) {
+            const resultsDiv = document.getElementById('results');
+            const statusColors = {
+                'success': 'bg-green-100 border-green-500 text-green-700',
+                'error': 'bg-red-100 border-red-500 text-red-700',
+                'warning': 'bg-yellow-100 border-yellow-500 text-yellow-700',
+                'info': 'bg-blue-100 border-blue-500 text-blue-700'
+            };
+
+            const statusIcons = {
+                'success': '✅',
+                'error': '❌',
+                'warning': '⚠️',
+                'info': 'ℹ️'
+            };
+
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `border-l-4 p-4 ${statusColors[result.status]}`;
+            resultDiv.innerHTML = `
+                <div class="flex items-start">
+                    <span class="text-lg mr-3 mt-1">${statusIcons[result.status]}</span>
+                    <div class="flex-1">
+                        <h3 class="font-semibold">${result.test}</h3>
+                        <p class="mt-1">${result.message}</p>
+                        ${result.details ? `<div class="mt-2 text-sm opacity-75 whitespace-pre-line">${result.details}</div>` : ''}
+                        <div class="text-xs opacity-50 mt-2">${result.timestamp}</div>
+                    </div>
+                </div>
+            `;
+            resultsDiv.appendChild(resultDiv);
+            resultsDiv.scrollTop = resultsDiv.scrollHeight;
+        }
+
+        async function testBasicApi() {
+            updateTestStatus('Testing Basic API...', 'blue');
+            addResult('Basic API Test', 'info', 'Testing direct API access...');
+            
+            try {
+                const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${PUBLIC_SHEET_ID}?key=${API_KEY}`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    addResult('Basic API Test', 'success', 'API key is valid and working!', 
+                        `Successfully accessed: "${data.properties.title}"\nSheets: ${data.sheets.length}`);
+                    updateTestStatus('Basic API: ✅ Success', 'green');
+                    return true;
+                } else {
+                    const errorData = await response.json().catch(() => ({}));
+                    addResult('Basic API Test', 'error', `HTTP ${response.status}: ${response.statusText}`, 
+                        `Error details: ${JSON.stringify(errorData, null, 2)}`);
+                    updateTestStatus('Basic API: ❌ Failed', 'red');
+                    return false;
+                }
+            } catch (error) {
+                addResult('Basic API Test', 'error', 'Network error', error.message);
+                updateTestStatus('Basic API: ❌ Network Error', 'red');
+                return false;
+            }
+        }
+
+        async function testSheetAccess() {
+            updateTestStatus('Testing Sheet Access...', 'blue');
+            addResult('Sheet Access Test', 'info', 'Testing access to configured spreadsheet...');
+            
+            try {
+                const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}?key=${API_KEY}`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    addResult('Sheet Access Test', 'success', 'Successfully accessed configured spreadsheet!', 
+                        `Title: "${data.properties.title}"\nSheets: ${data.sheets.map(s => s.properties.title).join(', ')}`);
+                    updateTestStatus('Sheet Access: ✅ Success', 'green');
+                    return true;
+                } else {
+                    const errorData = await response.json().catch(() => ({}));
+                    addResult('Sheet Access Test', 'error', `Cannot access configured spreadsheet: HTTP ${response.status}`, 
+                        `This might mean the spreadsheet is private or the ID is incorrect.\nError: ${JSON.stringify(errorData, null, 2)}`);
+                    updateTestStatus('Sheet Access: ❌ Failed', 'red');
+                    return false;
+                }
+            } catch (error) {
+                addResult('Sheet Access Test', 'error', 'Network error accessing spreadsheet', error.message);
+                updateTestStatus('Sheet Access: ❌ Network Error', 'red');
+                return false;
+            }
+        }
+
+        async function testGapiInit() {
+            updateTestStatus('Testing GAPI Initialization...', 'blue');
+            addResult('GAPI Initialization', 'info', 'Testing Google API client initialization...');
+            
+            if (typeof gapi === 'undefined') {
+                addResult('GAPI Initialization', 'error', 'GAPI library not loaded', 
+                    'Make sure the Google API script is included in the page.');
+                updateTestStatus('GAPI: ❌ Not Loaded', 'red');
+                return false;
+            }
+
+            try {
+                await new Promise((resolve, reject) => {
+                    gapi.load('client', {
+                        callback: resolve,
+                        onerror: reject,
+                        timeout: 10000,
+                        ontimeout: () => reject(new Error('Timeout loading gapi.client'))
+                    });
+                });
+
+                addResult('GAPI Client Load', 'success', 'GAPI client loaded successfully');
+
+                await gapi.client.init({
+                    apiKey: API_KEY,
+                    discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4']
+                });
+
+                addResult('GAPI Client Init', 'success', 'GAPI client initialized successfully');
+
+                if (gapi.client.sheets) {
+                    addResult('GAPI Sheets API', 'success', 'Google Sheets API is available via GAPI');
+                    
+                    // Test actual API call
+                    try {
+                        const response = await gapi.client.sheets.spreadsheets.get({
+                            spreadsheetId: PUBLIC_SHEET_ID
+                        });
+                        
+                        addResult('GAPI API Call', 'success', 'Successfully made API call via GAPI', 
+                            `Retrieved: "${response.result.properties.title}"`);
+                        updateTestStatus('GAPI: ✅ Fully Working', 'green');
+                        return true;
+                    } catch (apiError) {
+                        addResult('GAPI API Call', 'warning', 'GAPI initialized but API call failed', 
+                            `Error: ${apiError.message || apiError}`);
+                        updateTestStatus('GAPI: ⚠️ Partial Success', 'yellow');
+                        return false;
+                    }
+                } else {
+                    addResult('GAPI Sheets API', 'error', 'Google Sheets API not available after initialization');
+                    updateTestStatus('GAPI: ❌ Sheets API Missing', 'red');
+                    return false;
+                }
+            } catch (error) {
+                addResult('GAPI Initialization', 'error', 'Failed to initialize GAPI', error.message);
+                updateTestStatus('GAPI: ❌ Init Failed', 'red');
+                return false;
+            }
+        }
+
+        async function testFullIntegration() {
+            updateTestStatus('Running Full Integration Test...', 'blue');
+            addResult('Full Integration Test', 'info', 'Running comprehensive test suite...');
+            
+            const results = {
+                basicApi: await testBasicApi(),
+                sheetAccess: await testSheetAccess(),
+                gapiInit: await testGapiInit()
+            };
+            
+            const successCount = Object.values(results).filter(Boolean).length;
+            const totalTests = Object.keys(results).length;
+            
+            if (successCount === totalTests) {
+                addResult('Full Integration Test', 'success', 'All tests passed! Google Sheets integration is fully functional.', 
+                    `✅ Basic API: Working\n✅ Sheet Access: Working\n✅ GAPI Integration: Working`);
+                updateTestStatus('Integration: ✅ All Systems Go!', 'green');
+            } else if (successCount > 0) {
+                addResult('Full Integration Test', 'warning', `${successCount}/${totalTests} tests passed. Some issues detected.`, 
+                    `${results.basicApi ? '✅' : '❌'} Basic API\n${results.sheetAccess ? '✅' : '❌'} Sheet Access\n${results.gapiInit ? '✅' : '❌'} GAPI Integration`);
+                updateTestStatus(`Integration: ⚠️ ${successCount}/${totalTests} Working`, 'yellow');
+            } else {
+                addResult('Full Integration Test', 'error', 'All tests failed. Google Sheets integration is not working.', 
+                    `❌ Basic API: Failed\n❌ Sheet Access: Failed\n❌ GAPI Integration: Failed`);
+                updateTestStatus('Integration: ❌ All Failed', 'red');
+            }
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+            testResults = [];
+            updateTestStatus('Ready to test', 'green');
+        }
+
+        // Event listeners
+        document.getElementById('testBasicApi').addEventListener('click', testBasicApi);
+        document.getElementById('testSheetAccess').addEventListener('click', testSheetAccess);
+        document.getElementById('testGapiInit').addEventListener('click', testGapiInit);
+        document.getElementById('testFullIntegration').addEventListener('click', testFullIntegration);
+        document.getElementById('clearResults').addEventListener('click', clearResults);
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            updateConfigInfo();
+            addResult('System Ready', 'info', 'API Key Verification Dashboard loaded successfully', 
+                'Click any test button to verify the Google Sheets API integration.');
+        });
+
+        // Set the API key in window for consistency
+        window.GOOGLE_SHEETS_API_KEY = API_KEY;
+    </script>
+</body>
+</html>

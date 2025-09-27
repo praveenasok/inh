@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Connection Debug</title>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        .warning { background-color: #fff3cd; color: #856404; }
+        pre { background-color: #f8f9fa; padding: 10px; border-radius: 5px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>Firebase Connection Debug</h1>
+    <div id="results"></div>
+    
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCW3FsY_QwFuqZiQaWg4jmmmjlSUR9DxNA",
+            authDomain: "inhpricelistgenerator.firebaseapp.com",
+            projectId: "inhpricelistgenerator",
+            storageBucket: "inhpricelistgenerator.firebasestorage.app",
+            messagingSenderId: "263357798472",
+            appId: "1:263357798472:web:e03f4a7264a19fe4bfe07d"
+        };
+
+        function addResult(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.innerHTML = message;
+            document.getElementById('results').appendChild(div);
+        }
+
+        async function runTests() {
+            try {
+                addResult('🔧 Starting Firebase connection tests...', 'info');
+                
+                // Test 1: Initialize Firebase
+                addResult('Test 1: Initializing Firebase...', 'info');
+                const app = firebase.initializeApp(firebaseConfig);
+                addResult('✅ Firebase app initialized successfully', 'success');
+                
+                // Test 2: Get Firestore instance
+                addResult('Test 2: Getting Firestore instance...', 'info');
+                const db = firebase.firestore();
+                addResult('✅ Firestore instance created successfully', 'success');
+                
+                // Test 3: Test basic connection with minimal settings
+                addResult('Test 3: Testing basic connection...', 'info');
+                try {
+                    const testDoc = await db.collection('products').limit(1).get();
+                    addResult(`✅ Basic connection successful - Found ${testDoc.size} documents`, 'success');
+                } catch (error) {
+                    addResult(`❌ Basic connection failed: ${error.message}`, 'error');
+                    addResult(`<pre>${error.stack}</pre>`, 'error');
+                }
+                
+                // Test 4: Test each collection individually
+                const collections = ['products', 'clients', 'colors', 'styles', 'quotes', 'orders'];
+                
+                for (const collectionName of collections) {
+                    addResult(`Test 4.${collections.indexOf(collectionName) + 1}: Testing ${collectionName} collection...`, 'info');
+                    try {
+                        const snapshot = await db.collection(collectionName).limit(1).get();
+                        addResult(`✅ ${collectionName}: ${snapshot.size} documents found`, 'success');
+                    } catch (error) {
+                        addResult(`❌ ${collectionName}: ${error.message}`, 'error');
+                    }
+                }
+                
+                // Test 5: Test config collection
+                addResult('Test 5: Testing config collection...', 'info');
+                try {
+                    const configDoc = await db.collection('config').doc('salesmen').get();
+                    if (configDoc.exists) {
+                        addResult('✅ Config/salesmen document exists', 'success');
+                    } else {
+                        addResult('⚠️ Config/salesmen document does not exist', 'warning');
+                    }
+                } catch (error) {
+                    addResult(`❌ Config collection error: ${error.message}`, 'error');
+                }
+                
+                // Test 6: Test with different Firestore settings
+                addResult('Test 6: Testing with different Firestore settings...', 'info');
+                try {
+                    // Try with different settings
+                    db.settings({
+                        experimentalForceLongPolling: false,
+                        merge: true
+                    });
+                    
+                    const testDoc2 = await db.collection('products').limit(1).get();
+                    addResult(`✅ Connection with modified settings successful - Found ${testDoc2.size} documents`, 'success');
+                } catch (error) {
+                    addResult(`❌ Modified settings failed: ${error.message}`, 'error');
+                }
+                
+                addResult('🏁 All tests completed!', 'info');
+                
+            } catch (error) {
+                addResult(`❌ Critical error during testing: ${error.message}`, 'error');
+                addResult(`<pre>${error.stack}</pre>`, 'error');
+            }
+        }
+
+        // Run tests when page loads
+        window.addEventListener('load', runTests);
+    </script>
+</body>
+</html>

@@ -2,110 +2,75 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const url = require('url');
-const XLSX = require('xlsx');
 const SyncScheduler = require('./sync-scheduler');
 const FirebaseSyncService = require('./firebase-sync-service');
+const GoogleSheetsService = require('./google-sheets-service');
 
 const PORT = 3000;
 const HTML_FILE_PATH = path.join(__dirname, 'index.html');
 const DATA_FILE_PATH = path.join(__dirname, 'data.json');
-const EXCEL_FILE_PATH = path.join(__dirname, 'PriceLists', 'productData.xlsx');
 const PRICE_LIST_FILE_PATH = path.join(__dirname, 'oldfiles', 'Price List Generator — Indian Natural Hair.html');
 const QUOTE_MAKER_FILE_PATH = path.join(__dirname, 'quotemaker', 'index.html');
 
 // In-memory data storage
 let currentProductData = null;
-let cachedSalesmenData = null;
-let salesmenCacheTimestamp = null;
-const SALESMEN_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes cache
 
 // Initialize sync services
 let syncScheduler = null;
 let syncService = null;
+let googleSheetsService = null;
 
 // Initialize sync services
 async function initializeSyncServices() {
   try {
     syncScheduler = new SyncScheduler();
     syncService = new FirebaseSyncService();
+    googleSheetsService = new GoogleSheetsService();
     
     await syncScheduler.initialize();
     await syncService.initialize();
+    await googleSheetsService.initialize();
     
     // Start the scheduler automatically
     syncScheduler.startScheduler();
     
     // Perform initial sync for colors and styles on startup
     try {
-      console.log('Performing initial sync for colors and styles...');
+      // Performing initial sync for colors and styles
       const productSheetId = '1hlfrnZnNQ0u8idg5KDmkSY4zFhLyvjLqUwAZn6HmW3s';
       
       // Sync colors
       const colorsResult = await syncService.syncColorsData(productSheetId);
-      console.log('Initial colors sync completed:', {
-        success: colorsResult.success,
-        operationCount: colorsResult.operationCount
-      });
+      // Initial colors sync completed
       
       // Sync styles
       const stylesResult = await syncService.syncStylesData(productSheetId);
-      console.log('Initial styles sync completed:', {
-        success: stylesResult.success,
-        operationCount: stylesResult.operationCount
-      });
+      // Initial styles sync completed
       
     } catch (error) {
-      console.warn('Initial colors/styles sync failed:', error.message);
-      console.warn('Colors and styles will be synced during the next scheduled sync.');
+      // Initial colors/styles sync failed, will be synced during next scheduled sync
     }
     
-    console.log('Sync services initialized successfully');
+    // Sync services initialized successfully
     
     // Make scheduler globally available for graceful shutdown
     global.syncScheduler = syncScheduler;
   } catch (error) {
-    console.error('Failed to initialize sync services:', error.message);
-    console.log('Sync services will be disabled. Please check your service account configuration.');
+    // Failed to initialize sync services - sync services will be disabled
   }
 }
 
-// Function to read salesmen data from Excel file with caching
-function getSalesmenFromExcel() {
-  // Check if we have valid cached data
-  if (cachedSalesmenData && salesmenCacheTimestamp && 
-      (Date.now() - salesmenCacheTimestamp) < SALESMEN_CACHE_DURATION) {
-    return cachedSalesmenData;
+// Function to get salesmen data from Firebase or embedded data
+function getSalesmenFromData() {
+  // Try to get from current product data first
+  if (currentProductData && currentProductData.salesmen) {
+    return currentProductData.salesmen;
   }
   
-  try {
-    if (fs.existsSync(EXCEL_FILE_PATH)) {
-      const workbook = XLSX.readFile(EXCEL_FILE_PATH);
-      if (workbook.SheetNames.includes('salesmen')) {
-        const worksheet = workbook.Sheets['salesmen'];
-        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-        
-        // Extract names from the data (skip header row)
-        const salesmen = jsonData.slice(1)
-          .map(row => row[0]) // Get first column (Name)
-          .filter(name => name && name.trim()) // Filter out empty values
-          .map(name => name.trim()); // Trim whitespace
-        
-        // Cache the result
-        cachedSalesmenData = salesmen;
-        salesmenCacheTimestamp = Date.now();
-        
-        console.log(`Loaded ${salesmen.length} salesmen from Excel (cached for 5 minutes):`, salesmen);
-        return salesmen;
-      }
-    }
-  } catch (error) {
-    console.error('Error reading salesmen from Excel:', error);
-    // Return empty array if Excel reading fails - embedded data should be used
-    return [];
-  }
-  
-  // If no salesmen sheet found, return empty array
-  return [];
+  // Return default salesmen if no data available
+  return [
+    "Praveen", "Rupa", "INH", "HW", "Vijay", "Pankaj", "Sunil"
+  ];
 }
 
 // MIME types for different file extensions
@@ -122,7 +87,7 @@ const mimeTypes = {
 };
 
 const server = http.createServer(async (req, res) => {
-  const parsedUrl = url.parse(req.url, true);
+  const parsedUrl = new URL(req.url, `http://${req.headers.host}`);
   const pathname = parsedUrl.pathname;
 
   // Enable CORS
@@ -170,11 +135,76 @@ const server = http.createServer(async (req, res) => {
 
   if (pathname === '/api/get-data' && req.method === 'GET') {
     try {
+      const collection = parsedUrl.searchParams.get('collection');
+      const docId = parsedUrl.searchParams.get('id');
+
+      // If collection is specified, get data from Firebase
+      if (collection) {
+        if (!syncService || !syncService.db) {
+          res.writeHead(503, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Firebase service not available' }));
+          return;
+        }
+
+        if (docId) {
+          // Get specific document
+          const docRef = syncService.db.collection(collection).doc(docId);
+          const doc = await docRef.get();
+          
+          if (doc.exists) {
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ id: doc.id, ...doc.data() }));
+          } else {
+            res.writeHead(404, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Document not found' }));
+          }
+        } else {
+          // Handle special collections that are stored in config documents
+          if (collection === 'salespeople') {
+            try {
+              const configDoc = await syncService.db.collection('config').doc('salesmen').get();
+              if (configDoc.exists) {
+                const configData = configDoc.data();
+                const salespeople = configData.salesmen || configData.list || [];
+                // Add IDs to salespeople data for consistency
+                const salesmenWithIds = salespeople.map((salesman, index) => ({
+                  id: `salesman_${index}`,
+                  ...salesman
+                }));
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify(salesmenWithIds));
+              } else {
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify([]));
+              }
+            } catch (error) {
+              console.error('Error fetching salespeople:', error);
+              res.writeHead(200, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify([]));
+            }
+            return;
+          }
+          
+          // Get entire collection (default behavior)
+          const snapshot = await syncService.db.collection(collection).get();
+          const data = [];
+          
+          snapshot.forEach(doc => {
+            data.push({ id: doc.id, ...doc.data() });
+          });
+          
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify(data));
+        }
+        return;
+      }
+
+      // Default behavior for backward compatibility (no collection specified)
       if (currentProductData) {
-        // Add salesmen data from Excel
+        // Add salesmen data from data source
         const dataWithSalesmen = {
           ...currentProductData,
-          salesmen: getSalesmenFromExcel()
+          salesmen: getSalesmenFromData()
         };
         const response = {
           success: true,
@@ -183,21 +213,10 @@ const server = http.createServer(async (req, res) => {
         };
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(response));
-      } else if (fs.existsSync(DATA_FILE_PATH)) {
-        const data = fs.readFileSync(DATA_FILE_PATH, 'utf8');
-        currentProductData = JSON.parse(data);
-        // Add salesmen data from Excel
-        currentProductData.salesmen = getSalesmenFromExcel();
-        const response = {
-          success: true,
-          data: Array.isArray(currentProductData) ? currentProductData : currentProductData.products || [],
-          salesmen: currentProductData.salesmen
-        };
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify(response));
       } else {
-        res.writeHead(404, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ success: false, error: 'No data found' }));
+        // No fallback - Firebase data is required
+        res.writeHead(503, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Firebase data not available - service unavailable' }));
       }
     } catch (error) {
       res.writeHead(500, { 'Content-Type': 'application/json' });
@@ -210,7 +229,7 @@ const server = http.createServer(async (req, res) => {
   if (pathname === '/api/get-styles' && req.method === 'GET') {
     try {
       if (syncService && syncService.db) {
-        console.log('🔍 API: Fetching styles from Firebase...');
+        // Fetching styles from Firebase
         const stylesSnapshot = await syncService.db.collection('styles').get();
         const styles = [];
         
@@ -218,7 +237,7 @@ const server = http.createServer(async (req, res) => {
           styles.push({ id: doc.id, ...doc.data() });
         });
         
-        console.log(`📊 API: Found ${styles.length} styles in Firebase`);
+        // Found styles in Firebase
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ 
           success: true, 
@@ -226,7 +245,7 @@ const server = http.createServer(async (req, res) => {
           count: styles.length 
         }));
       } else {
-        console.log('⚠️ API: Firebase not available');
+        // Firebase not available
         res.writeHead(503, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ 
           success: false, 
@@ -234,7 +253,7 @@ const server = http.createServer(async (req, res) => {
         }));
       }
     } catch (error) {
-      console.error('❌ API: Error getting styles:', error);
+      // Error getting styles
       res.writeHead(500, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ 
         success: false, 
@@ -249,40 +268,103 @@ const server = http.createServer(async (req, res) => {
     req.on('data', chunk => { body += chunk.toString(); });
     req.on('end', () => {
       try {
-        console.log('Embed data request received');
         const { target, data } = JSON.parse(body);
-        console.log(`Target: ${target}, Data length: ${data ? data.products?.length || 'unknown' : 'no data'}`);
         
         if (target === 'priceList') {
-          console.log('Embedding into price list...');
           embedDataIntoFile(PRICE_LIST_FILE_PATH, data, 'price-list');
         } else if (target === 'quoteMaker') {
-          console.log('Embedding into quote maker...');
           embedDataIntoFile(QUOTE_MAKER_FILE_PATH, data, 'quote-maker');
         } else if (target === 'mainApp') {
-          console.log('Embedding into main app...');
           embedDataIntoFile(HTML_FILE_PATH, data, 'main-app');
         } else if (target === 'all') {
-          // Embed into all modules for synchronization
-          console.log('Embedding into all applications...');
-          console.log('1. Embedding into price list...');
           embedDataIntoFile(PRICE_LIST_FILE_PATH, data, 'price-list');
-          console.log('2. Embedding into quote maker...');
           embedDataIntoFile(QUOTE_MAKER_FILE_PATH, data, 'quote-maker');
-          console.log('3. Embedding into main app...');
           embedDataIntoFile(HTML_FILE_PATH, data, 'main-app');
         } else {
           throw new Error('Invalid target specified. Use: priceList, quoteMaker, mainApp, or all');
         }
         
-        console.log('Embed operation completed successfully');
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ success: true, message: `Data embedded into ${target}` }));
       } catch (error) {
-        console.error('Embed data error:', error.message);
-        console.error('Error stack:', error.stack);
         res.writeHead(500, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: 'Failed to embed data: ' + error.message }));
+      }
+    });
+    return;
+  }
+
+  if (pathname === '/api/save-data' && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => { body += chunk.toString(); });
+    req.on('end', async () => {
+      try {
+        const { collection, id, data, merge } = JSON.parse(body);
+        
+        if (!collection || !data) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Collection and data are required' }));
+          return;
+        }
+
+        if (!syncService || !syncService.db) {
+          res.writeHead(503, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Firebase service not available' }));
+          return;
+        }
+
+        let result;
+        if (id) {
+          // Update or set specific document
+          const docRef = syncService.db.collection(collection).doc(id);
+          if (merge) {
+            await docRef.update(data);
+          } else {
+            await docRef.set(data);
+          }
+          result = { id };
+        } else {
+          // Add new document
+          const docRef = await syncService.db.collection(collection).add(data);
+          result = { id: docRef.id };
+        }
+        
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, ...result }));
+      } catch (error) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Failed to save data: ' + error.message }));
+      }
+    });
+    return;
+  }
+
+  if (pathname === '/api/delete-data' && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => { body += chunk.toString(); });
+    req.on('end', async () => {
+      try {
+        const { collection, id } = JSON.parse(body);
+        
+        if (!collection || !id) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Collection and id are required' }));
+          return;
+        }
+
+        if (!syncService || !syncService.db) {
+          res.writeHead(503, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Firebase service not available' }));
+          return;
+        }
+
+        await syncService.db.collection(collection).doc(id).delete();
+        
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, message: 'Document deleted' }));
+      } catch (error) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Failed to delete data: ' + error.message }));
       }
     });
     return;
@@ -292,7 +374,6 @@ const server = http.createServer(async (req, res) => {
     try {
       currentProductData = null;
       
-      // Remove data file
       if (fs.existsSync(DATA_FILE_PATH)) {
         fs.unlinkSync(DATA_FILE_PATH);
       }
@@ -313,16 +394,13 @@ const server = http.createServer(async (req, res) => {
       try {
         const { priceLists, timestamp } = JSON.parse(body);
         
-        // Update price lists in main application
         const mainHtmlPath = path.join(__dirname, 'index.html');
         if (fs.existsSync(mainHtmlPath)) {
           let htmlContent = fs.readFileSync(mainHtmlPath, 'utf8');
           
-          // Create backup
           const backupPath = mainHtmlPath.replace('.html', `_backup_${Date.now()}.html`);
           fs.writeFileSync(backupPath, htmlContent, 'utf8');
           
-          // Update availablePriceLists in the HTML
           const priceListsJson = JSON.stringify(priceLists);
           const priceListRegex = /availablePriceLists\s*=\s*new\s+Set\(\[.*?\]\);/s;
           
@@ -333,7 +411,6 @@ const server = http.createServer(async (req, res) => {
             );
             
             fs.writeFileSync(mainHtmlPath, htmlContent, 'utf8');
-            console.log(`Price lists updated in main application: ${priceLists.join(', ')}`);
           }
         }
         
@@ -358,7 +435,6 @@ const server = http.createServer(async (req, res) => {
       try {
         const { priceLists, timestamp } = JSON.parse(body);
         
-        // Initialize synchronization metadata
         const syncData = {
           priceLists: priceLists || [],
           lastSync: timestamp || Date.now(),
@@ -369,7 +445,6 @@ const server = http.createServer(async (req, res) => {
           }
         };
         
-        // Save sync metadata
         const syncFilePath = path.join(__dirname, 'sync-metadata.json');
         fs.writeFileSync(syncFilePath, JSON.stringify(syncData, null, 2), 'utf8');
         
@@ -387,7 +462,6 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // Real-time price list synchronization endpoint
   if (pathname === '/api/sync-price-lists' && req.method === 'POST') {
     let body = '';
     req.on('data', chunk => { body += chunk.toString(); });
@@ -395,7 +469,6 @@ const server = http.createServer(async (req, res) => {
       try {
         const { action, priceLists, sourceModule } = JSON.parse(body);
         
-        // Update sync metadata
         let syncData = {};
         try {
           syncData = JSON.parse(fs.readFileSync(path.join(__dirname, 'sync-metadata.json'), 'utf8'));
@@ -407,7 +480,6 @@ const server = http.createServer(async (req, res) => {
         syncData.priceLists = priceLists || [];
         syncData.modules[sourceModule] = { status: 'updated', lastUpdate: Date.now() };
         
-        // Save updated sync metadata
         fs.writeFileSync(path.join(__dirname, 'sync-metadata.json'), JSON.stringify(syncData, null, 2));
         
         res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -420,7 +492,6 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // Get current sync status endpoint
   if (pathname === '/api/sync-status' && req.method === 'GET') {
     try {
       const syncData = JSON.parse(fs.readFileSync(path.join(__dirname, 'sync-metadata.json'), 'utf8'));
@@ -433,7 +504,6 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // Handle /save-html endpoint (legacy)
   if (pathname === '/save-html' && req.method === 'POST') {
     let body = '';
     
@@ -452,17 +522,12 @@ const server = http.createServer(async (req, res) => {
           return;
         }
         
-        // Create backup of current HTML file
         const backupPath = path.join(__dirname, `index_backup_${Date.now()}.html`);
         if (fs.existsSync(HTML_FILE_PATH)) {
           fs.copyFileSync(HTML_FILE_PATH, backupPath);
         }
         
-        // Write the new HTML content
         fs.writeFileSync(HTML_FILE_PATH, htmlContent, 'utf8');
-        
-        console.log(`HTML file updated at ${timestamp}`);
-        console.log(`Backup created: ${backupPath}`);
         
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ 
@@ -472,7 +537,6 @@ const server = http.createServer(async (req, res) => {
         }));
         
       } catch (error) {
-        console.error('Error saving HTML file:', error);
         res.writeHead(500, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: 'Failed to save HTML file: ' + error.message }));
       }
@@ -481,38 +545,14 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // Handle data.json requests with dynamic salesmen data
-  if (pathname === '/data.json' && req.method === 'GET') {
-    if (fs.existsSync(DATA_FILE_PATH)) {
-      try {
-        const data = fs.readFileSync(DATA_FILE_PATH, 'utf8');
-        const jsonData = JSON.parse(data);
-        
-        // Replace salesmen data with Excel data
-        jsonData.salesmen = getSalesmenFromExcel();
-        
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify(jsonData, null, 2));
-      } catch (error) {
-        console.error('Error reading data.json:', error);
-        res.writeHead(500, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Failed to read data file' }));
-      }
-    } else {
-      res.writeHead(404, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'Data file not found' }));
-    }
-    return;
-  }
+  // data.json endpoint removed - only Firebase data is served
 
-  // Google Sheets Sync API Endpoints
   if (pathname === '/api/sync/manual' && req.method === 'POST') {
     try {
       if (!syncService) {
         await initializeSyncServices();
       }
       if (!syncScheduler) {
-        // Return error if sync scheduler is not available
         res.writeHead(400, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ 
           success: false, 
@@ -521,7 +561,6 @@ const server = http.createServer(async (req, res) => {
         return;
       }
       
-      // Parse request body for sync options
       let body = '';
       req.on('data', chunk => {
         body += chunk.toString();
@@ -543,7 +582,6 @@ const server = http.createServer(async (req, res) => {
         }
       });
     } catch (error) {
-      // Check if it's a credential-related error
       const credentialErrorPatterns = [
         'Failed to parse private key',
         'Invalid PEM formatted message',
@@ -576,14 +614,12 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // Salesmen-specific sync endpoint
-  if (pathname === '/api/sync/salesmen' && req.method === 'POST') {
+  if (pathname === '/api/sync/products' && req.method === 'POST') {
     try {
       if (!syncService) {
         await initializeSyncServices();
       }
       if (!syncScheduler) {
-        // Return error if sync scheduler is not available
         res.writeHead(400, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ 
           success: false, 
@@ -594,8 +630,75 @@ const server = http.createServer(async (req, res) => {
         return;
       }
       
-      // Trigger salesmen-only sync
-      const result = await syncScheduler.triggerManualSync({ syncProducts: false, syncSalesmen: true });
+      const result = await syncScheduler.triggerManualSync({ 
+        syncProducts: true, 
+        syncSalesmen: false, 
+        syncCompanies: false, 
+        syncColors: false, 
+        syncStyles: false 
+      });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ 
+        success: true, 
+        result,
+        totalProducts: result.productResult ? result.productResult.totalProducts : 0
+      }));
+    } catch (error) {
+      const credentialErrorPatterns = [
+        'Failed to parse private key',
+        'Invalid PEM formatted message',
+        'service account key file not found',
+        'placeholder values',
+        'invalid json format',
+        'missing required fields',
+        'invalid credential type',
+        'invalid service account email',
+        'google sheets synchronization is not available'
+      ];
+      
+      const isCredentialError = credentialErrorPatterns.some(pattern => 
+        error.message.toLowerCase().includes(pattern.toLowerCase())
+      );
+      
+      if (isCredentialError) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ 
+          success: false, 
+          error: 'Google Sheets synchronization is not available. Please configure valid Google Sheets credentials to enable sync functionality.',
+          details: error.message,
+          setupGuide: 'See GOOGLE_SHEETS_CREDENTIALS_SETUP.md for detailed setup instructions.'
+        }));
+      } else {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: false, error: error.message }));
+      }
+    }
+    return;
+  }
+
+  if (pathname === '/api/sync/salesmen' && req.method === 'POST') {
+    try {
+      if (!syncService) {
+        await initializeSyncServices();
+      }
+      if (!syncScheduler) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ 
+          success: false, 
+          error: 'Google Sheets synchronization is not available. Please configure valid Google Sheets credentials to enable sync functionality.',
+          details: 'Sync service not available. Please configure service account credentials.',
+          setupGuide: 'See GOOGLE_SHEETS_CREDENTIALS_SETUP.md for detailed setup instructions.'
+        }));
+        return;
+      }
+      
+      const result = await syncScheduler.triggerManualSync({ 
+        syncProducts: false, 
+        syncSalesmen: true, 
+        syncCompanies: false, 
+        syncColors: false, 
+        syncStyles: false 
+      });
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ 
         success: true, 
@@ -603,7 +706,6 @@ const server = http.createServer(async (req, res) => {
         totalSalesmen: result.salesmanResult ? result.salesmanResult.totalSalesmen : 0
       }));
     } catch (error) {
-      // Check if it's a credential-related error
       const credentialErrorPatterns = [
         'Failed to parse private key',
         'Invalid PEM formatted message',
@@ -636,14 +738,12 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // Companies-specific sync endpoint
   if (pathname === '/api/sync/companies' && req.method === 'POST') {
     try {
       if (!syncService) {
         await initializeSyncServices();
       }
       if (!syncScheduler) {
-        // Return error if sync scheduler is not available
         res.writeHead(400, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ 
           success: false, 
@@ -654,8 +754,13 @@ const server = http.createServer(async (req, res) => {
         return;
       }
       
-      // Trigger companies-only sync
-      const result = await syncScheduler.triggerManualSync({ syncProducts: false, syncSalesmen: false, syncCompanies: true });
+      const result = await syncScheduler.triggerManualSync({ 
+        syncProducts: false, 
+        syncSalesmen: false, 
+        syncCompanies: true, 
+        syncColors: false, 
+        syncStyles: false 
+      });
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ 
         success: true, 
@@ -663,7 +768,6 @@ const server = http.createServer(async (req, res) => {
         companiesData: result.companiesResult || { added: 0, updated: 0, deleted: 0, total: 0 }
       }));
     } catch (error) {
-      // Check if it's a credential-related error
       const credentialErrorPatterns = [
         'Failed to parse private key',
         'Invalid PEM formatted message',
@@ -699,7 +803,6 @@ const server = http.createServer(async (req, res) => {
   if (pathname === '/api/sync/status' && req.method === 'GET') {
     try {
       if (!syncService) {
-        // Return mock status if sync service is not available
         const mockStatus = {
           isRunning: false,
           lastSync: null,
@@ -716,7 +819,6 @@ const server = http.createServer(async (req, res) => {
       }
       const status = await syncService.getSyncStatus();
       
-      // Add scheduler information if available
       if (syncScheduler) {
         const schedulerStatus = syncScheduler.getSchedulerStatus();
         status.schedulerRunning = schedulerStatus.isRunning;
@@ -735,7 +837,6 @@ const server = http.createServer(async (req, res) => {
   if (pathname === '/api/sync/logs' && req.method === 'GET') {
     try {
       if (!syncService) {
-        // Return mock logs if sync service is not available
         const mockLogs = [
           {
             id: 'mock-1',
@@ -795,19 +896,252 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // Determine file path based on request
+  // Collection-specific API endpoints for admin panel fallback
+  if (pathname === '/api/clients' && req.method === 'GET') {
+    try {
+      if (!syncService || !syncService.db) {
+        res.writeHead(503, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Firebase service not available' }));
+        return;
+      }
+      const snapshot = await syncService.db.collection('clients').get();
+      const data = [];
+      snapshot.forEach(doc => {
+        data.push({ id: doc.id, ...doc.data() });
+      });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(data));
+    } catch (error) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Failed to fetch clients: ' + error.message }));
+    }
+    return;
+  }
+
+  if (pathname === '/api/products' && req.method === 'GET') {
+    try {
+      if (!syncService || !syncService.db) {
+        res.writeHead(503, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Firebase service not available' }));
+        return;
+      }
+      const snapshot = await syncService.db.collection('products').get();
+      const data = [];
+      snapshot.forEach(doc => {
+        data.push({ id: doc.id, ...doc.data() });
+      });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(data));
+    } catch (error) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Failed to fetch products: ' + error.message }));
+    }
+    return;
+  }
+
+  if (pathname === '/api/salespeople' && req.method === 'GET') {
+    try {
+      if (!syncService || !syncService.db) {
+        res.writeHead(503, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Firebase service not available' }));
+        return;
+      }
+      // Salespeople are stored in config/salesmen document
+      const configDoc = await syncService.db.collection('config').doc('salesmen').get();
+      if (configDoc.exists) {
+        const configData = configDoc.data();
+        const salespeople = configData.salesmen || configData.list || [];
+        const salesmenWithIds = salespeople.map((salesman, index) => ({
+          id: `salesman_${index}`,
+          ...salesman
+        }));
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(salesmenWithIds));
+      } else {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify([]));
+      }
+    } catch (error) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Failed to fetch salespeople: ' + error.message }));
+    }
+    return;
+  }
+
+  if (pathname === '/api/colors' && req.method === 'GET') {
+    try {
+      // Try Firebase first
+      if (syncService && syncService.db) {
+        try {
+          const snapshot = await syncService.db.collection('colors').get();
+          const data = [];
+          snapshot.forEach(doc => {
+            data.push({ id: doc.id, ...doc.data() });
+          });
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify(data));
+          return;
+        } catch (firebaseError) {
+          // Firebase failed, fall back to Google Sheets
+        }
+      }
+      
+      // Fallback to Google Sheets
+      if (googleSheetsService) {
+        const sheetId = '1hlfrnZnNQ0u8idg5KDmkSY4zFhLyvjLqUwAZn6HmW3s';
+        const data = await googleSheetsService.fetchColorsData(sheetId);
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(data));
+        return;
+      }
+      
+      res.writeHead(503, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'No data service available' }));
+    } catch (error) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Failed to fetch colors: ' + error.message }));
+    }
+    return;
+  }
+
+  if (pathname === '/api/styles' && req.method === 'GET') {
+    try {
+      // Try Firebase first
+      if (syncService && syncService.db) {
+        try {
+          const snapshot = await syncService.db.collection('styles').get();
+          const data = [];
+          snapshot.forEach(doc => {
+            data.push({ id: doc.id, ...doc.data() });
+          });
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify(data));
+          return;
+        } catch (firebaseError) {
+          // Firebase failed, fall back to Google Sheets
+        }
+      }
+      
+      // Fallback to Google Sheets
+      if (googleSheetsService) {
+        const sheetId = '1hlfrnZnNQ0u8idg5KDmkSY4zFhLyvjLqUwAZn6HmW3s';
+        const data = await googleSheetsService.fetchStylesData(sheetId);
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(data));
+        return;
+      }
+      
+      res.writeHead(503, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'No data service available' }));
+    } catch (error) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Failed to fetch styles: ' + error.message }));
+    }
+    return;
+  }
+
+  if (pathname === '/api/quotes' && req.method === 'GET') {
+    try {
+      if (!syncService || !syncService.db) {
+        res.writeHead(503, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Firebase service not available' }));
+        return;
+      }
+      const snapshot = await syncService.db.collection('quotes').get();
+      const data = [];
+      snapshot.forEach(doc => {
+        data.push({ id: doc.id, ...doc.data() });
+      });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(data));
+    } catch (error) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Failed to fetch quotes: ' + error.message }));
+    }
+    return;
+  }
+
+  if (pathname === '/api/orders' && req.method === 'GET') {
+    try {
+      if (!syncService || !syncService.db) {
+        res.writeHead(503, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Firebase service not available' }));
+        return;
+      }
+      const snapshot = await syncService.db.collection('orders').get();
+      const data = [];
+      snapshot.forEach(doc => {
+        data.push({ id: doc.id, ...doc.data() });
+      });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(data));
+    } catch (error) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Failed to fetch orders: ' + error.message }));
+    }
+    return;
+  }
+
+  if (pathname === '/api/categories' && req.method === 'GET') {
+    try {
+      if (!syncService || !syncService.db) {
+        res.writeHead(503, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Firebase service not available' }));
+        return;
+      }
+      // Get products and extract categories
+      const snapshot = await syncService.db.collection('products').get();
+      const categories = new Set();
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const category = data.category || data.Category || data.ProductCategory;
+        if (category) categories.add(category);
+      });
+      const data = Array.from(categories).map(cat => ({ id: cat, name: cat }));
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(data));
+    } catch (error) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Failed to fetch categories: ' + error.message }));
+    }
+    return;
+  }
+
+  if (pathname === '/api/priceLists' && req.method === 'GET') {
+    try {
+      if (!syncService || !syncService.db) {
+        res.writeHead(503, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Firebase service not available' }));
+        return;
+      }
+      // Get products and extract price lists
+      const snapshot = await syncService.db.collection('products').get();
+      const priceLists = new Set();
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const priceList = data.priceList || data.PriceList || data.PriceListName || data['Price List Name'];
+        if (priceList) priceLists.add(priceList);
+      });
+      const data = Array.from(priceLists).map(pl => ({ id: pl, name: pl }));
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(data));
+    } catch (error) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Failed to fetch price lists: ' + error.message }));
+    }
+    return;
+  }
+
   let filePath;
   if (pathname === '/quotemaker') {
     filePath = QUOTE_MAKER_FILE_PATH;
   } else if (pathname.startsWith('/quotemaker/')) {
-    // Serve files from quotemaker directory
     filePath = path.join(__dirname, pathname);
   } else {
-    // Serve static files
-    filePath = path.join(__dirname, pathname === '/' ? 'index.html' : pathname);
+    // Set quote-maker-v2-ver3.html as the default page for root access
+    filePath = path.join(__dirname, pathname === '/' ? 'quote-maker-v2-ver3.html' : pathname);
   }
   
-  // Security check - prevent directory traversal
   if (!filePath.startsWith(__dirname)) {
     res.writeHead(403, { 'Content-Type': 'text/plain' });
     res.end('Forbidden');
@@ -833,7 +1167,6 @@ const server = http.createServer(async (req, res) => {
   });
 });
 
-// Helper function to embed data into HTML files
 function embedDataIntoFile(filePath, data, type) {
   if (!fs.existsSync(filePath)) {
     throw new Error(`File not found: ${filePath}`);
@@ -894,8 +1227,8 @@ function embedDataIntoFile(filePath, data, type) {
         fs.copyFileSync(productDataJsPath, backupPath);
         // Write updated content
         fs.writeFileSync(productDataJsPath, jsContent, 'utf8');
-        console.log(`Quote maker productData.js updated at ${new Date().toISOString()}`);
-        console.log(`Backup created: ${backupPath}`);
+        // Quote maker productData.js updated
+        // Backup created
       } else {
         throw new Error('Could not find products array to replace in quote maker productData.js');
       }
@@ -952,7 +1285,7 @@ function embedDataIntoFile(filePath, data, type) {
       }
     }
     
-    // Replace hardcoded productCatalog with dynamic data from Excel
+    // Replace hardcoded productCatalog with dynamic data from Firebase
     const productCatalogRegex = /const productCatalog = \{[\s\S]*?\};/;
     if (productCatalogRegex.test(htmlContent)) {
       const catalogData = productsArray.reduce((catalog, product) => {
@@ -985,51 +1318,41 @@ function embedDataIntoFile(filePath, data, type) {
   // Write updated content
   fs.writeFileSync(filePath, htmlContent, 'utf8');
   
-  console.log(`Data embedded into ${type} at ${new Date().toISOString()}`);
-  console.log(`Backup created: ${backupPath}`);
+  // Data embedded into file
+  // Backup created
 }
 
 
 
-// Load existing data on startup
-if (fs.existsSync(DATA_FILE_PATH)) {
-  try {
-    const data = fs.readFileSync(DATA_FILE_PATH, 'utf8');
-    currentProductData = JSON.parse(data);
-    console.log('Loaded existing product data from file');
-  } catch (error) {
-    console.log('Could not load existing data:', error.message);
-  }
-}
+// Server now only uses Firebase data - no local data.json fallback
 
 server.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
-  console.log('This server supports:');
-  console.log('- Static file serving');
-  console.log('- Admin interface at /admin.html');
-  console.log('- API endpoints for data management:');
-  console.log('  - GET /api/status - Server status');
-  console.log('  - POST /api/save-data - Save product data');
-  console.log('  - GET /api/get-data - Retrieve product data');
-  console.log('  - POST /api/embed-data - Embed data into HTML files');
-  console.log('  - POST /api/clear-data - Clear all data');
-  console.log('  - POST /api/sync/manual - Manual sync trigger');
-  console.log('  - GET /api/sync/status - Get sync status');
-  console.log('  - GET /api/sync/logs - Get sync logs');
-  console.log('  - POST /api/sync/scheduler/start - Start scheduler');
-  console.log('  - POST /api/sync/scheduler/stop - Stop scheduler');
-  console.log('- POST /save-html endpoint for permanent JSON embedding');
-  console.log('- Automatic HTML file backups');
+  // Server running at http://localhost:PORT
+  // This server supports:
+  // - Static file serving
+  // - Admin interface at /admin.html
+  // - API endpoints for data management:
+  //   - GET /api/status - Server status
+  //   - POST /api/save-data - Save product data
+  //   - GET /api/get-data - Retrieve product data
+  //   - POST /api/embed-data - Embed data into HTML files
+  //   - POST /api/clear-data - Clear all data
+  //   - POST /api/sync/manual - Manual sync trigger
+  //   - GET /api/sync/status - Get sync status
+  //   - GET /api/sync/logs - Get sync logs
+  //   - POST /api/sync/scheduler/start - Start scheduler
+  //   - POST /api/sync/scheduler/stop - Stop scheduler
+  // - POST /save-html endpoint for permanent JSON embedding
+  // - Automatic HTML file backups
   
   // Initialize sync services asynchronously (don't block server startup)
-  console.log('Initializing sync services in background...');
+  // Initializing sync services in background
   initializeSyncServices()
     .then(() => {
-      console.log('Google Sheets sync services initialized successfully');
+      // Google Sheets sync services initialized successfully
     })
     .catch((error) => {
-      console.error('Failed to initialize sync services:', error.message);
-      console.log('Server will continue running without sync functionality');
+      // Failed to initialize sync services - server will continue running without sync functionality
     });
 });
 

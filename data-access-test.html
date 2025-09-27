@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Data Access Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .test-section {
+            background: white;
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-title {
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .data-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+        }
+        .collection-card {
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 15px;
+            background: #f9f9f9;
+        }
+        .collection-title {
+            font-weight: bold;
+            color: #007bff;
+            margin-bottom: 10px;
+        }
+        .data-content {
+            background: white;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 11px;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        .error {
+            color: #dc3545;
+            background: #f8d7da;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .success {
+            color: #155724;
+            background: #d4edda;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .loading {
+            color: #007bff;
+            font-style: italic;
+        }
+        .stats {
+            background: #e9ecef;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            font-size: 12px;
+        }
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        .comparison-table th,
+        .comparison-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .comparison-table th {
+            background-color: #f2f2f2;
+        }
+        .status-available {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .status-unavailable {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .status-partial {
+            color: #ffc107;
+            font-weight: bold;
+        }
+        .test-controls {
+            margin: 20px 0;
+            text-align: center;
+        }
+        .test-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 0 10px;
+        }
+        .test-button:hover {
+            background: #0056b3;
+        }
+        .test-button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Live Data Access Test</h1>
+        <p>Testing actual data access from Local Storage, Firebase, and Google Sheets</p>
+        
+        <div class="test-controls">
+            <button id="testAllBtn" class="test-button">Test All Data Sources</button>
+            <button id="testLocalBtn" class="test-button">Test Local Only</button>
+            <button id="testFirebaseBtn" class="test-button">Test Firebase Only</button>
+            <button id="clearResultsBtn" class="test-button">Clear Results</button>
+        </div>
+
+        <div id="testResults">
+            <!-- Results will be populated here -->
+        </div>
+    </div>
+
+    <!-- Firebase SDK Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
+
+    <!-- Include necessary scripts -->
+    <script src="firebase-config.js"></script>
+    <script src="firebase-global-init.js"></script>
+    <script src="firebase-database.js"></script>
+    <script src="js/local-fallback-manager.js?v=4"></script>
+    <script src="js/unified-data-access.js?v=4"></script>
+
+    <script>
+        class LiveDataAccessTest {
+            constructor() {
+                this.testResults = {
+                    local: {},
+                    firebase: {},
+                    sheets: {},
+                    comparison: {}
+                };
+                this.collections = ['products', 'clients', 'salespeople', 'colors', 'styles', 'quotes', 'orders'];
+                this.isTestingInProgress = false;
+            }
+
+            async initialize() {
+                console.log('🔄 Initializing Live Data Access Test...');
+                this.setupEventListeners();
+                this.displayInitialState();
+            }
+
+            setupEventListeners() {
+                document.getElementById('testAllBtn').addEventListener('click', () => this.testAllSources());
+                document.getElementById('testLocalBtn').addEventListener('click', () => this.testLocalOnly());
+                document.getElementById('testFirebaseBtn').addEventListener('click', () => this.testFirebaseOnly());
+                document.getElementById('clearResultsBtn').addEventListener('click', () => this.clearResults());
+            }
+
+            displayInitialState() {
+                const resultsContainer = document.getElementById('testResults');
+                resultsContainer.innerHTML = `
+                    <div class="test-section">
+                        <h2 class="test-title">📊 Data Source Status</h2>
+                        <div class="loading">Click "Test All Data Sources" to begin comprehensive testing...</div>
+                    </div>
+                `;
+            }
+
+            async testAllSources() {
+                if (this.isTestingInProgress) return;
+                
+                this.isTestingInProgress = true;
+                this.setButtonsDisabled(true);
+                
+                try {
+                    console.log('🔄 Starting comprehensive data source testing...');
+                    
+                    this.displayTestingState();
+                    
+                    // Test all sources in parallel
+                    const [localResults, firebaseResults] = await Promise.allSettled([
+                        this.testLocalDataAccess(),
+                        this.testFirebaseDataAccess()
+                    ]);
+
+                    // Process results
+                    this.testResults.local = localResults.status === 'fulfilled' ? localResults.value : { error: localResults.reason };
+                    this.testResults.firebase = firebaseResults.status === 'fulfilled' ? firebaseResults.value : { error: firebaseResults.reason };
+                    
+                    // Generate comparison
+                    this.generateComparison();
+                    
+                    // Display results
+                    this.displayResults();
+                    
+                } catch (error) {
+                    console.error('❌ Error during testing:', error);
+                    this.displayError('Testing failed: ' + error.message);
+                } finally {
+                    this.isTestingInProgress = false;
+                    this.setButtonsDisabled(false);
+                }
+            }
+
+            async testLocalOnly() {
+                if (this.isTestingInProgress) return;
+                
+                this.isTestingInProgress = true;
+                this.setButtonsDisabled(true);
+                
+                try {
+                    this.displayTestingState('Testing Local Data Sources...');
+                    this.testResults.local = await this.testLocalDataAccess();
+                    this.displayLocalResults();
+                } catch (error) {
+                    this.displayError('Local testing failed: ' + error.message);
+                } finally {
+                    this.isTestingInProgress = false;
+                    this.setButtonsDisabled(false);
+                }
+            }
+
+            async testFirebaseOnly() {
+                if (this.isTestingInProgress) return;
+                
+                this.isTestingInProgress = true;
+                this.setButtonsDisabled(true);
+                
+                try {
+                    this.displayTestingState('Testing Firebase Data Access...');
+                    this.testResults.firebase = await this.testFirebaseDataAccess();
+                    this.displayFirebaseResults();
+                } catch (error) {
+                    this.displayError('Firebase testing failed: ' + error.message);
+                } finally {
+                    this.isTestingInProgress = false;
+                    this.setButtonsDisabled(false);
+                }
+            }
+
+            async testLocalDataAccess() {
+                console.log('📁 Testing local data access...');
+                const results = {
+                    localStorage: {},
+                    fallbackManager: {},
+                    dataJson: {},
+                    summary: {}
+                };
+
+                // Test localStorage
+                try {
+                    const localStorageData = {};
+                    let totalSize = 0;
+                    
+                    for (let i = 0; i < localStorage.length; i++) {
+                        const key = localStorage.key(i);
+                        if (key && (key.includes('fallback_') || key.includes('data_') || key.includes('cache_'))) {
+                            try {
+                                const value = localStorage.getItem(key);
+                                localStorageData[key] = JSON.parse(value);
+                                totalSize += value.length;
+                            } catch (e) {
+                                localStorageData[key] = localStorage.getItem(key);
+                                totalSize += localStorage.getItem(key).length;
+                            }
+                        }
+                    }
+                    
+                    results.localStorage = {
+                        status: 'available',
+                        data: localStorageData,
+                        totalKeys: Object.keys(localStorageData).length,
+                        totalSize: totalSize,
+                        sizeFormatted: this.formatBytes(totalSize)
+                    };
+                } catch (error) {
+                    results.localStorage = { status: 'error', error: error.message };
+                }
+
+                // Test LocalFallbackManager
+                try {
+                    if (window.localFallbackManager) {
+                        await window.localFallbackManager.ensureInitialized();
+                        
+                        const fallbackData = {};
+                        for (const collection of this.collections) {
+                            try {
+                                const data = await window.localFallbackManager.getData(collection);
+                                fallbackData[collection] = {
+                                    count: Array.isArray(data) ? data.length : 0,
+                                    sample: Array.isArray(data) && data.length > 0 ? data.slice(0, 2) : null,
+                                    hasData: Array.isArray(data) && data.length > 0
+                                };
+                            } catch (error) {
+                                fallbackData[collection] = { error: error.message };
+                            }
+                        }
+                        
+                        results.fallbackManager = {
+                            status: 'available',
+                            data: fallbackData,
+                            supportedCollections: Array.from(window.localFallbackManager.supportedCollections || [])
+                        };
+                    } else {
+                        results.fallbackManager = { status: 'unavailable', error: 'LocalFallbackManager not loaded' };
+                    }
+                } catch (error) {
+                    results.fallbackManager = { status: 'error', error: error.message };
+                }
+
+                // Test data.json
+                try {
+                    const response = await fetch('./data.json');
+                    if (response.ok) {
+                        const data = await response.json();
+                        results.dataJson = {
+                            status: 'available',
+                            data: data,
+                            size: JSON.stringify(data).length
+                        };
+                    } else {
+                        results.dataJson = { status: 'unavailable', error: 'HTTP ' + response.status };
+                    }
+                } catch (error) {
+                    results.dataJson = { status: 'error', error: error.message };
+                }
+
+                // Generate summary
+                const availableSources = [
+                    results.localStorage.status === 'available',
+                    results.fallbackManager.status === 'available',
+                    results.dataJson.status === 'available'
+                ].filter(Boolean).length;
+
+                results.summary = {
+                    availableSources: availableSources,
+                    totalSources: 3,
+                    status: availableSources > 0 ? 'available' : 'unavailable'
+                };
+
+                return results;
+            }
+
+            async testFirebaseDataAccess() {
+                console.log('🔥 Testing Firebase data access...');
+                const results = {
+                    connection: {},
+                    collections: {},
+                    summary: {}
+                };
+
+                try {
+                    // Test Firebase initialization
+                    if (window.firebaseDB) {
+                        await window.firebaseDB.initialize();
+                        
+                        if (window.firebaseDB.isAvailable()) {
+                            results.connection = {
+                                status: 'available',
+                                initialized: true
+                            };
+
+                            // Test each collection
+                            const collectionResults = {};
+                            for (const collection of this.collections) {
+                                try {
+                                    let data;
+                                    switch (collection) {
+                                        case 'clients':
+                                            data = await window.firebaseDB.getClients();
+                                            break;
+                                        case 'products':
+                                            data = await window.firebaseDB.getProducts();
+                                            break;
+                                        case 'quotes':
+                                            data = await window.firebaseDB.getQuotes();
+                                            break;
+                                        case 'orders':
+                                            data = await window.firebaseDB.getOrders();
+                                            break;
+                                        case 'salespeople':
+                                            data = await window.firebaseDB.getSalesmen();
+                                            break;
+                                        case 'colors':
+                                            data = await window.firebaseDB.getColors();
+                                            break;
+                                        case 'styles':
+                                            data = await window.firebaseDB.getStyles();
+                                            break;
+                                        default:
+                                            data = [];
+                                    }
+                                    
+                                    collectionResults[collection] = {
+                                        status: 'available',
+                                        count: Array.isArray(data) ? data.length : 0,
+                                        sample: Array.isArray(data) && data.length > 0 ? data.slice(0, 2) : null,
+                                        hasData: Array.isArray(data) && data.length > 0
+                                    };
+                                } catch (error) {
+                                    collectionResults[collection] = {
+                                        status: 'error',
+                                        error: error.message
+                                    };
+                                }
+                            }
+                            
+                            results.collections = collectionResults;
+                        } else {
+                            results.connection = {
+                                status: 'unavailable',
+                                error: 'Firebase not available'
+                            };
+                        }
+                    } else {
+                        results.connection = {
+                            status: 'unavailable',
+                            error: 'FirebaseDB not loaded'
+                        };
+                    }
+                } catch (error) {
+                    results.connection = {
+                        status: 'error',
+                        error: error.message
+                    };
+                }
+
+                // Generate summary
+                const availableCollections = Object.values(results.collections || {})
+                    .filter(col => col.status === 'available').length;
+
+                results.summary = {
+                    connectionStatus: results.connection.status,
+                    availableCollections: availableCollections,
+                    totalCollections: this.collections.length,
+                    status: results.connection.status === 'available' ? 'available' : 'unavailable'
+                };
+
+                return results;
+            }
+
+            generateComparison() {
+                console.log('🔍 Generating data comparison...');
+                
+                const comparison = {
+                    overview: {},
+                    collections: {},
+                    recommendations: []
+                };
+
+                // Overview comparison
+                comparison.overview = {
+                    local: {
+                        status: this.testResults.local.summary?.status || 'unknown',
+                        sources: this.testResults.local.summary?.availableSources || 0
+                    },
+                    firebase: {
+                        status: this.testResults.firebase.summary?.status || 'unknown',
+                        collections: this.testResults.firebase.summary?.availableCollections || 0
+                    }
+                };
+
+                // Collection-by-collection comparison
+                for (const collection of this.collections) {
+                    const localData = this.testResults.local.fallbackManager?.data?.[collection];
+                    const firebaseData = this.testResults.firebase.collections?.[collection];
+                    
+                    comparison.collections[collection] = {
+                        local: {
+                            available: localData && !localData.error,
+                            count: localData?.count || 0,
+                            hasData: localData?.hasData || false
+                        },
+                        firebase: {
+                            available: firebaseData && firebaseData.status === 'available',
+                            count: firebaseData?.count || 0,
+                            hasData: firebaseData?.hasData || false
+                        }
+                    };
+                }
+
+                // Generate recommendations
+                if (comparison.overview.local.status === 'available' && comparison.overview.firebase.status === 'available') {
+                    comparison.recommendations.push('✅ Both local and Firebase data sources are available - optimal setup');
+                } else if (comparison.overview.local.status === 'available') {
+                    comparison.recommendations.push('⚠️ Only local data is available - consider Firebase setup for backup');
+                } else if (comparison.overview.firebase.status === 'available') {
+                    comparison.recommendations.push('⚠️ Only Firebase is available - local fallback recommended');
+                } else {
+                    comparison.recommendations.push('❌ No data sources available - immediate setup required');
+                }
+
+                this.testResults.comparison = comparison;
+            }
+
+            displayTestingState(message = 'Testing all data sources...') {
+                const resultsContainer = document.getElementById('testResults');
+                resultsContainer.innerHTML = `
+                    <div class="test-section">
+                        <h2 class="test-title">🔄 Testing in Progress</h2>
+                        <div class="loading">${message}</div>
+                    </div>
+                `;
+            }
+
+            displayResults() {
+                const resultsContainer = document.getElementById('testResults');
+                
+                let html = '';
+                
+                // Comparison Overview
+                html += this.generateComparisonOverview();
+                
+                // Local Results
+                html += this.generateLocalResultsHTML();
+                
+                // Firebase Results
+                html += this.generateFirebaseResultsHTML();
+                
+                // Detailed Comparison
+                html += this.generateDetailedComparisonHTML();
+                
+                resultsContainer.innerHTML = html;
+            }
+
+            displayLocalResults() {
+                const resultsContainer = document.getElementById('testResults');
+                resultsContainer.innerHTML = this.generateLocalResultsHTML();
+            }
+
+            displayFirebaseResults() {
+                const resultsContainer = document.getElementById('testResults');
+                resultsContainer.innerHTML = this.generateFirebaseResultsHTML();
+            }
+
+            generateComparisonOverview() {
+                const comparison = this.testResults.comparison;
+                if (!comparison) return '';
+
+                return `
+                    <div class="test-section">
+                        <h2 class="test-title">📊 Data Source Comparison Overview</h2>
+                        <table class="comparison-table">
+                            <thead>
+                                <tr>
+                                    <th>Data Source</th>
+                                    <th>Status</th>
+                                    <th>Available Collections/Sources</th>
+                                    <th>Details</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Local Storage</strong></td>
+                                    <td><span class="status-${comparison.overview.local.status}">${comparison.overview.local.status.toUpperCase()}</span></td>
+                                    <td>${comparison.overview.local.sources}/3 sources</td>
+                                    <td>LocalStorage, FallbackManager, data.json</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Firebase</strong></td>
+                                    <td><span class="status-${comparison.overview.firebase.status}">${comparison.overview.firebase.status.toUpperCase()}</span></td>
+                                    <td>${comparison.overview.firebase.collections}/${this.collections.length} collections</td>
+                                    <td>Firestore real-time database</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        
+                        <div style="margin-top: 15px;">
+                            <h4>💡 Recommendations:</h4>
+                            <ul>
+                                ${comparison.recommendations.map(rec => `<li>${rec}</li>`).join('')}
+                            </ul>
+                        </div>
+                    </div>
+                `;
+            }
+
+            generateLocalResultsHTML() {
+                const local = this.testResults.local;
+                if (!local) return '';
+
+                return `
+                    <div class="test-section">
+                        <h2 class="test-title">🗄️ Local Data Sources Test Results</h2>
+                        <div class="data-grid">
+                            ${this.createTestCard('LocalStorage', local.localStorage)}
+                            ${this.createTestCard('LocalFallbackManager', local.fallbackManager)}
+                            ${this.createTestCard('data.json', local.dataJson)}
+                        </div>
+                    </div>
+                `;
+            }
+
+            generateFirebaseResultsHTML() {
+                const firebase = this.testResults.firebase;
+                if (!firebase) return '';
+
+                let collectionsHTML = '';
+                if (firebase.collections) {
+                    for (const [collection, data] of Object.entries(firebase.collections)) {
+                        collectionsHTML += this.createTestCard(`Firebase ${collection}`, data);
+                    }
+                }
+
+                return `
+                    <div class="test-section">
+                        <h2 class="test-title">🔥 Firebase Data Access Test Results</h2>
+                        <div class="data-grid">
+                            ${this.createTestCard('Firebase Connection', firebase.connection)}
+                            ${collectionsHTML}
+                        </div>
+                    </div>
+                `;
+            }
+
+            generateDetailedComparisonHTML() {
+                const comparison = this.testResults.comparison;
+                if (!comparison || !comparison.collections) return '';
+
+                let tableRows = '';
+                for (const [collection, data] of Object.entries(comparison.collections)) {
+                    tableRows += `
+                        <tr>
+                            <td><strong>${collection}</strong></td>
+                            <td><span class="status-${data.local.available ? 'available' : 'unavailable'}">${data.local.available ? 'Available' : 'Unavailable'}</span></td>
+                            <td>${data.local.count}</td>
+                            <td><span class="status-${data.firebase.available ? 'available' : 'unavailable'}">${data.firebase.available ? 'Available' : 'Unavailable'}</span></td>
+                            <td>${data.firebase.count}</td>
+                            <td>${data.local.hasData || data.firebase.hasData ? '✅' : '❌'}</td>
+                        </tr>
+                    `;
+                }
+
+                return `
+                    <div class="test-section">
+                        <h2 class="test-title">🔍 Detailed Collection Comparison</h2>
+                        <table class="comparison-table">
+                            <thead>
+                                <tr>
+                                    <th>Collection</th>
+                                    <th>Local Status</th>
+                                    <th>Local Count</th>
+                                    <th>Firebase Status</th>
+                                    <th>Firebase Count</th>
+                                    <th>Has Data</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${tableRows}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            }
+
+            createTestCard(title, data) {
+                let content = '';
+                let stats = '';
+                let statusClass = '';
+
+                if (!data) {
+                    content = 'No data available';
+                    stats = 'Status: Unknown';
+                    statusClass = 'error';
+                } else if (data.error) {
+                    content = `Error: ${data.error}`;
+                    stats = 'Status: Error';
+                    statusClass = 'error';
+                } else if (data.status === 'available') {
+                    content = JSON.stringify(data.data || data, null, 2);
+                    stats = `Status: Available`;
+                    if (data.count !== undefined) stats += ` | Count: ${data.count}`;
+                    if (data.totalSize !== undefined) stats += ` | Size: ${data.sizeFormatted || data.totalSize}`;
+                    statusClass = 'success';
+                } else {
+                    content = JSON.stringify(data, null, 2);
+                    stats = `Status: ${data.status || 'Unknown'}`;
+                    statusClass = data.status === 'unavailable' ? 'error' : 'success';
+                }
+
+                return `
+                    <div class="collection-card">
+                        <div class="collection-title">${title}</div>
+                        <div class="data-content">${content}</div>
+                        <div class="stats ${statusClass}">${stats}</div>
+                    </div>
+                `;
+            }
+
+            formatBytes(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+
+            setButtonsDisabled(disabled) {
+                const buttons = ['testAllBtn', 'testLocalBtn', 'testFirebaseBtn'];
+                buttons.forEach(id => {
+                    document.getElementById(id).disabled = disabled;
+                });
+            }
+
+            clearResults() {
+                this.testResults = { local: {}, firebase: {}, sheets: {}, comparison: {} };
+                this.displayInitialState();
+            }
+
+            displayError(message) {
+                const resultsContainer = document.getElementById('testResults');
+                resultsContainer.innerHTML = `
+                    <div class="test-section">
+                        <h2 class="test-title">❌ Test Error</h2>
+                        <div class="error">${message}</div>
+                    </div>
+                `;
+            }
+        }
+
+        // Initialize test when page loads
+        document.addEventListener('DOMContentLoaded', async () => {
+            const test = new LiveDataAccessTest();
+            await test.initialize();
+        });
+    </script>
+</body>
+</html>

@@ -35,8 +35,8 @@ This document provides comprehensive specifications and prompts for developing t
 ┌─────────────────────────────────────────────────────────────┐
 │                    Data Layer                               │
 │  ┌─────────────┐ ┌─────────────┐ ┌─────────────────────┐   │
-│  │ Excel Data  │ │ Embedded    │ │ localStorage        │   │
-│  │ Processing  │ │ JSON Data   │ │ Client Data         │   │
+│  │ Firebase    │ │ Google      │ │ localStorage        │   │
+│  │ Firestore   │ │ Sheets API  │ │ Client Data         │   │
 │  └─────────────┘ └─────────────┘ └─────────────────────┘   │
 └─────────────────────────────────────────────────────────────┘
 ┌─────────────────────────────────────────────────────────────┐
@@ -50,11 +50,11 @@ This document provides comprehensive specifications and prompts for developing t
 
 ### Technology Stack
 - **Frontend**: HTML5, CSS3 (Tailwind CSS), Vanilla JavaScript
-- **Data Processing**: Node.js, XLSX library
-- **Storage**: localStorage, Embedded JSON, Excel files
+- **Data Processing**: Node.js, Google Sheets API
+- **Storage**: Firebase Firestore, localStorage, Google Sheets
 - **Hosting**: Firebase Hosting
 - **Version Control**: Git with automated deployment
-- **Build Tools**: Custom deployment scripts
+- **Build Tools**: Custom deployment scripts with Firebase integration
 
 ---
 
@@ -69,7 +69,7 @@ This document provides comprehensive specifications and prompts for developing t
 - Category-based product filtering
 - Density and length-based pricing
 - Bulk pricing calculations
-- Export capabilities (PDF, Excel, Images)
+- Export capabilities (PDF, Images)
 
 ### 2. Quote Maker Module
 **Purpose**: Professional quote generation with client management integration
@@ -106,10 +106,11 @@ This document provides comprehensive specifications and prompts for developing t
 **Purpose**: Data management and system administration
 
 **Key Features**:
-- Excel data upload and processing
+- Firebase data synchronization controls
+- Google Sheets integration management
 - Data validation and error handling
 - System statistics and monitoring
-- Backup and restore functionality
+- Real-time sync status monitoring
 
 ---
 
@@ -222,10 +223,10 @@ This document provides comprehensive specifications and prompts for developing t
 
 ### Data Sources
 
-#### Excel File Structure
+#### Google Sheets Structure
 ```
-PriceLists/productData.xlsx
-├── Sheet1 (Main Product Data)
+Google Sheets (Primary Data Source)
+├── pricelists (Main Product Data)
 │   ├── Length (Number)
 │   ├── Price List Name (String)
 │   ├── Currency (String: INR/USD/EUR/GBP/AUD/CAD)
@@ -240,7 +241,7 @@ PriceLists/productData.xlsx
     └── Name (String)
 ```
 
-#### JSON Data Structure
+#### Firebase Firestore Structure
 ```json
 {
   "products": [
@@ -260,7 +261,7 @@ PriceLists/productData.xlsx
   "salesmen": ["Praveen", "Rupa", "INH", "HW", "Vijay", "Pankaj", "Sunil"],
   "headers": ["Length", "Price List Name", "Currency", ...],
   "lastUpdated": "2025-01-13T10:30:00.000Z",
-  "source": "productData.xlsx",
+  "source": "Google Sheets",
   "totalProducts": 620
 }
 ```
@@ -446,7 +447,7 @@ Develop a sophisticated price calculator module with:
 
 5. Export functionality:
    - PDF generation with custom templates
-   - Excel export with formatting
+   - CSV export with formatting
    - Image generation for social sharing
    - Print-optimized layouts
 
@@ -692,9 +693,9 @@ Implement lazy loading and performance optimization.
 ```
 Create a comprehensive admin panel with:
 
-1. Data upload system:
-   - Excel file upload with validation
-   - Progress tracking
+1. Data synchronization system:
+   - Google Sheets integration with validation
+   - Firebase sync progress tracking
    - Error reporting and resolution
    - Data preview before import
 
@@ -727,15 +728,15 @@ Implement proper access controls and audit logging.
 
 ### 8. Data Processing and Deployment
 
-#### Prompt 8.1: Excel Data Processing
+#### Prompt 8.1: Firebase Data Synchronization
 ```
-Implement robust Excel data processing with:
+Implement robust Firebase data synchronization with:
 
-1. File parsing:
-   - XLSX file reading
+1. Google Sheets integration:
+   - Google Sheets API connectivity
    - Multiple sheet support
    - Header detection and mapping
-   - Data type inference
+   - Real-time data fetching
 
 2. Data validation:
    - Schema validation
@@ -743,25 +744,25 @@ Implement robust Excel data processing with:
    - Data format validation
    - Business rule enforcement
 
-3. Data transformation:
-   - Field mapping and conversion
-   - Data normalization
-   - Calculated field generation
-   - Data enrichment
+3. Firebase operations:
+   - Firestore collection management
+   - Batch write operations
+   - Real-time listeners
+   - Offline support
 
 4. Error handling:
-   - Detailed error reporting
-   - Row-level error tracking
-   - Recovery mechanisms
+   - API error handling
+   - Network failure recovery
+   - Data consistency checks
    - User-friendly error messages
 
 5. Performance optimization:
-   - Streaming data processing
-   - Memory management
+   - Efficient data syncing
+   - Caching strategies
    - Progress reporting
-   - Cancellation support
+   - Background synchronization
 
-Ensure scalability for large datasets.
+Ensure scalability and real-time capabilities.
 ```
 
 #### Prompt 8.2: Deployment Automation
@@ -774,9 +775,9 @@ Create an automated deployment system with:
    - Image compression
    - Cache busting
 
-2. Data embedding:
-   - Excel to JSON conversion
-   - HTML data injection
+2. Data synchronization:
+   - Google Sheets to Firebase sync
+   - Real-time data updates
    - Validation and testing
    - Rollback capabilities
 

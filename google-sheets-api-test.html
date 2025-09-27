@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Sheets API Test</title>
+    <script src="https://apis.google.com/js/api.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .error { color: red; }
+        .success { color: green; }
+        .warning { color: orange; }
+        .log { background: #f5f5f5; padding: 10px; margin: 10px 0; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Google Sheets API Test</h1>
+    <button onclick="testAPI()">Test API</button>
+    <div id="results"></div>
+
+    <script>
+        // Set the same API key as in admin-sync-panel.html
+        window.GOOGLE_SHEETS_API_KEY = '35bbf27b0bf3abb0a9fec63e815006a5785ec7bb';
+
+        function log(message, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `log ${type}`;
+            div.innerHTML = message;
+            results.appendChild(div);
+            console.log(message);
+        }
+
+        async function testAPI() {
+            const results = document.getElementById('results');
+            results.innerHTML = '';
+            
+            try {
+                log('🔍 Starting Google Sheets API test...', 'info');
+                
+                // Step 1: Check if gapi is loaded
+                log('Step 1: Checking if gapi is loaded...', 'info');
+                if (typeof gapi === 'undefined') {
+                    throw new Error('Google API client library (gapi) not loaded');
+                }
+                log('✅ gapi is loaded', 'success');
+                
+                // Step 2: Check API key
+                log('Step 2: Checking API key...', 'info');
+                if (!window.GOOGLE_SHEETS_API_KEY || window.GOOGLE_SHEETS_API_KEY === 'YOUR_GOOGLE_SHEETS_API_KEY') {
+                    throw new Error('Google Sheets API key not configured');
+                }
+                log(`✅ API key is set: ${window.GOOGLE_SHEETS_API_KEY.substring(0, 10)}...`, 'success');
+                
+                // Step 3: Load gapi.client
+                log('Step 3: Loading gapi.client...', 'info');
+                await new Promise((resolve, reject) => {
+                    const timeout = setTimeout(() => {
+                        reject(new Error('gapi.client load timeout'));
+                    }, 10000);
+                    
+                    gapi.load('client', {
+                        callback: () => {
+                            clearTimeout(timeout);
+                            resolve();
+                        },
+                        onerror: (error) => {
+                            clearTimeout(timeout);
+                            reject(error);
+                        }
+                    });
+                });
+                log('✅ gapi.client loaded', 'success');
+                
+                // Step 4: Initialize gapi.client
+                log('Step 4: Initializing gapi.client...', 'info');
+                const initConfig = {
+                    apiKey: window.GOOGLE_SHEETS_API_KEY,
+                    discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4']
+                };
+                
+                await Promise.race([
+                    gapi.client.init(initConfig),
+                    new Promise((_, reject) => 
+                        setTimeout(() => reject(new Error('gapi.client.init timeout')), 15000)
+                    )
+                ]);
+                log('✅ gapi.client initialized', 'success');
+                
+                // Step 5: Check if Sheets API is available
+                log('Step 5: Checking if Sheets API is available...', 'info');
+                if (typeof gapi.client.sheets === 'undefined') {
+                    throw new Error('Google Sheets API client not available');
+                }
+                log('✅ Google Sheets API client is available', 'success');
+                
+                // Step 6: Test with a public spreadsheet
+                log('Step 6: Testing with public spreadsheet...', 'info');
+                const testSpreadsheetId = '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms'; // Google's public example
+                const response = await gapi.client.sheets.spreadsheets.values.get({
+                    spreadsheetId: testSpreadsheetId,
+                    range: 'Class Data!A1:B2'
+                });
+                
+                log(`✅ API test successful! Retrieved ${response.result.values?.length || 0} rows`, 'success');
+                log(`Data: ${JSON.stringify(response.result.values)}`, 'info');
+                
+                // Step 7: Test with the actual spreadsheet
+                log('Step 7: Testing with actual spreadsheet...', 'info');
+                const actualSpreadsheetId = '1hlfrnZnNQ0u8idg5KDmkSY4zFhLyvjLqUwAZn6HmW3s';
+                try {
+                    const actualResponse = await gapi.client.sheets.spreadsheets.values.get({
+                        spreadsheetId: actualSpreadsheetId,
+                        range: 'products!A1:B2'
+                    });
+                    log(`✅ Actual spreadsheet test successful! Retrieved ${actualResponse.result.values?.length || 0} rows`, 'success');
+                } catch (actualError) {
+                    log(`⚠️ Actual spreadsheet test failed: ${actualError.message}`, 'warning');
+                    log(`Error details: ${JSON.stringify({
+                        status: actualError.status,
+                        code: actualError.code,
+                        message: actualError.message
+                    })}`, 'warning');
+                }
+                
+                log('🎉 Google Sheets API test completed!', 'success');
+                
+            } catch (error) {
+                log(`❌ Test failed: ${error.message}`, 'error');
+                log(`Error details: ${JSON.stringify({
+                    name: error.name,
+                    message: error.message,
+                    status: error.status,
+                    code: error.code,
+                    stack: error.stack
+                })}`, 'error');
+            }
+        }
+    </script>
+</body>
+</html>

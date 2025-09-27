@@ -1,0 +1,36 @@
+{
+  "number": "TEST-001",
+  "date": "2024-01-15",
+  "client": {
+    "clientName": "Test Client"
+  },
+  "salesperson": "Test Sales",
+  "items": [
+    {
+      "product": "Bulk",
+      "category": "Hair Extensions",
+      "density": "150%",
+      "length": "18 inches",
+      "color": "Natural Black",
+      "quantity": 2,
+      "unitPrice": 150,
+      "totalPrice": 300
+    },
+    {
+      "product": "ClipOn",
+      "category": "Hair Extensions",
+      "density": "130%",
+      "length": "16 inches",
+      "color": "Brown",
+      "quantity": 1,
+      "unitPrice": 120,
+      "totalPrice": 120
+    }
+  ],
+  "subtotal": 420,
+  "tax": 18,
+  "taxAmount": 75.6,
+  "shipping": 50,
+  "total": 545.6,
+  "currency": "INR"
+}

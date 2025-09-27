@@ -1,0 +1,102 @@
+{
+  "applicationConfig": {
+    "name": "InstaQuote Business Hub",
+    "version": "2.0",
+    "defaultPage": "quote-maker-v2-ver3.html",
+    "activeFiles": [
+      {
+        "file": "quote-maker-v2-ver3.html",
+        "name": "Quote Maker",
+        "description": "Main quote creation and management application",
+        "status": "active",
+        "priority": 1
+      },
+      {
+        "file": "product-catalog.html",
+        "name": "Product Catalog",
+        "description": "Product browsing and catalog management",
+        "status": "active",
+        "priority": 2
+      },
+      {
+        "file": "admin-panel.html",
+        "name": "Admin Panel",
+        "description": "Administrative functions and system management",
+        "status": "active",
+        "priority": 3
+      },
+      {
+        "file": "price-calculator.html",
+        "name": "Price Calculator",
+        "description": "Price calculation and list generation",
+        "status": "active",
+        "priority": 4
+      }
+    ],
+    "dormantFiles": [
+      {
+        "file": "index.html",
+        "name": "Legacy Index",
+        "description": "Legacy main page - replaced by quote-maker-v2-ver3.html",
+        "status": "dormant",
+        "reason": "Superseded by new quote maker"
+      },
+      {
+        "file": "main-menu.html",
+        "name": "Main Menu",
+        "description": "Navigation hub - functionality integrated into active files",
+        "status": "dormant",
+        "reason": "Navigation integrated into individual modules"
+      },
+      {
+        "file": "navigation-hub.html",
+        "name": "Navigation Hub",
+        "description": "Alternative navigation interface",
+        "status": "dormant",
+        "reason": "Direct access to modules preferred"
+      },
+      {
+        "file": "quote-maker-v2.html",
+        "name": "Quote Maker V2",
+        "description": "Previous version of quote maker",
+        "status": "dormant",
+        "reason": "Replaced by quote-maker-v2-ver3.html"
+      },
+      {
+        "file": "quote-maker-v2-working-20250921-140509.html",
+        "name": "Quote Maker Working Copy",
+        "description": "Development backup version",
+        "status": "dormant",
+        "reason": "Development backup - not for production use"
+      },
+      {
+        "file": "quote-maker-standalone.html",
+        "name": "Standalone Quote Maker",
+        "description": "Standalone version without Firebase integration",
+        "status": "dormant",
+        "reason": "Firebase integration required for current workflow"
+      },
+      {
+        "file": "admin-sync-interface.html",
+        "name": "Admin Sync Interface",
+        "description": "Dedicated sync interface",
+        "status": "dormant",
+        "reason": "Functionality integrated into admin-panel.html"
+      },
+      {
+        "file": "client-admin-ui.html",
+        "name": "Client Admin UI",
+        "description": "Client management interface",
+        "status": "dormant",
+        "reason": "Functionality integrated into admin-panel.html"
+      }
+    ],
+    "routing": {
+      "/": "quote-maker-v2-ver3.html",
+      "/quote": "quote-maker-v2-ver3.html",
+      "/catalog": "product-catalog.html",
+      "/admin": "admin-panel.html",
+      "/calculator": "price-calculator.html"
+    }
+  }
+}

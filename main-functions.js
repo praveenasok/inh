@@ -1,14 +1,7 @@
-// Main Functions for Price List Generator
-// This file contains all the core functionality for the application
-
-
-
-// Additional functions for quote image download
 function downloadQuoteAsImage() {
     try {
         const quoteElement = document.getElementById('quote-table-container');
         if (!quoteElement) {
-            alert('Quote table not found!');
             return;
         }
         
@@ -19,13 +12,8 @@ function downloadQuoteAsImage() {
             a.download = 'quote-image.png';
             a.click();
             URL.revokeObjectURL(url);
-            alert('Quote image downloaded!');
         }).catch(error => {
-            alert('Error generating image. Please try again.');
         });
     } catch (error) {
-        alert('Error downloading image. Please try again.');
     }
 }
-
-// End of main-functions.js

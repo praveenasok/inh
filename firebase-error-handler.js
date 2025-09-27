@@ -1,314 +1,238 @@
-// Firebase Error Handler
-// Centralized error handling for Firebase operations
+/**
+ * Firebase Error Handler
+ * Provides centralized error handling for Firebase operations
+ */
 
 class FirebaseErrorHandler {
   constructor() {
     this.errorLog = [];
     this.maxLogSize = 100;
-    this.retryAttempts = 3;
-    this.retryDelay = 1000; // 1 second
+    this.setupGlobalErrorHandlers();
   }
 
-  // Handle Firebase errors with context
-  handleError(error, context = {}) {
-    const errorInfo = {
-      timestamp: new Date().toISOString(),
-      error: {
-        code: error.code || 'unknown',
-        message: error.message || 'Unknown error',
-        stack: error.stack
-      },
-      context,
-      userAgent: navigator.userAgent,
-      url: window.location.href
-    };
+  /**
+   * Setup global error handlers for Firebase
+   */
+  setupGlobalErrorHandlers() {
+    // Listen for Firebase initialization events
+    if (typeof window !== 'undefined') {
+      window.addEventListener('firebase-initialization-failed', (event) => {
+        this.handleError('FIREBASE_INIT', event.detail.error, 'Firebase initialization failed');
+      });
 
-    // Log error
-    this.logError(errorInfo);
-
-    // Determine error type and provide user-friendly message
-    const userMessage = this.getUserFriendlyMessage(error);
-    const recovery = this.getRecoveryAction(error);
-
-    return {
-      userMessage,
-      recovery,
-      canRetry: this.canRetry(error),
-      errorInfo
-    };
+      // Handle unhandled promise rejections that might be Firebase-related
+      window.addEventListener('unhandledrejection', (event) => {
+        if (this.isFirebaseError(event.reason)) {
+          this.handleError('FIREBASE_PROMISE', event.reason, 'Unhandled Firebase promise rejection');
+          event.preventDefault(); // Prevent console error
+        }
+      });
+    }
   }
 
-  // Log error to local storage and console
-  logError(errorInfo) {
-    console.error('🔥 Firebase Error:', errorInfo);
+  /**
+   * Check if an error is Firebase-related
+   * @param {Error} error - The error to check
+   * @returns {boolean} True if Firebase-related
+   */
+  isFirebaseError(error) {
+    if (!error) return false;
     
-    // Add to error log
-    this.errorLog.unshift(errorInfo);
-    
-    // Maintain log size
-    if (this.errorLog.length > this.maxLogSize) {
-      this.errorLog = this.errorLog.slice(0, this.maxLogSize);
-    }
-    
-    // Store in localStorage for debugging
-    try {
-      localStorage.setItem('firebaseErrorLog', JSON.stringify(this.errorLog));
-    } catch (e) {
-      console.warn('Failed to store error log in localStorage');
-    }
-    
-    // Send to Firebase if available (for production monitoring)
-    this.sendErrorToFirebase(errorInfo);
-  }
-
-  // Get user-friendly error message
-  getUserFriendlyMessage(error) {
-    const errorCode = error.code || '';
-    const errorMessage = error.message || '';
-
-    // Authentication errors
-    if (errorCode.includes('auth/')) {
-      switch (errorCode) {
-        case 'auth/user-not-found':
-        case 'auth/invalid-email':
-          return 'Invalid email address. Please check your credentials.';
-        case 'auth/wrong-password':
-          return 'Incorrect password. Please try again.';
-        case 'auth/too-many-requests':
-          return 'Too many failed attempts. Please try again later.';
-        case 'auth/network-request-failed':
-          return 'Network error. Please check your internet connection.';
-        default:
-          return 'Authentication failed. Please try logging in again.';
-      }
-    }
-
-    // Firestore errors
-    if (errorCode.includes('firestore/')) {
-      switch (errorCode) {
-        case 'firestore/permission-denied':
-          return 'Access denied. You may not have permission to perform this action.';
-        case 'firestore/unavailable':
-          return 'Database temporarily unavailable. Please try again.';
-        case 'firestore/deadline-exceeded':
-          return 'Operation timed out. Please try again.';
-        case 'firestore/resource-exhausted':
-          return 'Service temporarily overloaded. Please try again later.';
-        default:
-          return 'Database error occurred. Please try again.';
-      }
-    }
-
-    // Storage errors
-    if (errorCode.includes('storage/')) {
-      switch (errorCode) {
-        case 'storage/unauthorized':
-          return 'Upload permission denied. Please check your access rights.';
-        case 'storage/canceled':
-          return 'Upload was canceled.';
-        case 'storage/quota-exceeded':
-          return 'Storage quota exceeded. Please contact administrator.';
-        case 'storage/invalid-format':
-          return 'Invalid file format. Please select a valid Excel file.';
-        case 'storage/object-not-found':
-          return 'File not found.';
-        default:
-          return 'File upload error. Please try again.';
-      }
-    }
-
-    // Network errors
-    if (errorMessage.includes('network') || errorMessage.includes('offline')) {
-      return 'Network connection error. Please check your internet connection and try again.';
-    }
-
-    // File parsing errors
-    if (errorMessage.includes('parse') || errorMessage.includes('Excel')) {
-      return 'Failed to read Excel file. Please ensure the file is not corrupted and try again.';
-    }
-
-    // Validation errors
-    if (errorMessage.includes('validation') || errorMessage.includes('required')) {
-      return 'Data validation failed. Please check your file format and required fields.';
-    }
-
-    // Generic error
-    return 'An unexpected error occurred. Please try again or contact support if the problem persists.';
-  }
-
-  // Get recovery action
-  getRecoveryAction(error) {
-    const errorCode = error.code || '';
-    const errorMessage = error.message || '';
-
-    if (errorCode.includes('auth/')) {
-      return {
-        action: 'reauthenticate',
-        description: 'Please log in again',
-        buttonText: 'Log In'
-      };
-    }
-
-    if (errorCode.includes('network') || errorMessage.includes('offline')) {
-      return {
-        action: 'retry',
-        description: 'Check your connection and try again',
-        buttonText: 'Retry'
-      };
-    }
-
-    if (errorCode.includes('permission-denied')) {
-      return {
-        action: 'contact_admin',
-        description: 'Contact administrator for access',
-        buttonText: 'Contact Support'
-      };
-    }
-
-    return {
-      action: 'retry',
-      description: 'Try the operation again',
-      buttonText: 'Retry'
-    };
-  }
-
-  // Check if error can be retried
-  canRetry(error) {
-    const errorCode = error.code || '';
-    const nonRetryableErrors = [
-      'auth/user-not-found',
-      'auth/invalid-email',
-      'auth/wrong-password',
-      'firestore/permission-denied',
-      'storage/unauthorized',
-      'storage/quota-exceeded'
+    const firebaseErrorPatterns = [
+      'firebase',
+      'firestore',
+      'auth/',
+      'storage/',
+      'functions/',
+      'app-compat',
+      'permission-denied',
+      'unavailable',
+      'deadline-exceeded'
     ];
 
-    return !nonRetryableErrors.some(code => errorCode.includes(code));
+    const errorString = error.toString().toLowerCase();
+    return firebaseErrorPatterns.some(pattern => errorString.includes(pattern));
   }
 
-  // Retry operation with exponential backoff
-  async retryOperation(operation, context = {}, maxAttempts = this.retryAttempts) {
-    let lastError;
-    
-    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-      try {
-        console.log(`🔄 Attempt ${attempt}/${maxAttempts} for operation: ${context.operation || 'unknown'}`);
-        const result = await operation();
-        
-        if (attempt > 1) {
-          console.log(`✅ Operation succeeded on attempt ${attempt}`);
-        }
-        
-        return result;
-      } catch (error) {
-        lastError = error;
-        
-        const errorInfo = this.handleError(error, { ...context, attempt });
-        
-        if (!errorInfo.canRetry || attempt === maxAttempts) {
-          console.error(`❌ Operation failed after ${attempt} attempts`);
-          throw error;
-        }
-        
-        // Exponential backoff
-        const delay = this.retryDelay * Math.pow(2, attempt - 1);
-        console.log(`⏳ Waiting ${delay}ms before retry...`);
-        await this.sleep(delay);
-      }
+  /**
+   * Handle Firebase errors with appropriate user feedback
+   * @param {string} category - Error category
+   * @param {Error} error - The error object
+   * @param {string} context - Additional context
+   * @param {boolean} showToUser - Whether to show error to user
+   */
+  handleError(category, error, context = '', showToUser = false) {
+    const errorInfo = {
+      timestamp: new Date().toISOString(),
+      category,
+      error: error.toString(),
+      code: error.code || 'unknown',
+      context,
+      stack: error.stack
+    };
+
+    // Add to error log
+    this.errorLog.push(errorInfo);
+    if (this.errorLog.length > this.maxLogSize) {
+      this.errorLog.shift();
     }
-    
-    throw lastError;
-  }
 
-  // Send error to Firebase for monitoring (if available)
-  async sendErrorToFirebase(errorInfo) {
-    try {
-      if (window.firebaseDB && window.firebaseDB.isAvailable()) {
-        await firebase.firestore().collection('error_logs').add({
-          ...errorInfo,
-          reportedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-      }
-    } catch (e) {
-      // Silently fail - don't create error loops
-      console.warn('Failed to send error to Firebase:', e);
+    // Console logging
+    console.group(`🔥 Firebase Error [${category}]`);
+    console.error('Context:', context);
+    console.error('Error:', error);
+    console.error('Code:', error.code);
+    console.groupEnd();
+
+    // Handle specific error types
+    this.handleSpecificError(error, showToUser);
+
+    // Dispatch custom event for other components to listen
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('firebase-error', {
+        detail: errorInfo
+      }));
     }
   }
 
-  // Get error statistics
+  /**
+   * Handle specific Firebase error types
+   * @param {Error} error - The error object
+   * @param {boolean} showToUser - Whether to show error to user
+   */
+  handleSpecificError(error, showToUser) {
+    const code = error.code || '';
+    let userMessage = '';
+
+    switch (code) {
+      case 'permission-denied':
+        userMessage = 'Access denied. Please check your permissions.';
+        break;
+      case 'unavailable':
+        userMessage = 'Service temporarily unavailable. Please try again later.';
+        break;
+      case 'deadline-exceeded':
+        userMessage = 'Request timeout. Please check your connection and try again.';
+        break;
+      case 'unauthenticated':
+        userMessage = 'Authentication required. Please sign in.';
+        break;
+      case 'not-found':
+        userMessage = 'Requested data not found.';
+        break;
+      case 'already-exists':
+        userMessage = 'Data already exists.';
+        break;
+      case 'resource-exhausted':
+        userMessage = 'Service quota exceeded. Please try again later.';
+        break;
+      case 'failed-precondition':
+        userMessage = 'Operation failed due to system state.';
+        break;
+      case 'aborted':
+        userMessage = 'Operation was aborted. Please try again.';
+        break;
+      case 'out-of-range':
+        userMessage = 'Invalid data range provided.';
+        break;
+      case 'internal':
+        userMessage = 'Internal server error. Please try again later.';
+        break;
+      case 'data-loss':
+        userMessage = 'Data corruption detected. Please contact support.';
+        break;
+      default:
+        if (error.toString().includes('Firebase: No Firebase App')) {
+          userMessage = 'Firebase connection failed. Please refresh the page.';
+        } else if (error.toString().includes('network')) {
+          userMessage = 'Network error. Please check your connection.';
+        } else {
+          userMessage = 'An unexpected error occurred. Please try again.';
+        }
+    }
+
+    if (showToUser && userMessage) {
+      this.showUserError(userMessage);
+    }
+  }
+
+  /**
+   * Show error message to user
+   * @param {string} message - Error message to display
+   */
+  showUserError(message) {
+    // Try to use existing notification system
+    if (typeof window !== 'undefined') {
+      if (window.showNotification) {
+        window.showNotification(message, 'error');
+      } else if (window.showError) {
+        window.showError(message);
+      } else {
+        // Fallback to alert
+        console.warn('No notification system found, using alert');
+        alert(`Error: ${message}`);
+      }
+    }
+  }
+
+  /**
+   * Get recent error logs
+   * @param {number} limit - Number of recent errors to return
+   * @returns {Array} Recent error logs
+   */
+  getRecentErrors(limit = 10) {
+    return this.errorLog.slice(-limit);
+  }
+
+  /**
+   * Clear error log
+   */
+  clearErrorLog() {
+    this.errorLog = [];
+  }
+
+  /**
+   * Get error statistics
+   * @returns {Object} Error statistics
+   */
   getErrorStats() {
     const stats = {
       total: this.errorLog.length,
-      byType: {},
-      byContext: {},
-      recent: this.errorLog.slice(0, 10)
+      categories: {},
+      codes: {},
+      recent: this.errorLog.slice(-5)
     };
 
-    this.errorLog.forEach(log => {
-      const errorType = log.error.code || 'unknown';
-      const context = log.context.operation || 'unknown';
-      
-      stats.byType[errorType] = (stats.byType[errorType] || 0) + 1;
-      stats.byContext[context] = (stats.byContext[context] || 0) + 1;
+    this.errorLog.forEach(error => {
+      stats.categories[error.category] = (stats.categories[error.category] || 0) + 1;
+      stats.codes[error.code] = (stats.codes[error.code] || 0) + 1;
     });
 
     return stats;
   }
-
-  // Clear error log
-  clearErrorLog() {
-    this.errorLog = [];
-    localStorage.removeItem('firebaseErrorLog');
-    console.log('🧹 Error log cleared');
-  }
-
-  // Utility function for delays
-  sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
-
-  // Show error to user with recovery options
-  showErrorToUser(error, context = {}) {
-    const errorInfo = this.handleError(error, context);
-    
-    // Try to use existing admin message system
-    if (typeof showAdminMessage === 'function') {
-      showAdminMessage(errorInfo.userMessage, 'error');
-    } else {
-      // Fallback to alert
-      alert(`Error: ${errorInfo.userMessage}`);
-    }
-    
-    return errorInfo;
-  }
 }
 
-// Global error handler instance
-window.firebaseErrorHandler = new FirebaseErrorHandler();
+// Create global instance
+const firebaseErrorHandler = new FirebaseErrorHandler();
 
-// Global error event listeners
-window.addEventListener('error', (event) => {
-  if (event.error && event.error.message && event.error.message.includes('Firebase')) {
-    window.firebaseErrorHandler.handleError(event.error, {
-      operation: 'global_error',
-      filename: event.filename,
-      lineno: event.lineno
-    });
-  }
-});
+// Global error handling functions
+window.handleFirebaseError = (category, error, context, showToUser = false) => {
+  firebaseErrorHandler.handleError(category, error, context, showToUser);
+};
 
-window.addEventListener('unhandledrejection', (event) => {
-  if (event.reason && event.reason.message && event.reason.message.includes('Firebase')) {
-    window.firebaseErrorHandler.handleError(event.reason, {
-      operation: 'unhandled_promise_rejection'
-    });
-  }
-});
+window.getFirebaseErrorStats = () => {
+  return firebaseErrorHandler.getErrorStats();
+};
 
-// Export for module use
+window.clearFirebaseErrors = () => {
+  firebaseErrorHandler.clearErrorLog();
+};
+
+// Export for module systems
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = FirebaseErrorHandler;
 }
 
-console.log('🛡️ Firebase Error Handler initialized');
+// Make available globally
+window.FirebaseErrorHandler = FirebaseErrorHandler;
+window.firebaseErrorHandler = firebaseErrorHandler;

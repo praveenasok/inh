@@ -6,6 +6,14 @@ service cloud.firestore {
       return request.auth != null;
     }
     
+    function isAnonymous() {
+      return request.auth != null && request.auth.token.firebase.sign_in_provider == 'anonymous';
+    }
+    
+    function isAuthenticatedOrAnonymous() {
+      return request.auth != null;
+    }
+    
     function isAdmin() {
       return isAuthenticated() && 
              (request.auth.token.email == 'info@indiannaturalhair.com' ||
@@ -27,10 +35,7 @@ service cloud.firestore {
       allow write: if true; // Allow admin interface access
     }
     
-    // Allow public access for admin interface
-    match /salesmen/{salesmanId} {
-      allow read, write: if true;
-    }
+    // Allow public access for admin interface (consolidated salesmen rule)
     
     // Admin-only collections for data management
     match /admin/{document=**} {
@@ -59,10 +64,21 @@ service cloud.firestore {
       allow read, write: if true; // Allow public access for orders functionality
     }
 
-    // Salesmen data - read for all authenticated, write for admin
-    match /salesmen/{salesmanId} {
-      allow read: if isAuthenticated();
-      allow write: if isAdmin();
+    // Salespeople data - allow public access for admin interface
+    match /salespeople/{salespersonId} {
+      allow read, write: if true; // Allow public access for admin interface
+    }
+    
+    // Colors collection - allow public read for admin dashboard stats
+    match /colors/{colorId} {
+      allow read: if true; // Allow public read for dashboard statistics
+      allow write: if true; // Allow service account access for sync
+    }
+    
+    // Styles collection - allow public read for admin dashboard stats
+    match /styles/{styleId} {
+      allow read: if true; // Allow public read for dashboard statistics
+      allow write: if true; // Allow service account access for sync
     }
     
     // Sync logs - allow service account access
