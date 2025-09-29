@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Dropdown Test</title>
+    
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
+    
+    <!-- Firebase Configuration -->
+    <script src="firebase-config.js"></script>
+    <script src="firebase-global-init.js"></script>
+    <script src="firebase-database.js"></script>
+    <script src="google-sheets-config.js"></script>
+    <script src="firebase-error-handler.js"></script>
+    
+    <!-- Universal Firebase Data Manager -->
+    <script src="js/universal-firebase-data-manager.js"></script>
+    
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        select { padding: 10px; margin: 10px; width: 200px; }
+        button { padding: 10px 20px; margin: 10px; }
+        .status { padding: 10px; margin: 10px; border-radius: 5px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .warning { background-color: #fff3cd; color: #856404; }
+    </style>
+</head>
+<body>
+    <h1>Simple Dropdown Test</h1>
+    
+    <div>
+        <label for="price-list-selector">Price List:</label>
+        <select id="price-list-selector">
+            <option value="">Select Price List</option>
+        </select>
+    </div>
+    
+    <div>
+        <button onclick="testDropdownPopulation()">Test Dropdown Population</button>
+        <button onclick="loadDataDirectly()">Load Data Directly</button>
+    </div>
+    
+    <div id="status" class="status">Ready to test</div>
+    <div id="debug-info"></div>
+
+    <script>
+        let productData = [];
+        
+        async function loadDataDirectly() {
+            try {
+                document.getElementById('status').innerHTML = '<div class="warning">Loading data directly...</div>';
+                console.log('Starting direct data load...');
+                
+                // Wait for universal data manager
+                let attempts = 0;
+                while (!window.universalDataManager && attempts < 20) {
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    attempts++;
+                }
+                
+                if (!window.universalDataManager) {
+                    throw new Error('Universal data manager not available');
+                }
+                
+                console.log('Universal data manager found:', window.universalDataManager);
+                
+                // Wait for it to be ready
+                await window.universalDataManager.waitForReady();
+                console.log('Data manager is ready');
+                
+                // Get status
+                const status = window.universalDataManager.getStatus();
+                console.log('Data manager status:', status);
+                
+                // Load products
+                productData = await window.universalDataManager.getProducts();
+                console.log('Product data loaded:', productData);
+                
+                if (productData && productData.length > 0) {
+                    document.getElementById('status').innerHTML = `<div class="success">Loaded ${productData.length} products successfully</div>`;
+                    
+                    // Show sample
+                    const sample = productData[0];
+                    document.getElementById('debug-info').innerHTML = `
+                        <h3>Sample Product:</h3>
+                        <pre>${JSON.stringify(sample, null, 2)}</pre>
+                        <h3>Fields:</h3>
+                        <pre>${Object.keys(sample).join(', ')}</pre>
+                    `;
+                } else {
+                    document.getElementById('status').innerHTML = '<div class="error">No products loaded</div>';
+                }
+                
+            } catch (error) {
+                console.error('Direct load error:', error);
+                document.getElementById('status').innerHTML = `<div class="error">Error: ${error.message}</div>`;
+            }
+        }
+        
+        function testDropdownPopulation() {
+            try {
+                console.log('Testing dropdown population...');
+                console.log('Product data available:', productData);
+                
+                const priceListSelector = document.getElementById('price-list-selector');
+                if (!priceListSelector) {
+                    throw new Error('Price list selector not found');
+                }
+                
+                if (!productData || productData.length === 0) {
+                    throw new Error('No product data available');
+                }
+                
+                // Clear existing options
+                priceListSelector.innerHTML = '<option value="">Select Price List</option>';
+                
+                // Get unique price lists
+                const priceLists = [...new Set(productData.map(product => product.PriceList))].filter(Boolean);
+                console.log('Price lists found:', priceLists);
+                
+                priceLists.forEach(priceList => {
+                    const option = document.createElement('option');
+                    option.value = priceList;
+                    option.textContent = priceList;
+                    priceListSelector.appendChild(option);
+                });
+                
+                document.getElementById('status').innerHTML = `<div class="success">Populated ${priceLists.length} price lists</div>`;
+                
+            } catch (error) {
+                console.error('Dropdown population error:', error);
+                document.getElementById('status').innerHTML = `<div class="error">Dropdown error: ${error.message}</div>`;
+            }
+        }
+        
+        // Auto-load data when page loads
+        window.addEventListener('load', () => {
+            setTimeout(loadDataDirectly, 1000);
+        });
+    </script>
+</body>
+</html>

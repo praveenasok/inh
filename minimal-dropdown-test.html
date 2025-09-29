@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minimal Dropdown Test</title>
+    
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    
+    <!-- Firebase Configuration -->
+    <script src="firebase-config.js"></script>
+    
+    <!-- Universal Data Manager -->
+    <script src="js/universal-firebase-data-manager.js"></script>
+</head>
+<body>
+    <h1>Minimal Dropdown Test</h1>
+    
+    <div>
+        <label for="price-list-selector">Price List:</label>
+        <select id="price-list-selector">
+            <option value="">Select Price List</option>
+        </select>
+    </div>
+    
+    <div style="margin-top: 20px;">
+        <button onclick="testDataLoad()">Test Data Load</button>
+        <button onclick="testDropdownPopulation()">Test Dropdown Population</button>
+    </div>
+    
+    <div id="status" style="margin-top: 20px; padding: 10px; background: #f0f0f0;"></div>
+    
+    <script>
+        let productData = [];
+        
+        function updateStatus(message) {
+            document.getElementById('status').innerHTML += '<div>' + new Date().toLocaleTimeString() + ': ' + message + '</div>';
+            console.log(message);
+        }
+        
+        async function testDataLoad() {
+            updateStatus('Starting data load test...');
+            
+            try {
+                // Wait for data manager to be ready
+                let attempts = 0;
+                while (!window.universalDataManager && attempts < 50) {
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    attempts++;
+                }
+                
+                if (!window.universalDataManager) {
+                    updateStatus('ERROR: universalDataManager not available');
+                    return;
+                }
+                
+                updateStatus('Data manager available, checking if ready...');
+                
+                // Wait for data manager to be ready
+                attempts = 0;
+                while (!window.universalDataManager.isReady() && attempts < 50) {
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    attempts++;
+                }
+                
+                if (!window.universalDataManager.isReady()) {
+                    updateStatus('ERROR: Data manager not ready');
+                    return;
+                }
+                
+                updateStatus('Data manager ready, loading products...');
+                
+                // Load products
+                productData = await window.universalDataManager.getProducts();
+                
+                updateStatus('Products loaded: ' + productData.length + ' items');
+                
+                if (productData.length > 0) {
+                    updateStatus('First product: ' + JSON.stringify(productData[0]));
+                    
+                    // Check for PriceList field
+                    const firstProduct = productData[0];
+                    if (firstProduct.PriceList) {
+                        updateStatus('PriceList field found: ' + firstProduct.PriceList);
+                    } else if (firstProduct.priceList) {
+                        updateStatus('priceList field found: ' + firstProduct.priceList);
+                    } else {
+                        updateStatus('No PriceList/priceList field found in first product');
+                        updateStatus('Available fields: ' + Object.keys(firstProduct).join(', '));
+                    }
+                }
+                
+            } catch (error) {
+                updateStatus('ERROR loading data: ' + error.message);
+            }
+        }
+        
+        function testDropdownPopulation() {
+            updateStatus('Testing dropdown population...');
+            
+            if (!productData || productData.length === 0) {
+                updateStatus('ERROR: No product data available. Run data load test first.');
+                return;
+            }
+            
+            const priceListSelector = document.getElementById('price-list-selector');
+            if (!priceListSelector) {
+                updateStatus('ERROR: price-list-selector not found');
+                return;
+            }
+            
+            // Clear existing options
+            priceListSelector.innerHTML = '<option value="">Select Price List</option>';
+            
+            // Extract unique price lists
+            const priceLists = [...new Set(productData
+                .map(product => product.PriceList || product.priceList)
+                .filter(priceList => priceList && priceList.trim() !== ''))];
+            
+            updateStatus('Found ' + priceLists.length + ' unique price lists: ' + priceLists.join(', '));
+            
+            // Populate dropdown
+            priceLists.forEach(priceList => {
+                const option = document.createElement('option');
+                option.value = priceList;
+                option.textContent = priceList;
+                priceListSelector.appendChild(option);
+            });
+            
+            updateStatus('Dropdown populated with ' + priceLists.length + ' options');
+        }
+        
+        // Auto-run test when page loads
+        window.addEventListener('load', () => {
+            updateStatus('Page loaded, waiting 2 seconds before auto-test...');
+            setTimeout(() => {
+                testDataLoad();
+            }, 2000);
+        });
+    </script>
+</body>
+</html>

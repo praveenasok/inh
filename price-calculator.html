@@ -793,7 +793,7 @@
         priceListSelect.innerHTML = '<option value="">Select Price List</option>';
         
         // Get unique price lists from Firebase data
-        const priceLists = [...new Set(productData.map(product => product.priceList))].filter(Boolean);
+        const priceLists = [...new Set(productData.map(product => product.PriceList))].filter(Boolean);
         
         priceLists.forEach(priceList => {
           const option = document.createElement('option');
@@ -1058,8 +1058,8 @@
         // Get unique categories for the selected price list from Firebase data
         const categories = [...new Set(
           productData
-            .filter(product => product.priceList === priceList)
-            .map(product => product.category)
+            .filter(product => product.PriceList === priceList)
+            .map(product => product.Category)
         )].filter(Boolean);
         
         categories.forEach(category => {
@@ -1094,14 +1094,14 @@
       
       try {
         // Filter products by price list and category (if specified)
-        let filteredProducts = productData.filter(product => product.priceList === priceList);
+        let filteredProducts = productData.filter(product => product.PriceList === priceList);
         
         if (category) {
-          filteredProducts = filteredProducts.filter(product => product.category === category);
+          filteredProducts = filteredProducts.filter(product => product.Category === category);
         }
         
         // Get unique product names
-        const products = [...new Set(filteredProducts.map(product => product.product))].filter(Boolean);
+        const products = [...new Set(filteredProducts.map(product => product.Product))].filter(Boolean);
         
         // Clear and populate product dropdown
         productSelect.innerHTML = '<option value="">All Products</option>';

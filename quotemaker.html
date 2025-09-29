@@ -1420,6 +1420,70 @@
             }
         }
 
+        // Debug function to test data loading
+        window.debugDataLoading = async function() {
+            console.log('=== DEBUG DATA LOADING ===');
+            
+            try {
+                if (!window.universalDataManager) {
+                    console.log('ERROR: universalDataManager not available');
+                    return;
+                }
+                
+                console.log('Data manager available, checking if ready...');
+                
+                if (!window.universalDataManager.isReady()) {
+                    console.log('ERROR: Data manager not ready');
+                    return;
+                }
+                
+                console.log('Data manager ready, loading products...');
+                
+                const products = await window.universalDataManager.getProducts();
+                console.log('Products loaded:', products.length, 'items');
+                
+                if (products.length > 0) {
+                    console.log('First product:', products[0]);
+                    
+                    // Check for PriceList field
+                    const firstProduct = products[0];
+                    if (firstProduct.PriceList) {
+                        console.log('PriceList field found:', firstProduct.PriceList);
+                    } else if (firstProduct.priceList) {
+                        console.log('priceList field found:', firstProduct.priceList);
+                    } else {
+                        console.log('No PriceList/priceList field found');
+                        console.log('Available fields:', Object.keys(firstProduct));
+                    }
+                    
+                    // Test dropdown population
+                    console.log('Testing dropdown population...');
+                    const priceListSelector = document.getElementById('price-list-selector');
+                    if (priceListSelector) {
+                        console.log('Price list selector found');
+                        
+                        // Extract unique price lists
+                        const priceLists = [...new Set(products
+                            .map(product => product.PriceList || product.priceList)
+                            .filter(priceList => priceList && priceList.trim() !== ''))];
+                        
+                        console.log('Unique price lists found:', priceLists);
+                        
+                        if (priceLists.length > 0) {
+                            console.log('SUCCESS: Data and dropdown logic working');
+                        } else {
+                            console.log('ERROR: No valid price lists found in data');
+                        }
+                    } else {
+                        console.log('ERROR: price-list-selector element not found');
+                    }
+                }
+                
+            } catch (error) {
+                console.log('ERROR in debug function:', error);
+            }
+        };
+
         // Make the initialization function globally available
         window.initializeQuoteMaker = initializeQuoteMaker;
 
@@ -1511,20 +1575,27 @@
         // Load product data from Firebase
         async function loadProducts() {
             try {
+                console.log('loadProducts called');
                 // Load data from Firebase using universal data manager
                 if (window.universalDataManager) {
+                    console.log('Universal data manager available');
                     const status = window.universalDataManager.getStatus();
+                    console.log('Data manager status:', status);
                     if (status.isInitialized && status.isDataLoaded) {
                         productData = await window.universalDataManager.getProducts();
+                        console.log('Products loaded:', productData ? productData.length : 0);
                         return productData;
                     } else {
+                        console.log('Data manager not ready:', status);
                         throw new Error('Firebase universal data manager not ready');
                     }
                 } else {
+                    console.log('Universal data manager not available');
                     throw new Error('Firebase universal data manager not available');
                 }
                 
             } catch (error) {
+                console.error('loadProducts error:', error);
                 productData = [];
                 throw error;
             }
@@ -1620,12 +1691,16 @@
 
         // Populate price list dropdown using Firebase data
         function populatePriceListDropdown() {
+            console.log('populatePriceListDropdown called');
             const priceListSelector = document.getElementById('price-list-selector');
             if (!priceListSelector) {
+                console.log('Price list selector not found');
                 return;
             }
             
+            console.log('Product data available:', productData);
             if (!productData || productData.length === 0) {
+                console.log('No product data available for dropdown population');
                 return;
             }
             
@@ -1633,7 +1708,8 @@
             priceListSelector.innerHTML = '<option value="">Select Price List</option>';
             
             // Get unique price lists from Firebase product data
-            const priceLists = [...new Set(productData.map(product => product.priceList))].filter(Boolean);
+            const priceLists = [...new Set(productData.map(product => product.PriceList))].filter(Boolean);
+            console.log('Price lists extracted:', priceLists);
             
             priceLists.forEach(priceList => {
                 const option = document.createElement('option');
@@ -1642,7 +1718,7 @@
                 priceListSelector.appendChild(option);
             });
             
-
+            console.log('Price list dropdown populated with', priceLists.length, 'options');
         }
 
         // Populate client dropdown using Firebase data
@@ -2099,8 +2175,8 @@
             // Get unique categories for the selected price list
             const categories = [...new Set(
                 productData
-                    .filter(product => product.priceList === priceList)
-                    .map(product => product.category)
+                    .filter(product => product.PriceList === priceList)
+                    .map(product => product.Category)
             )].filter(Boolean);
             
             categories.forEach(category => {
@@ -2148,8 +2224,8 @@
             // Get unique products for the selected price list and category
             const products = [...new Set(
                 productData
-                    .filter(product => product.priceList === priceList && product.category === category)
-                    .map(product => product.product)
+                    .filter(product => product.PriceList === priceList && product.Category === category)
+                    .map(product => product.Product)
             )].filter(Boolean);
             
             selector.innerHTML = '<option value="">Select Product</option>';

@@ -34,6 +34,9 @@ class UnifiedDataAccess {
         this.isAdminPage = this._isAdminPage();
         this.fallbackFirstMode = !this.isAdminPage;
         
+        // Initialize dataSource property
+        this.dataSource = null;
+        
         // Data source priorities - adjusted for fallback-first mode
         this.sourcePriority = this.fallbackFirstMode ? ['local', 'firebase'] : ['firebase', 'local'];
         
@@ -81,6 +84,7 @@ class UnifiedDataAccess {
             try {
                 // Additional safety check
                 if (this === null || this === undefined) {
+                    console.warn('Map.has called on null/undefined instance:', {
                         key: key,
                         stack: new Error().stack
                     });
@@ -88,6 +92,7 @@ class UnifiedDataAccess {
                 }
                 return originalHas.call(this, key);
             } catch (error) {
+                console.error('Error in Map.has override:', {
                     error: error,
                     mapInstance: this,
                     key: key,
@@ -101,6 +106,7 @@ class UnifiedDataAccess {
         // Also add a global error handler for uncaught errors
         window.addEventListener('error', (event) => {
             if (event.message && event.message.includes('has')) {
+                console.error('Uncaught Map.has error:', {
                     message: event.message,
                     filename: event.filename,
                     lineno: event.lineno,

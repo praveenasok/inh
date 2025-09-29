@@ -539,6 +539,13 @@ class UniversalFirebaseDataManager {
             lastUpdate: Math.max(...Array.from(this.lastFetchTime.values()), 0)
         };
     }
+
+    /**
+     * Check if the system is ready (both initialized and data loaded)
+     */
+    isReady() {
+        return this.isInitialized && this.isDataLoaded;
+    }
     
     // Private helper methods
     

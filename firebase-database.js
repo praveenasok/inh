@@ -21,6 +21,7 @@ class FirebaseDatabase {
           merge: true
         });
       } catch (settingsError) {
+        console.warn('Error configuring Firestore settings:', settingsError);
       }
 
       try {
@@ -28,6 +29,7 @@ class FirebaseDatabase {
         await new Promise(resolve => setTimeout(resolve, 1000));
         await this.db.enableNetwork();
       } catch (networkError) {
+        console.warn('Error with network operations:', networkError);
       }
       
       try {
@@ -39,6 +41,7 @@ class FirebaseDatabase {
       try {
         await this.db.collection('test').limit(1).get();
       } catch (testError) {
+        console.warn('Error testing database connection:', testError);
       }
       
       this.initialized = true;

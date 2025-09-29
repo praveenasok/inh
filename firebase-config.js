@@ -24,8 +24,9 @@ let firebaseApp = null;
 if (typeof window !== 'undefined' && window.firebaseConfig) {
   // Firebase config already exists
 } else {
+  // Define Firebase functions
 
-function initializeFirebaseApp() {
+  function initializeFirebaseApp() {
   try {
     if (typeof firebase === 'undefined') {
       throw new Error('Firebase SDK not loaded');
@@ -45,6 +46,7 @@ function initializeFirebaseApp() {
       
       // Add connection state monitoring
       db.enableNetwork().catch(error => {
+        console.warn('Firebase network error:', error);
       });
       
       if (firebase.auth) {
@@ -66,28 +68,27 @@ function initializeFirebaseApp() {
   }
 }
 
-function isFirebaseInitialized() {
-  return firebaseInitialized;
-}
+  function isFirebaseInitialized() {
+    return firebaseInitialized;
+  }
 
-function getFirebaseApp() {
-  return firebaseApp;
-}
+  function getFirebaseApp() {
+    return firebaseApp;
+  }
 
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = {
-    firebaseConfig,
-    firebaseCollections,
-    initializeFirebaseApp,
-    isFirebaseInitialized,
-    getFirebaseApp
-  };
-}
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+      firebaseConfig,
+      firebaseCollections,
+      initializeFirebaseApp,
+      isFirebaseInitialized,
+      getFirebaseApp
+    };
+  }
 
   window.firebaseConfig = firebaseConfig;
   window.firebaseCollections = firebaseCollections;
   window.initializeFirebaseApp = initializeFirebaseApp;
   window.isFirebaseInitialized = isFirebaseInitialized;
   window.getFirebaseApp = getFirebaseApp;
-
 }

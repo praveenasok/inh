@@ -30,6 +30,22 @@
     
     <!-- Firebase Configuration -->
     <script src="firebase-config.js"></script>
+    <!-- Firebase global initialization -->
+    <script src="firebase-global-init.js"></script>
+    
+    <!-- Firebase Database Service -->
+    <script src="firebase-database.js"></script>
+    
+    <!-- Firebase Error Handler -->
+    <script src="firebase-error-handler.js"></script>
+    
+    <!-- Universal Firebase Data Manager -->
+    <script src="js/universal-firebase-data-manager.js"></script>
+    
+    <!-- Fallback System Components -->
+    <script src="js/local-fallback-manager.js"></script>
+    <script src="js/fallback-detector.js"></script>
+    <script src="js/unified-data-access.js"></script>
     
     <!-- Browser-compatible Firebase Service -->
     <script src="firebase-browser-service.js"></script>
@@ -344,8 +360,8 @@
             </div>
             <div class="flex items-center justify-between mb-6">
                 <div class="flex items-center space-x-2">
-                    <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                    <span class="text-sm text-gray-600">Auto-updating every 30 seconds</span>
+                    <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
+                    <span class="text-sm text-gray-600">Updates after sync operations only</span>
                 </div>
                 <div id="refresh-status" class="text-sm text-gray-500">Ready</div>
             </div>
@@ -438,6 +454,7 @@
         window.addEventListener('error', function(event) {
             const error = event.error;
             if (error) {
+                console.log('Global error caught:', {
                     message: error.message || 'Unknown error',
                     filename: event.filename || 'Unknown file',
                     lineno: event.lineno || 'Unknown line',
@@ -455,6 +472,7 @@
         // Handle unhandled promise rejections (common with Firebase)
         window.addEventListener('unhandledrejection', function(event) {
             const error = event.reason;
+            console.log('Unhandled promise rejection:', {
                 message: error?.message || 'Unknown promise rejection',
                 stack: error?.stack || 'No stack trace',
                 reason: error
@@ -725,6 +743,7 @@
                         lastSync: new Date().toISOString()
                     });
                 } catch (testError) {
+                    console.log('Google Sheets API test error:', {
                         message: testError.message,
                         status: testError.status,
                         code: testError.code
@@ -1099,6 +1118,18 @@
             try {
                 await syncSystem.performReverseSync();
                 addToSyncLog('Reverse synchronization completed', 'success');
+                
+                // Auto-update: Refresh comparison table once after reverse sync completion
+                setTimeout(async () => {
+                    try {
+                        addToSyncLog('Auto-updating comparison table after reverse sync...', 'info');
+                        await refreshComparisonTable();
+                        addToSyncLog('Comparison table auto-updated successfully!', 'success');
+                    } catch (error) {
+                        addToSyncLog(`Auto-update failed: ${error.message}`, 'error');
+                    }
+                }, 1000); // Wait 1 second before auto-updating
+                
             } catch (error) {
                 addToSyncLog(`Reverse sync failed: ${error.message}`, 'error');
             } finally {
@@ -1165,6 +1196,17 @@
         function onSyncCompleted(report) {
             addToSyncLog('Comprehensive synchronization completed successfully!', 'success');
             addToSyncLog(`Sync Report: ${JSON.stringify(report, null, 2)}`, 'info');
+            
+            // Auto-update: Refresh comparison table once after sync completion
+            setTimeout(async () => {
+                try {
+                    addToSyncLog('Auto-updating comparison table after sync...', 'info');
+                    await refreshComparisonTable();
+                    addToSyncLog('Comparison table auto-updated successfully!', 'success');
+                } catch (error) {
+                    addToSyncLog(`Auto-update failed: ${error.message}`, 'error');
+                }
+            }, 1000); // Wait 1 second before auto-updating
             
             // Hide progress section
             setTimeout(() => {
@@ -1585,6 +1627,17 @@
                 
                 addToSyncLog('Manual sync completed successfully', 'success');
                 
+                // Auto-update: Refresh comparison table once after manual sync completion
+                setTimeout(async () => {
+                    try {
+                        addToSyncLog('Auto-updating comparison table after manual sync...', 'info');
+                        await refreshComparisonTable();
+                        addToSyncLog('Comparison table auto-updated successfully!', 'success');
+                    } catch (error) {
+                        addToSyncLog(`Auto-update failed: ${error.message}`, 'error');
+                    }
+                }, 1000); // Wait 1 second before auto-updating
+                
             } catch (error) {
                 addToSyncLog(`Manual sync failed: ${error.message}`, 'error');
                 statusText.textContent = 'Manual sync failed';
@@ -1622,7 +1675,6 @@
         // Firebase synchronization system
         class FirebaseSyncManager {
             constructor() {
-                this.syncInterval = 30000; // 30 seconds
                 this.isRunning = false;
                 this.syncInProgress = false;
                 this.isInitialized = false;
@@ -1754,30 +1806,7 @@
         // Initialize Firebase sync manager
         const firebaseSyncManager = new FirebaseSyncManager();
 
-        // Auto-refresh timer for comparison table
-        let comparisonTableRefreshTimer = null;
-        
-        function startComparisonTableAutoRefresh() {
-            // Clear any existing timer
-            if (comparisonTableRefreshTimer) {
-                clearInterval(comparisonTableRefreshTimer);
-            }
-            
-            // Set up auto-refresh every 30 seconds
-            comparisonTableRefreshTimer = setInterval(async () => {
-                try {
-                    await refreshComparisonTable();
-                } catch (error) {
-                }
-            }, 30000); // 30 seconds
-        }
-        
-        function stopComparisonTableAutoRefresh() {
-            if (comparisonTableRefreshTimer) {
-                clearInterval(comparisonTableRefreshTimer);
-                comparisonTableRefreshTimer = null;
-            }
-        }
+        // Note: Auto-refresh timer system removed - table updates only after sync operations
 
         // Start Firebase sync when page loads
         document.addEventListener('DOMContentLoaded', async function() {
@@ -1792,8 +1821,7 @@
                     // Initial refresh of comparison table
                     await refreshComparisonTable();
                     
-                    // Start auto-refresh timer
-                    startComparisonTableAutoRefresh();
+                    // Note: Removed continuous auto-refresh timer - table now updates only after sync operations
                     
                 } catch (error) {
                     addToSyncLog(`Failed to start Firebase sync system: ${error.message}`, 'error');
@@ -1805,11 +1833,11 @@
         document.addEventListener('visibilitychange', async function() {
             if (document.hidden) {
                 firebaseSyncManager.stop();
-                stopComparisonTableAutoRefresh();
+                // Note: Auto-refresh timer system removed
             } else {
                 try {
                     await firebaseSyncManager.start();
-                    startComparisonTableAutoRefresh();
+                    // Note: Removed auto-refresh restart - table updates only after sync operations
                 } catch (error) {
                     addToSyncLog(`Failed to restart Firebase sync system: ${error.message}`, 'error');
                 }
