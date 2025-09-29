@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Server to IndexedDB Sync Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 10px 5px;
+            font-size: 16px;
+        }
+        .button:hover {
+            background: #0056b3;
+        }
+        .button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+        .status {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 20px 0;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .stat-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+        }
+        .stat-label {
+            font-size: 14px;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Server to IndexedDB Sync Test</h1>
+        <p>This page tests the synchronization of data from server API endpoints to IndexedDB.</p>
+        
+        <div class="controls">
+            <button id="syncAllBtn" class="button">Sync All Collections</button>
+            <button id="checkDataBtn" class="button">Check IndexedDB Data</button>
+            <button id="clearLogBtn" class="button">Clear Log</button>
+        </div>
+
+        <div id="status" class="status" style="display: none;"></div>
+
+        <div class="stats" id="stats" style="display: none;">
+            <div class="stat-card">
+                <div class="stat-number" id="totalRecords">0</div>
+                <div class="stat-label">Total Records</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="successfulRecords">0</div>
+                <div class="stat-label">Successful</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="failedRecords">0</div>
+                <div class="stat-label">Failed</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="collections">0</div>
+                <div class="stat-label">Collections</div>
+            </div>
+        </div>
+
+        <div id="log" class="log"></div>
+    </div>
+
+    <!-- Include required dependencies -->
+    <script src="js/local-fallback-manager.js"></script>
+    <script src="js/fallback-detector.js"></script>
+    <script src="js/unified-data-access.js"></script>
+    <script src="js/server-to-indexeddb-sync.js"></script>
+
+    <script>
+        let syncService = null;
+        let dbManager = null;
+        
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                log('Initializing IndexedDB manager...', 'info');
+                
+                // Initialize the unified data access (which includes IndexedDB)
+                if (typeof UnifiedDataAccess !== 'undefined') {
+                    dbManager = new UnifiedDataAccess();
+                    await dbManager.initialize();
+                    log('IndexedDB manager initialized successfully', 'success');
+                } else {
+                    throw new Error('UnifiedDataAccess not available');
+                }
+
+                // Initialize sync service
+                syncService = new ServerToIndexedDBSync({
+                    dbManager: dbManager,
+                    logLevel: 'debug'
+                });
+                
+                log('Server sync service initialized successfully', 'success');
+                
+            } catch (error) {
+                log(`Initialization failed: ${error.message}`, 'error');
+                showStatus(`Initialization failed: ${error.message}`, 'error');
+            }
+        });
+
+        // Event listeners
+        document.getElementById('syncAllBtn').addEventListener('click', async function() {
+            if (!syncService) {
+                showStatus('Sync service not initialized', 'error');
+                return;
+            }
+
+            const btn = this;
+            btn.disabled = true;
+            btn.textContent = 'Syncing...';
+            
+            try {
+                log('Starting sync process...', 'info');
+                showStatus('Synchronization in progress...', 'info');
+                
+                const result = await syncService.syncAll();
+                
+                if (result.success) {
+                    showStatus('Synchronization completed successfully!', 'success');
+                    log('Sync completed successfully', 'success');
+                    updateStats(result.stats);
+                } else {
+                    showStatus('Synchronization completed with errors', 'error');
+                    log('Sync completed with errors', 'error');
+                    updateStats(result.stats);
+                }
+                
+                log(`Sync results: ${JSON.stringify(result.results, null, 2)}`, 'info');
+                
+            } catch (error) {
+                showStatus(`Sync failed: ${error.message}`, 'error');
+                log(`Sync failed: ${error.message}`, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Sync All Collections';
+            }
+        });
+
+        document.getElementById('checkDataBtn').addEventListener('click', async function() {
+            if (!syncService) {
+                showStatus('Sync service not initialized', 'error');
+                return;
+            }
+
+            try {
+                log('Checking IndexedDB data...', 'info');
+                
+                const counts = await syncService.checkDataCounts();
+                
+                log('IndexedDB Data Counts:', 'info');
+                for (const [collection, count] of Object.entries(counts)) {
+                    log(`  ${collection}: ${count}`, 'info');
+                }
+                
+                showStatus('IndexedDB data check completed', 'success');
+                
+            } catch (error) {
+                log('Error checking IndexedDB data: ' + error.message, 'error');
+                showStatus('Failed to check IndexedDB data', 'error');
+            }
+        });
+
+        document.getElementById('clearLogBtn').addEventListener('click', function() {
+            document.getElementById('log').innerHTML = '';
+        });
+
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : 'info';
+            
+            logDiv.innerHTML += `<div class="${className}">[${timestamp}] ${message}</div>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+            statusDiv.style.display = 'block';
+            
+            // Auto-hide after 5 seconds for success messages
+            if (type === 'success') {
+                setTimeout(() => {
+                    statusDiv.style.display = 'none';
+                }, 5000);
+            }
+        }
+
+        function updateStats(stats) {
+            if (!stats) return;
+            
+            document.getElementById('totalRecords').textContent = stats.totalRecords || 0;
+            document.getElementById('successfulRecords').textContent = stats.successfulRecords || 0;
+            document.getElementById('failedRecords').textContent = stats.failedRecords || 0;
+            document.getElementById('collections').textContent = Object.keys(stats.results || {}).length;
+            
+            document.getElementById('stats').style.display = 'grid';
+        }
+    </script>
+</body>
+</html>

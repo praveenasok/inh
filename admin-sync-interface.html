@@ -756,20 +756,17 @@
         document.addEventListener('DOMContentLoaded', async function() {
             // Initialize fallback system components
             try {
-                console.log('🔄 Initializing fallback system...');
                 
                 // Initialize local fallback manager
                 if (typeof LocalFallbackManager !== 'undefined') {
                     window.localFallbackManager = new LocalFallbackManager();
                     await window.localFallbackManager.initialize();
-                    console.log('✅ Local fallback manager initialized');
                 }
                 
                 // Initialize fallback detector
                 if (typeof FallbackDetector !== 'undefined') {
                     window.fallbackDetector = new FallbackDetector();
                     await window.fallbackDetector.initialize();
-                    console.log('✅ Fallback detector initialized');
                 }
                 
                 // Initialize unified data access
@@ -779,12 +776,9 @@
                         window.unifiedDataAccess = new UnifiedDataAccess();
                     }
                     await window.unifiedDataAccess.initialize();
-                    console.log('✅ Unified data access initialized');
                 }
                 
-                console.log('✅ Fallback system fully initialized');
             } catch (error) {
-                console.error('❌ Failed to initialize fallback system:', error);
                 // Continue with Firebase initialization
             }
             

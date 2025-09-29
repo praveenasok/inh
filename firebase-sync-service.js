@@ -1,6 +1,7 @@
 const admin = require('firebase-admin');
 const crypto = require('crypto');
 const GoogleSheetsService = require('./google-sheets-service');
+const { googleSheetsAutoConfig } = require('./js/google-sheets-auto-config');
 
 class FirebaseSyncService {
   constructor() {
@@ -17,23 +18,44 @@ class FirebaseSyncService {
 
   async initialize() {
     try {
+      // Check if service account key exists
+      const serviceAccountPath = require('path').join(__dirname, 'service-account-key.json');
+      const fs = require('fs');
+      
+      if (!fs.existsSync(serviceAccountPath)) {
+        
+        // Initialize in fallback mode
+        this.isInitialized = false;
+        this.fallbackMode = true;
+        await this.googleSheetsService.initialize();
+        return false;
+      }
+
       if (!admin.apps.length) {
-        const serviceAccountPath = require('path').join(__dirname, 'service-account-key.json');
         const serviceAccount = require(serviceAccountPath);
         
         admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount),
-        projectId: serviceAccount.project_id
-      });
+          credential: admin.credential.cert(serviceAccount),
+          projectId: serviceAccount.project_id
+        });
       }
       
       this.db = admin.firestore();
       await this.googleSheetsService.initialize();
       this.isInitialized = true;
+      this.fallbackMode = false;
       
       return true;
     } catch (error) {
-      throw error;
+      
+      // Initialize in fallback mode
+      this.isInitialized = false;
+      this.fallbackMode = true;
+      try {
+        await this.googleSheetsService.initialize();
+      } catch (gsError) {
+      }
+      return false;
     }
   }
 
@@ -112,9 +134,17 @@ class FirebaseSyncService {
     return changes;
   }
 
-  async syncProductData(spreadsheetId) {
-    if (!this.isInitialized) {
+  async syncProductData(spreadsheetId = googleSheetsAutoConfig.getSheetId()) {
+    if (!this.isInitialized && !this.fallbackMode) {
       await this.initialize();
+    }
+
+    if (this.fallbackMode) {
+      return {
+        success: false,
+        message: 'Firebase not available',
+        changes: { added: [], updated: [], deleted: [], unchanged: 0 }
+      };
     }
 
     if (this.syncStatus.isRunning) {
@@ -226,7 +256,7 @@ class FirebaseSyncService {
     }
   }
 
-  async syncSalesmanData(spreadsheetId = '1hlfrnZnNQ0u8idg5KDmkSY4zFhLyvjLqUwAZn6HmW3s') {
+  async syncSalesmanData(spreadsheetId = googleSheetsAutoConfig.getSheetId()) {
     try {
       if (!this.db) {
         throw new Error('Firebase not initialized');
@@ -238,14 +268,27 @@ class FirebaseSyncService {
         return { recordsProcessed: 0, changes: 0 };
       }
 
-      const configRef = this.db.collection('config').doc('salesmen');
-      const existingDoc = await configRef.get();
+      // Get existing salesmen from the salesmen collection
+      const salesmenCollection = this.db.collection('salesmen');
+      const existingSnapshot = await salesmenCollection.get();
+      const existingData = existingSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       
       let changes = 0;
-      const existingData = existingDoc.exists ? existingDoc.data().salesmen || [] : [];
       
       if (this.compareData(existingData, salesmanData)) {
-        await configRef.set({ salesmen: salesmanData }, { merge: true });
+        // Clear existing salesmen collection
+        const batch = this.db.batch();
+        existingSnapshot.docs.forEach(doc => {
+          batch.delete(doc.ref);
+        });
+        
+        // Add new salesmen data
+        salesmanData.forEach((salesman, index) => {
+          const docRef = salesmenCollection.doc(`salesman_${index + 1}`);
+          batch.set(docRef, salesman);
+        });
+        
+        await batch.commit();
         changes = salesmanData.length;
       }
 
@@ -255,7 +298,7 @@ class FirebaseSyncService {
     }
   }
 
-  async syncCompaniesData(spreadsheetId = '1hlfrnZnNQ0u8idg5KDmkSY4zFhLyvjLqUwAZn6HmW3s') {
+  async syncCompaniesData(spreadsheetId = googleSheetsAutoConfig.getSheetId()) {
     try {
       if (!this.db) {
         throw new Error('Firebase not initialized');
@@ -284,7 +327,11 @@ class FirebaseSyncService {
     }
   }
 
-  async syncColorsData(spreadsheetId = '1hlfrnZnNQ0u8idg5KDmkSY4zFhLyvjLqUwAZn6HmW3s') {
+  async syncColorsData(spreadsheetId = googleSheetsAutoConfig.getSheetId()) {
+    if (this.fallbackMode) {
+      return { success: false, message: 'Firebase not available' };
+    }
+    
     try {
       if (!this.db) {
         throw new Error('Firebase not initialized');
@@ -296,14 +343,27 @@ class FirebaseSyncService {
         return { recordsProcessed: 0, changes: 0 };
       }
 
-      const configRef = this.db.collection('config').doc('colors');
-      const existingDoc = await configRef.get();
+      // Get existing colors from the colors collection
+      const colorsCollection = this.db.collection('colors');
+      const existingSnapshot = await colorsCollection.get();
+      const existingData = existingSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       
       let changes = 0;
-      const existingData = existingDoc.exists ? existingDoc.data().colors || [] : [];
       
       if (this.compareData(existingData, colorsData)) {
-        await configRef.set({ colors: colorsData }, { merge: true });
+        // Clear existing colors collection
+        const batch = this.db.batch();
+        existingSnapshot.docs.forEach(doc => {
+          batch.delete(doc.ref);
+        });
+        
+        // Add new colors data
+        colorsData.forEach((color, index) => {
+          const docRef = colorsCollection.doc(`color_${index + 1}`);
+          batch.set(docRef, color);
+        });
+        
+        await batch.commit();
         changes = colorsData.length;
       }
 
@@ -313,7 +373,11 @@ class FirebaseSyncService {
     }
   }
 
-  async syncStylesData(spreadsheetId = '1hlfrnZnNQ0u8idg5KDmkSY4zFhLyvjLqUwAZn6HmW3s') {
+  async syncStylesData(spreadsheetId = googleSheetsAutoConfig.getSheetId()) {
+    if (this.fallbackMode) {
+      return { success: false, message: 'Firebase not available' };
+    }
+    
     try {
       if (!this.db) {
         throw new Error('Firebase not initialized');
@@ -322,23 +386,148 @@ class FirebaseSyncService {
       const stylesData = await this.googleSheetsService.fetchStylesData(spreadsheetId);
       
       if (!stylesData || stylesData.length === 0) {
-        return { recordsProcessed: 0, changes: 0 };
+        return { recordsProcessed: stylesData.length, changes: 0 };
       }
 
-      const configRef = this.db.collection('config').doc('styles');
-      const existingDoc = await configRef.get();
+      // Get existing styles from the styles collection
+      const stylesCollection = this.db.collection('styles');
+      const existingSnapshot = await stylesCollection.get();
+      const existingData = existingSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       
       let changes = 0;
-      const existingData = existingDoc.exists ? existingDoc.data().styles || [] : [];
       
       if (this.compareData(existingData, stylesData)) {
-        await configRef.set({ styles: stylesData }, { merge: true });
+        // Clear existing styles collection
+        const batch = this.db.batch();
+        existingSnapshot.docs.forEach(doc => {
+          batch.delete(doc.ref);
+        });
+        
+        // Add new styles data
+        stylesData.forEach((style, index) => {
+          const docRef = stylesCollection.doc(`style_${index + 1}`);
+          batch.set(docRef, style);
+        });
+        
+        await batch.commit();
         changes = stylesData.length;
       }
 
       return { recordsProcessed: stylesData.length, changes };
     } catch (error) {
       throw new Error(`Failed to sync styles data: ${error.message}`);
+    }
+  }
+
+  async syncCountData(spreadsheetId = googleSheetsAutoConfig.getSheetId()) {
+    try {
+      if (!this.db) {
+        throw new Error('Firebase not initialized');
+      }
+
+      // Fetch salesmen count
+      const salesmenData = await this.googleSheetsService.fetchSalesmanData(spreadsheetId);
+      const salesmenCount = salesmenData ? salesmenData.length : 0;
+
+      // Fetch price lists count
+      const productsData = await this.googleSheetsService.fetchProductData(spreadsheetId);
+      const priceListNames = new Set();
+      
+      if (productsData && Array.isArray(productsData)) {
+        productsData.forEach(product => {
+          const priceListName = product['Price List Name'] || product.PriceList || product.pricelist;
+          if (priceListName && priceListName.trim()) {
+            priceListNames.add(priceListName.trim());
+          }
+        });
+      }
+      
+      const priceListsCount = priceListNames.size;
+      const priceListsArray = Array.from(priceListNames);
+
+      // Store count data in Firebase
+      const countData = {
+        salesmenCount,
+        priceListsCount,
+        priceListNames: priceListsArray,
+        lastUpdated: admin.firestore.FieldValue.serverTimestamp(),
+        syncedAt: admin.firestore.FieldValue.serverTimestamp()
+      };
+
+      const configRef = this.db.collection('config').doc('counts');
+      await configRef.set(countData, { merge: true });
+
+      return {
+        success: true,
+        salesmenCount,
+        priceListsCount,
+        priceListNames: priceListsArray
+      };
+
+    } catch (error) {
+      throw new Error(`Failed to sync count data: ${error.message}`);
+    }
+  }
+
+  async syncPriceListsData(spreadsheetId = googleSheetsAutoConfig.getSheetId()) {
+    if (this.fallbackMode) {
+      return { success: false, message: 'Firebase not available' };
+    }
+    
+    try {
+      if (!this.db) {
+        throw new Error('Firebase not initialized');
+      }
+
+      // Fetch product data to extract price list names
+      const productsData = await this.googleSheetsService.fetchProductData(spreadsheetId);
+      const priceListNames = new Set();
+      
+      if (productsData && Array.isArray(productsData)) {
+        productsData.forEach(product => {
+          const priceListName = product['Price List Name'] || product.PriceList || product.pricelist;
+          if (priceListName && priceListName.trim()) {
+            priceListNames.add(priceListName.trim());
+          }
+        });
+      }
+
+      const priceListsArray = Array.from(priceListNames);
+      
+      if (priceListsArray.length === 0) {
+        return { recordsProcessed: 0, changes: 0 };
+      }
+
+      // Store price lists in Firebase
+      const batch = this.db.batch();
+      
+      // Clear existing price lists
+      const existingSnapshot = await this.db.collection('price_lists').get();
+      existingSnapshot.docs.forEach(doc => {
+        batch.delete(doc.ref);
+      });
+
+      // Add new price lists
+      priceListsArray.forEach((priceListName, index) => {
+        const docRef = this.db.collection('price_lists').doc(`pricelist_${index}`);
+        batch.set(docRef, {
+          name: priceListName,
+          id: `pricelist_${index}`,
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          source: 'google_sheets'
+        });
+      });
+
+      await batch.commit();
+
+      return { 
+        recordsProcessed: priceListsArray.length, 
+        changes: priceListsArray.length,
+        priceListNames: priceListsArray
+      };
+    } catch (error) {
+      throw new Error(`Failed to sync price lists data: ${error.message}`);
     }
   }
 
@@ -364,7 +553,6 @@ class FirebaseSyncService {
       this.syncStatus.lastSyncSuccess = logEntry.success;
       
     } catch (error) {
-      console.error('Failed to log sync activity:', error);
     }
   }
 

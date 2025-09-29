@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Sheets to IndexedDB Sync Diagnostic Tool</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #fafafa;
+        }
+        .section h2 {
+            margin-top: 0;
+            color: #555;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        .status.success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .status.error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .status.warning { background-color: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        .status.info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        button:hover { background-color: #0056b3; }
+        button:disabled { background-color: #6c757d; cursor: not-allowed; }
+        
+        .log {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+        }
+        
+        .progress {
+            width: 100%;
+            height: 20px;
+            background-color: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-bar {
+            height: 100%;
+            background-color: #28a745;
+            transition: width 0.3s ease;
+            text-align: center;
+            line-height: 20px;
+            color: white;
+            font-size: 12px;
+        }
+        
+        .config-item {
+            margin: 10px 0;
+            padding: 10px;
+            background-color: white;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        
+        .data-preview {
+            max-height: 200px;
+            overflow-y: auto;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Google Sheets to IndexedDB Sync Diagnostic Tool</h1>
+        
+        <!-- Configuration Status -->
+        <div class="section">
+            <h2>📋 Configuration Status</h2>
+            <div id="config-status"></div>
+            <div class="config-item">
+                <strong>API Key:</strong> <span id="api-key-status"></span>
+            </div>
+            <div class="config-item">
+                <strong>Sheet ID:</strong> <span id="sheet-id-status"></span>
+            </div>
+            <div class="config-item">
+                <strong>IndexedDB:</strong> <span id="indexeddb-status"></span>
+            </div>
+        </div>
+        
+        <!-- Connection Tests -->
+        <div class="section">
+            <h2>🔗 Connection Tests</h2>
+            <button onclick="testGoogleSheetsConnection()">Test Google Sheets API</button>
+            <button onclick="testIndexedDBConnection()">Test IndexedDB</button>
+            <button onclick="testSyncServices()">Test Sync Services</button>
+            <div id="connection-results"></div>
+        </div>
+        
+        <!-- Sync Operations -->
+        <div class="section">
+            <h2>🔄 Sync Operations</h2>
+            <button onclick="performFullSync()">Full Sync (All Collections)</button>
+            <button onclick="syncSpecificCollection('products')">Sync Products</button>
+            <button onclick="syncSpecificCollection('clients')">Sync Clients</button>
+            <button onclick="syncSpecificCollection('salespeople')">Sync Salespeople</button>
+            <button onclick="clearIndexedDB()">Clear IndexedDB</button>
+            
+            <div class="progress">
+                <div id="sync-progress" class="progress-bar" style="width: 0%">0%</div>
+            </div>
+            
+            <div id="sync-results"></div>
+        </div>
+        
+        <!-- Data Preview -->
+        <div class="section">
+            <h2>📊 Data Preview</h2>
+            <button onclick="previewGoogleSheetsData()">Preview Google Sheets Data</button>
+            <button onclick="previewIndexedDBData()">Preview IndexedDB Data</button>
+            <div id="data-preview"></div>
+        </div>
+        
+        <!-- Diagnostic Log -->
+        <div class="section">
+            <h2>📝 Diagnostic Log</h2>
+            <button onclick="clearLog()">Clear Log</button>
+            <button onclick="exportLog()">Export Log</button>
+            <div id="diagnostic-log" class="log"></div>
+        </div>
+    </div>
+
+    <!-- Load required scripts -->
+    <script src="js/google-sheets-auto-config.js"></script>
+    <script src="js/indexeddb-manager.js"></script>
+    <script src="js/sheets-to-indexeddb-sync.js"></script>
+    <script src="js/indexeddb-to-sheets-sync.js"></script>
+    <script src="js/bidirectional-sync-coordinator.js"></script>
+    <script src="js/sync-system-integration.js"></script>
+
+    <script>
+        let syncSystem = null;
+        let diagnosticLog = [];
+        
+        // Initialize diagnostic tool
+        document.addEventListener('DOMContentLoaded', async () => {
+            log('🚀 Diagnostic tool initialized', 'info');
+            await checkConfiguration();
+            await initializeSyncSystem();
+        });
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}`;
+            diagnosticLog.push({ timestamp, message, type });
+            
+            const logElement = document.getElementById('diagnostic-log');
+            const colorMap = {
+                'info': '#0c5460',
+                'success': '#155724',
+                'error': '#721c24',
+                'warning': '#856404'
+            };
+            
+            logElement.innerHTML += `<span style="color: ${colorMap[type] || '#333'}">${logEntry}</span>\n`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+        
+        async function checkConfiguration() {
+            log('🔍 Checking configuration...', 'info');
+            
+            // Check API Key
+            const apiKey = window.GOOGLE_SHEETS_API_KEY || 'Not configured';
+            const apiKeyElement = document.getElementById('api-key-status');
+            if (apiKey && apiKey !== 'YOUR_GOOGLE_SHEETS_API_KEY' && apiKey !== 'Not configured') {
+                apiKeyElement.innerHTML = `<span style="color: green;">✅ Configured (${apiKey.substring(0, 10)}...)</span>`;
+                log('✅ API Key is configured', 'success');
+            } else {
+                apiKeyElement.innerHTML = `<span style="color: red;">❌ Not configured</span>`;
+                log('❌ API Key is not configured', 'error');
+            }
+            
+            // Check Sheet ID
+            const sheetId = window.GOOGLE_SHEETS_SHEET_ID || 'Not configured';
+            const sheetIdElement = document.getElementById('sheet-id-status');
+            if (sheetId && sheetId !== 'Not configured') {
+                sheetIdElement.innerHTML = `<span style="color: green;">✅ Configured (${sheetId.substring(0, 15)}...)</span>`;
+                log('✅ Sheet ID is configured', 'success');
+            } else {
+                sheetIdElement.innerHTML = `<span style="color: red;">❌ Not configured</span>`;
+                log('❌ Sheet ID is not configured', 'error');
+            }
+            
+            // Check IndexedDB
+            const indexedDBElement = document.getElementById('indexeddb-status');
+            if ('indexedDB' in window) {
+                indexedDBElement.innerHTML = `<span style="color: green;">✅ Supported</span>`;
+                log('✅ IndexedDB is supported', 'success');
+            } else {
+                indexedDBElement.innerHTML = `<span style="color: red;">❌ Not supported</span>`;
+                log('❌ IndexedDB is not supported', 'error');
+            }
+        }
+        
+        async function initializeSyncSystem() {
+            try {
+                log('🔧 Initializing sync system...', 'info');
+                
+                // Initialize IndexedDB Manager first
+                const indexedDBManager = new IndexedDBManager();
+                await indexedDBManager.initialize();
+                log('✅ IndexedDB Manager initialized', 'success');
+                
+                // Initialize Sheets to IndexedDB sync service
+                const sheetsToIndexedDBSync = new SheetsToIndexedDBSync({
+                    dbManager: indexedDBManager,
+                    apiKey: window.GOOGLE_SHEETS_API_KEY,
+                    sheetId: window.GOOGLE_SHEETS_SHEET_ID,
+                    logLevel: 'debug'
+                });
+                
+                // Create a simplified sync system object
+                syncSystem = {
+                    indexedDBManager: indexedDBManager,
+                    sheetsToIndexedDBSync: sheetsToIndexedDBSync,
+                    isInitialized: true,
+                    getStatus: async () => ({
+                        isInitialized: true,
+                        indexedDBReady: true,
+                        sheetsAPIReady: !!window.GOOGLE_SHEETS_API_KEY
+                    })
+                };
+                
+                log('✅ Sync system initialized successfully', 'success');
+            } catch (error) {
+                log(`❌ Failed to initialize sync system: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testGoogleSheetsConnection() {
+            log('🔗 Testing Google Sheets API connection...', 'info');
+            const resultsDiv = document.getElementById('connection-results');
+            
+            try {
+                const apiKey = window.GOOGLE_SHEETS_API_KEY;
+                const sheetId = window.GOOGLE_SHEETS_SHEET_ID;
+                
+                if (!apiKey || apiKey === 'YOUR_GOOGLE_SHEETS_API_KEY') {
+                    throw new Error('API Key not configured');
+                }
+                
+                if (!sheetId) {
+                    throw new Error('Sheet ID not configured');
+                }
+                
+                // Test API connection
+                const testUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}?key=${apiKey}`;
+                const response = await fetch(testUrl);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    resultsDiv.innerHTML = `<div class="status success">✅ Google Sheets API connection successful</div>`;
+                    log(`✅ Google Sheets API connection successful. Sheet title: ${data.properties?.title || 'Unknown'}`, 'success');
+                } else {
+                    const errorData = await response.json();
+                    throw new Error(`API Error: ${errorData.error?.message || response.statusText}`);
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="status error">❌ Google Sheets API connection failed: ${error.message}</div>`;
+                log(`❌ Google Sheets API connection failed: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testIndexedDBConnection() {
+            log('🗄️ Testing IndexedDB connection...', 'info');
+            const resultsDiv = document.getElementById('connection-results');
+            
+            try {
+                if (!syncSystem || !syncSystem.indexedDBManager) {
+                    throw new Error('Sync system not initialized');
+                }
+                
+                const stats = await syncSystem.indexedDBManager.getStats();
+                resultsDiv.innerHTML = `<div class="status success">✅ IndexedDB connection successful. Database: ${stats.dbName}</div>`;
+                log(`✅ IndexedDB connection successful. Found ${Object.keys(stats.collections).length} collections`, 'success');
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="status error">❌ IndexedDB connection failed: ${error.message}</div>`;
+                log(`❌ IndexedDB connection failed: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testSyncServices() {
+            log('🔄 Testing sync services...', 'info');
+            const resultsDiv = document.getElementById('connection-results');
+            
+            try {
+                if (!syncSystem) {
+                    throw new Error('Sync system not initialized');
+                }
+                
+                const status = await syncSystem.getStatus();
+                resultsDiv.innerHTML = `<div class="status success">✅ Sync services are ${status.isInitialized ? 'initialized' : 'not initialized'}</div>`;
+                log(`✅ Sync services status: ${status.isInitialized ? 'Ready' : 'Not ready'}`, status.isInitialized ? 'success' : 'warning');
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="status error">❌ Sync services test failed: ${error.message}</div>`;
+                log(`❌ Sync services test failed: ${error.message}`, 'error');
+            }
+        }
+        
+        async function performFullSync() {
+            log('🔄 Starting full sync...', 'info');
+            const resultsDiv = document.getElementById('sync-results');
+            const progressBar = document.getElementById('sync-progress');
+            
+            try {
+                if (!syncSystem || !syncSystem.sheetsToIndexedDBSync) {
+                    throw new Error('Sync system not initialized');
+                }
+                
+                progressBar.style.width = '10%';
+                progressBar.textContent = '10%';
+                
+                resultsDiv.innerHTML = `<div class="status info">🔄 Syncing data from Google Sheets to IndexedDB...</div>`;
+                
+                const result = await syncSystem.sheetsToIndexedDBSync.syncAll();
+                
+                progressBar.style.width = '100%';
+                progressBar.textContent = '100%';
+                
+                resultsDiv.innerHTML = `<div class="status success">✅ Full sync completed successfully</div>`;
+                log(`✅ Full sync completed. Processed ${result.totalProcessed || 0} records`, 'success');
+                
+                // Reset progress after 3 seconds
+                setTimeout(() => {
+                    progressBar.style.width = '0%';
+                    progressBar.textContent = '0%';
+                }, 3000);
+                
+            } catch (error) {
+                progressBar.style.width = '0%';
+                progressBar.textContent = '0%';
+                resultsDiv.innerHTML = `<div class="status error">❌ Full sync failed: ${error.message}</div>`;
+                log(`❌ Full sync failed: ${error.message}`, 'error');
+            }
+        }
+        
+        async function syncSpecificCollection(collection) {
+            log(`🔄 Starting sync for ${collection}...`, 'info');
+            const resultsDiv = document.getElementById('sync-results');
+            const progressBar = document.getElementById('sync-progress');
+            
+            try {
+                if (!syncSystem || !syncSystem.sheetsToIndexedDBSync) {
+                    throw new Error('Sync system not initialized');
+                }
+                
+                progressBar.style.width = '50%';
+                progressBar.textContent = '50%';
+                
+                resultsDiv.innerHTML = `<div class="status info">🔄 Syncing ${collection} from Google Sheets to IndexedDB...</div>`;
+                
+                const result = await syncSystem.sheetsToIndexedDBSync.syncCollection(collection);
+                
+                progressBar.style.width = '100%';
+                progressBar.textContent = '100%';
+                
+                resultsDiv.innerHTML = `<div class="status success">✅ ${collection} sync completed successfully</div>`;
+                log(`✅ ${collection} sync completed. Processed ${result.processed || 0} records`, 'success');
+                
+                // Reset progress after 3 seconds
+                setTimeout(() => {
+                    progressBar.style.width = '0%';
+                    progressBar.textContent = '0%';
+                }, 3000);
+                
+            } catch (error) {
+                progressBar.style.width = '0%';
+                progressBar.textContent = '0%';
+                resultsDiv.innerHTML = `<div class="status error">❌ ${collection} sync failed: ${error.message}</div>`;
+                log(`❌ ${collection} sync failed: ${error.message}`, 'error');
+            }
+        }
+        
+        async function previewGoogleSheetsData() {
+            log('👀 Previewing Google Sheets data...', 'info');
+            const previewDiv = document.getElementById('data-preview');
+            
+            try {
+                const apiKey = window.GOOGLE_SHEETS_API_KEY;
+                const sheetId = window.GOOGLE_SHEETS_SHEET_ID;
+                
+                // Test with products sheet
+                const testUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/Products!A1:Z10?key=${apiKey}`;
+                const response = await fetch(testUrl);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    previewDiv.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+                    log(`✅ Google Sheets data preview loaded. Found ${data.values?.length || 0} rows`, 'success');
+                } else {
+                    const errorData = await response.json();
+                    throw new Error(`API Error: ${errorData.error?.message || response.statusText}`);
+                }
+            } catch (error) {
+                previewDiv.innerHTML = `<div class="status error">❌ Failed to preview Google Sheets data: ${error.message}</div>`;
+                log(`❌ Failed to preview Google Sheets data: ${error.message}`, 'error');
+            }
+        }
+        
+        async function previewIndexedDBData() {
+            log('👀 Previewing IndexedDB data...', 'info');
+            const previewDiv = document.getElementById('data-preview');
+            
+            try {
+                if (!syncSystem || !syncSystem.indexedDBManager) {
+                    throw new Error('Sync system not initialized');
+                }
+                
+                const stats = await syncSystem.indexedDBManager.getStats();
+                previewDiv.innerHTML = `<pre>${JSON.stringify(stats, null, 2)}</pre>`;
+                log(`✅ IndexedDB data preview loaded`, 'success');
+            } catch (error) {
+                previewDiv.innerHTML = `<div class="status error">❌ Failed to preview IndexedDB data: ${error.message}</div>`;
+                log(`❌ Failed to preview IndexedDB data: ${error.message}`, 'error');
+            }
+        }
+        
+        async function clearIndexedDB() {
+            log('🗑️ Clearing IndexedDB...', 'info');
+            const resultsDiv = document.getElementById('sync-results');
+            
+            try {
+                if (!syncSystem || !syncSystem.indexedDBManager) {
+                    throw new Error('Sync system not initialized');
+                }
+                
+                await syncSystem.indexedDBManager.clearAllData();
+                resultsDiv.innerHTML = `<div class="status success">✅ IndexedDB cleared successfully</div>`;
+                log('✅ IndexedDB cleared successfully', 'success');
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="status error">❌ Failed to clear IndexedDB: ${error.message}</div>`;
+                log(`❌ Failed to clear IndexedDB: ${error.message}`, 'error');
+            }
+        }
+        
+        function clearLog() {
+            diagnosticLog = [];
+            document.getElementById('diagnostic-log').innerHTML = '';
+            log('📝 Diagnostic log cleared', 'info');
+        }
+        
+        function exportLog() {
+            const logText = diagnosticLog.map(entry => 
+                `[${entry.timestamp}] [${entry.type.toUpperCase()}] ${entry.message}`
+            ).join('\n');
+            
+            const blob = new Blob([logText], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `sync-diagnostic-log-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            log('📄 Diagnostic log exported', 'success');
+        }
+    </script>
+</body>
+</html>

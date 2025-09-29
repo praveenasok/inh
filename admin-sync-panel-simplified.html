@@ -107,7 +107,6 @@
             const timestamp = new Date().toLocaleTimeString();
             logDiv.innerHTML += `[${timestamp}] ${message}\n`;
             logDiv.scrollTop = logDiv.scrollHeight;
-            console.log(message);
         }
         
         function updateStatus(message, className = 'p-4 rounded-lg bg-blue-50 text-blue-800') {

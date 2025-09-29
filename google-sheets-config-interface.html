@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Sheets Configuration - InstaQuote</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="js/google-sheets-auto-config.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <div class="max-w-2xl mx-auto">
+            <!-- Header -->
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+                <h1 class="text-3xl font-bold text-gray-800 mb-2">
+                    <i class="fas fa-cog text-blue-600 mr-3"></i>
+                    Google Sheets Configuration
+                </h1>
+                <p class="text-gray-600">Configure your Google Sheets API key and spreadsheet ID for automatic synchronization.</p>
+            </div>
+
+            <!-- Current Configuration -->
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">
+                    <i class="fas fa-info-circle text-green-600 mr-2"></i>
+                    Current Configuration
+                </h2>
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
+                        <span class="font-medium text-gray-700">API Key:</span>
+                        <span id="currentApiKey" class="text-sm text-gray-600 font-mono">Loading...</span>
+                    </div>
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
+                        <span class="font-medium text-gray-700">Sheet ID:</span>
+                        <span id="currentSheetId" class="text-sm text-gray-600 font-mono">Loading...</span>
+                    </div>
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
+                        <span class="font-medium text-gray-700">Sheet URL:</span>
+                        <a id="currentSheetUrl" href="#" target="_blank" class="text-sm text-blue-600 hover:underline">Loading...</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Configuration Form -->
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">
+                    <i class="fas fa-edit text-blue-600 mr-2"></i>
+                    Update Configuration
+                </h2>
+                <form id="configForm" class="space-y-4">
+                    <div>
+                        <label for="apiKey" class="block text-sm font-medium text-gray-700 mb-2">
+                            Google Sheets API Key
+                        </label>
+                        <input 
+                            type="text" 
+                            id="apiKey" 
+                            name="apiKey"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="Enter your Google Sheets API key"
+                        >
+                        <p class="text-xs text-gray-500 mt-1">
+                            Get your API key from the <a href="https://console.developers.google.com/" target="_blank" class="text-blue-600 hover:underline">Google Cloud Console</a>
+                        </p>
+                    </div>
+                    
+                    <div>
+                        <label for="sheetId" class="block text-sm font-medium text-gray-700 mb-2">
+                            Google Sheets ID
+                        </label>
+                        <input 
+                            type="text" 
+                            id="sheetId" 
+                            name="sheetId"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="Enter your Google Sheets ID"
+                        >
+                        <p class="text-xs text-gray-500 mt-1">
+                            Extract the ID from your Google Sheets URL: https://docs.google.com/spreadsheets/d/<strong>SHEET_ID</strong>/edit
+                        </p>
+                    </div>
+
+                    <div class="flex space-x-4">
+                        <button 
+                            type="submit" 
+                            class="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200"
+                        >
+                            <i class="fas fa-save mr-2"></i>
+                            Save Configuration
+                        </button>
+                        <button 
+                            type="button" 
+                            id="testBtn"
+                            class="flex-1 bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition duration-200"
+                        >
+                            <i class="fas fa-check-circle mr-2"></i>
+                            Test Connection
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Status Messages -->
+            <div id="statusMessage" class="hidden rounded-lg p-4 mb-6">
+                <div class="flex items-center">
+                    <i id="statusIcon" class="mr-3"></i>
+                    <span id="statusText"></span>
+                </div>
+            </div>
+
+            <!-- Instructions -->
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                <h3 class="text-lg font-semibold text-blue-800 mb-3">
+                    <i class="fas fa-lightbulb text-blue-600 mr-2"></i>
+                    Setup Instructions
+                </h3>
+                <ol class="list-decimal list-inside space-y-2 text-blue-700">
+                    <li>Create a Google Sheets API key in the <a href="https://console.developers.google.com/" target="_blank" class="underline">Google Cloud Console</a></li>
+                    <li>Enable the Google Sheets API for your project</li>
+                    <li>Copy your spreadsheet ID from the Google Sheets URL</li>
+                    <li>Enter both values in the form above and click "Save Configuration"</li>
+                    <li>Use "Test Connection" to verify your setup</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Load current configuration on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCurrentConfig();
+        });
+
+        function loadCurrentConfig() {
+            try {
+                // Apply auto-configuration first
+                googleSheetsAutoConfig.autoApply();
+                
+                // Display current values
+                const apiKey = googleSheetsAutoConfig.getApiKey();
+                const sheetId = googleSheetsAutoConfig.getSheetId();
+                const sheetUrl = googleSheetsAutoConfig.getSheetUrl();
+                
+                document.getElementById('currentApiKey').textContent = apiKey ? `${apiKey.substring(0, 10)}...` : 'Not configured';
+                document.getElementById('currentSheetId').textContent = sheetId || 'Not configured';
+                document.getElementById('currentSheetUrl').href = sheetUrl;
+                document.getElementById('currentSheetUrl').textContent = sheetUrl ? 'Open Sheet' : 'Not configured';
+                
+                // Pre-fill form with current values
+                document.getElementById('apiKey').value = apiKey || '';
+                document.getElementById('sheetId').value = sheetId || '';
+            } catch (error) {
+                showStatus('error', 'Error loading current configuration');
+            }
+        }
+
+        // Handle form submission
+        document.getElementById('configForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const apiKey = document.getElementById('apiKey').value.trim();
+            const sheetId = document.getElementById('sheetId').value.trim();
+            
+            if (!apiKey || !sheetId) {
+                showStatus('error', 'Please enter both API key and Sheet ID');
+                return;
+            }
+            
+            try {
+                // Update the configuration
+                googleSheetsAutoConfig.config.apiKey = apiKey;
+                googleSheetsAutoConfig.config.sheetId = sheetId;
+                googleSheetsAutoConfig.config.sheetUrl = `https://docs.google.com/spreadsheets/d/${sheetId}`;
+                
+                // Apply the new configuration
+                googleSheetsAutoConfig.autoApply();
+                
+                // Save to localStorage for persistence
+                localStorage.setItem('googleSheetsConfig', JSON.stringify({
+                    apiKey: apiKey,
+                    sheetId: sheetId,
+                    timestamp: Date.now()
+                }));
+                
+                showStatus('success', 'Configuration saved successfully!');
+                loadCurrentConfig(); // Refresh display
+                
+            } catch (error) {
+                showStatus('error', 'Error saving configuration');
+            }
+        });
+
+        // Handle test connection
+        document.getElementById('testBtn').addEventListener('click', async function() {
+            const apiKey = document.getElementById('apiKey').value.trim();
+            const sheetId = document.getElementById('sheetId').value.trim();
+            
+            if (!apiKey || !sheetId) {
+                showStatus('error', 'Please enter both API key and Sheet ID before testing');
+                return;
+            }
+            
+            showStatus('info', 'Testing connection...');
+            
+            try {
+                // Test the connection by making a simple API call
+                const testUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}?key=${apiKey}&fields=properties.title`;
+                
+                const response = await fetch(testUrl);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    showStatus('success', `Connection successful! Sheet: "${data.properties.title}"`);
+                } else {
+                    const errorData = await response.json();
+                    showStatus('error', `Connection failed: ${errorData.error.message}`);
+                }
+            } catch (error) {
+                showStatus('error', 'Connection test failed. Please check your API key and Sheet ID.');
+            }
+        });
+
+        function showStatus(type, message) {
+            const statusDiv = document.getElementById('statusMessage');
+            const statusIcon = document.getElementById('statusIcon');
+            const statusText = document.getElementById('statusText');
+            
+            statusDiv.className = 'rounded-lg p-4 mb-6';
+            
+            switch (type) {
+                case 'success':
+                    statusDiv.classList.add('bg-green-50', 'border', 'border-green-200', 'text-green-800');
+                    statusIcon.className = 'fas fa-check-circle text-green-600';
+                    break;
+                case 'error':
+                    statusDiv.classList.add('bg-red-50', 'border', 'border-red-200', 'text-red-800');
+                    statusIcon.className = 'fas fa-exclamation-circle text-red-600';
+                    break;
+                case 'info':
+                    statusDiv.classList.add('bg-blue-50', 'border', 'border-blue-200', 'text-blue-800');
+                    statusIcon.className = 'fas fa-info-circle text-blue-600';
+                    break;
+            }
+            
+            statusText.textContent = message;
+            statusDiv.classList.remove('hidden');
+            
+            // Auto-hide after 5 seconds for non-error messages
+            if (type !== 'error') {
+                setTimeout(() => {
+                    statusDiv.classList.add('hidden');
+                }, 5000);
+            }
+        }
+    </script>
+</body>
+</html>

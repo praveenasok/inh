@@ -6,7 +6,6 @@
 
 class UnifiedDataAccess {
     constructor() {
-        console.log('🔧 Initializing Unified Data Access...');
         
         // Add global error handler for .has() errors
         this._setupGlobalErrorHandler();
@@ -23,9 +22,7 @@ class UnifiedDataAccess {
                 this.eventListeners = new Map();
             }
             
-            console.log('UnifiedDataAccess constructor completed, eventListeners:', this.eventListeners);
         } catch (error) {
-            console.error('Error in UnifiedDataAccess constructor:', error);
             this.eventListeners = new Map(); // Fallback
         }
         
@@ -84,7 +81,6 @@ class UnifiedDataAccess {
             try {
                 // Additional safety check
                 if (this === null || this === undefined) {
-                    console.error('Global .has() error: Map instance is null/undefined', {
                         key: key,
                         stack: new Error().stack
                     });
@@ -92,7 +88,6 @@ class UnifiedDataAccess {
                 }
                 return originalHas.call(this, key);
             } catch (error) {
-                console.error('Global .has() error caught:', {
                     error: error,
                     mapInstance: this,
                     key: key,
@@ -106,7 +101,6 @@ class UnifiedDataAccess {
         // Also add a global error handler for uncaught errors
         window.addEventListener('error', (event) => {
             if (event.message && event.message.includes('has')) {
-                console.error('Global error handler caught .has() related error:', {
                     message: event.message,
                     filename: event.filename,
                     lineno: event.lineno,
@@ -147,9 +141,6 @@ class UnifiedDataAccess {
 
     async initialize() {
         try {
-            console.log('🔄 Initializing Unified Data Access...');
-            console.log(`📊 Mode: ${this.fallbackFirstMode ? 'Fallback-First' : 'Firebase-First'} (${this.isAdminPage ? 'Admin Page' : 'Regular Page'})`);
-            console.log(`📋 Data source priority: [${this.sourcePriority.join(', ')}]`);
             
             // Wait for dependencies
             await this.waitForDependencies();
@@ -158,7 +149,6 @@ class UnifiedDataAccess {
             this.setupEventListeners();
             
             this.isInitialized = true;
-            console.log('✅ Unified Data Access initialized successfully');
             
             // Trigger initialization event with comprehensive error handling
             try {
@@ -169,24 +159,18 @@ class UnifiedDataAccess {
                         fallbackAvailable: !!window.localFallbackManager
                     });
                 } else {
-                    console.error('Cannot emit initialized event - object not properly constructed');
                 }
             } catch (emitError) {
-                console.error('Error emitting initialized event:', emitError);
             }
             
         } catch (error) {
-            console.error('❌ Failed to initialize Unified Data Access:', error);
-            console.log('Debug: this =', this, 'this.eventListeners =', this.eventListeners);
             // Emit error event with comprehensive error handling
             try {
                 if (this && typeof this.emit === 'function' && this.eventListeners && this.eventListeners instanceof Map) {
                     this.emit('error', { error, context: 'initialization' });
                 } else {
-                    console.error('Cannot emit error event - emit function or eventListeners not available');
                 }
             } catch (emitError) {
-                console.error('Error emitting error event:', emitError);
             }
             throw error;
         }
@@ -220,10 +204,8 @@ class UnifiedDataAccess {
                             if (this && typeof this.emit === 'function' && this.eventListeners && this.eventListeners instanceof Map) {
                                 this.emit('sourceChanged', { newSource: 'local', reason: 'firebase_unavailable' });
                             } else {
-                                console.log('sourceChanged event (firebase unavailable) - emit not available');
                             }
                         } catch (error) {
-                            console.error('Error in firebaseUnavailable handler:', error);
                         }
                     });
                     
@@ -233,14 +215,11 @@ class UnifiedDataAccess {
                             if (this && typeof this.emit === 'function' && this.eventListeners && this.eventListeners instanceof Map) {
                                 this.emit('sourceChanged', { newSource: 'firebase', reason: 'firebase_restored' });
                             } else {
-                                console.log('sourceChanged event (firebase restored) - emit not available');
                             }
                         } catch (error) {
-                            console.error('Error in firebaseRestored handler:', error);
                         }
                     });
                 } catch (error) {
-                    console.error('Error setting up fallback detector listeners:', error);
                 }
             }
             
@@ -253,18 +232,14 @@ class UnifiedDataAccess {
                             if (this && typeof this.emit === 'function' && this.eventListeners && this.eventListeners instanceof Map) {
                                 this.emit('dataUpdated', data);
                             } else {
-                                console.log('dataUpdated event - emit not available');
                             }
                         } catch (error) {
-                            console.error('Error in dataUpdated handler:', error);
                         }
                     });
                 } catch (error) {
-                    console.error('Error setting up local fallback manager listeners:', error);
                 }
             }
         } catch (error) {
-            console.error('Error in setupEventListeners:', error);
             // Ensure eventListeners is properly initialized even if setup fails
             if (!this.eventListeners || !(this.eventListeners instanceof Map)) {
                 this.eventListeners = new Map();
@@ -286,7 +261,6 @@ class UnifiedDataAccess {
             
             // Safety check for requestQueue
             if (!this.requestQueue || !(this.requestQueue instanceof Map)) {
-                console.warn('requestQueue not properly initialized, creating new Map');
                 this.requestQueue = new Map();
             }
             
@@ -297,10 +271,6 @@ class UnifiedDataAccess {
                     return await this.requestQueue.get(requestKey);
                 }
             } catch (hasError) {
-                console.error('Error checking requestQueue.has:', hasError);
-                console.error('requestQueue:', this.requestQueue);
-                console.error('typeof requestQueue:', typeof this.requestQueue);
-                console.error('requestQueue instanceof Map:', this.requestQueue instanceof Map);
                 // Recreate the requestQueue and continue
                 this.requestQueue = new Map();
             }
@@ -393,7 +363,6 @@ class UnifiedDataAccess {
                     
                     // Log successful recovery if this was a retry
                     if (attempt > 0) {
-                        console.log(`Successfully recovered data for ${collection} on attempt ${attempt + 1}`);
                         this.emit('dataRecovered', { collection, attempt, source });
                     }
                     
@@ -407,7 +376,6 @@ class UnifiedDataAccess {
                     // Categorize error type
                     const errorType = this.categorizeError(error);
                     
-                    console.warn(`Attempt ${attempt + 1} failed for ${collection} (${errorType}):`, error.message);
                     
                     // If this is the last attempt, try fallback
                     if (attempt === maxRetries) {
@@ -484,7 +452,6 @@ class UnifiedDataAccess {
                     try {
                         results.firebase = await this.saveFirebaseData(collection, data, options);
                     } catch (error) {
-                        console.warn(`Failed to save to Firebase: ${error.message}`);
                         results.firebaseError = error.message;
                     }
                 }
@@ -495,7 +462,6 @@ class UnifiedDataAccess {
                 try {
                     results.local = await window.localFallbackManager.saveData(collection, data, options);
                 } catch (error) {
-                    console.warn(`Failed to save to local storage: ${error.message}`);
                     results.localError = error.message;
                 }
             }
@@ -509,7 +475,6 @@ class UnifiedDataAccess {
             return results;
             
         } catch (error) {
-            console.error(`Error saving data to ${collection}:`, error);
             throw error;
         }
     }
@@ -529,7 +494,6 @@ class UnifiedDataAccess {
                     try {
                         results.firebase = await this.deleteFirebaseData(collection, id, options);
                     } catch (error) {
-                        console.warn(`Failed to delete from Firebase: ${error.message}`);
                         results.firebaseError = error.message;
                     }
                 }
@@ -542,7 +506,6 @@ class UnifiedDataAccess {
                     const filteredData = localData.filter(item => item.id !== id);
                     results.local = await window.localFallbackManager.saveData(collection, filteredData, { overwrite: true });
                 } catch (error) {
-                    console.warn(`Failed to delete from local storage: ${error.message}`);
                     results.localError = error.message;
                 }
             }
@@ -556,7 +519,6 @@ class UnifiedDataAccess {
             return results;
             
         } catch (error) {
-            console.error(`Error deleting data from ${collection}:`, error);
             throw error;
         }
     }
@@ -648,7 +610,6 @@ class UnifiedDataAccess {
             throw new Error('Firebase not available');
             
         } catch (error) {
-            console.error(`Error getting Firebase data for ${collection}:`, error);
             throw error;
         }
     }
@@ -672,14 +633,12 @@ class UnifiedDataAccess {
             };
             
         } catch (error) {
-            console.error(`Error getting local data for ${collection}:`, error);
             throw error;
         }
     }
     
     async getFallbackData(collection, options, originalError) {
         try {
-            console.warn(`Primary data source failed for ${collection}, trying fallback...`);
             
             // Try the opposite source
             const primarySource = await this.determineDataSource(options);
@@ -701,7 +660,6 @@ class UnifiedDataAccess {
             return result;
             
         } catch (fallbackError) {
-            console.error(`Fallback also failed for ${collection}:`, fallbackError);
             throw new Error(`Both primary and fallback sources failed: ${originalError.message} | ${fallbackError.message}`);
         }
     }
@@ -738,7 +696,6 @@ class UnifiedDataAccess {
             throw new Error('Firebase not available for saving');
             
         } catch (error) {
-            console.error(`Error saving Firebase data for ${collection}:`, error);
             throw error;
         }
     }
@@ -754,7 +711,6 @@ class UnifiedDataAccess {
             throw new Error('Firebase not available for deletion');
             
         } catch (error) {
-            console.error(`Error deleting Firebase data for ${collection}:`, error);
             throw error;
         }
     }
@@ -821,7 +777,6 @@ class UnifiedDataAccess {
             return results;
             
         } catch (error) {
-            console.error('Error getting multiple collections:', error);
             throw error;
         }
     }
@@ -863,7 +818,6 @@ class UnifiedDataAccess {
             return results;
             
         } catch (error) {
-            console.error('Error syncing all collections:', error);
             throw error;
         }
     }
@@ -910,7 +864,6 @@ class UnifiedDataAccess {
             return stats;
             
         } catch (error) {
-            console.error('Error getting data statistics:', error);
             throw error;
         }
     }
@@ -923,7 +876,6 @@ class UnifiedDataAccess {
                 this.eventListeners = new Map();
             }
             if (!this.eventListeners || !(this.eventListeners instanceof Map) || typeof this.eventListeners.has !== 'function') {
-                console.warn('eventListeners not properly initialized in on(), recreating');
                 this.eventListeners = new Map();
             }
             if (!this.eventListeners.has(event)) {
@@ -931,7 +883,6 @@ class UnifiedDataAccess {
             }
             this.eventListeners.get(event).push(callback);
         } catch (error) {
-            console.error('Error in on() method:', error);
             this.eventListeners = new Map();
             this.eventListeners.set(event, [callback]);
         }
@@ -953,7 +904,6 @@ class UnifiedDataAccess {
                 }
             }
         } catch (error) {
-            console.error('Error in off() method:', error);
             // Recreate eventListeners if there's an error
             this.eventListeners = new Map();
         }
@@ -963,12 +913,10 @@ class UnifiedDataAccess {
         try {
             // Comprehensive safety checks
             if (!this || typeof this !== 'object') {
-                console.error('emit: Invalid this context');
                 return;
             }
             
             if (!event || typeof event !== 'string') {
-                console.error('emit: Invalid event parameter');
                 return;
             }
             
@@ -979,13 +927,11 @@ class UnifiedDataAccess {
             
             // Verify eventListeners is a proper Map
             if (!(this.eventListeners instanceof Map)) {
-                console.warn('emit: eventListeners is not a Map, recreating');
                 this.eventListeners = new Map();
             }
             
             // Verify has method exists
             if (typeof this.eventListeners.has !== 'function') {
-                console.warn('emit: eventListeners.has is not a function, recreating');
                 this.eventListeners = new Map();
             }
             
@@ -999,15 +945,11 @@ class UnifiedDataAccess {
                                 callback(data);
                             }
                         } catch (callbackError) {
-                            console.error('Error in event callback:', callbackError);
                         }
                     });
                 }
             }
         } catch (error) {
-            console.error('Error in emit method:', error);
-            console.error('this:', this);
-            console.error('eventListeners:', this.eventListeners);
             // Recreate eventListeners if there's an error
             this.eventListeners = new Map();
         }
@@ -1138,7 +1080,6 @@ class UnifiedDataAccess {
         this.clearCache();
         this.eventListeners.clear();
         this.isInitialized = false;
-        console.log('Unified Data Access destroyed');
     }
 }
 

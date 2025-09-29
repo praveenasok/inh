@@ -24,7 +24,6 @@ async function retryWithBackoff(fn, maxRetries = 3, baseDelay = 1000) {
       }
       
       const delay = baseDelay * Math.pow(2, attempt);
-      console.log(`⏳ Retry attempt ${attempt + 1}/${maxRetries + 1} in ${delay}ms...`);
       await new Promise(resolve => setTimeout(resolve, delay));
     }
   }
@@ -60,7 +59,6 @@ async function initializeFirebaseApp() {
       window.firebaseGlobalInitialized = true;
       return app;
     } catch (error) {
-      console.warn('firebase-config.js initialization failed, trying manual init:', error);
     }
   }
 
@@ -73,8 +71,6 @@ async function initializeFirebaseApp() {
 
       // Initialize Firebase app if not already done
       if (!firebase.apps.length) {
-        console.log('🔄 Initializing Firebase app...');
-        
         // Use global firebaseConfig from firebase-config.js
         if (!window.firebaseConfig) {
           throw new Error('Firebase configuration not found. Please ensure firebase-config.js is loaded.');
@@ -96,14 +92,11 @@ async function initializeFirebaseApp() {
           try {
             const currentUser = firebase.auth().currentUser;
             if (!currentUser) {
-              console.log('🔐 Signing in anonymously...');
               await retryWithBackoff(async () => {
                 await firebase.auth().signInAnonymously();
               }, 3, 1000);
-              console.log('✅ Anonymous authentication successful');
             }
           } catch (authError) {
-            console.warn('⚠️ Anonymous authentication failed after retries:', authError);
             // Continue without authentication - some operations may still work
           }
         }
@@ -118,9 +111,7 @@ async function initializeFirebaseApp() {
               synchronizeTabs: true
             }).catch((err) => {
               if (err.code === 'failed-precondition') {
-                console.warn('⚠️ Firestore persistence failed: Multiple tabs open');
               } else if (err.code === 'unimplemented') {
-                console.warn('⚠️ Firestore persistence not supported in this browser');
               }
             });
             
@@ -130,16 +121,12 @@ async function initializeFirebaseApp() {
               merge: true
             });
             
-            console.log('✅ Firestore configured with offline persistence');
           } catch (firestoreError) {
-            console.warn('⚠️ Firestore configuration failed:', firestoreError);
           }
         }
         
-        console.log('✅ Firebase app initialized successfully');
       } else {
         window.firebaseGlobalApp = firebase.app();
-        console.log('✅ Using existing Firebase app');
       }
       
       window.firebaseGlobalInitialized = true;
@@ -154,7 +141,6 @@ async function initializeFirebaseApp() {
       return window.firebaseGlobalApp;
       
     } catch (error) {
-      console.error('❌ Firebase initialization failed:', error);
       window.firebaseGlobalInitialized = false;
       window.firebaseGlobalApp = null;
       
@@ -226,7 +212,6 @@ if (typeof document !== 'undefined') {
       // Small delay to ensure all Firebase scripts are loaded
       setTimeout(() => {
         initializeFirebaseApp().catch(error => {
-          console.error('Auto-initialization failed:', error);
         });
       }, 100);
     });
@@ -234,7 +219,6 @@ if (typeof document !== 'undefined') {
     // DOM is already ready
     setTimeout(() => {
       initializeFirebaseApp().catch(error => {
-        console.error('Auto-initialization failed:', error);
       });
     }, 100);
   }

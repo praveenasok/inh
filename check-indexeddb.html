@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Quick IndexedDB Check</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .result { margin: 10px 0; padding: 10px; border-radius: 4px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 4px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>IndexedDB Quick Check</h1>
+    <div id="results"></div>
+
+    <script>
+        async function checkIndexedDB() {
+            const results = document.getElementById('results');
+            
+            try {
+                // Check if IndexedDB is supported
+                if (!window.indexedDB) {
+                    results.innerHTML += '<div class="error">IndexedDB is not supported in this browser</div>';
+                    return;
+                }
+                
+                results.innerHTML += '<div class="success">✅ IndexedDB is supported</div>';
+                
+                // List all databases
+                if (indexedDB.databases) {
+                    const databases = await indexedDB.databases();
+                    results.innerHTML += `<div class="info">📊 Found ${databases.length} IndexedDB databases:</div>`;
+                    
+                    for (const db of databases) {
+                        results.innerHTML += `<div class="info">- ${db.name} (version: ${db.version})</div>`;
+                        
+                        // Check if it's our database
+                        if (db.name === 'INH_SyncDatabase') {
+                            await checkOurDatabase();
+                        }
+                    }
+                    
+                    if (databases.length === 0) {
+                        results.innerHTML += '<div class="info">No IndexedDB databases found</div>';
+                    }
+                } else {
+                    results.innerHTML += '<div class="info">Cannot list databases (older browser)</div>';
+                    // Try to check our specific database
+                    await checkOurDatabase();
+                }
+                
+            } catch (error) {
+                results.innerHTML += `<div class="error">❌ Error checking IndexedDB: ${error.message}</div>`;
+            }
+        }
+        
+        async function checkOurDatabase() {
+            const results = document.getElementById('results');
+            
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open('INH_SyncDatabase');
+                
+                request.onerror = () => {
+                    results.innerHTML += '<div class="error">❌ Cannot open INH_SyncDatabase</div>';
+                    resolve();
+                };
+                
+                request.onsuccess = (event) => {
+                    const db = event.target.result;
+                    results.innerHTML += '<div class="success">✅ Successfully opened INH_SyncDatabase</div>';
+                    
+                    const storeNames = Array.from(db.objectStoreNames);
+                    results.innerHTML += `<div class="info">📦 Object stores: ${storeNames.join(', ')}</div>`;
+                    
+                    // Check data in each store
+                    checkStoreData(db, storeNames).then(() => {
+                        db.close();
+                        resolve();
+                    });
+                };
+                
+                request.onupgradeneeded = () => {
+                    results.innerHTML += '<div class="info">🔧 Database needs upgrade (probably empty)</div>';
+                    resolve();
+                };
+            });
+        }
+        
+        async function checkStoreData(db, storeNames) {
+            const results = document.getElementById('results');
+            
+            for (const storeName of storeNames) {
+                try {
+                    const transaction = db.transaction([storeName], 'readonly');
+                    const store = transaction.objectStore(storeName);
+                    const countRequest = store.count();
+                    
+                    countRequest.onsuccess = () => {
+                        const count = countRequest.result;
+                        results.innerHTML += `<div class="info">📊 ${storeName}: ${count} records</div>`;
+                        
+                        if (count > 0) {
+                            // Get first few records
+                            const getAllRequest = store.getAll(undefined, 5);
+                            getAllRequest.onsuccess = () => {
+                                const data = getAllRequest.result;
+                                results.innerHTML += `<div class="info">Sample data from ${storeName}:</div>`;
+                                results.innerHTML += `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+                            };
+                        }
+                    };
+                    
+                    countRequest.onerror = () => {
+                        results.innerHTML += `<div class="error">❌ Error counting records in ${storeName}</div>`;
+                    };
+                    
+                } catch (error) {
+                    results.innerHTML += `<div class="error">❌ Error checking ${storeName}: ${error.message}</div>`;
+                }
+            }
+        }
+        
+        // Run check when page loads
+        document.addEventListener('DOMContentLoaded', checkIndexedDB);
+    </script>
+</body>
+</html>

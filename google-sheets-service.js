@@ -2,14 +2,16 @@
 // Handles secure authentication and data fetching from Google Sheets
 
 const { google } = require('googleapis');
-const path = require('path');
 const fs = require('fs');
+const path = require('path');
+const { googleSheetsAutoConfig } = require('./js/google-sheets-auto-config');
 
 class GoogleSheetsService {
   constructor() {
-    this.sheets = null;
     this.auth = null;
+    this.sheets = null;
     this.isInitialized = false;
+    this.spreadsheetId = googleSheetsAutoConfig.getSheetId();
   }
 
   async initialize() {
@@ -116,6 +118,47 @@ class GoogleSheetsService {
     }
   }
 
+  async testConnection() {
+    try {
+      if (!this.isInitialized) {
+        return {
+          success: false,
+          error: 'Google Sheets service not initialized'
+        };
+      }
+
+      if (!this.sheets) {
+        return {
+          success: false,
+          error: 'Google Sheets API client not available'
+        };
+      }
+
+      // Test connection by trying to access the spreadsheet metadata
+      const response = await this.sheets.spreadsheets.get({
+        spreadsheetId: this.spreadsheetId
+      });
+
+      if (response && response.data) {
+        return {
+          success: true,
+          spreadsheetTitle: response.data.properties?.title || 'Unknown',
+          sheetCount: response.data.sheets?.length || 0
+        };
+      } else {
+        return {
+          success: false,
+          error: 'Invalid response from Google Sheets API'
+        };
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message || 'Failed to connect to Google Sheets'
+      };
+    }
+  }
+
   async fetchProductData(spreadsheetId, range = 'pricelists!A1:Z1000') {
     if (!this.isInitialized) {
       await this.initialize();
@@ -192,7 +235,7 @@ class GoogleSheetsService {
     }
   }
 
-  async fetchCompaniesData(spreadsheetId, range = 'clients!A1:Z1000') {
+  async fetchCompaniesData(spreadsheetId, range = 'company!A1:Z1000') {
     try {
       if (!this.isInitialized) {
         throw new Error('Google Sheets service not initialized');

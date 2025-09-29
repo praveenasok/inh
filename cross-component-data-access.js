@@ -64,7 +64,6 @@ class CrossComponentDataAccess {
             this.cache.set(collection, parsedData);
             this.lastUpdate.set(collection, new Date().toISOString());
         } catch (error) {
-            console.warn(`Error refreshing cache for ${collection}:`, error);
             this.cache.set(collection, []);
         }
     }
@@ -224,7 +223,6 @@ class CrossComponentDataAccess {
             
             return true;
         } catch (error) {
-            console.error(`Error saving to ${collection}:`, error);
             return false;
         }
     }
@@ -243,7 +241,6 @@ class CrossComponentDataAccess {
             
             return true;
         } catch (error) {
-            console.error(`Error deleting from ${collection}:`, error);
             return false;
         }
     }
@@ -372,7 +369,6 @@ class CrossComponentDataAccess {
             
             return true;
         } catch (error) {
-            console.error('Error importing data:', error);
             return false;
         }
     }

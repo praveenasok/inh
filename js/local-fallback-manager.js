@@ -80,11 +80,9 @@ class LocalFallbackManager {
                 throw new Error('localStorage read/write test failed');
             }
             
-            console.log('✅ localStorage is available and working');
             return true;
             
         } catch (error) {
-            console.error('❌ localStorage is not available:', error);
             throw new Error(`localStorage not available: ${error.message}`);
         }
     }
@@ -118,8 +116,6 @@ class LocalFallbackManager {
 
     async initialize() {
         try {
-            console.log('🔄 Initializing Local Fallback Manager...');
-            
             // Check localStorage availability
             this.checkStorageAvailability();
             
@@ -130,10 +126,8 @@ class LocalFallbackManager {
             await this.validateStorageIntegrity();
             
             this.isInitialized = true;
-            console.log('✅ Local Fallback Manager initialized successfully');
             
         } catch (error) {
-            console.error('❌ Failed to initialize Local Fallback Manager:', error);
             throw error;
         }
     }
@@ -171,7 +165,6 @@ class LocalFallbackManager {
             return updatedData;
             
         } catch (error) {
-            console.error(`Error saving data to ${collection}:`, error);
             throw error;
         }
     }
@@ -230,13 +223,11 @@ class LocalFallbackManager {
                 try {
                     data = JSON.parse(rawData);
                 } catch (parseError) {
-                    console.warn(`JSON parse error for ${collection}, attempting recovery...`);
                     
                     // Try to recover corrupted data
                     const recoveredData = await this.recoverCorruptedData(collection, rawData);
                     if (recoveredData) {
                         data = recoveredData;
-                        console.log(`Successfully recovered data for ${collection}`);
                         this.emit('dataRecovered', { collection, method: 'json_repair' });
                     } else {
                         throw new Error(`Failed to parse and recover data for ${collection}: ${parseError.message}`);
@@ -252,22 +243,19 @@ class LocalFallbackManager {
                 if (options.validateIntegrity) {
                     const isValid = await this.validateDataIntegrity(collection, data);
                     if (!isValid) {
-                        console.warn(`Data integrity check failed for ${collection}`);
                         this.emit('integrityError', { collection, data, attempt });
                         
                         // Try to repair data integrity
                         const repairedData = await this.repairDataIntegrity(collection, data);
                         if (repairedData) {
                             data = repairedData;
-                            console.log(`Data integrity repaired for ${collection}`);
                             this.emit('dataRepaired', { collection, method: 'integrity_repair' });
                         }
                     }
                 }
                 
-                // Log successful recovery if this was a retry
+                // Emit successful recovery if this was a retry
                 if (attempt > 0) {
-                    console.log(`Successfully retrieved data for ${collection} on attempt ${attempt + 1}`);
                     this.emit('dataRetrieved', { collection, attempt });
                 }
                 
@@ -275,11 +263,9 @@ class LocalFallbackManager {
                 
             } catch (error) {
                 lastError = error;
-                console.warn(`Attempt ${attempt + 1} failed for ${collection}:`, error.message);
                 
                 // If this is the last attempt, return fallback
                 if (attempt === maxRetries) {
-                    console.error(`All attempts failed for ${collection}:`, error);
                     this.emit('criticalError', { collection, error, attempts: attempt + 1 });
                     
                     // Return empty data or null based on options
@@ -331,7 +317,6 @@ class LocalFallbackManager {
             return JSON.parse(fixedData);
             
         } catch (error) {
-            console.warn(`Failed to recover corrupted data for ${collection}:`, error);
             return null;
         }
     }
@@ -379,7 +364,6 @@ class LocalFallbackManager {
             return repairedData;
             
         } catch (error) {
-            console.error(`Failed to repair data integrity for ${collection}:`, error);
             return null;
         }
     }
@@ -415,7 +399,6 @@ class LocalFallbackManager {
             return syncResults;
             
         } catch (error) {
-            console.error('Error syncing from Firebase:', error);
             await this.updateMetadata('sync', {
                 syncStatus: 'failed',
                 lastError: error.message
@@ -482,7 +465,6 @@ class LocalFallbackManager {
             return currentIntegrity === metadata.integrity;
             
         } catch (error) {
-            console.error(`Error validating integrity for ${collection}:`, error);
             return false;
         }
     }
@@ -555,7 +537,6 @@ class LocalFallbackManager {
                 this.metadata = { ...this.metadata, ...JSON.parse(rawMetadata) };
             }
         } catch (error) {
-            console.error('Error loading metadata:', error);
         }
     }
     
@@ -571,7 +552,6 @@ class LocalFallbackManager {
             localStorage.setItem(metadataKey, JSON.stringify(this.metadata));
             
         } catch (error) {
-            console.error('Error updating metadata:', error);
         }
     }
     
@@ -605,7 +585,6 @@ class LocalFallbackManager {
             return true;
             
         } catch (error) {
-            console.error('Storage integrity validation failed:', error);
             throw error;
         }
     }
@@ -625,15 +604,27 @@ class LocalFallbackManager {
         const stats = {};
         
         for (const collection of Object.keys(this.collections)) {
-            const data = await this.getData(collection, { returnEmpty: true });
-            const metadata = await this.getMetadata(collection);
-            
-            stats[collection] = {
-                count: data.length,
-                lastUpdated: metadata?.lastUpdated || 'Never',
-                integrity: metadata?.integrity || 'Unknown',
-                source: metadata?.source || 'Unknown'
-            };
+            try {
+                const data = await this.getData(collection, { returnEmpty: true });
+                const metadata = await this.getMetadata(collection);
+                
+                // Ensure data is an array
+                const dataArray = Array.isArray(data) ? data : [];
+                
+                stats[collection] = {
+                    count: dataArray.length,
+                    lastUpdated: metadata?.lastUpdated || 'Never',
+                    integrity: metadata?.integrity || 'Unknown',
+                    source: metadata?.source || 'Unknown'
+                };
+            } catch (error) {
+                stats[collection] = {
+                    count: 0,
+                    lastUpdated: 'Error',
+                    integrity: 'Error',
+                    source: 'Error'
+                };
+            }
         }
         
         return stats;
@@ -672,7 +663,6 @@ class LocalFallbackManager {
     on(event, callback) {
         try {
             if (!this.eventListeners || !(this.eventListeners instanceof Map)) {
-                console.warn('LocalFallbackManager: eventListeners not properly initialized in on(), recreating');
                 this.eventListeners = new Map();
             }
             if (!this.eventListeners.has(event)) {
@@ -680,7 +670,6 @@ class LocalFallbackManager {
             }
             this.eventListeners.get(event).push(callback);
         } catch (error) {
-            console.error('LocalFallbackManager: Error in on() method:', error);
             this.eventListeners = new Map();
             this.eventListeners.set(event, [callback]);
         }
@@ -699,7 +688,6 @@ class LocalFallbackManager {
                 }
             }
         } catch (error) {
-            console.error('LocalFallbackManager: Error in off() method:', error);
             this.eventListeners = new Map();
         }
     }
@@ -707,7 +695,6 @@ class LocalFallbackManager {
     emit(event, data) {
         try {
             if (!this.eventListeners || !(this.eventListeners instanceof Map) || typeof this.eventListeners.has !== 'function') {
-                console.warn('LocalFallbackManager: eventListeners not properly initialized in emit(), recreating');
                 this.eventListeners = new Map();
                 return;
             }
@@ -716,12 +703,10 @@ class LocalFallbackManager {
                     try {
                         callback(data);
                     } catch (error) {
-                        console.error(`Error in event listener for ${event}:`, error);
                     }
                 });
             }
         } catch (error) {
-            console.error('LocalFallbackManager: Error in emit() method:', error);
             this.eventListeners = new Map();
         }
     }
@@ -745,7 +730,6 @@ class LocalFallbackManager {
             this.emit('collectionCleared', { collection });
             
         } catch (error) {
-            console.error(`Error clearing collection ${collection}:`, error);
             throw error;
         }
     }
@@ -763,7 +747,6 @@ class LocalFallbackManager {
             this.emit('allDataCleared');
             
         } catch (error) {
-            console.error('Error clearing all data:', error);
             throw error;
         }
     }
@@ -784,7 +767,6 @@ class LocalFallbackManager {
             return exportData;
             
         } catch (error) {
-            console.error('Error exporting data:', error);
             throw error;
         }
     }
@@ -807,7 +789,6 @@ class LocalFallbackManager {
             this.emit('dataImported', importData);
             
         } catch (error) {
-            console.error('Error importing data:', error);
             throw error;
         }
     }

@@ -178,7 +178,7 @@
                 
                 <!-- Navigation Links -->
                 <div class="hidden md:flex items-center space-x-4">
-                    <a href="quote-maker-v2-ver3.html" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-white/10 transition-colors">
+                    <a href="quotemaker.html" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-white/10 transition-colors">
                         <i class="fas fa-file-invoice-dollar mr-1"></i> Quote Maker
                     </a>
                     <a href="price-calculator.html" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-white/10 transition-colors">
@@ -203,7 +203,7 @@
             <!-- Mobile Menu -->
             <div id="mobile-menu" class="md:hidden hidden pb-3">
                 <div class="space-y-1">
-                    <a href="quote-maker-v2-ver3.html" class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-white/10 transition-colors">
+                    <a href="quotemaker.html" class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-white/10 transition-colors">
                         <i class="fas fa-file-invoice-dollar mr-2"></i> Quote Maker
                     </a>
                     <a href="price-calculator.html" class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-white/10 transition-colors">
@@ -842,7 +842,6 @@
                         addSyncMessage(`Local fallback updated with ${totalSynced} total items`, 'success');
                     } catch (fallbackError) {
                         addSyncMessage(`Warning: Local fallback update failed: ${fallbackError.message}`, 'warning');
-                        console.warn('Fallback sync failed:', fallbackError);
                     }
                 } else if (window.localFallbackManager && window.universalDataManager && window.universalDataManager.isInitialized) {
                     // Fallback to direct local storage update
@@ -862,7 +861,6 @@
                         addSyncMessage('Local fallback storage updated successfully', 'success');
                     } catch (fallbackError) {
                         addSyncMessage(`Warning: Local fallback update failed: ${fallbackError.message}`, 'warning');
-                        console.warn('Direct fallback sync failed:', fallbackError);
                     }
                 }
                 progressBar.style.width = '90%';
@@ -969,10 +967,8 @@
                 addSyncMessage('Validating products data...', 'info');
                 try {
                     const products = await window.unifiedDataAccess.getProducts();
-                    console.log('Products loaded from:', products.length > 0 ? 'unified data access' : 'fallback');
                     const duplicateProducts = findDuplicates(products, 'id');
                 } catch (error) {
-                    console.error('Error loading products:', error);
                     const products = await window.universalDataManager.getProducts();
                     const duplicateProducts = findDuplicates(products, 'id');
                 }
@@ -983,10 +979,8 @@
                 addSyncMessage('Validating salespeople data...', 'info');
                 try {
                     const salespeople = await window.unifiedDataAccess.getSalespeople();
-                    console.log('Salespeople loaded from:', salespeople.length > 0 ? 'unified data access' : 'fallback');
                     const duplicateSalespeople = findDuplicates(salespeople, 'name');
                 } catch (error) {
-                    console.error('Error loading salespeople:', error);
                     const salespeople = await window.universalDataManager.getSalespeople();
                     const duplicateSalespeople = findDuplicates(salespeople, 'name');
                 }
@@ -997,9 +991,7 @@
                 addSyncMessage('Validating clients data...', 'info');
                 try {
                     const clients = await window.unifiedDataAccess.getClients();
-                    console.log('Clients loaded from:', clients.length > 0 ? 'unified data access' : 'fallback');
                 } catch (error) {
-                    console.error('Error loading clients:', error);
                     const clients = await window.universalDataManager.getClients();
                 }
                 const duplicateClients = findDuplicates(clients, 'id');
@@ -1272,7 +1264,6 @@
                         }
                         
                     } catch (unifiedError) {
-                        console.warn('Unified data access failed, falling back to universal data manager:', unifiedError);
                         throw unifiedError;
                     }
                 } else {
@@ -1706,41 +1697,33 @@
         document.addEventListener('DOMContentLoaded', async function() {
             // Initialize fallback system components
             try {
-                console.log('🔄 Initializing fallback system...');
                 
                 // Initialize local fallback manager
                 if (typeof LocalFallbackManager !== 'undefined') {
                     window.localFallbackManager = new LocalFallbackManager();
                     await window.localFallbackManager.initialize();
-                    console.log('✅ Local fallback manager initialized');
                 }
                 
                 // Initialize fallback detector
                 if (typeof FallbackDetector !== 'undefined') {
                     window.fallbackDetector = new FallbackDetector();
                     await window.fallbackDetector.initialize();
-                    console.log('✅ Fallback detector initialized');
                 }
                 
                 // Initialize unified data access
                 if (typeof UnifiedDataAccess !== 'undefined' && window.localFallbackManager && window.fallbackDetector) {
                     window.unifiedDataAccess = new UnifiedDataAccess(window.localFallbackManager, window.fallbackDetector);
                     await window.unifiedDataAccess.initialize();
-                    console.log('✅ Unified data access initialized');
                 }
                 
-                console.log('✅ Fallback system fully initialized');
             } catch (error) {
-                console.error('❌ Failed to initialize fallback system:', error);
             }
             
             // Wait for universal data manager to be ready before initializing
             if (window.universalDataManager) {
                 try {
                     await window.universalDataManager.waitForReady();
-                    console.log('✅ Universal data manager is ready, initializing admin panel...');
                 } catch (error) {
-                    console.error('❌ Failed to initialize universal data manager:', error);
                 }
             }
             
@@ -2034,7 +2017,6 @@
                             syncedCount += localData.length;
                         }
                     } catch (error) {
-                        console.warn(`Failed to sync ${collection}:`, error);
                     }
                 }
                 
@@ -2079,7 +2061,6 @@
                             backedUpCount += firebaseData.length;
                         }
                     } catch (error) {
-                        console.warn(`Failed to backup ${collection}:`, error);
                     }
                 }
                 

@@ -1125,7 +1125,6 @@
                     // Fallback timeout
                     setTimeout(() => {
                         clearInterval(checkInterval);
-                        console.warn('⚠️ Global Firebase not ready, proceeding with local initialization');
                         resolve();
                     }, 5000);
                 }
@@ -1211,7 +1210,6 @@
                     const response = await fetch('https://api.exchangerate-api.com/v4/latest/INR');
                     data = await response.json();
                 } catch (e) {
-                    console.warn('Primary API failed, trying backup...');
                     // Backup API
                     const response = await fetch('https://api.fixer.io/latest?base=INR&access_key=YOUR_API_KEY');
                     data = await response.json();
@@ -1239,10 +1237,8 @@
                         updateQuoteSummary();
                     }
                     
-                    console.log('✅ Exchange rates updated successfully', exchangeRates);
                 }
             } catch (error) {
-                console.warn('⚠️ Failed to fetch exchange rates, using default rates:', error);
             }
         }
 
@@ -1259,7 +1255,6 @@
         function startExchangeRateUpdates() {
             // Update rates every 30 minutes
             setInterval(async () => {
-                console.log('🔄 Updating exchange rates...');
                 await fetchExchangeRates();
                 // Recalculate current quote with new rates
                 recalculateWithCurrentRates();
@@ -1269,7 +1264,6 @@
         // Recalculate all prices with current exchange rates
         function recalculateWithCurrentRates() {
             if (currentQuote && currentQuote.items && currentQuote.items.length > 0) {
-                console.log('🔄 Recalculating quote with current exchange rates...');
                 
                 // Update pricing for current product selection
                 updatePricing();
@@ -1280,7 +1274,6 @@
                 // Update quote items display
                 updateQuoteItemsDisplay();
                 
-                console.log('✅ Quote recalculated with current exchange rates');
             }
         }
 
@@ -1288,77 +1281,54 @@
 
         // Global initialization function that can be called manually
         async function initializeQuoteMaker() {
-            console.log('🔍 DEBUG: initializeQuoteMaker called');
-            console.log('🔍 DEBUG: Current window.quoteMakerInitialized:', window.quoteMakerInitialized);
-            console.log('🔍 DEBUG: Current window.universalDataManager:', window.universalDataManager);
             
             // Prevent multiple initializations
             if (window.quoteMakerInitialized) {
-                console.log('Quote Maker already initialized, skipping...');
                 return;
             }
             
-            console.log('🚀 Starting Quote Maker initialization...');
             showLoading(true);
             
             try {
                 // Initialize fallback system first
-                console.log('🔍 DEBUG: Initializing fallback system...');
                 try {
                     window.localFallbackManager = new LocalFallbackManager();
                     window.fallbackDetector = new FallbackDetector(window.localFallbackManager);
                     window.unifiedDataAccess = new UnifiedDataAccess(window.fallbackDetector, window.localFallbackManager);
                     
                     await window.fallbackDetector.initialize();
-                    console.log('✅ Fallback system initialized for quote maker');
                 } catch (fallbackError) {
-                    console.warn('⚠️ Fallback system initialization failed, continuing with Firebase only:', fallbackError);
                 }
                 
-                console.log('🔍 DEBUG: About to wait for Firebase...');
                 // Wait for Firebase to be ready first
                 await waitForFirebase();
-                console.log('✅ Firebase ready for quote maker');
                 
-                console.log('🔍 DEBUG: About to initialize Firebase...');
                 // Initialize Firebase
                 await initializeFirebase();
-                console.log('🔍 DEBUG: Firebase initialization completed');
                 
-                console.log('🔍 DEBUG: About to fetch exchange rates...');
                 // Fetch real-time exchange rates
                 await fetchExchangeRates();
-                console.log('🔍 DEBUG: Exchange rates fetched');
                 
-                console.log('🔍 DEBUG: Starting exchange rate updates...');
                 // Start periodic exchange rate updates
                 startExchangeRateUpdates();
                 
-                console.log('🔍 DEBUG: About to load all data...');
                 // Load initial data
                 await loadAllData();
-                console.log('🔍 DEBUG: All data loaded');
                 
-                console.log('🔍 DEBUG: Setting up event listeners...');
                 // Setup event listeners
                 setupEventListeners();
                 
-                console.log('🔍 DEBUG: Initializing quote...');
                 // Initialize quote
                 initializeQuote();
                 
-                console.log('🔍 DEBUG: Loading saved quotes...');
                 // Load saved quotes
                 await loadSavedQuotes();
                 
                 // Mark as initialized
                 window.quoteMakerInitialized = true;
                 
-                console.log('✅ Quote Maker v2 initialized successfully');
                 
             } catch (error) {
-                console.error('❌ Initialization error:', error);
-                console.error('❌ DEBUG: Error details:', error.stack);
                 showError('Failed to initialize application. Please refresh the page.');
             } finally {
                 showLoading(false);
@@ -1371,16 +1341,12 @@
         // Initialize the application when DOM is ready (for direct access) or immediately if already loaded (for menu system)
         if (document.readyState === 'loading') {
             // DOM is still loading, wait for DOMContentLoaded
-            console.log('🔍 DEBUG: DOM is loading, waiting for DOMContentLoaded...');
             document.addEventListener('DOMContentLoaded', async function() {
-                console.log('🔍 DEBUG: DOMContentLoaded event fired, initializing...');
                 await initializeQuoteMaker();
             });
         } else {
             // DOM is already loaded, initialize immediately (this happens when loaded via menu)
-            console.log('🔍 DEBUG: DOM already loaded, initializing immediately...');
             setTimeout(async () => {
-                console.log('🔍 DEBUG: Timeout fired, starting initialization...');
                 await initializeQuoteMaker();
             }, 100); // Small delay to ensure all scripts are loaded
         }
@@ -1388,14 +1354,12 @@
         // Initialize universal Firebase data manager
         async function initializeFirebase() {
             try {
-                console.log('🔄 Waiting for universal Firebase data manager...');
                 
                 // Wait for universal data manager to be available
                 let attempts = 0;
                 const maxAttempts = 20; // 10 seconds max wait
                 
                 while (!window.universalDataManager && attempts < maxAttempts) {
-                    console.log(`⏳ Waiting for universalDataManager... (attempt ${attempts + 1}/${maxAttempts})`);
                     await new Promise(resolve => setTimeout(resolve, 500));
                     attempts++;
                 }
@@ -1410,14 +1374,12 @@
                 const status = window.universalDataManager.getStatus();
                 if (status.isInitialized && status.isDataLoaded) {
                     updateConnectionStatus(true);
-                    console.log('✅ Universal Firebase data manager ready');
                 } else {
                     updateConnectionStatus(false);
                     throw new Error('Universal Firebase data manager not ready. Please check your connection.');
                 }
                 
             } catch (error) {
-                console.error('❌ Centralized Firebase access failed:', error);
                 updateConnectionStatus(false);
                 throw error;
             }
@@ -1425,11 +1387,8 @@
 
         // Load all required data
         async function loadAllData() {
-            console.log('🔍 DEBUG: loadAllData started');
-            console.log('🔍 DEBUG: window.universalDataManager available:', !!window.universalDataManager);
             
             try {
-                console.log('🔍 DEBUG: Starting parallel data loading...');
                 // Load data in parallel for better performance
                 const [products, clients, salesmen, styles, colors] = await Promise.all([
                     loadProducts(),
@@ -1439,16 +1398,8 @@
                     loadColors()
                 ]);
                 
-                console.log('🔍 DEBUG: Loaded products count:', products?.length || 0);
-                console.log('🔍 DEBUG: Loaded clients count:', clients?.length || 0);
-                console.log('🔍 DEBUG: Loaded salesmen count:', salesmen?.length || 0);
-                console.log('🔍 DEBUG: Loaded styles data:', styles);
-                console.log('🔍 DEBUG: Loaded colors data:', colors);
-                console.log('✅ All data loaded successfully');
                 
             } catch (error) {
-                console.error('❌ Error loading data:', error);
-                console.error('❌ DEBUG: loadAllData error details:', error.stack);
                 throw error;
             }
         }
@@ -1460,22 +1411,17 @@
                 if (window.unifiedDataAccess) {
                     try {
                         productData = await window.unifiedDataAccess.getProducts();
-                        console.log(`📦 Loaded ${productData.length} products from unified data access`);
                     } catch (unifiedError) {
-                        console.warn('⚠️ Unified data access failed, falling back to universal data manager:', unifiedError);
                         productData = await window.universalDataManager.getProducts();
-                        console.log(`📦 Loaded ${productData.length} products from universal data manager (fallback)`);
                     }
                 } else {
                     productData = await window.universalDataManager.getProducts();
-                    console.log(`📦 Loaded ${productData.length} products from universal data manager`);
                 }
                 
                 populatePriceListDropdown();
                 return productData;
                 
             } catch (error) {
-                console.error('❌ Error loading products:', error);
                 throw new Error('Failed to load products. Please check your connection.');
             }
         }
@@ -1487,22 +1433,17 @@
                 if (window.unifiedDataAccess) {
                     try {
                         clientData = await window.unifiedDataAccess.getClients();
-                        console.log(`👥 Loaded ${clientData.length} clients from unified data access`);
                     } catch (unifiedError) {
-                        console.warn('⚠️ Unified data access failed, falling back to universal data manager:', unifiedError);
                         clientData = await window.universalDataManager.getClients();
-                        console.log(`👥 Loaded ${clientData.length} clients from universal data manager (fallback)`);
                     }
                 } else {
                     clientData = await window.universalDataManager.getClients();
-                    console.log(`👥 Loaded ${clientData.length} clients from universal data manager`);
                 }
                 
                 populateClientDropdown();
                 return clientData;
                 
             } catch (error) {
-                console.error('❌ Error loading clients:', error);
                 throw new Error('Failed to load clients. Please check your connection.');
             }
         }
@@ -1514,22 +1455,17 @@
                 if (window.unifiedDataAccess) {
                     try {
                         salesmenData = await window.unifiedDataAccess.getSalespeople();
-                        console.log(`👨‍💼 Loaded ${salesmenData.length} salespeople from unified data access`);
                     } catch (unifiedError) {
-                        console.warn('⚠️ Unified data access failed, falling back to universal data manager:', unifiedError);
                         salesmenData = await window.universalDataManager.getSalespeople();
-                        console.log(`👨‍💼 Loaded ${salesmenData.length} salespeople from universal data manager (fallback)`);
                     }
                 } else {
                     salesmenData = await window.universalDataManager.getSalespeople();
-                    console.log(`👨‍💼 Loaded ${salesmenData.length} salespeople from universal data manager`);
                 }
                 
                 populateSalespersonDropdown();
                 return salesmenData;
                 
             } catch (error) {
-                console.error('❌ Error loading salespeople:', error);
                 throw new Error('Failed to load salespeople. Please check your connection.');
             }
         }
@@ -1541,15 +1477,11 @@
                 if (window.unifiedDataAccess) {
                     try {
                         stylesData = await window.unifiedDataAccess.getStyles();
-                        console.log(`🎨 Loaded ${stylesData.length} styles from unified data access`);
                     } catch (unifiedError) {
-                        console.warn('⚠️ Unified data access failed, falling back to universal data manager:', unifiedError);
                         stylesData = await window.universalDataManager.getStyles();
-                        console.log(`🎨 Loaded ${stylesData.length} styles from universal data manager (fallback)`);
                     }
                 } else {
                     stylesData = await window.universalDataManager.getStyles();
-                    console.log(`🎨 Loaded ${stylesData.length} styles from universal data manager`);
                 }
                 
                 populateStylesFromCollection();
@@ -1560,7 +1492,6 @@
                 return stylesData;
                 
             } catch (error) {
-                console.error('❌ Error loading styles:', error);
                 stylesData = [];
                 return [];
             }
@@ -1573,22 +1504,17 @@
                 if (window.unifiedDataAccess) {
                     try {
                         colorsData = await window.unifiedDataAccess.getColors();
-                        console.log(`🌈 Loaded ${colorsData.length} colors from unified data access`);
                     } catch (unifiedError) {
-                        console.warn('⚠️ Unified data access failed, falling back to universal data manager:', unifiedError);
                         colorsData = await window.universalDataManager.getColors();
-                        console.log(`🌈 Loaded ${colorsData.length} colors from universal data manager (fallback)`);
                     }
                 } else {
                     colorsData = await window.universalDataManager.getColors();
-                    console.log(`🌈 Loaded ${colorsData.length} colors from universal data manager`);
                 }
                 
                 populateColors();
                 return colorsData;
                 
             } catch (error) {
-                console.error('❌ Error loading colors:', error);
                 colorsData = [];
                 return [];
             }
@@ -1608,7 +1534,6 @@
                 selector.appendChild(option);
             });
             
-            console.log(`📋 Populated ${priceLists.length} price lists`);
         }
 
         // Populate client dropdown
@@ -1625,7 +1550,6 @@
                 selector.appendChild(option);
             });
             
-            console.log(`👥 Populated ${clientData.length} clients`);
         }
 
         // Populate salesperson dropdown
@@ -1641,12 +1565,10 @@
                 selector.appendChild(option);
             });
             
-            console.log(`👨‍💼 Populated ${salesmenData.length} salespeople`);
         }
 
         // Setup event listeners
         function setupEventListeners() {
-            console.log('🔧 Setting up event listeners...');
             
             // Price list change
             document.getElementById('price-list-selector').addEventListener('change', onPriceListChange);
@@ -1659,18 +1581,15 @@
             
             // Other selectors
             document.getElementById('density-selector').addEventListener('change', () => {
-                console.log('🎯 Density changed');
                 isManualPriceEntry = false; // Reset manual entry flag
                 updatePricing();
             });
             document.getElementById('length-selector').addEventListener('change', () => {
-                console.log('🎯 Length changed');
                 isManualPriceEntry = false; // Reset manual entry flag
                 updatePricing();
             });
             document.getElementById('color-type-selector').addEventListener('change', onColorTypeChange);
             document.getElementById('color-selector').addEventListener('change', (e) => {
-                console.log('🎯 Color changed');
                 const customColorContainer = document.querySelector('.custom-color-container');
                 const colorImageBtn = document.getElementById('color-image-btn');
                 const customColorInput = document.getElementById('custom-color-input');
@@ -1707,7 +1626,6 @@
                 updatePricing();
             });
             document.getElementById('style-selector').addEventListener('change', (e) => {
-                console.log('🎯 Style changed');
                 const customStyleContainer = document.querySelector('.custom-style-container');
                 const styleImageBtn = document.getElementById('style-image-btn');
                 const customStyleInput = document.getElementById('custom-style-input');
@@ -1746,11 +1664,9 @@
             
             // Quantity and price inputs
             document.getElementById('quantity-input').addEventListener('input', () => {
-                console.log('🎯 Quantity changed');
                 updatePricing();
             });
             document.getElementById('unit-price-input').addEventListener('input', () => {
-                console.log('🎯 Unit price changed');
                 isManualPriceEntry = true; // User is manually entering price
                 updatePricing();
             });
@@ -1817,7 +1733,6 @@
             if (shippingInput) {
                 shippingInput.addEventListener('input', updateQuoteSummary);
             } else {
-                console.error('❌ Shipping input element not found');
             }
             
             // Action buttons
@@ -1828,21 +1743,18 @@
             if (clearQuoteBtn) {
                 clearQuoteBtn.addEventListener('click', clearQuote);
             } else {
-                console.log('ℹ️ Clear quote button not found - feature not available');
             }
             
             const duplicateQuoteBtn = document.getElementById('duplicate-quote-btn');
             if (duplicateQuoteBtn) {
                 duplicateQuoteBtn.addEventListener('click', duplicateQuote);
             } else {
-                console.log('ℹ️ Duplicate quote button not found - feature not available');
             }
             
             const loadQuoteBtn = document.getElementById('load-quote-btn');
             if (loadQuoteBtn) {
                 loadQuoteBtn.addEventListener('click', loadQuote);
             } else {
-                console.log('ℹ️ Load quote button not found - feature not available');
             }
             
             // Modal events
@@ -1865,7 +1777,6 @@
             
             // Check if all required elements exist before setting up listeners
             if (!colorImageBtn || !colorImageInput || !colorImagePreview || !colorImageDisplay || !removeColorImageBtn) {
-                console.log('ℹ️ Color image upload elements not found - feature not available');
                 return;
             }
             
@@ -1941,7 +1852,6 @@
             
             // Check if all required elements exist before setting up listeners
             if (!styleImageBtn || !styleImageInput || !styleImagePreview || !styleImageDisplay || !removeStyleImageBtn) {
-                console.log('ℹ️ Style image upload elements not found - feature not available');
                 return;
             }
             
@@ -2010,25 +1920,21 @@
             
             // Custom input change handlers
             document.getElementById('custom-color-input').addEventListener('input', () => {
-                console.log('🎯 Custom color input changed');
                 isManualPriceEntry = false;
                 updatePricing();
             });
             
             document.getElementById('custom-style-input').addEventListener('input', () => {
-                console.log('🎯 Custom style input changed');
                 isManualPriceEntry = false;
                 updatePricing();
             });
             
             // OK button event listeners
             document.getElementById('custom-color-ok-btn').addEventListener('click', () => {
-                console.log('🎯 Custom color OK button clicked');
                 handleCustomAreaCollapse('color');
             });
             
             document.getElementById('custom-style-ok-btn').addEventListener('click', () => {
-                console.log('🎯 Custom style OK button clicked');
                 handleCustomAreaCollapse('style');
             });
         }
@@ -2068,12 +1974,10 @@
             // Auto-select if only one option is available
             if (categories.length === 1) {
                 selector.value = categories[0];
-                console.log(`🎯 Auto-selected category: ${categories[0]}`);
                 // Trigger the change event to populate dependent dropdowns
                 onCategoryChange();
             }
             
-            console.log(`📂 Populated ${categories.length} categories for ${priceList}`);
         }
 
         // Category change handler
@@ -2114,12 +2018,10 @@
             // Auto-select if only one option is available
             if (products.length === 1) {
                 selector.value = products[0];
-                console.log(`🎯 Auto-selected product: ${products[0]}`);
                 // Trigger the change event to populate dependent dropdowns
                 onProductChange();
             }
             
-            console.log(`📦 Populated ${products.length} products for ${category}`);
         }
 
         // Product change handler
@@ -2186,11 +2088,9 @@
             // Auto-select if only one option is available
             if (densities.length === 1) {
                 selector.value = densities[0];
-                console.log(`🎯 Auto-selected density: ${densities[0]}`);
                 updatePricing();
             }
             
-            console.log(`⚖️ Populated ${densities.length} densities for ${product}`);
         }
 
         // Populate lengths
@@ -2223,11 +2123,9 @@
             // Auto-select if only one option is available
             if (lengths.length === 1) {
                 selector.value = lengths[0];
-                console.log(`🎯 Auto-selected length: ${lengths[0]}`);
                 updatePricing();
             }
             
-            console.log(`📏 Populated ${lengths.length} lengths for ${product}`);
         }
 
         // Populate color types
@@ -2258,11 +2156,9 @@
             // Auto-select if only one option is available
             if (colors.length === 1) {
                 selector.value = colors[0];
-                console.log(`🎯 Auto-selected color type: ${colors[0]}`);
                 onColorTypeChange();
             }
             
-            console.log(`🎨 Populated ${colors.length} color types for ${product}`);
         }
 
         // Populate colors from colors collection
@@ -2297,7 +2193,6 @@
                 }
             });
             
-            console.log(`🌈 Populated ${colorsData.length} colors from colors collection + Custom option`);
         }
 
         // Populate styles from styles collection
@@ -2305,7 +2200,6 @@
             const selector = document.getElementById('style-selector');
             
             if (!selector) {
-                console.error('❌ Style selector element not found');
                 return;
             }
             
@@ -2316,7 +2210,6 @@
                 customOption.value = 'Custom';
                 customOption.textContent = 'Custom';
                 selector.appendChild(customOption);
-                console.log('⚠️ No styles data available for population');
                 return;
             }
             
@@ -2340,7 +2233,6 @@
                 }
             });
             
-            console.log(`✨ Populated ${populatedCount} styles from ${stylesData.length} style items + Custom option`);
         }
 
         // Populate styles
@@ -2348,7 +2240,6 @@
 
         // Update pricing based on current selections
         function updatePricing() {
-            console.log('🔄 updatePricing called');
             
             const priceList = document.getElementById('price-list-selector').value;
             const category = document.getElementById('category-selector').value;
@@ -2359,11 +2250,9 @@
             const quantity = parseFloat(document.getElementById('quantity-input').value) || 1;
             const overridePrice = parseFloat(document.getElementById('unit-price-input').value);
             
-            console.log('📋 Current form values:', {
                 priceList, category, product, density, length, colorType, quantity, overridePrice
             });
             
-            console.log('📊 ProductData status:', {
                 loaded: !!productData,
                 length: productData ? productData.length : 0,
                 sample: productData && productData.length > 0 ? productData[0] : null,
@@ -2372,14 +2261,12 @@
             
             // Log first few products for debugging
             if (productData && productData.length > 0) {
-                console.log('📦 First 3 products for debugging:', productData.slice(0, 3));
             }
             
             let unitPrice = 0;
             
             // Always try to calculate price from product data first
             if (priceList && category && product && density && length) {
-                console.log('🔍 Searching for matching product with criteria:', {
                     priceList, category, product, density, length, colorType
                 });
                 
@@ -2396,7 +2283,6 @@
                     const densityMatch = (p.Density || p.density) === density;
                     const lengthMatch = (p.Length || p.length) === length;
                     
-                    console.log('🔍 Checking product:', {
                         productData: {
                             priceList: p['Price List Name'] || p.PriceListName || p.PriceList,
                             category: p.Category || p.category,
@@ -2423,7 +2309,6 @@
                     const productCurrency = matchingProduct.Currency || 'INR';
                     const selectedCurrency = document.getElementById('currency-selector').value;
                     
-                    console.log('💰 Found matching product for pricing:', {
                         product: matchingProduct,
                         calculatedPrice: calculatedPrice,
                         productCurrency: productCurrency,
@@ -2436,10 +2321,8 @@
                     // Use override price if manually entered, otherwise use converted calculated price
                      if (isManualPriceEntry && overridePrice && overridePrice > 0) {
                          unitPrice = overridePrice;
-                         console.log('🔧 Using manual override price:', overridePrice);
                      } else {
                          unitPrice = convertedPrice;
-                         console.log('💱 Applied currency conversion:', {
                              original: calculatedPrice,
                              converted: convertedPrice,
                              from: productCurrency,
@@ -2451,7 +2334,6 @@
                          }
                      }
                 } else {
-                    console.log('⚠️ No matching product found for pricing with criteria:', {
                         priceList, category, product, density, length, colorType
                     });
                     
@@ -2479,11 +2361,9 @@
             
             // Check if price display elements exist
             if (!priceDisplay || !calculatedPrice) {
-                console.log('ℹ️ Price display elements not found');
                 return;
             }
             
-            console.log('🔍 Button enabling check:', {
                 unitPrice,
                 priceList,
                 category,
@@ -2507,10 +2387,8 @@
                 if (addBtn) {
                     if (priceList && category && product && density && length) {
                         addBtn.disabled = false;
-                        console.log('✅ Add item button ENABLED');
                     } else {
                         addBtn.disabled = true;
-                        console.log('❌ Add item button DISABLED - missing required fields');
                     }
                 }
             } else {
@@ -2519,7 +2397,6 @@
                 if (addBtn) {
                     addBtn.disabled = true;
                 }
-                console.log('❌ Add item button DISABLED - no valid price');
             }
         }
 
@@ -2707,13 +2584,10 @@
                 selector.dataset.customConfirmed = 'true';
                 selector.dataset.customValue = customText;
                 
-                console.log(`✅ ${type} custom area collapsed with content: ${customText}`);
             }
         }
 
         function addQuoteItem() {
-            console.log('🚀 addQuoteItem function called');
-            console.log('📊 Current quote items before adding:', currentQuote.items.length);
             
             const priceList = document.getElementById('price-list-selector').value;
             const category = document.getElementById('category-selector').value;
@@ -2726,7 +2600,6 @@
             const quantity = parseFloat(document.getElementById('quantity-input').value) || 1;
             const unitPrice = parseFloat(document.getElementById('unit-price-input').value) || 0;
             
-            console.log('📝 Form values:', { priceList, category, product, density, length, colorType, color, style, quantity, unitPrice });
             
             // Get custom inputs - use confirmed values if available
             const colorSelector = document.getElementById('color-selector');
@@ -2739,7 +2612,6 @@
                 ? styleSelector.dataset.customValue 
                 : document.getElementById('custom-style-input').value.trim();
             
-            console.log('🎨 Custom inputs:', { customColor, customStyle, 
                 colorConfirmed: colorSelector.dataset.customConfirmed,
                 styleConfirmed: styleSelector.dataset.customConfirmed });
             
@@ -2749,7 +2621,6 @@
             const colorImageDisplay = document.getElementById('color-image-display');
             const styleImageDisplay = document.getElementById('style-image-display');
             
-            console.log('🖼️ Image elements:', {
                 colorImageDisplay: !!colorImageDisplay,
                 styleImageDisplay: !!styleImageDisplay,
                 colorImageSrc: colorImageDisplay ? colorImageDisplay.src.substring(0, 50) + '...' : 'none',
@@ -2758,19 +2629,15 @@
             
             // Basic validation
             if (!priceList || !category || !product || !density || !length || unitPrice <= 0) {
-                console.log('❌ Basic validation failed');
                 showError('Please fill in all required fields and ensure a valid price is calculated.');
                 return;
             }
-            console.log('✅ Basic validation passed');
             
             // Validate custom inputs
             if (!validateCustomInputs()) {
-                console.log('❌ Custom validation failed');
                 showError('Please correct the validation errors in custom fields.');
                 return;
             }
-            console.log('✅ Custom validation passed');
             
             const item = {
                 id: Date.now().toString(),
@@ -2792,7 +2659,6 @@
                 styleImage: styleImageDisplay && styleImageDisplay.src && styleImageDisplay.src.includes('data:') ? styleImageDisplay.src : null
             };
             
-            console.log('🖼️ Image data stored:', {
                 hasColorImage: !!item.colorImage,
                 hasStyleImage: !!item.styleImage,
                 colorImageLength: item.colorImage ? item.colorImage.length : 0,
@@ -2800,18 +2666,12 @@
             });
             
             currentQuote.items.push(item);
-            console.log('✅ Item added to quote:', item);
-            console.log('📊 Current quote items after adding:', currentQuote.items.length);
-            console.log('📋 All items in quote:', currentQuote.items);
             
             // Clear form
-            console.log('🧹 Clearing product form...');
             clearProductForm();
             
             // Update display
-            console.log('🔄 Updating quote items display...');
             updateQuoteItemsDisplay();
-            console.log('💰 Updating quote summary...');
             updateQuoteSummary();
         }
 
@@ -2931,9 +2791,7 @@
 
         // Update quote items display
         function updateQuoteItemsDisplay() {
-            console.log('🖼️ updateQuoteItemsDisplay called with', currentQuote.items.length, 'items');
             const container = document.getElementById('quote-items-container');
-            console.log('📦 Container element found:', !!container);
             
             if (currentQuote.items.length === 0) {
                 container.innerHTML = `
@@ -2947,16 +2805,13 @@
             const currency = currentQuote.currency;
             const symbol = currencySymbols[currency] || currency + ' ';
             
-            console.log('🎨 Generating HTML for', currentQuote.items.length, 'items');
             container.innerHTML = currentQuote.items.map((item, index) => {
-                console.log(`🔍 Processing item ${index + 1}/${currentQuote.items.length}:`, {
                     product: item.product,
                     category: item.category,
                     hasColorImage: !!item.colorImage,
                     hasStyleImage: !!item.styleImage
                 });
                 const imagePath = getProductImagePath(item.product, item.category, item.density, item.length, item.colorType, item.color);
-                console.log(`🖼️ Image path for item ${index + 1}:`, imagePath);
                 
                 // Determine color and style display
                 const colorDisplay = item.customColor ? `${item.color} (Custom)` : item.color;
@@ -2964,7 +2819,6 @@
                 
                 // Create custom images section
                 let customImagesHtml = '';
-                console.log('🖼️ Processing item images:', {
                     itemId: item.id,
                     hasColorImage: !!item.colorImage,
                     hasStyleImage: !!item.styleImage,
@@ -2980,8 +2834,6 @@
                                     <img src="${item.colorImage}" 
                                          alt="Color Reference" 
                                          class="w-12 h-12 object-cover rounded border border-gray-300"
-                                         onerror="console.error('❌ Custom color image failed to load for item ${index + 1}'); this.style.display='none';"
-                                         onload="console.log('✅ Custom color image loaded for item ${index + 1}')">
                                     <p class="text-xs text-gray-500 mt-1">Color</p>
                                 </div>
                             ` : ''}
@@ -2990,8 +2842,6 @@
                                     <img src="${item.styleImage}" 
                                          alt="Style Reference" 
                                          class="w-12 h-12 object-cover rounded border border-gray-300"
-                                         onerror="console.error('❌ Custom style image failed to load for item ${index + 1}'); this.style.display='none';"
-                                         onload="console.log('✅ Custom style image loaded for item ${index + 1}')">
                                     <p class="text-xs text-gray-500 mt-1">Style</p>
                                 </div>
                             ` : ''}
@@ -3007,8 +2857,6 @@
                                 <img src="${imagePath}" 
                                      alt="${item.product}" 
                                      class="w-16 h-16 object-cover rounded-lg border border-gray-200"
-                                     onerror="console.error('❌ Image failed to load:', this.src); this.src='images/Products/Genius.png'; this.onerror=null;"
-                                     onload="console.log('✅ Image loaded successfully:', this.src)"
                                      loading="lazy">
                             </div>
                             <div class="flex-1 min-w-0">
@@ -3033,10 +2881,8 @@
                     </div>
                 </div>
                 `;
-                console.log(`✅ Generated HTML for item ${index + 1}, length:`, itemHtml.length);
                 return itemHtml;
             }).join('');
-            console.log('✅ HTML set in container, length:', container.innerHTML.length);
         }
 
         // Remove quote item
@@ -3126,7 +2972,6 @@
             const indicator = document.querySelector('.status-indicator');
             if (!indicator) {
                 // Status indicator element doesn't exist, just log the status
-                console.log(`Connection status: ${connected ? 'Connected' : 'Disconnected'}`);
                 return;
             }
             
@@ -3154,7 +2999,6 @@
         function showLoading(show) {
             const overlay = document.getElementById('loading-overlay');
             if (!overlay) {
-                console.log('ℹ️ Loading overlay element not found');
                 return;
             }
             if (show) {
@@ -3205,7 +3049,6 @@
         function openAddClientModal() {
             const modal = document.getElementById('add-client-modal');
             if (!modal) {
-                console.log('ℹ️ Add client modal element not found');
                 return;
             }
             modal.classList.remove('hidden');
@@ -3221,7 +3064,6 @@
             const modal = document.getElementById('add-client-modal');
             const form = document.getElementById('add-client-form');
             if (!modal) {
-                console.log('ℹ️ Add client modal element not found');
                 return;
             }
             modal.classList.add('hidden');
@@ -3284,7 +3126,6 @@
                 closeAddClientModal();
                 
             } catch (error) {
-                console.error('Error adding client:', error);
                 showError('Failed to add client. Please try again.');
             } finally {
                 showLoading(false);
@@ -3354,7 +3195,6 @@
                 }
                 
             } catch (error) {
-                console.error('Error saving quote:', error);
                 showError('Failed to save quote. Please try again.');
             } finally {
                 showLoading(false);
@@ -3364,21 +3204,16 @@
         // Load saved quotes from Firebase
         async function loadSavedQuotes() {
             try {
-                console.log('🔄 Loading saved quotes...');
                 const container = document.getElementById('saved-quotes-container');
                 
                 if (window.firebaseDB && window.firebaseDB.isAvailable()) {
-                    console.log('📊 Using Firebase for quotes');
                     const quotes = await window.firebaseDB.getQuotes();
-                    console.log('📋 Retrieved quotes from Firebase:', quotes);
                     displaySavedQuotes(quotes);
                 } else {
-                    console.log('💾 Using localStorage for quotes');
                     loadSavedQuotesFromLocal();
                 }
                 
             } catch (error) {
-                console.error('Error loading saved quotes:', error);
                 const container = document.getElementById('saved-quotes-container');
                 container.innerHTML = '<div class="text-center text-red-500 py-4"><p class="text-sm">Error loading quotes</p></div>';
             }
@@ -3390,7 +3225,6 @@
                 const savedQuotes = JSON.parse(localStorage.getItem('savedQuotes') || '[]');
                 displaySavedQuotes(savedQuotes);
             } catch (error) {
-                console.error('Error loading local quotes:', error);
                 const container = document.getElementById('saved-quotes-container');
                 container.innerHTML = '<div class="text-center text-red-500 py-4"><p class="text-sm">Error loading local quotes</p></div>';
             }
@@ -3479,7 +3313,6 @@
                     
                     // Apply currency conversion to all quote items if currency has changed
                     if (quoteCurrency !== currentCurrency && currentQuote.items) {
-                        console.log('💱 Converting loaded quote from', quoteCurrency, 'to', currentCurrency);
                         currentQuote.items.forEach(item => {
                             if (item.unitPrice) {
                                 item.unitPrice = convertCurrency(item.unitPrice, quoteCurrency, currentCurrency);
@@ -3531,7 +3364,6 @@
                 }
                 
             } catch (error) {
-                console.error('Error loading quote:', error);
                 showError('Failed to load quote.');
             } finally {
                 showLoading(false);
@@ -3671,7 +3503,6 @@
                 }
                 
             } catch (error) {
-                console.error('Error recalling quote:', error);
                 showError('Failed to recall quote.');
             } finally {
                 showLoading(false);
@@ -3706,7 +3537,6 @@
                 }
                 
             } catch (error) {
-                console.error('Error generating preview:', error);
                 showError('Failed to generate preview.');
             } finally {
                 showLoading(false);
@@ -3748,7 +3578,6 @@
                 }
                 
             } catch (error) {
-                console.error('Error deleting quote:', error);
                 showError('Failed to delete quote.');
             } finally {
                 showLoading(false);
@@ -3822,7 +3651,6 @@
                 }
                 
             } catch (error) {
-                console.error('Error converting to order:', error);
                 showError('Failed to convert quote to order.');
             } finally {
                 showLoading(false);
@@ -4128,7 +3956,6 @@
                                     await downloadAsPDF();
                                 }
                             } catch (error) {
-                                console.error('Error in smart download:', error);
                                 alert('Error generating download. Please try again.');
                             }
                         }
@@ -4176,7 +4003,6 @@
 
         // Get product image path
         function getProductImagePath(product, category, density, length, colorType, color) {
-            console.log('getProductImagePath called with:', { product, category, density, length, colorType, color });
             
             // Product image mapping based on actual files in images/Products/
             const productImageMap = {
@@ -4212,7 +4038,6 @@
             // Try to find image by product name first (exact match)
             if (product && productImageMap[product]) {
                 const path = `images/Products/${productImageMap[product]}`;
-                console.log('Exact match found:', path);
                 return path;
             }
 
@@ -4221,14 +4046,12 @@
             for (const [key, value] of Object.entries(productImageMap)) {
                 if (key.toLowerCase().includes(productLower) || productLower.includes(key.toLowerCase())) {
                     const path = `images/Products/${value}`;
-                    console.log('Partial match found:', path);
                     return path;
                 }
             }
 
             // Fallback to a default image (use one of the existing images)
             const fallbackPath = 'images/Products/Genius.png';
-            console.log('Using fallback image:', fallbackPath);
             return fallbackPath;
         }
 
@@ -4244,13 +4067,11 @@
 
         // Test function for debugging image upload functionality
         function testImageUploadFunctionality() {
-            console.log('🧪 Starting image upload functionality test...');
             
             // Test 1: Check if image display elements exist
             const colorImageDisplay = document.getElementById('color-image-display');
             const styleImageDisplay = document.getElementById('style-image-display');
             
-            console.log('🔍 Image display elements check:', {
                 colorImageDisplay: !!colorImageDisplay,
                 styleImageDisplay: !!styleImageDisplay,
                 colorImageDisplaySrc: colorImageDisplay ? colorImageDisplay.src : 'N/A',
@@ -4258,13 +4079,11 @@
             });
             
             // Test 2: Simulate adding an item and check if elements still exist
-            console.log('🧪 Simulating form clear...');
             clearProductForm();
             
             const colorImageDisplayAfter = document.getElementById('color-image-display');
             const styleImageDisplayAfter = document.getElementById('style-image-display');
             
-            console.log('🔍 Image display elements after clear:', {
                 colorImageDisplay: !!colorImageDisplayAfter,
                 styleImageDisplay: !!styleImageDisplayAfter,
                 colorImageDisplaySrc: colorImageDisplayAfter ? colorImageDisplayAfter.src : 'N/A',
@@ -4272,9 +4091,7 @@
             });
             
             if (colorImageDisplayAfter && styleImageDisplayAfter) {
-                console.log('✅ Image display elements preserved after form clear - fix successful!');
             } else {
-                console.log('❌ Image display elements missing after form clear - fix failed!');
             }
             
             return {
@@ -4285,7 +4102,6 @@
 
         // Test function to diagnose second quote line rendering
         function testSecondQuoteLineRendering() {
-            console.log('🧪 Testing second quote line rendering...');
             
             // Clear existing items
             currentQuote.items = [];
@@ -4327,16 +4143,13 @@
                 styleImage: null
             };
             
-            console.log('➕ Adding first test item:', testItem1);
             currentQuote.items.push(testItem1);
             updateQuoteItemsDisplay();
             
             setTimeout(() => {
-                console.log('➕ Adding second test item:', testItem2);
                 currentQuote.items.push(testItem2);
                 updateQuoteItemsDisplay();
                 
-                console.log('✅ Test completed. Check the quote items display for any issues.');
             }, 1000);
         }
 

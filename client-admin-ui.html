@@ -409,9 +409,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     window.unifiedDataAccess = new UnifiedDataAccess(window.fallbackDetector, window.localFallbackManager);
     
     await window.fallbackDetector.initialize();
-    console.log('✅ Fallback system initialized for client admin UI');
   } catch (fallbackError) {
-    console.warn('⚠️ Fallback system initialization failed, continuing with Firebase only:', fallbackError);
   }
   
   if (typeof window.clientManager !== 'undefined') {

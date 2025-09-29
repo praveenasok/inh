@@ -238,16 +238,12 @@ class ClientManager {
   // Load clients using fallback-first strategy
   async loadClients() {
     try {
-      console.log('🔄 Loading clients with fallback-first strategy...');
-      
       // Primary: Try unified data access (fallback-first)
       if (window.unifiedDataAccess) {
         try {
           const clients = await window.unifiedDataAccess.getClients();
-          console.log(`👥 Loaded ${clients.length} clients from unified data access`);
           return clients;
         } catch (unifiedError) {
-          console.warn('⚠️ Unified data access failed, trying local fallback:', unifiedError);
         }
       }
       
@@ -255,10 +251,8 @@ class ClientManager {
       if (window.localFallbackManager) {
         try {
           const clients = await window.localFallbackManager.getData('clients');
-          console.log(`👥 Loaded ${clients.length} clients from local fallback manager`);
           return clients || [];
         } catch (fallbackError) {
-          console.warn('⚠️ Local fallback failed, trying Firebase:', fallbackError);
         }
       }
       
@@ -267,20 +261,16 @@ class ClientManager {
         try {
           const firebaseClients = await window.firebaseDB.getClients();
           if (firebaseClients && Array.isArray(firebaseClients)) {
-            console.log(`👥 Loaded ${firebaseClients.length} clients from Firebase (fallback)`);
             return firebaseClients;
           }
         } catch (firebaseError) {
-          console.warn('⚠️ Firebase data access failed:', firebaseError);
         }
       }
       
       // If all methods fail, return empty array
-      console.warn('⚠️ No client data available from any source, using empty array');
       return [];
       
     } catch (error) {
-      console.error('❌ Error loading clients:', error);
       throw new Error(`Failed to load clients: ${error.message}`);
     }
   }

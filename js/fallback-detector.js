@@ -110,7 +110,6 @@ class FallbackDetector {
 
     async initialize() {
         try {
-            console.log(`🔄 Initializing Fallback Detector (${this.fallbackFirstMode ? 'Fallback-First Mode' : 'Admin Mode'})...`);
             
             if (this.isAdminPage) {
                 // Initial Firebase availability check for admin pages
@@ -120,7 +119,6 @@ class FallbackDetector {
                 this.startPeriodicChecks();
             } else {
                 // For non-admin pages, skip Firebase checks and use fallback
-                console.log('📦 Non-admin page detected, using fallback-first strategy');
                 this.updateStatus({
                     firebase: 'disabled',
                     fallback: 'active',
@@ -131,10 +129,8 @@ class FallbackDetector {
             this.isInitialized = true;
             this.status.initialized = true;
             
-            console.log('✅ Fallback Detector initialized successfully');
             
         } catch (error) {
-            console.error('❌ Failed to initialize Fallback Detector:', error);
             // Continue with fallback mode
             this.isFirebaseAvailable = false;
             this.status.firebase = false;
@@ -195,7 +191,6 @@ class FallbackDetector {
             });
             
         } catch (error) {
-            console.error('Firebase connection test error:', error);
             return false;
         }
     }
@@ -220,12 +215,10 @@ class FallbackDetector {
         // Handle circuit breaker recovery
         if (this.circuitBreakerState === 'half-open') {
             this.circuitBreakerState = 'closed';
-            console.log('Circuit breaker closed - Firebase connection stable');
             this.emit('circuitBreakerClosed', { responseTime, timestamp: Date.now() });
         } else if (this.circuitBreakerState === 'open') {
             // Direct recovery from open state (shouldn't happen normally)
             this.circuitBreakerState = 'closed';
-            console.log('Circuit breaker force-closed due to successful connection');
         }
         
         // Reset recovery tracking
@@ -245,7 +238,6 @@ class FallbackDetector {
         
         if (wasUnavailable) {
             const downtime = this.calculateDowntime();
-            console.log(`Firebase connection restored after ${Math.round(downtime / 1000)}s downtime`);
             
             this.emit('firebaseRestored', {
                 responseTime: responseTime,
@@ -306,7 +298,6 @@ class FallbackDetector {
                 recoveryMode: true
             });
             
-            console.warn('Firebase unavailable, switching to fallback data:', reason);
             this.emit('firebaseUnavailable', {
                 reason: reason,
                 details: details,
@@ -338,7 +329,6 @@ class FallbackDetector {
                     this.circuitBreakerState = 'open';
                     this.lastCircuitBreakerOpen = now;
                     this.updateStatus({ circuitBreaker: 'open' });
-                    console.warn('Circuit breaker opened due to high error rate:', errorRate);
                     this.emit('circuitBreakerOpened', { errorRate, timestamp: now });
                 }
                 break;
@@ -347,7 +337,6 @@ class FallbackDetector {
                 if (now - this.lastCircuitBreakerOpen > this.circuitBreakerTimeout) {
                     this.circuitBreakerState = 'half-open';
                     this.updateStatus({ circuitBreaker: 'half-open' });
-                    console.log('Circuit breaker moved to half-open state');
                     this.emit('circuitBreakerHalfOpen', { timestamp: now });
                 }
                 break;
@@ -360,7 +349,6 @@ class FallbackDetector {
     
     startRecoveryProcess() {
         if (this.recoveryAttempts >= this.maxRecoveryAttempts) {
-            console.warn('Maximum recovery attempts reached, stopping recovery process');
             this.emit('recoveryFailed', { attempts: this.recoveryAttempts });
             return;
         }
@@ -370,26 +358,21 @@ class FallbackDetector {
             this.maxRecoveryBackoffMs
         );
         
-        console.log(`Starting recovery attempt ${this.recoveryAttempts + 1} in ${backoffTime}ms`);
         
         setTimeout(async () => {
             this.recoveryAttempts++;
             
             try {
-                console.log(`Recovery attempt ${this.recoveryAttempts}: Testing Firebase connection...`);
                 const isAvailable = await this.checkFirebaseAvailability();
                 
                 if (!isAvailable) {
-                    console.log(`Recovery attempt ${this.recoveryAttempts} failed, scheduling next attempt`);
                     this.startRecoveryProcess();
                 } else {
-                    console.log(`Recovery successful after ${this.recoveryAttempts} attempts`);
                     this.recoveryAttempts = 0;
                     this.updateStatus({ recoveryMode: false });
                     this.emit('recoverySuccessful', { attempts: this.recoveryAttempts });
                 }
             } catch (error) {
-                console.error(`Recovery attempt ${this.recoveryAttempts} failed:`, error);
                 this.startRecoveryProcess();
             }
         }, backoffTime);
@@ -407,7 +390,6 @@ class FallbackDetector {
             this.checkFirebaseAvailability();
         }, this.checkIntervalMs);
         
-        console.log(`Started Firebase monitoring (interval: ${this.checkIntervalMs}ms)`);
     }
     
     startMonitoring() {
@@ -420,7 +402,6 @@ class FallbackDetector {
             this.checkFirebaseAvailability();
         }, this.checkIntervalMs);
         
-        console.log(`Started Firebase monitoring (interval: ${this.checkIntervalMs}ms)`);
     }
     
     stopMonitoring() {
@@ -429,18 +410,15 @@ class FallbackDetector {
             this.checkInterval = null;
         }
         this.isMonitoring = false;
-        console.log('Stopped Firebase monitoring');
     }
     
     setupNetworkListeners() {
         // Listen for online/offline events
         window.addEventListener('online', () => {
-            console.log('Network connection restored');
             this.checkFirebaseAvailability();
         });
         
         window.addEventListener('offline', () => {
-            console.log('Network connection lost');
             this.handleFirebaseFailure('network_offline', 'Device is offline');
         });
     }
@@ -453,7 +431,6 @@ class FallbackDetector {
                 return;
             }
             
-            console.log('Syncing data from Firebase to local storage...');
             
             // Get data from Firebase (assuming universalDataManager is available)
             if (window.universalDataManager && window.universalDataManager.isInitialized) {
@@ -471,11 +448,9 @@ class FallbackDetector {
                 });
                 
                 this.emit('syncCompleted', firebaseData);
-                console.log('Firebase to local sync completed successfully');
             }
             
         } catch (error) {
-            console.error('Error syncing from Firebase to local:', error);
             this.emit('syncError', error);
         }
     }
@@ -487,10 +462,22 @@ class FallbackDetector {
             }
             
             const stats = await window.localFallbackManager.getStatistics();
-            const hasData = Object.values(stats).some(stat => stat.count > 0);
+            
+            // Defensive check for stats object
+            if (!stats || typeof stats !== 'object') {
+                this.updateStatus({
+                    fallback: 'error',
+                    error: 'Invalid stats object'
+                });
+                return false;
+            }
+            
+            // Check if any collection has data
+            const hasData = Object.values(stats).some(stat => {
+                return stat && typeof stat === 'object' && typeof stat.count === 'number' && stat.count > 0;
+            });
             
             if (!hasData) {
-                console.warn('No fallback data available');
                 this.emit('fallbackDataUnavailable');
                 
                 this.updateStatus({
@@ -508,7 +495,6 @@ class FallbackDetector {
             return hasData;
             
         } catch (error) {
-            console.error('Error validating fallback data:', error);
             this.updateStatus({
                 fallback: 'error',
                 error: error.message
@@ -536,7 +522,6 @@ class FallbackDetector {
                         mode: 'fallback-first'
                     };
                 } else {
-                    console.warn(`LocalFallbackManager not available for ${collection}`);
                     return {
                         data: [],
                         source: 'empty',
@@ -558,7 +543,6 @@ class FallbackDetector {
                             };
                         }
                     } catch (error) {
-                        console.warn(`Firebase data access failed for ${collection}, falling back to local:`, error);
                         this.handleFirebaseFailure('data_access_error', error.message);
                     }
                 }
@@ -582,7 +566,6 @@ class FallbackDetector {
             }
             
         } catch (error) {
-            console.error(`Error getting data for ${collection}:`, error);
             throw error;
         }
     }
@@ -632,7 +615,6 @@ class FallbackDetector {
     on(event, callback) {
         try {
             if (!this.eventListeners || !(this.eventListeners instanceof Map)) {
-                console.warn('FallbackDetector: eventListeners not properly initialized in on(), recreating');
                 this.eventListeners = new Map();
             }
             if (!this.eventListeners.has(event)) {
@@ -640,7 +622,6 @@ class FallbackDetector {
             }
             this.eventListeners.get(event).push(callback);
         } catch (error) {
-            console.error('FallbackDetector: Error in on() method:', error);
             this.eventListeners = new Map();
             this.eventListeners.set(event, [callback]);
         }
@@ -659,7 +640,6 @@ class FallbackDetector {
                 }
             }
         } catch (error) {
-            console.error('FallbackDetector: Error in off() method:', error);
             this.eventListeners = new Map();
         }
     }
@@ -667,7 +647,6 @@ class FallbackDetector {
     emit(event, data) {
         try {
             if (!this.eventListeners || !(this.eventListeners instanceof Map) || typeof this.eventListeners.has !== 'function') {
-                console.warn('FallbackDetector: eventListeners not properly initialized in emit(), recreating');
                 this.eventListeners = new Map();
                 return;
             }
@@ -676,12 +655,10 @@ class FallbackDetector {
                     try {
                         callback(data);
                     } catch (error) {
-                        console.error(`Error in event listener for ${event}:`, error);
                     }
                 });
             }
         } catch (error) {
-            console.error('FallbackDetector: Error in emit() method:', error);
             this.eventListeners = new Map();
         }
     }
@@ -689,12 +666,10 @@ class FallbackDetector {
     // ==================== MANUAL CONTROLS ====================
     
     async forceFirebaseCheck() {
-        console.log('Forcing Firebase availability check...');
         return await this.checkFirebaseAvailability();
     }
     
     async forceFallback() {
-        console.log('Forcing fallback mode...');
         this.isFirebaseAvailable = false;
         this.updateStatus({
             firebase: 'forced_unavailable',
@@ -704,7 +679,6 @@ class FallbackDetector {
     }
     
     async forceFirebase() {
-        console.log('Forcing Firebase mode...');
         const isAvailable = await this.checkFirebaseAvailability();
         if (isAvailable) {
             this.isFirebaseAvailable = true;
@@ -727,7 +701,6 @@ class FallbackDetector {
         window.removeEventListener('online', this.checkFirebaseAvailability);
         window.removeEventListener('offline', this.handleFirebaseFailure);
         
-        console.log('Fallback Detector destroyed');
     }
 }
 

@@ -1,5 +1,7 @@
 const cron = require('node-cron');
 const FirebaseSyncService = require('./firebase-sync-service');
+const GoogleSheetsService = require('./google-sheets-service');
+const { googleSheetsAutoConfig } = require('./js/google-sheets-auto-config');
 
 class SyncScheduler {
   constructor() {
@@ -7,9 +9,9 @@ class SyncScheduler {
     this.scheduledTask = null;
     this.isSchedulerRunning = false;
     
-    this.productSheetId = '1hlfrnZnNQ0u8idg5KDmkSY4zFhLyvjLqUwAZn6HmW3s';
-    this.salesmanSheetId = '1hlfrnZnNQ0u8idg5KDmkSY4zFhLyvjLqUwAZn6HmW3s';
-    this.companiesSheetId = '1hlfrnZnNQ0u8idg5KDmkSY4zFhLyvjLqUwAZn6HmW3s';
+    this.productSheetId = googleSheetsAutoConfig.getSheetId();
+    this.salesmanSheetId = googleSheetsAutoConfig.getSheetId();
+    this.companiesSheetId = googleSheetsAutoConfig.getSheetId();
     
     this.config = {
       cronSchedule: '0 */12 * * *',
@@ -212,6 +214,22 @@ class SyncScheduler {
         }
       }
 
+      // Add count data synchronization
+      try {
+        const countData = await this.syncCountData();
+        syncResults.results.countData = {
+          success: true,
+          salesmenCount: countData.salesmenCount,
+          priceListsCount: countData.priceListsCount
+        };
+      } catch (error) {
+        syncResults.results.countData = {
+          success: false,
+          error: error.message
+        };
+        syncResults.errors.push(`Count data sync: ${error.message}`);
+      }
+
       syncResults.success = Object.values(syncResults.results).every(result => result.success);
 
       await this.syncService.logSyncActivity(syncResults);
@@ -231,12 +249,60 @@ class SyncScheduler {
     }
   }
 
+  async syncCountData() {
+    try {
+      // Fetch salesmen count
+      let salesmenCount = 0;
+      try {
+        const salesmenData = await this.syncService.googleSheetsService.fetchSalesmanData(this.salesmanSheetId);
+        salesmenCount = salesmenData ? salesmenData.length : 0;
+      } catch (error) {
+      }
+
+      // Fetch price lists count
+      let priceListsCount = 0;
+      try {
+        const productData = await this.syncService.googleSheetsService.fetchProductData(this.productSheetId);
+        if (productData && productData.length > 0) {
+          const uniquePriceLists = new Set();
+          productData.forEach(product => {
+            if (product['Price List Name']) {
+              uniquePriceLists.add(product['Price List Name']);
+            }
+          });
+          priceListsCount = uniquePriceLists.size;
+        }
+      } catch (error) {
+      }
+
+      const countData = {
+        salesmenCount,
+        priceListsCount,
+        lastUpdated: new Date().toISOString()
+      };
+
+      // Also store count data in Firebase
+      try {
+        const firebaseResult = await this.syncService.syncCountData();
+        countData.firebaseSync = firebaseResult;
+      } catch (firebaseError) {
+        countData.firebaseSync = { success: false, error: firebaseError.message };
+      }
+
+      return countData;
+
+    } catch (error) {
+      throw error;
+    }
+  }
+
   getSchedulerStatus() {
     return {
       isRunning: this.isSchedulerRunning,
       isInitialized: this.isInitialized,
       credentialsAvailable: this.credentialsAvailable,
-      nextRun: this.scheduledTask ? this.scheduledTask.nextDate() : null,
+      nextRun: this.scheduledTask ? 'Scheduled according to cron pattern' : null,
+      cronPattern: this.config.cronPattern,
       config: this.config
     };
   }

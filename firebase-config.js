@@ -22,6 +22,7 @@ let firebaseInitialized = false;
 let firebaseApp = null;
 
 if (typeof window !== 'undefined' && window.firebaseConfig) {
+  // Firebase config already exists
 } else {
 
 function initializeFirebaseApp() {
@@ -44,7 +45,6 @@ function initializeFirebaseApp() {
       
       // Add connection state monitoring
       db.enableNetwork().catch(error => {
-        console.warn('Firebase network enable failed:', error);
       });
       
       if (firebase.auth) {
@@ -84,10 +84,10 @@ if (typeof module !== 'undefined' && module.exports) {
   };
 }
 
-window.firebaseConfig = firebaseConfig;
-window.firebaseCollections = firebaseCollections;
-window.initializeFirebaseApp = initializeFirebaseApp;
-window.isFirebaseInitialized = isFirebaseInitialized;
-window.getFirebaseApp = getFirebaseApp;
+  window.firebaseConfig = firebaseConfig;
+  window.firebaseCollections = firebaseCollections;
+  window.initializeFirebaseApp = initializeFirebaseApp;
+  window.isFirebaseInitialized = isFirebaseInitialized;
+  window.getFirebaseApp = getFirebaseApp;
 
 }

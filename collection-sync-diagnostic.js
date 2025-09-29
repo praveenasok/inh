@@ -16,7 +16,6 @@ class CollectionSyncDiagnostic {
     log(message, type = 'info') {
         const timestamp = new Date().toLocaleTimeString();
         const logMessage = `[${timestamp}] [${type.toUpperCase()}] ${message}`;
-        console.log(logMessage);
         
         // Also log to page if available
         if (typeof window !== 'undefined' && window.log) {
@@ -36,7 +35,6 @@ class CollectionSyncDiagnostic {
             this.generateCollectionReport();
         } catch (error) {
             this.log(`❌ Diagnostic failed: ${error.message}`, 'error');
-            console.error('Full error:', error);
         }
     }
 

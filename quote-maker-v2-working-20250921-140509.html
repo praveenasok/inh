@@ -708,7 +708,6 @@
                     const response = await fetch('https://api.exchangerate-api.com/v4/latest/INR');
                     data = await response.json();
                 } catch (e) {
-                    console.warn('Primary API failed, trying backup...');
                     // Backup API
                     const response = await fetch('https://api.fixer.io/latest?base=INR&access_key=YOUR_API_KEY');
                     data = await response.json();
@@ -739,7 +738,6 @@
                     console.log('✅ Exchange rates updated successfully', exchangeRates);
                 }
             } catch (error) {
-                console.warn('⚠️ Failed to fetch exchange rates, using default rates:', error);
             }
         }
 
@@ -810,7 +808,6 @@
                 console.log('✅ Quote Maker v2 initialized successfully');
                 
             } catch (error) {
-                console.error('❌ Initialization error:', error);
                 showError('Failed to initialize application. Please refresh the page.');
             } finally {
                 showLoading(false);
@@ -829,14 +826,11 @@
                         console.log('✅ Firebase connected successfully');
                     } else {
                         updateConnectionStatus(false);
-                        console.warn('⚠️ Firebase not available, using fallback data');
                     }
                 } else {
-                    console.warn('⚠️ Firebase database module not found, using fallback data');
                     updateConnectionStatus(false);
                 }
             } catch (error) {
-                console.error('❌ Firebase initialization failed:', error);
                 updateConnectionStatus(false);
                 // Continue with fallback data instead of failing
             }
@@ -859,7 +853,6 @@
                 console.log('✅ All data loaded successfully');
                 
             } catch (error) {
-                console.error('❌ Error loading data:', error);
                 throw error;
             }
         }
@@ -882,7 +875,6 @@
                 return productData;
                 
             } catch (error) {
-                console.error('❌ Error loading products:', error);
                 productData = [];
                 return [];
             }
@@ -903,7 +895,6 @@
                 return clientData;
                 
             } catch (error) {
-                console.error('❌ Error loading clients:', error);
                 clientData = [];
                 return [];
             }
@@ -924,7 +915,6 @@
                 return salesmenData;
                 
             } catch (error) {
-                console.error('❌ Error loading salesmen:', error);
                 salesmenData = [];
                 return [];
             }
@@ -949,7 +939,6 @@
                 return stylesData;
                 
             } catch (error) {
-                console.error('❌ Error loading styles:', error);
                 stylesData = [];
                 populateStylesFromCollection(); // Still call to show "No styles available"
                 return [];
@@ -971,7 +960,6 @@
                 return colorsData;
                 
             } catch (error) {
-                console.error('❌ Error loading colors:', error);
                 colorsData = [];
                 return [];
             }
@@ -1092,7 +1080,6 @@
             if (shippingInput) {
                 shippingInput.addEventListener('input', updateQuoteSummary);
             } else {
-                console.error('❌ Shipping input element not found');
             }
             
             // Action buttons
@@ -1377,7 +1364,6 @@
             const selector = document.getElementById('style-selector');
             
             if (!selector) {
-                console.error('❌ Style selector element not found');
                 return;
             }
             
@@ -1924,7 +1910,6 @@
                 closeAddClientModal();
                 
             } catch (error) {
-                console.error('Error adding client:', error);
                 showError('Failed to add client. Please try again.');
             } finally {
                 showLoading(false);
@@ -1983,7 +1968,6 @@
                 }
                 
             } catch (error) {
-                console.error('Error saving quote:', error);
                 showError('Failed to save quote. Please try again.');
             } finally {
                 showLoading(false);
@@ -2003,7 +1987,6 @@
                 }
                 
             } catch (error) {
-                console.error('Error loading saved quotes:', error);
                 const container = document.getElementById('saved-quotes-container');
                 container.innerHTML = '<div class="text-center text-red-500 py-4"><p class="text-sm">Error loading quotes</p></div>';
             }
@@ -2015,7 +1998,6 @@
                 const savedQuotes = JSON.parse(localStorage.getItem('savedQuotes') || '[]');
                 displaySavedQuotes(savedQuotes);
             } catch (error) {
-                console.error('Error loading local quotes:', error);
                 const container = document.getElementById('saved-quotes-container');
                 container.innerHTML = '<div class="text-center text-red-500 py-4"><p class="text-sm">Error loading local quotes</p></div>';
             }
@@ -2156,7 +2138,6 @@
                 }
                 
             } catch (error) {
-                console.error('Error loading quote:', error);
                 showError('Failed to load quote.');
             } finally {
                 showLoading(false);
@@ -2286,7 +2267,6 @@
                 }
                 
             } catch (error) {
-                console.error('Error recalling quote:', error);
                 showError('Failed to recall quote.');
             } finally {
                 showLoading(false);
@@ -2327,7 +2307,6 @@
                 }
                 
             } catch (error) {
-                console.error('Error generating preview:', error);
                 showError('Failed to generate preview.');
             } finally {
                 showLoading(false);
@@ -2369,7 +2348,6 @@
                 }
                 
             } catch (error) {
-                console.error('Error deleting quote:', error);
                 showError('Failed to delete quote.');
             } finally {
                 showLoading(false);
@@ -2443,7 +2421,6 @@
                 }
                 
             } catch (error) {
-                console.error('Error converting to order:', error);
                 showError('Failed to convert quote to order.');
             } finally {
                 showLoading(false);
@@ -2791,7 +2768,6 @@
                                 doc.save(fileName);
                                 
                             } catch (error) {
-                                console.error('Error generating PDF:', error);
                                 alert('Error generating PDF. Please try again.');
                             }
                          }

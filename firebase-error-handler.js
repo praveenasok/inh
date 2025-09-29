@@ -79,9 +79,6 @@ class FirebaseErrorHandler {
 
     // Console logging
     console.group(`🔥 Firebase Error [${category}]`);
-    console.error('Context:', context);
-    console.error('Error:', error);
-    console.error('Code:', error.code);
     console.groupEnd();
 
     // Handle specific error types
@@ -169,7 +166,6 @@ class FirebaseErrorHandler {
         window.showError(message);
       } else {
         // Fallback to alert
-        console.warn('No notification system found, using alert');
         alert(`Error: ${message}`);
       }
     }

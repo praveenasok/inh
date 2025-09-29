@@ -34,7 +34,6 @@ class APIClient {
             if (!options.skipCache) {
                 const cached = this.getCachedData(collection);
                 if (cached) {
-                    console.log(`📦 Using cached data for ${collection}`);
                     return cached;
                 }
             }
@@ -44,7 +43,6 @@ class APIClient {
                 throw new Error(`Unknown collection: ${collection}`);
             }
 
-            console.log(`🌐 Fetching ${collection} from server API: ${endpoint}`);
             
             const response = await fetch(`${this.baseURL}${endpoint}`, {
                 method: 'GET',
@@ -59,7 +57,6 @@ class APIClient {
                 // If API endpoint doesn't exist (404), mark API as unavailable
                 if (response.status === 404) {
                     this.isApiAvailable = false;
-                    console.warn(`API endpoint ${endpoint} not found (404). API marked as unavailable.`);
                 }
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
@@ -86,18 +83,15 @@ class APIClient {
             // Cache the result
             this.setCachedData(collection, data);
 
-            console.log(`✅ Successfully loaded ${data.length} items from ${collection}`);
             this.emit('dataLoaded', { collection, count: data.length, source: 'api' });
 
             return data;
 
         } catch (error) {
-            console.error(`❌ Error loading ${collection}:`, error);
             
             // Mark API as unavailable for network errors
             if (error.name === 'TypeError' || error.message.includes('Failed to fetch')) {
                 this.isApiAvailable = false;
-                console.warn(`API marked as unavailable due to network error: ${error.message}`);
             }
             
             this.emit('dataError', { collection, error: error.message });
@@ -136,7 +130,6 @@ class APIClient {
             return result;
 
         } catch (error) {
-            console.error(`❌ Error saving ${collection}:`, error);
             this.emit('saveError', { collection, error: error.message });
             throw error;
         }
@@ -211,7 +204,6 @@ class APIClient {
         try {
             // Ensure eventListeners is properly initialized
             if (!this.eventListeners || !(this.eventListeners instanceof Map)) {
-                console.warn('API Client: eventListeners not properly initialized, recreating...');
                 this.eventListeners = new Map();
             }
             
@@ -220,7 +212,6 @@ class APIClient {
             }
             this.eventListeners.get(event).push(callback);
         } catch (error) {
-            console.error('API Client: Error in on method:', error);
             // Recreate eventListeners if there's an error
             this.eventListeners = new Map();
             this.eventListeners.set(event, [callback]);
@@ -231,7 +222,6 @@ class APIClient {
         try {
             // Ensure eventListeners is properly initialized
             if (!this.eventListeners || !(this.eventListeners instanceof Map)) {
-                console.warn('API Client: eventListeners not properly initialized, recreating...');
                 this.eventListeners = new Map();
                 return;
             }
@@ -244,7 +234,6 @@ class APIClient {
                 }
             }
         } catch (error) {
-            console.error('API Client: Error in off method:', error);
             // Recreate eventListeners if there's an error
             this.eventListeners = new Map();
         }
@@ -254,7 +243,6 @@ class APIClient {
         try {
             // Ensure eventListeners is properly initialized
             if (!this.eventListeners || !(this.eventListeners instanceof Map)) {
-                console.warn('API Client: eventListeners not properly initialized, recreating...');
                 this.eventListeners = new Map();
                 return;
             }
@@ -265,12 +253,10 @@ class APIClient {
                     try {
                         callback(data);
                     } catch (error) {
-                        console.error('Event listener error:', error);
                     }
                 });
             }
         } catch (error) {
-            console.error('API Client: Error in emit method:', error);
             // Recreate eventListeners if there's an error
             this.eventListeners = new Map();
         }

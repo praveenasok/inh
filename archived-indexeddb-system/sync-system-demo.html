@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="sync-system-auto-init" content="true">
+    <title>Two-Way Sync System Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+            padding: 25px;
+            border: 2px solid #f0f0f0;
+            border-radius: 15px;
+            background: #fafafa;
+        }
+
+        .section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-icon {
+            font-size: 1.8rem;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .dropdown-demo {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .dropdown-group {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .dropdown-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .dropdown-group select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            background: white;
+            transition: border-color 0.3s ease;
+        }
+
+        .dropdown-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .status-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .status-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .status-label {
+            color: #666;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .log-container {
+            background: #1a1a1a;
+            color: #00ff00;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            max-height: 300px;
+            overflow-y: auto;
+            line-height: 1.4;
+        }
+
+        .log-entry {
+            margin-bottom: 5px;
+        }
+
+        .log-timestamp {
+            color: #888;
+        }
+
+        .log-level-info { color: #00ff00; }
+        .log-level-warn { color: #ffaa00; }
+        .log-level-error { color: #ff4444; }
+        .log-level-debug { color: #00aaff; }
+
+        .config-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .form-group {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        #sync-status-container {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔄 Two-Way Sync System</h1>
+            <p>Google Sheets ↔ IndexedDB Synchronization Demo</p>
+        </div>
+
+        <div class="content">
+            <!-- Sync Status Section -->
+            <div class="section">
+                <h2><span class="section-icon">📊</span>Sync Status</h2>
+                <div id="sync-status-container"></div>
+                <div class="status-grid">
+                    <div class="status-card">
+                        <div class="status-value" id="status-initialized">❓</div>
+                        <div class="status-label">Initialized</div>
+                    </div>
+                    <div class="status-card">
+                        <div class="status-value" id="status-syncing">❓</div>
+                        <div class="status-label">Syncing</div>
+                    </div>
+                    <div class="status-card">
+                        <div class="status-value" id="status-last-sync">Never</div>
+                        <div class="status-label">Last Sync</div>
+                    </div>
+                    <div class="status-card">
+                        <div class="status-value" id="status-records">0</div>
+                        <div class="status-label">Total Records</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Control Panel -->
+            <div class="section">
+                <h2><span class="section-icon">🎛️</span>Control Panel</h2>
+                <div class="controls">
+                    <button class="btn btn-primary" onclick="initializeSystem()">
+                        <span id="init-loading" class="loading hidden"></span>
+                        Initialize System
+                    </button>
+                    <button class="btn btn-success" onclick="performSync('incremental')" disabled id="btn-incremental">
+                        Incremental Sync
+                    </button>
+                    <button class="btn btn-secondary" onclick="performSync('full')" disabled id="btn-full">
+                        Full Sync
+                    </button>
+                    <button class="btn btn-warning" onclick="runTests()" disabled id="btn-tests">
+                        Run Tests
+                    </button>
+                </div>
+                <div id="system-alerts"></div>
+            </div>
+
+            <!-- Configuration -->
+            <div class="section">
+                <h2><span class="section-icon">⚙️</span>Configuration</h2>
+                <div class="config-form">
+                    <div class="form-group">
+                        <label for="config-sheet-id">Google Sheets ID</label>
+                        <input type="text" id="config-sheet-id" placeholder="Enter your Google Sheets ID">
+                    </div>
+                    <div class="form-group">
+                        <label for="config-api-key">API Key</label>
+                        <input type="password" id="config-api-key" placeholder="Enter your API key">
+                    </div>
+                    <div class="form-group">
+                        <label for="config-sync-interval">Sync Interval (ms)</label>
+                        <input type="number" id="config-sync-interval" value="300000" min="30000">
+                    </div>
+                    <div class="form-group">
+                        <label for="config-log-level">Log Level</label>
+                        <select id="config-log-level">
+                            <option value="error">Error</option>
+                            <option value="warn">Warning</option>
+                            <option value="info" selected>Info</option>
+                            <option value="debug">Debug</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dropdown Demo -->
+            <div class="section">
+                <h2><span class="section-icon">📋</span>Dropdown Demo</h2>
+                <div class="dropdown-demo">
+                    <div class="dropdown-group">
+                        <label for="demo-products">Products</label>
+                        <select id="demo-products">
+                            <option value="">Loading...</option>
+                        </select>
+                    </div>
+                    <div class="dropdown-group">
+                        <label for="demo-clients">Clients</label>
+                        <select id="demo-clients">
+                            <option value="">Loading...</option>
+                        </select>
+                    </div>
+                    <div class="dropdown-group">
+                        <label for="demo-salespeople">Salespeople</label>
+                        <select id="demo-salespeople">
+                            <option value="">Loading...</option>
+                        </select>
+                    </div>
+                    <div class="dropdown-group">
+                        <label for="demo-categories">Categories</label>
+                        <select id="demo-categories">
+                            <option value="">Loading...</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Activity Log -->
+            <div class="section">
+                <h2><span class="section-icon">📝</span>Activity Log</h2>
+                <div class="log-container" id="activity-log">
+                    <div class="log-entry">
+                        <span class="log-timestamp">[System]</span>
+                        <span class="log-level-info">Demo page loaded. Click "Initialize System" to begin.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Include all sync system scripts -->
+    <script src="js/indexeddb-manager.js"></script>
+    <script src="js/sheets-to-indexeddb-sync.js"></script>
+    <script src="js/indexeddb-to-sheets-sync.js"></script>
+    <script src="js/bidirectional-sync-coordinator.js"></script>
+    <script src="js/indexeddb-dropdown-manager.js"></script>
+    <script src="js/dropdown-manager-migration.js"></script>
+    <script src="js/sync-status-ui.js"></script>
+    <script src="js/sync-system-integration.js"></script>
+    <script src="js/sync-system-tests.js"></script>
+    <script src="js/sync-system-init.js"></script>
+
+    <script>
+        // Demo page functionality
+        let syncSystem = null;
+        let statusUpdateInterval = null;
+
+        // Initialize the system
+        async function initializeSystem() {
+            const initButton = document.querySelector('.btn-primary');
+            const loading = document.getElementById('init-loading');
+            
+            try {
+                // Show loading
+                loading.classList.remove('hidden');
+                initButton.disabled = true;
+                
+                // Get configuration from form
+                const config = {
+                    sheetId: document.getElementById('config-sheet-id').value || null,
+                    apiKey: document.getElementById('config-api-key').value || null,
+                    syncInterval: parseInt(document.getElementById('config-sync-interval').value) || 300000,
+                    logLevel: document.getElementById('config-log-level').value || 'info',
+                    enableStatusUI: true,
+                    statusUIElement: 'sync-status-container',
+                    runTests: false,
+                    autoStart: false
+                };
+
+                logActivity('Initializing sync system...', 'info');
+                
+                // Initialize the sync system
+                syncSystem = await initializeSyncSystem(config);
+                
+                // Enable controls
+                document.getElementById('btn-incremental').disabled = false;
+                document.getElementById('btn-full').disabled = false;
+                document.getElementById('btn-tests').disabled = false;
+                
+                // Start status updates
+                startStatusUpdates();
+                
+                // Populate dropdowns
+                await populateDropdowns();
+                
+                showAlert('Sync system initialized successfully!', 'success');
+                logActivity('✅ Sync system initialized successfully', 'info');
+                
+            } catch (error) {
+                showAlert(`Initialization failed: ${error.message}`, 'error');
+                logActivity(`❌ Initialization failed: ${error.message}`, 'error');
+            } finally {
+                loading.classList.add('hidden');
+                initButton.disabled = false;
+            }
+        }
+
+        // Perform sync
+        async function performSync(type) {
+            if (!syncSystem) {
+                showAlert('System not initialized', 'error');
+                return;
+            }
+
+            try {
+                logActivity(`Starting ${type} sync...`, 'info');
+                
+                await syncSystem.performManualSync(type);
+                
+                showAlert(`${type} sync completed successfully!`, 'success');
+                logActivity(`✅ ${type} sync completed`, 'info');
+                
+                // Refresh dropdowns
+                await populateDropdowns();
+                
+            } catch (error) {
+                showAlert(`${type} sync failed: ${error.message}`, 'error');
+                logActivity(`❌ ${type} sync failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Run tests
+        async function runTests() {
+            if (!syncSystem) {
+                showAlert('System not initialized', 'error');
+                return;
+            }
+
+            try {
+                logActivity('Running validation tests...', 'info');
+                
+                const testResult = await runSyncSystemTests(syncSystem, {
+                    logLevel: document.getElementById('config-log-level').value
+                });
+                
+                if (testResult.success) {
+                    showAlert('All tests passed!', 'success');
+                    logActivity(`✅ All tests passed (${testResult.report.summary.total} tests)`, 'info');
+                } else {
+                    showAlert(`Tests completed with issues: ${testResult.report.summary.failed} failed, ${testResult.report.summary.errors} errors`, 'warning');
+                    logActivity(`⚠️ Tests completed with issues`, 'warn');
+                }
+                
+            } catch (error) {
+                showAlert(`Tests failed: ${error.message}`, 'error');
+                logActivity(`❌ Tests failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Populate dropdown demos
+        async function populateDropdowns() {
+            if (!syncSystem) return;
+
+            try {
+                const dropdownManager = syncSystem.dropdownManager;
+                
+                // Populate products
+                const productsSelect = document.getElementById('demo-products');
+                await dropdownManager.populateProductDropdown(productsSelect);
+                
+                // Populate clients
+                const clientsSelect = document.getElementById('demo-clients');
+                await dropdownManager.populateClientDropdown(clientsSelect);
+                
+                // Populate salespeople
+                const salespeopleSelect = document.getElementById('demo-salespeople');
+                await dropdownManager.populateSalespersonDropdown(salespeopleSelect);
+                
+                // Populate categories
+                const categoriesSelect = document.getElementById('demo-categories');
+                await dropdownManager.populateCategoryDropdown(categoriesSelect);
+                
+                logActivity('Dropdowns populated successfully', 'debug');
+                
+            } catch (error) {
+                logActivity(`Failed to populate dropdowns: ${error.message}`, 'error');
+            }
+        }
+
+        // Start status updates
+        function startStatusUpdates() {
+            if (statusUpdateInterval) {
+                clearInterval(statusUpdateInterval);
+            }
+            
+            statusUpdateInterval = setInterval(updateStatus, 2000);
+            updateStatus(); // Initial update
+        }
+
+        // Update status display
+        async function updateStatus() {
+            if (!syncSystem) return;
+
+            try {
+                const status = await syncSystem.getStatus();
+                
+                // Update status indicators
+                document.getElementById('status-initialized').textContent = status.isInitialized ? '✅' : '❌';
+                document.getElementById('status-syncing').textContent = status.isSyncing ? '🔄' : '⏸️';
+                
+                if (status.lastSync) {
+                    const lastSync = new Date(status.lastSync);
+                    document.getElementById('status-last-sync').textContent = lastSync.toLocaleTimeString();
+                }
+                
+                // Update record count
+                if (status.stats && status.stats.totalRecords) {
+                    document.getElementById('status-records').textContent = status.stats.totalRecords;
+                }
+                
+            } catch (error) {
+            }
+        }
+
+        // Show alert
+        function showAlert(message, type) {
+            const alertsContainer = document.getElementById('system-alerts');
+            
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.textContent = message;
+            
+            alertsContainer.appendChild(alert);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                if (alert.parentNode) {
+                    alert.parentNode.removeChild(alert);
+                }
+            }, 5000);
+        }
+
+        // Log activity
+        function logActivity(message, level = 'info') {
+            const logContainer = document.getElementById('activity-log');
+            
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            
+            const timestamp = new Date().toLocaleTimeString();
+            entry.innerHTML = `
+                <span class="log-timestamp">[${timestamp}]</span>
+                <span class="log-level-${level}">${message}</span>
+            `;
+            
+            logContainer.appendChild(entry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+            
+            // Keep only last 100 entries
+            while (logContainer.children.length > 100) {
+                logContainer.removeChild(logContainer.firstChild);
+            }
+        }
+
+        // Listen for sync system events
+        window.addEventListener('syncSystemInitialized', (event) => {
+            logActivity('🎉 Sync system initialization event received', 'info');
+        });
+
+        window.addEventListener('syncSystemInitializationFailed', (event) => {
+            logActivity(`💥 Sync system initialization failed: ${event.detail.error}`, 'error');
+        });
+
+        // Auto-populate configuration from URL parameters
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            
+            if (urlParams.get('sheetId')) {
+                document.getElementById('config-sheet-id').value = urlParams.get('sheetId');
+            }
+            
+            if (urlParams.get('apiKey')) {
+                document.getElementById('config-api-key').value = urlParams.get('apiKey');
+            }
+            
+            if (urlParams.get('logLevel')) {
+                document.getElementById('config-log-level').value = urlParams.get('logLevel');
+            }
+        });
+    </script>
+</body>
+</html>

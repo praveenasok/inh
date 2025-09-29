@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Sync System</title>
+</head>
+<body>
+    <h1>Debug Sync System</h1>
+    <div id="output"></div>
+
+    <script src="js/indexeddb-manager.js"></script>
+    <script src="js/sheets-to-indexeddb-sync.js"></script>
+    <script src="js/indexeddb-to-sheets-sync.js"></script>
+    <script src="js/bidirectional-sync-coordinator.js"></script>
+    <script src="js/indexeddb-dropdown-manager.js"></script>
+    <script src="js/dropdown-manager-migration.js"></script>
+    <script src="js/sync-status-ui.js"></script>
+    <script src="js/sync-system-integration.js"></script>
+
+    <script>
+        const output = document.getElementById('output');
+        
+        function log(message) {
+            console.log(message);
+            output.innerHTML += '<div>' + message + '</div>';
+        }
+
+        async function testSyncSystem() {
+            try {
+                log('Testing SyncSystemIntegration class...');
+                
+                // Test basic instantiation
+                const config = {
+                    logLevel: 'debug',
+                    googleSheetsId: 'test-id',
+                    googleSheetsApiKey: 'test-key'
+                };
+                
+                log('Creating SyncSystemIntegration instance...');
+                const syncSystem = new SyncSystemIntegration(config);
+                log('✅ Instance created successfully');
+                
+                log('Testing log method...');
+                syncSystem.log('Test message', 'info');
+                log('✅ Log method works');
+                
+                log('Checking properties...');
+                log('errors array: ' + (syncSystem.errors ? 'exists' : 'undefined'));
+                log('config: ' + (syncSystem.config ? 'exists' : 'undefined'));
+                
+                log('Testing initialization...');
+                try {
+                    await syncSystem.initialize();
+                    log('✅ Initialization completed');
+                } catch (initError) {
+                    log('❌ Initialization failed: ' + initError.message);
+                    log('Init Stack: ' + initError.stack);
+                }
+                
+            } catch (error) {
+                log('❌ Error: ' + error.message);
+                log('Stack: ' + error.stack);
+            }
+        }
+
+        // Run test when page loads
+        window.addEventListener('load', testSyncSystem);
+    </script>
+</body>
+</html>

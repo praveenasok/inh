@@ -514,7 +514,6 @@ class FirebaseDataSource {
                 const snapshot = await db.collection(collection).get();
                 data[collection] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             } catch (error) {
-                console.warn(`Firebase collection ${collection} error:`, error);
                 data[collection] = [];
             }
         }
@@ -615,7 +614,6 @@ class LocalStorageDataSource {
                     data[collection] = [];
                 }
             } catch (error) {
-                console.warn(`Local storage collection ${collection} error:`, error);
                 data[collection] = [];
             }
         });

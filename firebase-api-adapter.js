@@ -21,13 +21,10 @@ class FirebaseAPIAdapter {
         
         for (let attempt = 1; attempt <= maxRetries; attempt++) {
             try {
-                console.log(`🔄 Initializing Firebase API Adapter (attempt ${attempt}/${maxRetries})...`);
-                
                 const response = await this.fetchWithTimeout(`${this.baseURL}/api/status`, {}, 10000);
                 
                 if (response.ok) {
                     this.isInitialized = true;
-                    console.log('✅ Firebase API Adapter initialized successfully');
                     return true;
                 }
                 
@@ -36,14 +33,11 @@ class FirebaseAPIAdapter {
                 
             } catch (error) {
                 lastError = error;
-                console.warn(`⚠️ Initialization attempt ${attempt} failed:`, error.message);
                 
                 if (attempt < maxRetries) {
                     const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000); // Exponential backoff, max 5s
-                    console.log(`⏳ Retrying in ${delay}ms...`);
                     await new Promise(resolve => setTimeout(resolve, delay));
                 } else {
-                    console.error('❌ Failed to initialize Firebase API Adapter after all retries:', error);
                     this.isInitialized = false;
                     throw new Error(`Firebase API initialization failed: ${this.getErrorMessage(error)}`);
                 }
@@ -108,8 +102,6 @@ class FirebaseAPIAdapter {
         
         for (let attempt = 1; attempt <= maxRetries; attempt++) {
             try {
-                console.log(`🔄 Fetching data from ${endpoint} (attempt ${attempt}/${maxRetries})...`);
-                
                 const response = await this.fetchWithTimeout(`${this.baseURL}/api/${endpoint}`, {}, 15000);
                 
                 if (!response.ok) {
@@ -118,19 +110,15 @@ class FirebaseAPIAdapter {
                 }
                 
                 const data = await response.json();
-                console.log(`✅ Successfully fetched data from ${endpoint}`);
                 return data;
                 
             } catch (error) {
                 lastError = error;
-                console.warn(`⚠️ Fetch attempt ${attempt} failed for ${endpoint}:`, error.message);
                 
                 if (attempt < maxRetries && this.isRetryableError(error)) {
                     const delay = Math.min(1000 * attempt, 3000); // Linear backoff, max 3s
-                    console.log(`⏳ Retrying in ${delay}ms...`);
                     await new Promise(resolve => setTimeout(resolve, delay));
                 } else {
-                    console.error(`❌ Failed to fetch data from ${endpoint} after all retries:`, error);
                     throw new Error(`Data fetch failed: ${this.getErrorMessage(error)}`);
                 }
             }
@@ -145,8 +133,6 @@ class FirebaseAPIAdapter {
         
         for (let attempt = 1; attempt <= maxRetries; attempt++) {
             try {
-                console.log(`🔄 Posting data to ${endpoint} (attempt ${attempt}/${maxRetries})...`);
-                
                 const response = await this.fetchWithTimeout(`${this.baseURL}/api/${endpoint}`, {
                     method: 'POST',
                     headers: {
@@ -161,19 +147,15 @@ class FirebaseAPIAdapter {
                 }
                 
                 const result = await response.json();
-                console.log(`✅ Successfully posted data to ${endpoint}`);
                 return result;
                 
             } catch (error) {
                 lastError = error;
-                console.warn(`⚠️ Post attempt ${attempt} failed for ${endpoint}:`, error.message);
                 
                 if (attempt < maxRetries && this.isRetryableError(error)) {
                     const delay = Math.min(1000 * attempt, 3000); // Linear backoff, max 3s
-                    console.log(`⏳ Retrying in ${delay}ms...`);
                     await new Promise(resolve => setTimeout(resolve, delay));
                 } else {
-                    console.error(`❌ Failed to post data to ${endpoint} after all retries:`, error);
                     throw new Error(`Data post failed: ${this.getErrorMessage(error)}`);
                 }
             }
@@ -321,7 +303,6 @@ class FirebaseAPIAdapter {
             const data = await this.getData('get-styles');
             return data;
         } catch (error) {
-            console.error('❌ Failed to get styles:', error);
             return [];
         }
     }
@@ -334,7 +315,6 @@ class FirebaseAPIAdapter {
             const result = await this.postData('sync/manual', options);
             return result;
         } catch (error) {
-            console.error('❌ Failed to trigger sync:', error);
             throw error;
         }
     }
@@ -347,7 +327,6 @@ class FirebaseAPIAdapter {
             const data = await this.getData('sync/status');
             return data.status;
         } catch (error) {
-            console.error('❌ Failed to get sync status:', error);
             return null;
         }
     }
@@ -360,7 +339,6 @@ class FirebaseAPIAdapter {
             const data = await this.getData('sync/logs');
             return data.logs;
         } catch (error) {
-            console.error('❌ Failed to get sync logs:', error);
             return [];
         }
     }
@@ -450,8 +428,6 @@ window.createFirebaseCompatibilityLayer = function() {
             signOut: async () => {}
         });
     }
-
-    console.log('✅ Firebase compatibility layer created using API adapter');
 };
 
 // Auto-initialize when DOM is ready
@@ -461,7 +437,6 @@ if (document.readyState === 'loading') {
             await window.firebaseAPIAdapter.initialize();
             window.createFirebaseCompatibilityLayer();
         } catch (error) {
-            console.warn('⚠️ Firebase API Adapter initialization failed, falling back to direct Firebase');
         }
     });
 } else {
@@ -471,7 +446,6 @@ if (document.readyState === 'loading') {
             await window.firebaseAPIAdapter.initialize();
             window.createFirebaseCompatibilityLayer();
         } catch (error) {
-            console.warn('⚠️ Firebase API Adapter initialization failed, falling back to direct Firebase');
         }
     }, 100);
 }

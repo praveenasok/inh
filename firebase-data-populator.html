@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Data Populator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #fafafa;
+        }
+        .section h3 {
+            margin-top: 0;
+            color: #555;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .danger {
+            background-color: #f44336;
+        }
+        .danger:hover {
+            background-color: #da190b;
+        }
+        .info {
+            background-color: #2196F3;
+        }
+        .info:hover {
+            background-color: #0b7dda;
+        }
+        .log {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .status.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .progress {
+            width: 100%;
+            height: 20px;
+            background-color: #f0f0f0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-bar {
+            height: 100%;
+            background-color: #4CAF50;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔥 Firebase Data Populator</h1>
+        <p>This tool populates Firebase with sample colors and styles data for the Quote Maker application.</p>
+        
+        <div class="section">
+            <h3>📊 Current Status</h3>
+            <div id="status-display" class="status info">
+                Checking Firebase connection...
+            </div>
+            <div id="current-counts"></div>
+        </div>
+
+        <div class="section">
+            <h3>🌈 Colors Data (20 items)</h3>
+            <p>Natural colors, auburn/red tones, and fashion colors for hair extensions.</p>
+            <button id="populate-colors" onclick="populateColors()">Populate Colors</button>
+            <button id="clear-colors" onclick="clearColors()" class="danger">Clear Colors</button>
+            <div id="colors-progress" class="progress" style="display: none;">
+                <div id="colors-progress-bar" class="progress-bar"></div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>💇 Styles Data (16 items)</h3>
+            <p>Hair styles including straight, wavy, curly, and kinky textures.</p>
+            <button id="populate-styles" onclick="populateStyles()">Populate Styles</button>
+            <button id="clear-styles" onclick="clearStyles()" class="danger">Clear Styles</button>
+            <div id="styles-progress" class="progress" style="display: none;">
+                <div id="styles-progress-bar" class="progress-bar"></div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>🚀 Bulk Operations</h3>
+            <button id="populate-all" onclick="populateAllData()" class="info">Populate All Data</button>
+            <button id="clear-all" onclick="clearAllData()" class="danger">Clear All Data</button>
+            <button id="verify-data" onclick="verifyData()" class="info">Verify Data</button>
+        </div>
+
+        <div class="section">
+            <h3>📝 Activity Log</h3>
+            <div id="log" class="log">Ready to populate Firebase data...\n</div>
+            <button onclick="clearLog()">Clear Log</button>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    
+    <!-- Firebase Configuration -->
+    <script src="firebase-config.js"></script>
+    
+    <script>
+        // Global variables
+        let db = null;
+        let isFirebaseReady = false;
+
+        // Sample data
+        const colorsData = [
+            // Natural Colors
+            { name: 'Natural Black', code: '#1B1B1B', category: 'Natural', description: 'Deep natural black color' },
+            { name: 'Off Black', code: '#2C2C2C', category: 'Natural', description: 'Slightly softer than natural black' },
+            { name: 'Darkest Brown', code: '#3C2415', category: 'Natural', description: 'Very dark brown, almost black' },
+            { name: 'Dark Brown', code: '#4A2C17', category: 'Natural', description: 'Rich dark brown' },
+            { name: 'Medium Brown', code: '#6B4423', category: 'Natural', description: 'Classic medium brown' },
+            { name: 'Light Brown', code: '#8B5A2B', category: 'Natural', description: 'Warm light brown' },
+            { name: 'Dark Blonde', code: '#A67C52', category: 'Natural', description: 'Deep blonde with brown undertones' },
+            { name: 'Medium Blonde', code: '#C19A6B', category: 'Natural', description: 'Classic medium blonde' },
+            { name: 'Light Blonde', code: '#D4B896', category: 'Natural', description: 'Light golden blonde' },
+            { name: 'Platinum Blonde', code: '#F5F5DC', category: 'Natural', description: 'Very light platinum blonde' },
+            
+            // Auburn/Red Colors
+            { name: 'Auburn', code: '#A52A2A', category: 'Auburn', description: 'Rich reddish-brown' },
+            { name: 'Dark Auburn', code: '#8B2635', category: 'Auburn', description: 'Deep auburn with red highlights' },
+            { name: 'Light Auburn', code: '#CC5500', category: 'Auburn', description: 'Bright auburn color' },
+            { name: 'Copper Red', code: '#B87333', category: 'Auburn', description: 'Warm copper red' },
+            { name: 'Burgundy', code: '#800020', category: 'Auburn', description: 'Deep wine red' },
+            
+            // Fashion Colors
+            { name: 'Ash Blonde', code: '#B8B5A6', category: 'Fashion', description: 'Cool-toned ash blonde' },
+            { name: 'Honey Blonde', code: '#DAA520', category: 'Fashion', description: 'Warm honey-colored blonde' },
+            { name: 'Strawberry Blonde', code: '#FF9361', category: 'Fashion', description: 'Blonde with red undertones' },
+            { name: 'Silver Gray', code: '#C0C0C0', category: 'Fashion', description: 'Elegant silver gray' },
+            { name: 'Salt and Pepper', code: '#808080', category: 'Fashion', description: 'Mixed gray and dark' }
+        ];
+
+        const stylesData = [
+            // Straight Styles
+            { name: 'Straight', category: 'Straight', description: 'Classic straight hair', texture: 'Smooth and sleek' },
+            { name: 'Silky Straight', category: 'Straight', description: 'Ultra-smooth silky straight', texture: 'Very fine and smooth' },
+            { name: 'Yaki Straight', category: 'Straight', description: 'Textured straight mimicking relaxed hair', texture: 'Slightly textured' },
+            
+            // Wavy Styles
+            { name: 'Body Wave', category: 'Wavy', description: 'Loose, natural-looking waves', texture: 'Soft waves' },
+            { name: 'Loose Wave', category: 'Wavy', description: 'Gentle, flowing waves', texture: 'Relaxed wave pattern' },
+            { name: 'Beach Wave', category: 'Wavy', description: 'Casual, tousled beach waves', texture: 'Natural wave texture' },
+            { name: 'Water Wave', category: 'Wavy', description: 'Defined water-like wave pattern', texture: 'Consistent wave pattern' },
+            { name: 'Ocean Wave', category: 'Wavy', description: 'Deep, flowing ocean-inspired waves', texture: 'Deep wave pattern' },
+            
+            // Curly Styles
+            { name: 'Deep Wave', category: 'Curly', description: 'Deep, defined wave pattern', texture: 'Pronounced waves' },
+            { name: 'Curly', category: 'Curly', description: 'Natural curly texture', texture: 'Spiral curls' },
+            { name: 'Deep Curly', category: 'Curly', description: 'Tight, defined curls', texture: 'Tight curl pattern' },
+            { name: 'Jerry Curl', category: 'Curly', description: 'Retro-style tight curls', texture: 'Processed curls' },
+            { name: 'Spiral Curl', category: 'Curly', description: 'Defined spiral curl pattern', texture: 'Uniform spirals' },
+            
+            // Kinky/Coily Styles
+            { name: 'Kinky Straight', category: 'Kinky', description: 'Straightened kinky texture', texture: 'Coarse straight' },
+            { name: 'Kinky Curly', category: 'Kinky', description: 'Natural kinky curly texture', texture: 'Tight coils' },
+            { name: 'Afro Kinky', category: 'Kinky', description: 'Natural afro texture', texture: 'Very tight coils' }
+        ];
+
+        // Utility functions
+        function log(message) {
+            const logElement = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            logElement.textContent += `[${timestamp}] ${message}\n`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+
+        function clearLog() {
+            document.getElementById('log').textContent = '';
+        }
+
+        function updateStatus(message, type = 'info') {
+            const statusElement = document.getElementById('status-display');
+            statusElement.textContent = message;
+            statusElement.className = `status ${type}`;
+        }
+
+        function updateProgress(elementId, percentage) {
+            const progressBar = document.getElementById(elementId);
+            if (progressBar) {
+                progressBar.style.width = percentage + '%';
+            }
+        }
+
+        function showProgress(elementId) {
+            const progressElement = document.getElementById(elementId);
+            if (progressElement) {
+                progressElement.style.display = 'block';
+            }
+        }
+
+        function hideProgress(elementId) {
+            const progressElement = document.getElementById(elementId);
+            if (progressElement) {
+                progressElement.style.display = 'none';
+            }
+        }
+
+        // Firebase initialization
+        async function initializeFirebase() {
+            try {
+                log('🔥 Initializing Firebase...');
+                
+                if (typeof firebase === 'undefined') {
+                    throw new Error('Firebase SDK not loaded');
+                }
+
+                if (typeof firebaseConfig === 'undefined') {
+                    throw new Error('Firebase config not found');
+                }
+
+                // Initialize Firebase if not already initialized
+                if (!firebase.apps.length) {
+                    firebase.initializeApp(firebaseConfig);
+                }
+
+                db = firebase.firestore();
+                isFirebaseReady = true;
+                
+                log('✅ Firebase initialized successfully');
+                updateStatus('Firebase connected and ready', 'success');
+                
+                // Get current counts
+                await updateCurrentCounts();
+                
+                return true;
+            } catch (error) {
+                log(`❌ Firebase initialization failed: ${error.message}`);
+                updateStatus(`Firebase connection failed: ${error.message}`, 'error');
+                return false;
+            }
+        }
+
+        // Get current data counts
+        async function updateCurrentCounts() {
+            if (!isFirebaseReady) return;
+
+            try {
+                const colorsSnapshot = await db.collection('colors').get();
+                const stylesSnapshot = await db.collection('styles').get();
+                
+                const countsElement = document.getElementById('current-counts');
+                countsElement.innerHTML = `
+                    <p><strong>Current Data:</strong></p>
+                    <p>🌈 Colors: ${colorsSnapshot.size} documents</p>
+                    <p>💇 Styles: ${stylesSnapshot.size} documents</p>
+                `;
+                
+                log(`📊 Current counts - Colors: ${colorsSnapshot.size}, Styles: ${stylesSnapshot.size}`);
+            } catch (error) {
+                log(`❌ Failed to get current counts: ${error.message}`);
+            }
+        }
+
+        // Populate colors
+        async function populateColors() {
+            if (!isFirebaseReady) {
+                log('❌ Firebase not ready');
+                return;
+            }
+
+            try {
+                log('🌈 Starting colors population...');
+                updateStatus('Populating colors...', 'info');
+                showProgress('colors-progress');
+                
+                const batch = db.batch();
+                const colorsCollection = db.collection('colors');
+
+                // Clear existing colors
+                log('🧹 Clearing existing colors...');
+                updateProgress('colors-progress-bar', 10);
+                const existingColors = await colorsCollection.get();
+                existingColors.docs.forEach(doc => {
+                    batch.delete(doc.ref);
+                });
+
+                // Add new colors
+                log('➕ Adding new colors...');
+                updateProgress('colors-progress-bar', 30);
+                
+                colorsData.forEach((color, index) => {
+                    const docRef = colorsCollection.doc(`color_${index + 1}`);
+                    batch.set(docRef, {
+                        ...color,
+                        created_at: firebase.firestore.FieldValue.serverTimestamp(),
+                        updated_at: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    updateProgress('colors-progress-bar', 30 + (index / colorsData.length) * 60);
+                });
+
+                await batch.commit();
+                updateProgress('colors-progress-bar', 100);
+                
+                log(`✅ Successfully added ${colorsData.length} colors to Firebase`);
+                updateStatus(`Colors populated successfully (${colorsData.length} items)`, 'success');
+                
+                setTimeout(() => hideProgress('colors-progress'), 1000);
+                await updateCurrentCounts();
+                
+            } catch (error) {
+                log(`❌ Failed to populate colors: ${error.message}`);
+                updateStatus(`Failed to populate colors: ${error.message}`, 'error');
+                hideProgress('colors-progress');
+            }
+        }
+
+        // Populate styles
+        async function populateStyles() {
+            if (!isFirebaseReady) {
+                log('❌ Firebase not ready');
+                return;
+            }
+
+            try {
+                log('💇 Starting styles population...');
+                updateStatus('Populating styles...', 'info');
+                showProgress('styles-progress');
+                
+                const batch = db.batch();
+                const stylesCollection = db.collection('styles');
+
+                // Clear existing styles
+                log('🧹 Clearing existing styles...');
+                updateProgress('styles-progress-bar', 10);
+                const existingStyles = await stylesCollection.get();
+                existingStyles.docs.forEach(doc => {
+                    batch.delete(doc.ref);
+                });
+
+                // Add new styles
+                log('➕ Adding new styles...');
+                updateProgress('styles-progress-bar', 30);
+                
+                stylesData.forEach((style, index) => {
+                    const docRef = stylesCollection.doc(`style_${index + 1}`);
+                    batch.set(docRef, {
+                        ...style,
+                        created_at: firebase.firestore.FieldValue.serverTimestamp(),
+                        updated_at: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    updateProgress('styles-progress-bar', 30 + (index / stylesData.length) * 60);
+                });
+
+                await batch.commit();
+                updateProgress('styles-progress-bar', 100);
+                
+                log(`✅ Successfully added ${stylesData.length} styles to Firebase`);
+                updateStatus(`Styles populated successfully (${stylesData.length} items)`, 'success');
+                
+                setTimeout(() => hideProgress('styles-progress'), 1000);
+                await updateCurrentCounts();
+                
+            } catch (error) {
+                log(`❌ Failed to populate styles: ${error.message}`);
+                updateStatus(`Failed to populate styles: ${error.message}`, 'error');
+                hideProgress('styles-progress');
+            }
+        }
+
+        // Clear colors
+        async function clearColors() {
+            if (!isFirebaseReady) {
+                log('❌ Firebase not ready');
+                return;
+            }
+
+            if (!confirm('Are you sure you want to clear all colors data?')) {
+                return;
+            }
+
+            try {
+                log('🧹 Clearing colors collection...');
+                updateStatus('Clearing colors...', 'info');
+                
+                const batch = db.batch();
+                const colorsSnapshot = await db.collection('colors').get();
+                
+                colorsSnapshot.docs.forEach(doc => {
+                    batch.delete(doc.ref);
+                });
+
+                await batch.commit();
+                
+                log(`✅ Cleared ${colorsSnapshot.size} colors from Firebase`);
+                updateStatus('Colors cleared successfully', 'success');
+                await updateCurrentCounts();
+                
+            } catch (error) {
+                log(`❌ Failed to clear colors: ${error.message}`);
+                updateStatus(`Failed to clear colors: ${error.message}`, 'error');
+            }
+        }
+
+        // Clear styles
+        async function clearStyles() {
+            if (!isFirebaseReady) {
+                log('❌ Firebase not ready');
+                return;
+            }
+
+            if (!confirm('Are you sure you want to clear all styles data?')) {
+                return;
+            }
+
+            try {
+                log('🧹 Clearing styles collection...');
+                updateStatus('Clearing styles...', 'info');
+                
+                const batch = db.batch();
+                const stylesSnapshot = await db.collection('styles').get();
+                
+                stylesSnapshot.docs.forEach(doc => {
+                    batch.delete(doc.ref);
+                });
+
+                await batch.commit();
+                
+                log(`✅ Cleared ${stylesSnapshot.size} styles from Firebase`);
+                updateStatus('Styles cleared successfully', 'success');
+                await updateCurrentCounts();
+                
+            } catch (error) {
+                log(`❌ Failed to clear styles: ${error.message}`);
+                updateStatus(`Failed to clear styles: ${error.message}`, 'error');
+            }
+        }
+
+        // Populate all data
+        async function populateAllData() {
+            if (!isFirebaseReady) {
+                log('❌ Firebase not ready');
+                return;
+            }
+
+            try {
+                log('🚀 Starting bulk data population...');
+                updateStatus('Populating all data...', 'info');
+                
+                await populateColors();
+                await new Promise(resolve => setTimeout(resolve, 1000)); // Small delay
+                await populateStyles();
+                
+                log('🎉 All data populated successfully!');
+                updateStatus('All data populated successfully', 'success');
+                
+            } catch (error) {
+                log(`❌ Bulk population failed: ${error.message}`);
+                updateStatus(`Bulk population failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Clear all data
+        async function clearAllData() {
+            if (!isFirebaseReady) {
+                log('❌ Firebase not ready');
+                return;
+            }
+
+            if (!confirm('Are you sure you want to clear ALL colors and styles data?')) {
+                return;
+            }
+
+            try {
+                log('🧹 Starting bulk data clearing...');
+                updateStatus('Clearing all data...', 'info');
+                
+                await clearColors();
+                await new Promise(resolve => setTimeout(resolve, 500)); // Small delay
+                await clearStyles();
+                
+                log('✅ All data cleared successfully!');
+                updateStatus('All data cleared successfully', 'success');
+                
+            } catch (error) {
+                log(`❌ Bulk clearing failed: ${error.message}`);
+                updateStatus(`Bulk clearing failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Verify data
+        async function verifyData() {
+            if (!isFirebaseReady) {
+                log('❌ Firebase not ready');
+                return;
+            }
+
+            try {
+                log('🔍 Verifying data integrity...');
+                updateStatus('Verifying data...', 'info');
+                
+                const colorsSnapshot = await db.collection('colors').get();
+                const stylesSnapshot = await db.collection('styles').get();
+                
+                log(`📊 Verification Results:`);
+                log(`   Colors: ${colorsSnapshot.size} documents`);
+                log(`   Styles: ${stylesSnapshot.size} documents`);
+                
+                // Show sample data
+                if (colorsSnapshot.size > 0) {
+                    const firstColor = colorsSnapshot.docs[0].data();
+                    log(`   Sample color: ${firstColor.name} (${firstColor.category})`);
+                }
+
+                if (stylesSnapshot.size > 0) {
+                    const firstStyle = stylesSnapshot.docs[0].data();
+                    log(`   Sample style: ${firstStyle.name} (${firstStyle.category})`);
+                }
+                
+                updateStatus(`Verification complete - Colors: ${colorsSnapshot.size}, Styles: ${stylesSnapshot.size}`, 'success');
+                await updateCurrentCounts();
+                
+            } catch (error) {
+                log(`❌ Verification failed: ${error.message}`);
+                updateStatus(`Verification failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Initialize when page loads
+        window.addEventListener('load', async () => {
+            log('🌟 Firebase Data Populator loaded');
+            await initializeFirebase();
+        });
+    </script>
+</body>
+</html>

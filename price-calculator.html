@@ -40,6 +40,8 @@
   <script src="js/fallback-detector.js"></script>
   <script src="js/unified-data-access.js"></script>
   
+  <!-- Local Storage Dropdown Manager - REMOVED: Now using Firebase-only data -->
+  
   <!-- Unified Button System -->
   <link rel="stylesheet" href="unified-button-system.css">
 
@@ -255,69 +257,156 @@
     .no-underline:hover {
       text-decoration: none !important;
     }
+
+    /* Hamburger Menu Styles */
+    .hamburger-menu {
+      display: none;
+      flex-direction: column;
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 4px;
+      transition: background-color 0.3s ease;
+    }
+
+    .hamburger-menu:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .hamburger-line {
+      width: 25px;
+      height: 3px;
+      background-color: white;
+      margin: 3px 0;
+      transition: 0.3s;
+      border-radius: 2px;
+    }
+
+    .hamburger-menu.active .hamburger-line:nth-child(1) {
+      transform: rotate(-45deg) translate(-5px, 6px);
+    }
+
+    .hamburger-menu.active .hamburger-line:nth-child(2) {
+      opacity: 0;
+    }
+
+    .hamburger-menu.active .hamburger-line:nth-child(3) {
+      transform: rotate(45deg) translate(-5px, -6px);
+    }
+
+    /* Mobile Menu Styles */
+    .mobile-menu {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #d97706 100%);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      z-index: 1000;
+      padding: 1rem;
+      animation: slideDown 0.3s ease-out;
+    }
+
+    .mobile-menu.show {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .mobile-menu a {
+      padding: 12px 16px;
+      border-radius: 8px;
+      transition: background-color 0.3s ease;
+      text-decoration: none;
+      color: white;
+      font-weight: 500;
+    }
+
+    .mobile-menu a:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+      text-decoration: none;
+    }
+
+    /* Desktop Menu Styles */
+    .desktop-menu {
+      display: flex;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .desktop-menu {
+        display: none;
+      }
+      
+      .hamburger-menu {
+        display: flex;
+      }
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
   </style>
   <script src="main-functions.js"></script>
 </head>
 <body class="bg-gray-50 min-h-screen text-slate-800">
 
   <!-- Navigation Component -->
-  <nav class="bg-gradient-to-r from-blue-900 via-blue-800 to-amber-700 text-white shadow-lg sticky top-0 z-50">
+  <nav class="bg-gradient-to-r from-blue-900 via-blue-800 to-amber-700 text-white shadow-lg sticky top-0 z-50 relative">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div class="flex items-center justify-between h-16">
               <!-- Logo and Title -->
               <div class="flex items-center space-x-3">
                   <img src="images/logo.png" alt="Logo" class="h-8 w-auto opacity-90">
-                  <span class="text-lg font-bold">InstaQuote</span>
+                  <span class="text-lg font-bold">instaQuote - Price Lists</span>
               </div>
               
-              <!-- Navigation Links -->
-              <div class="hidden md:flex items-center space-x-4">
-                  <a href="quote-maker-v2-ver3.html" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-white/10 transition-colors">
+              <!-- Desktop Menu -->
+              <div class="desktop-menu items-center space-x-4">
+                  <a href="quotemaker.html" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-white/10 transition-colors">
                       <i class="fas fa-file-invoice-dollar mr-1"></i> Quote Maker
                   </a>
-                  <span class="px-3 py-2 rounded-md text-sm font-medium bg-white/20">
-                      <i class="fas fa-calculator mr-1"></i> Calculator
-                  </span>
                   <a href="product-catalog.html" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-white/10 transition-colors">
-                      <i class="fas fa-th-large mr-1"></i> Catalog
+                      <i class="fas fa-th-large mr-1"></i> Product Catalog
                   </a>
-                  <a href="admin-panel.html" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-white/10 transition-colors">
-                      <i class="fas fa-cog mr-1"></i> Admin
+                  <a href="admin-sync-panel.html" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-white/10 transition-colors">
+                      <i class="fas fa-cog mr-1"></i> Admin Panel
                   </a>
               </div>
               
-              <!-- Mobile Menu Button -->
-              <div class="md:hidden">
-                  <button id="mobile-menu-btn" class="p-2 rounded-md hover:bg-white/10 transition-colors">
-                      <i class="fas fa-bars"></i>
-                  </button>
+              <!-- Hamburger Menu Button -->
+              <div class="hamburger-menu" onclick="toggleMobileMenu()">
+                  <div class="hamburger-line"></div>
+                  <div class="hamburger-line"></div>
+                  <div class="hamburger-line"></div>
               </div>
           </div>
-          
-          <!-- Mobile Menu -->
-          <div id="mobile-menu" class="md:hidden hidden pb-3">
-              <div class="space-y-1">
-                  <a href="quote-maker-v2-ver3.html" class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-white/10 transition-colors">
-                      <i class="fas fa-file-invoice-dollar mr-2"></i> Quote Maker
-                  </a>
-                  <span class="block px-3 py-2 rounded-md text-sm font-medium bg-white/20">
-                      <i class="fas fa-calculator mr-2"></i> Price Calculator
-                  </span>
-                  <a href="product-catalog.html" class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-white/10 transition-colors">
-                      <i class="fas fa-th-large mr-2"></i> Product Catalog
-                  </a>
-                  <a href="admin-panel.html" class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-white/10 transition-colors">
-                      <i class="fas fa-cog mr-2"></i> Admin Panel
-                  </a>
-              </div>
-          </div>
+      </div>
+      
+      <!-- Mobile Menu -->
+      <div class="mobile-menu" id="mobileMenu">
+          <a href="quotemaker.html" class="text-white hover:text-gray-200">
+              <i class="fas fa-file-invoice-dollar mr-2"></i> Quote Maker
+          </a>
+          <a href="product-catalog.html" class="text-white hover:text-gray-200">
+              <i class="fas fa-th-large mr-2"></i> Product Catalog
+          </a>
+          <a href="admin-sync-panel.html" class="text-white hover:text-gray-200">
+              <i class="fas fa-cog mr-2"></i> Admin Panel
+          </a>
       </div>
   </nav>
 
   <div class="container mx-auto px-4 py-6">
     <!-- Page Header -->
     <div class="text-left mb-8">
-      <h1 class="text-3xl font-bold mb-2" style="color: #081249;">Price Lists</h1>
     </div>
 
     <!-- Price List Calculator Content will be inserted here -->
@@ -464,6 +553,8 @@
     // Product data will be loaded here
     let productData = [];
     
+    // LocalStorageDropdownManager removed - using Firebase-only data
+    
     // Product data and salesmen data will be loaded from Firebase
     
     // Application state
@@ -482,7 +573,6 @@
       const maxAttempts = 20; // 10 seconds max wait
       
       while ((!window.firebase || !window.firebaseConfig) && attempts < maxAttempts) {
-        console.log(`⏳ Waiting for Firebase... (attempt ${attempts + 1}/${maxAttempts})`);
         await new Promise(resolve => setTimeout(resolve, 500));
         attempts++;
       }
@@ -495,14 +585,12 @@
     // Initialize Firebase
     async function initializeFirebase() {
       try {
-        console.log('🔄 Waiting for centralized Firebase system...');
         
         // Wait for universal data manager to be available
         let attempts = 0;
         const maxAttempts = 20; // 10 seconds max wait
         
         while (!window.universalDataManager && attempts < maxAttempts) {
-          console.log(`⏳ Waiting for universalDataManager... (attempt ${attempts + 1}/${maxAttempts})`);
           await new Promise(resolve => setTimeout(resolve, 500));
           attempts++;
         }
@@ -516,63 +604,33 @@
         
         const status = window.universalDataManager.getStatus();
         if (status.isInitialized && status.isDataLoaded) {
-          console.log('✅ Universal Firebase system ready');
         } else {
           throw new Error('Universal Firebase system not ready. Please check your connection.');
         }
         
       } catch (error) {
-        console.error('❌ Centralized Firebase access failed:', error);
         throw error;
       }
     }
 
     // Initialize the application
     document.addEventListener('DOMContentLoaded', async function() {
-      console.log('🔄 Initializing Price Calculator with fallback-first strategy...');
       
       try {
-        // Initialize fallback system first (fallback-first strategy)
-        try {
-          console.log('🔄 Initializing fallback system components...');
-          
-          // Initialize local fallback manager
-          if (typeof LocalFallbackManager !== 'undefined') {
-            window.localFallbackManager = new LocalFallbackManager();
-            await window.localFallbackManager.initialize();
-            console.log('✅ Local fallback manager initialized');
-          }
-          
-          // Initialize fallback detector
-          if (typeof FallbackDetector !== 'undefined') {
-            window.fallbackDetector = new FallbackDetector();
-            await window.fallbackDetector.initialize();
-            console.log('✅ Fallback detector initialized');
-          }
-          
-          // Initialize unified data access (fallback-first for non-admin pages)
-          if (typeof UnifiedDataAccess !== 'undefined' && window.localFallbackManager && window.fallbackDetector) {
-            window.unifiedDataAccess = new UnifiedDataAccess(window.localFallbackManager, window.fallbackDetector);
-            await window.unifiedDataAccess.initialize();
-            console.log('✅ Unified data access initialized with fallback-first strategy');
-          }
-          
-          console.log('✅ Fallback system fully initialized');
-        } catch (fallbackError) {
-          console.warn('⚠️ Fallback system initialization failed, continuing with Firebase only:', fallbackError);
-        }
-        
-        // Initialize Firebase as secondary (for admin sync only)
+        // Initialize Firebase as primary data source
         try {
           await waitForFirebase();
           await initializeFirebase();
-          console.log('✅ Firebase initialized as secondary data source');
         } catch (firebaseError) {
-          console.warn('⚠️ Firebase initialization failed, using fallback-only mode:', firebaseError);
+          throw new Error(`Firebase initialization failed: ${firebaseError.message}`);
         }
         
-        // Load data using fallback-first strategy
+        // LocalStorageDropdownManager removed - using Firebase-only data
+        
+        // Load data from Firebase
         await loadProductData();
+        await loadColorsData();
+        await loadStylesData();
         await populatePriceListDropdown();
         await loadExchangeRates();
         await populateSalesRepresentatives();
@@ -586,10 +644,8 @@
           priceListSelect.dispatchEvent(new Event('change'));
         }
         
-        console.log('✅ Price Calculator initialized successfully with fallback-first strategy');
         
       } catch (error) {
-        console.error('❌ Price Calculator initialization failed:', error);
         showInitializationError(error);
       }
     });
@@ -602,7 +658,6 @@
       
       try {
         const db = firebase.firestore();
-        console.log('✅ Firebase Firestore is available');
         return db;
       } catch (error) {
         throw new Error(`Firebase initialization failed: ${error.message}`);
@@ -629,59 +684,90 @@
       }
     }
     
-    // Load product data using fallback-first strategy
+    // Load product data from Firebase
     async function loadProductData() {
       try {
-        console.log('🔄 Loading product data with fallback-first strategy...');
         
-        // Primary: Try unified data access (fallback-first)
-        if (window.unifiedDataAccess) {
-          try {
-            productData = await window.unifiedDataAccess.getData('products');
-            console.log('✅ Product data loaded successfully from unified data access (fallback-first):', productData.length, 'products');
-            return;
-          } catch (unifiedError) {
-            console.warn('⚠️ Unified data access failed, trying alternative methods:', unifiedError);
+        if (!window.universalDataManager) {
+          throw new Error('Universal data manager not available');
+        }
+        
+        const status = window.universalDataManager.getStatus();
+        if (!status.isInitialized) {
+          throw new Error('Firebase not initialized');
+        }
+        
+        if (!status.isDataLoaded) {
+          // Wait a bit for data to load
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          
+          const newStatus = window.universalDataManager.getStatus();
+          if (!newStatus.isDataLoaded) {
+            throw new Error('Firebase data not loaded after waiting');
           }
         }
         
-        // Secondary: Try local fallback manager directly
-        if (window.localFallbackManager) {
-          try {
-            productData = await window.localFallbackManager.getData('products');
-            if (productData && productData.length > 0) {
-              console.log('✅ Product data loaded successfully from local fallback:', productData.length, 'products');
-              return;
-            }
-          } catch (fallbackError) {
-            console.warn('⚠️ Local fallback failed:', fallbackError);
-          }
+        productData = await window.universalDataManager.getProducts();
+        
+        if (!productData || !Array.isArray(productData) || productData.length === 0) {
+          throw new Error('No product data available from Firebase');
         }
         
-        // Tertiary: Try universal data manager (Firebase) as last resort
-        if (window.universalDataManager) {
-          try {
-            const status = window.universalDataManager.getStatus();
-            if (status.isInitialized && status.isDataLoaded) {
-              productData = await window.universalDataManager.getProducts();
-              console.log('✅ Product data loaded successfully from Firebase (last resort):', productData.length, 'products');
-              return;
-            } else {
-              console.warn('⚠️ Universal data manager not ready');
-            }
-          } catch (firebaseError) {
-            console.warn('⚠️ Firebase data access failed:', firebaseError);
-          }
-        }
-        
-        // If all methods fail, throw error
-        if (!productData || productData.length === 0) {
-          throw new Error('No product data available from any source (fallback-first strategy failed)');
-        }
         
       } catch (error) {
-        console.error('❌ Error loading product data:', error);
         productData = [];
+        throw error;
+      }
+    }
+    
+    // Load colors data from Firebase
+    async function loadColorsData() {
+      try {
+        
+        if (!window.universalDataManager) {
+          throw new Error('Universal data manager not available');
+        }
+        
+        const status = window.universalDataManager.getStatus();
+        if (!status.isInitialized || !status.isDataLoaded) {
+          throw new Error('Firebase not ready for colors data');
+        }
+        
+        window.colorsData = await window.universalDataManager.getColors();
+        
+        if (!window.colorsData || !Array.isArray(window.colorsData)) {
+          throw new Error('No colors data available from Firebase');
+        }
+        
+        
+      } catch (error) {
+        window.colorsData = [];
+        throw error;
+      }
+    }
+    
+    // Load styles data from Firebase
+    async function loadStylesData() {
+      try {
+        
+        if (!window.universalDataManager) {
+          throw new Error('Universal data manager not available');
+        }
+        
+        const status = window.universalDataManager.getStatus();
+        if (!status.isInitialized || !status.isDataLoaded) {
+          throw new Error('Firebase not ready for styles data');
+        }
+        
+        window.stylesData = await window.universalDataManager.getStyles();
+        
+        if (!window.stylesData || !Array.isArray(window.stylesData)) {
+          throw new Error('No styles data available from Firebase');
+        }
+        
+        
+      } catch (error) {
+        window.stylesData = [];
         throw error;
       }
     }
@@ -689,59 +775,34 @@
     // Populate price list dropdown from loaded product data
     async function populatePriceListDropdown() {
       const priceListSelect = document.getElementById('price-list');
+      if (!priceListSelect) {
+        return;
+      }
+      
+      if (!productData || productData.length === 0) {
+        const option = document.createElement('option');
+        option.value = '';
+        option.textContent = 'Loading price lists...';
+        option.disabled = true;
+        priceListSelect.appendChild(option);
+        return;
+      }
       
       try {
-        console.log('🔄 Populating price list dropdown...');
+        // Clear existing options
+        priceListSelect.innerHTML = '<option value="">Select Price List</option>';
         
-        if (productData && productData.length > 0) {
-          // Extract unique price lists from product data
-          const priceLists = new Set();
-          productData.forEach(product => {
-            if (product && (product.PriceListName || product.PriceList || product['Price List Name'])) {
-              const priceListName = product.PriceListName || product.PriceList || product['Price List Name'];
-              if (priceListName && priceListName !== 'N/A' && priceListName.trim() !== '') {
-                priceLists.add(priceListName);
-              }
-            }
-          });
-          
-          console.log(`📋 Found price lists: ${Array.from(priceLists).join(', ')}`);
-          
-          // Clear existing options except the first one
-          while (priceListSelect.children.length > 1) {
-            priceListSelect.removeChild(priceListSelect.lastChild);
-          }
-          
-          // Add price list options
-          const sortedPriceLists = Array.from(priceLists).sort();
-          
-          if (sortedPriceLists.length === 0) {
-            const option = document.createElement('option');
-            option.value = '';
-            option.textContent = 'No price lists available';
-            option.disabled = true;
-            priceListSelect.appendChild(option);
-            console.log('⚠️ No valid price lists found in product data');
-          } else {
-            sortedPriceLists.forEach(priceList => {
-              const option = document.createElement('option');
-              option.value = priceList;
-              option.textContent = priceList;
-              priceListSelect.appendChild(option);
-            });
-            
-            console.log(`✅ Price list dropdown populated with ${sortedPriceLists.length} options`);
-          }
-        } else {
-          console.warn('No product data available for price list extraction');
+        // Get unique price lists from Firebase data
+        const priceLists = [...new Set(productData.map(product => product.priceList))].filter(Boolean);
+        
+        priceLists.forEach(priceList => {
           const option = document.createElement('option');
-          option.value = '';
-          option.textContent = 'No product data available';
-          option.disabled = true;
+          option.value = priceList;
+          option.textContent = priceList;
           priceListSelect.appendChild(option);
-        }
+        });
+        
       } catch (error) {
-        console.error('❌ Error populating price list dropdown:', error);
         const option = document.createElement('option');
         option.value = '';
         option.textContent = 'Error loading price lists';
@@ -759,7 +820,6 @@
           state.exchangeRates = { INR: 1, ...data.data };
         }
       } catch (error) {
-        console.warn('Failed to load exchange rates, using defaults:', error);
       }
     }
     
@@ -768,16 +828,13 @@
       const salesmanSelect = document.getElementById('salesman');
       
       try {
-        console.log('🔄 Loading salespeople data from Firebase...');
         
         // Load from unified data access first, then fallback to universal data manager
         let salesmen;
         if (window.unifiedDataAccess) {
           try {
             salesmen = await window.unifiedDataAccess.getSalespeople();
-            console.log('✅ Salespeople loaded from unified data access');
           } catch (unifiedError) {
-            console.warn('⚠️ Unified data access failed, falling back to Firebase:', unifiedError);
             
             if (window.universalDataManager) {
               const status = window.universalDataManager.getStatus();
@@ -794,7 +851,6 @@
         }
         
         if (salesmen) {
-          console.log('✅ Salespeople data loaded successfully:', salesmen ? salesmen.length : 0, 'salespeople');
           
           if (salesmen && salesmen.length > 0) {
             salesmen.forEach(salesman => {
@@ -805,9 +861,7 @@
               option.textContent = salesmanName;
               salesmanSelect.appendChild(option);
             });
-            console.log('✅ Price calculator salesman dropdown populated with', salesmen.length, 'salespeople');
           } else {
-            console.warn('⚠️ No salespeople data found');
             const option = document.createElement('option');
             option.value = '';
             option.textContent = 'No salespeople available';
@@ -815,11 +869,9 @@
             salesmanSelect.appendChild(option);
           }
         } else {
-          console.error('❌ No data access system available');
           throw new Error('Data access is required to load salespeople');
         }
       } catch (error) {
-        console.error('❌ Error loading salespeople from Firebase:', error);
         const option = document.createElement('option');
         option.value = '';
         option.textContent = 'Error loading salespeople';
@@ -855,16 +907,13 @@
         
         if (canSellInKg) {
           kgToggleContainer.style.display = 'flex';
-          console.log(`✅ KG option enabled for category: ${category}`);
         } else {
           kgToggleContainer.style.display = 'none';
           document.getElementById('kg-toggle').checked = false;
           state.kg = false;
-          console.log(`❌ KG option disabled for category: ${category}`);
         }
         
       } catch (error) {
-        console.error('❌ Error updating KG option visibility:', error);
         kgToggleContainer.style.display = 'none';
       }
     }
@@ -988,75 +1037,40 @@
     function populateCategories(priceList) {
       const categorySelect = document.getElementById('category');
       
-      try {
-        console.log('🔄 Populating categories for price list:', priceList);
-        console.log('📊 Product data available:', productData ? productData.length : 'No data');
-        
-        if (!priceList) {
-          console.log('⚠️ No price list selected');
-          categorySelect.innerHTML = '<option value="">All Categories</option>';
-          return;
-        }
-        
-        if (!productData || productData.length === 0) {
-          console.log('⚠️ No product data available');
-          categorySelect.innerHTML = '<option value="">All Categories</option>';
-          return;
-        }
-        
-        // Debug: Check first few products and their price list fields
-        console.log('🔍 Sample product data:');
-        productData.slice(0, 3).forEach((product, index) => {
-          console.log(`Product ${index}:`, {
-            PriceListName: product.PriceListName,
-            PriceList: product.PriceList,
-            'Price List Name': product['Price List Name'],
-            Category: product.Category,
-            Product: product.Product
-          });
-        });
-        
-        // Filter products by price list and extract unique categories
-        const categories = new Set();
-        let matchingProducts = 0;
-        
-        productData.forEach(product => {
-          const productPriceList = product.PriceListName || product.PriceList || product['Price List Name'];
-          
-          if (productPriceList === priceList) {
-            matchingProducts++;
-            if (product.Category) {
-              categories.add(product.Category);
-            }
-          }
-        });
-        
-        console.log(`📋 Found ${matchingProducts} products matching price list "${priceList}"`);
-        console.log(`📂 Found ${categories.size} unique categories`);
-        
-        // Clear and populate category dropdown
+      if (!categorySelect) {
+        return;
+      }
+      
+      if (!priceList) {
         categorySelect.innerHTML = '<option value="">All Categories</option>';
-        const sortedCategories = Array.from(categories).sort();
+        return;
+      }
+      
+      if (!productData || productData.length === 0) {
+        categorySelect.innerHTML = '<option value="">Loading categories...</option>';
+        return;
+      }
+      
+      try {
+        // Clear existing options
+        categorySelect.innerHTML = '<option value="">All Categories</option>';
         
-        if (sortedCategories.length === 0) {
-          console.log('⚠️ No categories found for this price list');
+        // Get unique categories for the selected price list from Firebase data
+        const categories = [...new Set(
+          productData
+            .filter(product => product.priceList === priceList)
+            .map(product => product.category)
+        )].filter(Boolean);
+        
+        categories.forEach(category => {
           const option = document.createElement('option');
-          option.value = '';
-          option.textContent = 'No categories available';
-          option.disabled = true;
+          option.value = category;
+          option.textContent = category;
           categorySelect.appendChild(option);
-        } else {
-          sortedCategories.forEach(category => {
-            const option = document.createElement('option');
-            option.value = category;
-            option.textContent = category;
-            categorySelect.appendChild(option);
-          });
-          console.log(`✅ Categories populated: ${sortedCategories.join(', ')}`);
-        }
+        });
+        
         
       } catch (error) {
-        console.error('❌ Error populating categories:', error);
       }
     }
     
@@ -1064,64 +1078,49 @@
     function populateProducts(priceList, category) {
       const productSelect = document.getElementById('product');
       
+      if (!productSelect) {
+        return;
+      }
+      
+      if (!priceList) {
+        productSelect.innerHTML = '<option value="">All Products</option>';
+        return;
+      }
+      
+      if (!productData || productData.length === 0) {
+        productSelect.innerHTML = '<option value="">Loading products...</option>';
+        return;
+      }
+      
       try {
-        console.log('🔄 Populating products for price list:', priceList, 'category:', category);
-        console.log('📊 Product data available:', productData ? productData.length : 'No data');
+        // Filter products by price list and category (if specified)
+        let filteredProducts = productData.filter(product => product.priceList === priceList);
         
-        if (!priceList) {
-          console.log('⚠️ No price list selected');
-          productSelect.innerHTML = '<option value="">All Products</option>';
-          return;
+        if (category) {
+          filteredProducts = filteredProducts.filter(product => product.category === category);
         }
         
-        if (!productData || productData.length === 0) {
-          console.log('⚠️ No product data available');
-          productSelect.innerHTML = '<option value="">All Products</option>';
-          return;
-        }
-        
-        // Filter products by price list and category
-        const products = new Set();
-        let matchingProducts = 0;
-        
-        productData.forEach(product => {
-          const productPriceList = product.PriceListName || product.PriceList || product['Price List Name'];
-          const matchesPriceList = productPriceList === priceList;
-          const matchesCategory = !category || product.Category === category;
-          
-          if (matchesPriceList && matchesCategory) {
-            matchingProducts++;
-            if (product.Product) {
-              products.add(product.Product);
-            }
-          }
-        });
-        
-        console.log(`📋 Found ${matchingProducts} products matching price list "${priceList}" and category "${category || 'All'}"`);
-        console.log(`📦 Found ${products.size} unique product names`);
+        // Get unique product names
+        const products = [...new Set(filteredProducts.map(product => product.product))].filter(Boolean);
         
         // Clear and populate product dropdown
         productSelect.innerHTML = '<option value="">All Products</option>';
-        const sortedProducts = Array.from(products).sort();
         
-        if (sortedProducts.length === 0) {
-          console.log('⚠️ No products found for this combination');
+        if (products.length === 0) {
           const option = document.createElement('option');
           option.value = '';
           option.textContent = 'No products available';
           option.disabled = true;
           productSelect.appendChild(option);
         } else {
-          sortedProducts.forEach(product => {
+          products.forEach(product => {
             const option = document.createElement('option');
             option.value = product;
             option.textContent = product;
             productSelect.appendChild(option);
           });
-          console.log(`✅ Products populated: ${sortedProducts.slice(0, 5).join(', ')}${sortedProducts.length > 5 ? '...' : ''}`);
-         }
+        }
       } catch (error) {
-        console.error('❌ Error populating products:', error);
       }
     }
     
@@ -1129,66 +1128,47 @@
     function populateDensities(priceList, category, product) {
       const densitySelect = document.getElementById('density');
       
+      if (!densitySelect) {
+        return;
+      }
+      
+      if (!priceList) {
+        densitySelect.innerHTML = '<option value="">All Densities</option>';
+        return;
+      }
+      
+      if (!productData || productData.length === 0) {
+        densitySelect.innerHTML = '<option value="">Loading densities...</option>';
+        return;
+      }
+      
       try {
-        console.log('🔄 Populating densities for price list:', priceList, 'category:', category, 'product:', product);
-        console.log('📊 Product data available:', productData ? productData.length : 'No data');
+        // Filter products by criteria
+        let filteredProducts = productData.filter(item => item.priceList === priceList);
         
-        if (!priceList) {
-          console.log('⚠️ No price list selected for densities');
-          densitySelect.innerHTML = '<option value="">All Densities</option>';
-          return;
+        if (category) {
+          filteredProducts = filteredProducts.filter(item => item.category === category);
         }
         
-        if (!productData || productData.length === 0) {
-          console.log('⚠️ No product data available for densities');
-          densitySelect.innerHTML = '<option value="">All Densities</option>';
-          return;
+        if (product) {
+          filteredProducts = filteredProducts.filter(item => item.product === product);
         }
         
-        // Filter products and extract unique densities
-        const densities = new Set();
-        let matchingProducts = 0;
-        
-        productData.forEach(productItem => {
-          const productPriceList = productItem.PriceListName || productItem.PriceList || productItem['Price List Name'];
-          const matchesPriceList = productPriceList === priceList;
-          const matchesCategory = !category || productItem.Category === category;
-          const matchesProduct = !product || productItem.Product === product;
-          
-          if (matchesPriceList && matchesCategory && matchesProduct) {
-            matchingProducts++;
-            if (productItem.Density) {
-              densities.add(productItem.Density);
-            }
-          }
-        });
-        
-        console.log(`📋 Found ${matchingProducts} products matching criteria for densities`);
-        console.log(`🔧 Found ${densities.size} unique densities`);
+        // Get unique densities
+        const densities = [...new Set(filteredProducts.map(item => item.density))].filter(Boolean);
         
         // Clear and populate density dropdown
         densitySelect.innerHTML = '<option value="">All Densities</option>';
-        const sortedDensities = Array.from(densities).sort();
         
-        if (sortedDensities.length === 0) {
-          console.log('⚠️ No densities found for this combination');
+        densities.forEach(density => {
           const option = document.createElement('option');
-          option.value = '';
-          option.textContent = 'No densities available';
-          option.disabled = true;
+          option.value = density;
+          option.textContent = density;
           densitySelect.appendChild(option);
-        } else {
-          sortedDensities.forEach(density => {
-            const option = document.createElement('option');
-            option.value = density;
-            option.textContent = density;
-            densitySelect.appendChild(option);
-          });
-          console.log(`✅ Densities populated: ${sortedDensities.join(', ')}`);
-        }
+        });
+        
         
       } catch (error) {
-        console.error('❌ Error populating densities:', error);
       }
     }
     
@@ -1196,66 +1176,39 @@
     function populateColors(priceList, category, product) {
       const colorSelect = document.getElementById('color');
       
+      if (!colorSelect) {
+        return;
+      }
+      
+      if (!priceList) {
+        colorSelect.innerHTML = '<option value="">All Colors</option>';
+        return;
+      }
+      
+      if (!colorsData || colorsData.length === 0) {
+        colorSelect.innerHTML = '<option value="">Loading colors...</option>';
+        return;
+      }
+      
       try {
-        console.log('🔄 Populating colors for price list:', priceList, 'category:', category, 'product:', product);
-        console.log('📊 Product data available:', productData ? productData.length : 'No data');
-        
-        if (!priceList) {
-          console.log('⚠️ No price list selected for colors');
-          colorSelect.innerHTML = '<option value="">All Colors</option>';
-          return;
-        }
-        
-        if (!productData || productData.length === 0) {
-          console.log('⚠️ No product data available for colors');
-          colorSelect.innerHTML = '<option value="">All Colors</option>';
-          return;
-        }
-        
-        // Filter products and extract unique colors
-        const colors = new Set();
-        let matchingProducts = 0;
-        
-        productData.forEach(productItem => {
-          const productPriceList = productItem.PriceListName || productItem.PriceList || productItem['Price List Name'];
-          const matchesPriceList = productPriceList === priceList;
-          const matchesCategory = !category || productItem.Category === category;
-          const matchesProduct = !product || productItem.Product === product;
-          
-          if (matchesPriceList && matchesCategory && matchesProduct) {
-            matchingProducts++;
-            if (productItem.Colors) {
-              colors.add(productItem.Colors);
-            }
-          }
-        });
-        
-        console.log(`📋 Found ${matchingProducts} products matching criteria for colors`);
-        console.log(`🎨 Found ${colors.size} unique colors`);
-        
         // Clear and populate color dropdown
         colorSelect.innerHTML = '<option value="">All Colors</option>';
-        const sortedColors = Array.from(colors).sort();
         
-        if (sortedColors.length === 0) {
-          console.log('⚠️ No colors found for this combination');
+        colorsData.forEach(color => {
           const option = document.createElement('option');
-          option.value = '';
-          option.textContent = 'No colors available';
-          option.disabled = true;
+          option.value = color.colorName;
+          option.textContent = color.colorName;
           colorSelect.appendChild(option);
-        } else {
-          sortedColors.forEach(color => {
-            const option = document.createElement('option');
-            option.value = color;
-            option.textContent = color;
-            colorSelect.appendChild(option);
-          });
-          console.log(`✅ Colors populated: ${sortedColors.join(', ')}`);
-        }
+        });
+        
+        // Add custom color option
+        const customOption = document.createElement('option');
+        customOption.value = 'Custom Color';
+        customOption.textContent = 'Custom Color';
+        colorSelect.appendChild(customOption);
+        
         
       } catch (error) {
-        console.error('❌ Error populating colors:', error);
       }
     }
     
@@ -1300,7 +1253,6 @@
           return matchesPriceList && matchesCategory && matchesProduct && matchesDensity && matchesColor;
         });
         
-        console.log(`📊 Found ${matchingProducts.length} matching products for price calculation`);
         
         // Update state segments for price calculation
         state.segments = matchingProducts.map(productItem => {
@@ -1326,10 +1278,8 @@
           };
         });
         
-        console.log(`💰 Price calculation updated for ${state.segments.length} products`);
         
       } catch (error) {
-        console.error('❌ Error updating price display:', error);
       }
     }
     
@@ -1545,10 +1495,8 @@
         htmlPreview.innerHTML = previewHTML;
         previewSection.style.display = 'block';
         
-        console.log(`✅ Product-specific price lists generated for ${Object.keys(groupedByProduct).length} unique products`);
         
       } catch (error) {
-        console.error('❌ Error generating preview:', error);
         htmlPreview.innerHTML = '<div class="text-center py-8 text-red-500">Error generating preview. Please try again.</div>';
         previewSection.style.display = 'block';
       }
@@ -1866,23 +1814,19 @@
               files: [file]
             });
             
-            console.log('✅ PDF shared successfully via native share');
           } else {
             // Fallback to download if file sharing not supported
             downloadPDFBlob(pdfBlob, filename);
-            console.log('✅ PDF downloaded (native file sharing not supported)');
           }
         } else {
           // Fallback to download if native share not available
           downloadPDFBlob(pdfBlob, filename);
-          console.log('✅ PDF downloaded (native sharing not available)');
         }
         
         // Remove loading indicator
         document.body.removeChild(loadingDiv);
         
       } catch (error) {
-        console.error('❌ PDF sharing failed:', error);
         alert('Failed to generate PDF. Please try again.');
         
         // Remove loading indicator if it exists
@@ -1964,7 +1908,6 @@
         const imgData = canvas.toDataURL('image/jpeg', 0.95);
         pdf.addImage(imgData, 'JPEG', xOffset, yOffset, finalWidth, finalHeight);
         
-        console.log(`📄 Page ${i + 1}: Original ${canvas.width}x${canvas.height}, PDF ${finalWidth.toFixed(2)}x${finalHeight.toFixed(2)}mm, Aspect ratio preserved: ${originalAspectRatio.toFixed(3)}`);
       }
       
       // Return PDF as blob
@@ -2071,7 +2014,6 @@
           const imgData = canvas.toDataURL('image/jpeg', 0.95);
           pdf.addImage(imgData, 'JPEG', xOffset, yOffset, finalWidth, finalHeight);
           
-          console.log(`📄 Page ${i + 1}: Original ${canvas.width}x${canvas.height}, PDF ${finalWidth.toFixed(2)}x${finalHeight.toFixed(2)}mm, Aspect ratio preserved: ${originalAspectRatio.toFixed(3)}`);
         }
         
         // Generate filename with timestamp
@@ -2084,10 +2026,8 @@
         // Remove loading indicator
         document.body.removeChild(loadingDiv);
         
-        console.log(`✅ Multi-page PDF generated successfully: ${filename}`);
         
       } catch (error) {
-        console.error('❌ PDF generation failed:', error);
         alert('Failed to generate PDF. Please try again.');
         
         // Remove loading indicator if it exists
@@ -2138,7 +2078,6 @@
         window.open(whatsappUrl, '_blank');
         
       } catch (error) {
-        console.error('WhatsApp sharing error:', error);
         alert('Error sharing to WhatsApp. Please try again.');
       }
     }
@@ -2347,7 +2286,6 @@
         }
         
       } catch (error) {
-        console.error('Error generating images:', error);
         alert('Error generating price list images. Please try again.');
       }
     }
@@ -2368,7 +2306,6 @@
           downloadImage(imageData.blob, imageData.fileName);
         }
       } catch (error) {
-        console.error('Share error:', error);
         downloadImage(imageData.blob, imageData.fileName);
       }
     }
@@ -2403,7 +2340,6 @@
         }
         
       } catch (error) {
-        console.error('Error sharing multiple images:', error);
         // Fallback to download all images
         images.forEach(imageData => {
           downloadImage(imageData.blob, imageData.fileName);
@@ -2425,14 +2361,27 @@
     }
     
     // Mobile menu functionality
-    document.addEventListener('DOMContentLoaded', function() {
-        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-        const mobileMenu = document.getElementById('mobile-menu');
+    function toggleMobileMenu() {
+        const mobileMenu = document.getElementById('mobileMenu');
+        const hamburgerMenu = document.querySelector('.hamburger-menu');
         
-        if (mobileMenuBtn && mobileMenu) {
-            mobileMenuBtn.addEventListener('click', function() {
-                mobileMenu.classList.toggle('hidden');
-            });
+        if (mobileMenu.classList.contains('show')) {
+            mobileMenu.classList.remove('show');
+            hamburgerMenu.classList.remove('active');
+        } else {
+            mobileMenu.classList.add('show');
+            hamburgerMenu.classList.add('active');
+        }
+    }
+
+    // Close mobile menu when clicking outside
+    document.addEventListener('click', function(event) {
+        const mobileMenu = document.getElementById('mobileMenu');
+        const hamburgerMenu = document.querySelector('.hamburger-menu');
+        
+        if (!hamburgerMenu.contains(event.target) && !mobileMenu.contains(event.target)) {
+            mobileMenu.classList.remove('show');
+            hamburgerMenu.classList.remove('active');
         }
     });
   </script>

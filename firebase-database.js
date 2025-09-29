@@ -80,7 +80,7 @@ class FirebaseDatabase {
 
   async getClients(filters = {}) {
     if (!this.isAvailable()) {
-      throw new Error('Firebase not available');
+      return [];
     }
 
     try {
@@ -107,7 +107,7 @@ class FirebaseDatabase {
       return clients;
       
     } catch (error) {
-      throw error;
+      return [];
     }
   }
 
@@ -213,54 +213,54 @@ class FirebaseDatabase {
   }
 
   async getProducts(filters = {}) {
-    if (!this.db) {
-        return [];
+    if (!this.isAvailable()) {
+      return [];
     }
 
     try {
-        const querySnapshot = await getDocs(collection(this.db, 'products'));
+        const querySnapshot = await this.db.collection('products').get();
         const products = [];
         querySnapshot.forEach((doc) => {
             products.push({ id: doc.id, ...doc.data() });
         });
         return products;
     } catch (error) {
-        throw error;
+        return [];
     }
   }
 
   // Colors Management Operations
   async getColors(filters = {}) {
-    if (!this.db) {
-        return [];
+    if (!this.isAvailable()) {
+      return [];
     }
 
     try {
-        const querySnapshot = await getDocs(collection(this.db, 'colors'));
+        const querySnapshot = await this.db.collection('colors').get();
         const colors = [];
         querySnapshot.forEach((doc) => {
             colors.push({ id: doc.id, ...doc.data() });
         });
         return colors;
     } catch (error) {
-        throw error;
+        return [];
     }
   }
 
   async getStyles(filters = {}) {
-    if (!this.db) {
-        return [];
+    if (!this.isAvailable()) {
+      return [];
     }
 
     try {
-        const querySnapshot = await getDocs(collection(this.db, 'styles'));
+        const querySnapshot = await this.db.collection('styles').get();
         const styles = [];
         querySnapshot.forEach((doc) => {
             styles.push({ id: doc.id, ...doc.data() });
         });
         return styles;
     } catch (error) {
-        throw error;
+        return [];
     }
   }
 
@@ -578,7 +578,7 @@ class FirebaseDatabase {
 
   async getQuotes(filters = {}) {
     if (!this.isAvailable()) {
-      throw new Error('Firebase not available');
+      return [];
     }
 
     try {
@@ -606,14 +606,14 @@ class FirebaseDatabase {
       return quotes;
       
     } catch (error) {
-      throw error;
+      return [];
     }
   }
 
   // Get Orders
   async getOrders(filters = {}) {
     if (!this.isAvailable()) {
-      throw new Error('Firebase not available');
+      return [];
     }
 
     try {
@@ -645,7 +645,7 @@ class FirebaseDatabase {
       return orders;
       
     } catch (error) {
-      throw error;
+      return [];
     }
   }
 
@@ -683,7 +683,7 @@ class FirebaseDatabase {
 
   async getSalesmen() {
     if (!this.isAvailable()) {
-      throw new Error('Firebase not available');
+      return [];
     }
 
     try {
@@ -696,7 +696,58 @@ class FirebaseDatabase {
       }
       
     } catch (error) {
-      throw error;
+      return [];
+    }
+  }
+
+  // Alias for compatibility
+  async getSalespeople() {
+    return this.getSalesmen();
+  }
+
+  async getCategories(filters = {}) {
+    if (!this.isAvailable()) {
+      return [];
+    }
+
+    try {
+      const categoriesRef = this.db.collection('categories');
+      const snapshot = await categoriesRef.get();
+      
+      const categories = [];
+      snapshot.forEach(doc => {
+        categories.push({
+          id: doc.id,
+          ...doc.data()
+        });
+      });
+
+      return categories;
+    } catch (error) {
+      return [];
+    }
+  }
+
+  async getPriceLists(filters = {}) {
+    if (!this.isAvailable()) {
+      return [];
+    }
+
+    try {
+      const priceListsRef = this.db.collection('priceLists');
+      const snapshot = await priceListsRef.get();
+      
+      const priceLists = [];
+      snapshot.forEach(doc => {
+        priceLists.push({
+          id: doc.id,
+          ...doc.data()
+        });
+      });
+
+      return priceLists;
+    } catch (error) {
+      return [];
     }
   }
 
@@ -1046,7 +1097,6 @@ class FirebaseDatabase {
           });
           callback(clients);
         }, error => {
-          console.warn('⚠️ Clients real-time listener error:', error.message);
           if (error.code === 'permission-denied' || error.message.includes('insufficient permissions')) {
             return;
           }
@@ -1056,7 +1106,6 @@ class FirebaseDatabase {
           }
         });
     } catch (error) {
-      console.warn('⚠️ Failed to setup clients listener:', error.message);
       return () => {};
     }
   }
@@ -1076,7 +1125,6 @@ class FirebaseDatabase {
           });
           callback(quotes);
         }, error => {
-          console.warn('⚠️ Quotes real-time listener error:', error.message);
           if (error.code === 'permission-denied' || error.message.includes('insufficient permissions')) {
             return;
           }
@@ -1086,7 +1134,6 @@ class FirebaseDatabase {
           }
         });
     } catch (error) {
-      console.warn('⚠️ Failed to setup quotes listener:', error.message);
       return () => {};
     }
   }
@@ -1112,7 +1159,6 @@ class FirebaseDatabase {
           });
           callback(products);
         }, error => {
-          console.warn('⚠️ Products real-time listener error:', error.message);
           if (error.code === 'permission-denied' || error.message.includes('insufficient permissions')) {
             return;
           }
@@ -1122,7 +1168,6 @@ class FirebaseDatabase {
           }
         });
     } catch (error) {
-      console.warn('⚠️ Failed to setup products listener:', error.message);
       return () => {};
     }
   }
@@ -1145,7 +1190,6 @@ class FirebaseDatabase {
             callback([]);
           }
         }, error => {
-          console.warn('⚠️ Salesmen real-time listener error:', error.message);
           if (error.code === 'permission-denied' || error.message.includes('insufficient permissions')) {
             return;
           }
@@ -1156,7 +1200,6 @@ class FirebaseDatabase {
         });
       
     } catch (error) {
-      console.warn('⚠️ Failed to setup salesmen listener:', error.message);
       return () => {};
     }
   }

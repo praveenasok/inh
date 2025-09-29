@@ -34,6 +34,10 @@
     <script src="js/fallback-detector.js"></script>
     <script src="js/unified-data-access.js?v=20"></script>
     
+    <!-- Local Storage Dropdown Manager - REMOVED: Migrated to Firebase-only data -->
+    <!-- <script src="js/local-storage-dropdown-manager.js"></script> -->
+    <!-- <script src="js/sample-data-initializer.js"></script> -->
+    
     <!-- New API Client (Server-based data access) -->
     <script src="js/api-client.js"></script>
     
@@ -162,61 +166,151 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        /* Hamburger Menu Styles */
+        .hamburger-menu {
+            display: none;
+            flex-direction: column;
+            cursor: pointer;
+            padding: 8px;
+            z-index: 1001;
+        }
+
+        .hamburger-line {
+            width: 25px;
+            height: 3px;
+            background-color: white;
+            margin: 3px 0;
+            transition: 0.3s;
+            border-radius: 2px;
+        }
+
+        .hamburger-menu.active .hamburger-line:nth-child(1) {
+            transform: rotate(-45deg) translate(-5px, 6px);
+        }
+
+        .hamburger-menu.active .hamburger-line:nth-child(2) {
+            opacity: 0;
+        }
+
+        .hamburger-menu.active .hamburger-line:nth-child(3) {
+            transform: rotate(45deg) translate(-5px, -6px);
+        }
+
+        /* Mobile Menu Styles */
+        .mobile-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #d97706 100%);
+            padding: 1rem;
+            transform: translateY(-100%);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .mobile-menu.active {
+            transform: translateY(0);
+            opacity: 1;
+            visibility: visible;
+            animation: slideDown 0.3s ease forwards;
+        }
+
+        .mobile-menu a {
+            display: block;
+            padding: 12px 16px;
+            margin: 4px 0;
+            border-radius: 8px;
+            transition: background-color 0.2s ease;
+            text-decoration: none;
+        }
+
+        .mobile-menu a:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        /* Desktop Menu Styles */
+        .desktop-menu {
+            display: flex;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .desktop-menu {
+                display: none;
+            }
+            
+            .hamburger-menu {
+                display: flex;
+            }
+        }
+
+        @media (min-width: 769px) {
+            .mobile-menu {
+                display: none !important;
+            }
+        }
     </style>
 </head>
 <body class="bg-gray-50">
 
-    <!-- Navigation Component -->
-    <nav class="bg-gradient-to-r from-blue-900 via-blue-800 to-amber-700 text-white shadow-lg sticky top-0 z-50">
+    <!-- Navigation -->
+    <nav class="bg-gradient-to-r from-blue-900 via-blue-800 to-amber-700 text-white shadow-lg sticky top-0 z-50 relative">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
-                <!-- Logo and Title -->
                 <div class="flex items-center space-x-3">
                     <img src="images/logo.png" alt="Logo" class="h-8 w-auto opacity-90">
-                    <span class="text-lg font-bold">InstaQuote</span>
+                    <span class="text-lg font-bold">instaQuote - Product Catalog</span>
                 </div>
                 
-                <!-- Navigation Links -->
-                <div class="hidden md:flex items-center space-x-4">
-                    <a href="quote-maker-v2-ver3.html" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-white/10 transition-colors">
+                <!-- Desktop Menu -->
+                <div class="desktop-menu items-center space-x-4">
+                    <a href="quotemaker.html" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-white/10 transition-colors">
                         <i class="fas fa-file-invoice-dollar mr-1"></i> Quote Maker
                     </a>
                     <a href="price-calculator.html" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-white/10 transition-colors">
-                        <i class="fas fa-calculator mr-1"></i> Calculator
+                        <i class="fas fa-calculator mr-1"></i> Price Lists
                     </a>
-                    <span class="px-3 py-2 rounded-md text-sm font-medium bg-white/20">
-                        <i class="fas fa-th-large mr-1"></i> Catalog
-                    </span>
-                    <a href="admin-panel.html" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-white/10 transition-colors">
-                        <i class="fas fa-cog mr-1"></i> Admin
+                    <a href="admin-sync-panel.html" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-white/10 transition-colors">
+                        <i class="fas fa-cog mr-1"></i> Admin Panel
                     </a>
                 </div>
                 
-                <!-- Mobile Menu Button -->
-                <div class="md:hidden">
-                    <button id="mobile-menu-btn" class="p-2 rounded-md hover:bg-white/10 transition-colors">
-                        <i class="fas fa-bars"></i>
-                    </button>
+                <!-- Hamburger Menu Button -->
+                <div class="hamburger-menu" onclick="toggleMobileMenu()">
+                    <div class="hamburger-line"></div>
+                    <div class="hamburger-line"></div>
+                    <div class="hamburger-line"></div>
                 </div>
             </div>
-            
-            <!-- Mobile Menu -->
-            <div id="mobile-menu" class="md:hidden hidden pb-3">
-                <div class="space-y-1">
-                    <a href="quote-maker-v2-ver3.html" class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-white/10 transition-colors">
-                        <i class="fas fa-file-invoice-dollar mr-2"></i> Quote Maker
-                    </a>
-                    <a href="price-calculator.html" class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-white/10 transition-colors">
-                        <i class="fas fa-calculator mr-2"></i> Price Calculator
-                    </a>
-                    <span class="block px-3 py-2 rounded-md text-sm font-medium bg-white/20">
-                        <i class="fas fa-th-large mr-2"></i> Product Catalog
-                    </span>
-                    <a href="admin-panel.html" class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-white/10 transition-colors">
-                        <i class="fas fa-cog mr-2"></i> Admin Panel
-                    </a>
-                </div>
-            </div>
+        </div>
+        
+        <!-- Mobile Menu -->
+        <div class="mobile-menu" id="mobileMenu">
+            <a href="quotemaker.html" class="text-white hover:text-gray-200">
+                <i class="fas fa-file-invoice-dollar mr-2"></i> Quote Maker
+            </a>
+            <a href="price-calculator.html" class="text-white hover:text-gray-200">
+                <i class="fas fa-calculator mr-2"></i> Price Lists
+            </a>
+            <a href="admin-sync-panel.html" class="text-white hover:text-gray-200">
+                <i class="fas fa-cog mr-2"></i> Admin Panel
+            </a>
         </div>
     </nav>
 
@@ -224,7 +318,6 @@
     <div class="container mx-auto px-4 py-6">
         <!-- Page Header -->
         <div class="text-left mb-8">
-            <h1 class="text-3xl font-bold mb-2" style="color: #081249;">Product Catalog</h1>
         </div>
 
         <!-- Product Catalog Module -->
@@ -505,6 +598,8 @@
         }
     ];
     
+    // LocalStorageDropdownManager removed - using Firebase-only data
+    
     const FX_APIS = [
       (base) => `https://api.exchangerate-api.com/v4/latest/${base}`,
       (base) => `https://api.fixer.io/latest?base=${base}`,
@@ -530,20 +625,17 @@
                 const colors = await window.apiClient.getColors();
                 if (colors && colors.length > 0) {
                     firebaseColors = colors;
-                    console.log(`📦 Loaded ${firebaseColors.length} colors from API client`);
                 }
                 
                 // Load styles collection
                 const styles = await window.apiClient.getStyles();
                 if (styles && styles.length > 0) {
                     firebaseStyles = styles;
-                    console.log(`📦 Loaded ${firebaseStyles.length} styles from API client`);
                 }
                 return;
             }
             
             // Fallback: Try unified data access if API client is not available
-            console.warn('⚠️ API client not available or API endpoints not found, falling back to legacy methods...');
             
             if (window.unifiedDataAccess) {
                 try {
@@ -551,21 +643,17 @@
                     const colors = await window.unifiedDataAccess.getColors();
                     if (colors && colors.length > 0) {
                         firebaseColors = colors;
-                        console.log(`📦 Loaded ${firebaseColors.length} colors from unified data access (fallback)`);
                     }
                     
                     // Load styles collection
                     const styles = await window.unifiedDataAccess.getStyles();
                     if (styles && styles.length > 0) {
                         firebaseStyles = styles;
-                        console.log(`📦 Loaded ${firebaseStyles.length} styles from unified data access (fallback)`);
                     }
                 } catch (unifiedError) {
-                    console.warn('⚠️ Unified data access failed:', unifiedError);
                 }
             }
         } catch (error) {
-            console.error('Error loading Firebase collections:', error);
         }
     }
 
@@ -801,58 +889,27 @@
         try {
             showLoading(true);
             
-            // Initialize fallback system components (fallback-first strategy)
-            try {
-                console.log('🔄 Initializing fallback system with fallback-first strategy...');
-                
-                // Initialize local fallback manager
-                if (typeof LocalFallbackManager !== 'undefined') {
-                    window.localFallbackManager = new LocalFallbackManager();
-                    await window.localFallbackManager.initialize();
-                    console.log('✅ Local fallback manager initialized');
-                }
-                
-                // Initialize fallback detector
-                if (typeof FallbackDetector !== 'undefined') {
-                    window.fallbackDetector = new FallbackDetector();
-                    await window.fallbackDetector.initialize();
-                    console.log('✅ Fallback detector initialized');
-                }
-                
-                // Initialize unified data access with fallback-first priority
-                if (typeof UnifiedDataAccess !== 'undefined') {
-                    window.unifiedDataAccess = new UnifiedDataAccess();
-                    await window.unifiedDataAccess.initialize();
-                    console.log('✅ Unified data access initialized (fallback-first)');
-                }
-                
-                console.log('✅ Fallback system fully initialized with fallback-first strategy');
-            } catch (error) {
-                console.warn('⚠️ Fallback system initialization failed:', error);
-            }
             
-            // Initialize Firebase as auxiliary data source
+            // Initialize Firebase as primary data source
             try {
                 if (window.universalDataManager) {
-                    console.log('🔄 Initializing Firebase as auxiliary data source...');
                     await window.universalDataManager.waitForReady();
                     
                     const status = window.universalDataManager.getStatus();
                     if (status.isInitialized && status.isDataLoaded) {
-                        console.log('✅ Firebase auxiliary data source ready');
                     } else {
-                        console.warn('⚠️ Firebase auxiliary data source not ready');
+                        throw new Error('Firebase data source not ready');
                     }
+                } else {
+                    throw new Error('Universal data manager not available');
                 }
             } catch (firebaseError) {
-                console.warn('⚠️ Firebase auxiliary initialization failed:', firebaseError);
+                throw new Error(`Firebase initialization failed: ${firebaseError.message}`);
             }
             
             // Check API client availability
             if (window.apiClient && typeof window.apiClient.isAvailable === 'function') {
-                console.log(`🔗 API Client available: ${window.apiClient.isAvailable()}`);
             } else {
-                console.warn('⚠️ API Client not properly loaded or missing isAvailable method');
             }
             
             // Load Firebase collections first
@@ -867,10 +924,8 @@
             // Render products after data is loaded
             renderProducts();
             
-            console.log('Product catalog initialized successfully');
             
         } catch (error) {
-            console.error('Error initializing product catalog:', error);
             // Show error message to user
             showErrorMessage('Failed to load product catalog. Please check your internet connection and try again.');
         } finally {
@@ -878,80 +933,74 @@
         }
     });
 
-    // Load product data using API client
+    // Load product data from Firebase
     async function loadProductData() {
         try {
-            console.log('🔄 Loading products via API client...');
             
-            // Use the new API client for data access if available
-            if (window.apiClient && typeof window.apiClient.isAvailable === 'function' && window.apiClient.isAvailable()) {
-                productData = await window.apiClient.getProducts();
-                console.log(`📦 Loaded ${productData.length} products from API client`);
-                return;
+            // Check if universalDataManager is available
+            if (!window.universalDataManager) {
+                throw new Error('Universal data manager not available');
             }
             
-            // Fallback: If API client is not available, try the old methods
-            console.warn('⚠️ API client not available or API endpoints not found, falling back to legacy methods...');
+            // Wait for Firebase to be ready
+            await window.universalDataManager.waitForReady();
             
-            // Try unified data access as fallback
-            if (window.unifiedDataAccess) {
-                try {
-                    const products = await window.unifiedDataAccess.getData('products');
-                    if (products && products.length > 0) {
-                        productData = products;
-                        console.log(`📦 Loaded ${products.length} products from unified data access (fallback)`);
-                        return;
-                    }
-                } catch (unifiedError) {
-                    console.warn('⚠️ Unified data access failed:', unifiedError);
+            // Check if Firebase is initialized and data is loaded
+            const status = window.universalDataManager.getStatus();
+            if (!status.isInitialized || !status.isDataLoaded) {
+                // Wait a bit more for data to load
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                const newStatus = window.universalDataManager.getStatus();
+                if (!newStatus.isInitialized || !newStatus.isDataLoaded) {
+                    throw new Error('Firebase data not loaded');
                 }
             }
             
-            // Try local fallback manager as last resort
-            if (window.localFallbackManager) {
-                try {
-                    const products = await window.localFallbackManager.getData('products');
-                    if (products && products.length > 0) {
-                        productData = products;
-                        console.log(`📦 Loaded ${products.length} products from local fallback (last resort)`);
-                        return;
-                    }
-                } catch (fallbackError) {
-                    console.warn('⚠️ Local fallback failed:', fallbackError);
-                }
+            // Get product data from Firebase
+            const products = window.universalDataManager.getProductData();
+            if (!products || !Array.isArray(products)) {
+                throw new Error('No product data available from Firebase');
             }
             
-            // If all methods fail, set empty array
-            console.warn('⚠️ No products data available from any source, using empty array');
-            productData = [];
+            productData = products;
+            window.productData = products; // Make it globally available
             
         } catch (error) {
-            console.error('❌ Error loading product data:', error);
             productData = [];
-            throw error;
+            throw new Error(`Error loading product data: ${error.message}`);
         }
     }
 
-    // Populate category dropdown with unique categories from product data
+    // Populate category dropdown with unique categories from Firebase data
     function populateCatalogCategories() {
-        const categorySelect = document.getElementById('catalog-category');
-        if (!categorySelect) return;
-        
-        // Get unique categories from product data
-        const categories = [...new Set(productData.map(product => product.Category))].filter(Boolean).sort();
-        
-        // Clear existing options except "All Categories"
-        categorySelect.innerHTML = '<option value="">All Categories</option>';
-        
-        // Add category options
-        categories.forEach(category => {
-            const option = document.createElement('option');
-            option.value = category;
-            option.textContent = category;
-            categorySelect.appendChild(option);
-        });
-        
-        console.log(`📋 Populated ${categories.length} categories in dropdown`);
+        try {
+            
+            const categorySelect = document.getElementById('catalog-category');
+            if (!categorySelect) {
+                return;
+            }
+            
+            // Check if productData is available and is an array
+            if (!window.productData || !Array.isArray(window.productData)) {
+                return;
+            }
+            
+            // Extract unique categories from Firebase product data
+            const categories = [...new Set(window.productData.map(product => product.Category))].filter(Boolean).sort();
+            
+            // Populate the dropdown
+            categorySelect.innerHTML = '<option value="">All Categories</option>';
+            categories.forEach(category => {
+                const option = document.createElement('option');
+                option.value = category;
+                option.textContent = category;
+                categorySelect.appendChild(option);
+            });
+            
+            
+        } catch (error) {
+        }
     }
 
     // Show/hide loading indicator
@@ -1030,7 +1079,6 @@
                 // Fallback timeout
                 setTimeout(() => {
                     clearInterval(checkInterval);
-                    console.warn('⚠️ Global Firebase not ready, proceeding with local initialization');
                     resolve();
                 }, 5000);
             }
@@ -1040,7 +1088,6 @@
     // Add event listeners for filters
     document.addEventListener('DOMContentLoaded', async function() {
         await waitForFirebase();
-        console.log('✅ Firebase ready for product catalog');
         // Category filter
         const categorySelect = document.getElementById('catalog-category');
         if (categorySelect) {
@@ -1094,14 +1141,22 @@
     
     <script>
         // Mobile menu functionality
-        document.addEventListener('DOMContentLoaded', function() {
-            const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-            const mobileMenu = document.getElementById('mobile-menu');
+        function toggleMobileMenu() {
+            const hamburger = document.querySelector('.hamburger-menu');
+            const mobileMenu = document.querySelector('.mobile-menu');
             
-            if (mobileMenuBtn && mobileMenu) {
-                mobileMenuBtn.addEventListener('click', function() {
-                    mobileMenu.classList.toggle('hidden');
-                });
+            hamburger.classList.toggle('active');
+            mobileMenu.classList.toggle('active');
+        }
+
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', function(event) {
+            const hamburger = document.querySelector('.hamburger-menu');
+            const mobileMenu = document.querySelector('.mobile-menu');
+            
+            if (!hamburger.contains(event.target) && !mobileMenu.contains(event.target)) {
+                hamburger.classList.remove('active');
+                mobileMenu.classList.remove('active');
             }
         });
     </script>

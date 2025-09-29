@@ -1,6 +1,7 @@
 class GoogleSheetsIntegration {
   constructor() {
-    this.SHEET_ID = '1hlfrnZnNQ0u8idg5KDmkSY4zFhLyvjLqUwAZn6HmW3s';
+    // Use auto-configuration if available, fallback to hardcoded values
+    this.SHEET_ID = this.getSheetId();
     this.API_KEY = this.getApiKey();
     this.DISCOVERY_DOC = 'https://sheets.googleapis.com/$discovery/rest?version=v4';
     this.SCOPES = 'https://www.googleapis.com/auth/spreadsheets';
@@ -13,6 +14,19 @@ class GoogleSheetsIntegration {
     }
     return window.GOOGLE_SHEETS_API_KEY || 'YOUR_GOOGLE_SHEETS_API_KEY';
   }
+
+  getSheetId() {
+    if (typeof process !== 'undefined' && process.env && process.env.GOOGLE_SHEETS_SHEET_ID) {
+      return process.env.GOOGLE_SHEETS_SHEET_ID;
+    }
+    if (typeof window !== 'undefined' && window.GOOGLE_SHEETS_SHEET_ID) {
+      return window.GOOGLE_SHEETS_SHEET_ID;
+    }
+    // Fallback to hardcoded value
+    return '1hlfrnZnNQ0u8idg5KDmkSY4zFhLyvjLqUwAZn6HmW3s';
+  }
+
+
 
   async initialize() {
     try {
@@ -356,16 +370,27 @@ class GoogleSheetsIntegration {
 }
 
 class GoogleSheetsFetchAPI {
-  constructor() {
-    this.SHEET_ID = '1hlfrnZnNQ0u8idg5KDmkSY4zFhLyvjLqUwAZn6HmW3s';
-    this.API_KEY = this.getApiKey();
-  }
-
   getApiKey() {
     if (typeof process !== 'undefined' && process.env) {
       return process.env.GOOGLE_SHEETS_API_KEY || 'YOUR_GOOGLE_SHEETS_API_KEY';
     }
     return window.GOOGLE_SHEETS_API_KEY || 'YOUR_GOOGLE_SHEETS_API_KEY';
+  }
+
+  getSheetId() {
+    if (typeof process !== 'undefined' && process.env && process.env.GOOGLE_SHEETS_SHEET_ID) {
+      return process.env.GOOGLE_SHEETS_SHEET_ID;
+    }
+    if (typeof window !== 'undefined' && window.GOOGLE_SHEETS_SHEET_ID) {
+      return window.GOOGLE_SHEETS_SHEET_ID;
+    }
+    // Fallback to hardcoded value
+    return '1hlfrnZnNQ0u8idg5KDmkSY4zFhLyvjLqUwAZn6HmW3s';
+  }
+
+  constructor() {
+    this.SHEET_ID = this.getSheetId();
+    this.API_KEY = this.getApiKey();
   }
 
   async appendOrderData(orderData) {

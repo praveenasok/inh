@@ -2,10 +2,10 @@
   "applicationConfig": {
     "name": "InstaQuote Business Hub",
     "version": "2.0",
-    "defaultPage": "quote-maker-v2-ver3.html",
+    "defaultPage": "quotemaker.html",
     "activeFiles": [
       {
-        "file": "quote-maker-v2-ver3.html",
+        "file": "quotemaker.html",
         "name": "Quote Maker",
         "description": "Main quote creation and management application",
         "status": "active",
@@ -37,7 +37,7 @@
       {
         "file": "index.html",
         "name": "Legacy Index",
-        "description": "Legacy main page - replaced by quote-maker-v2-ver3.html",
+        "description": "Legacy main page - replaced by quotemaker.html",
         "status": "dormant",
         "reason": "Superseded by new quote maker"
       },
@@ -60,7 +60,7 @@
         "name": "Quote Maker V2",
         "description": "Previous version of quote maker",
         "status": "dormant",
-        "reason": "Replaced by quote-maker-v2-ver3.html"
+        "reason": "Replaced by quotemaker.html"
       },
       {
         "file": "quote-maker-v2-working-20250921-140509.html",
@@ -92,8 +92,8 @@
       }
     ],
     "routing": {
-      "/": "quote-maker-v2-ver3.html",
-      "/quote": "quote-maker-v2-ver3.html",
+      "/": "quotemaker.html",
+      "/quote": "quotemaker.html",
       "/catalog": "product-catalog.html",
       "/admin": "admin-panel.html",
       "/calculator": "price-calculator.html"

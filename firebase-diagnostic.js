@@ -19,7 +19,6 @@ class FirebaseDiagnostic {
 
     log(message, type = 'info') {
         const timestamp = new Date().toLocaleTimeString();
-        console.log(`[${timestamp}] [${type.toUpperCase()}] ${message}`);
     }
 
     async runFullDiagnostic() {

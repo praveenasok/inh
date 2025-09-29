@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Integrity Diagnostic Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+            padding: 25px;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            background: #f9f9f9;
+        }
+
+        .section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            margin: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .status {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status.warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .log-container {
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            max-height: 400px;
+            overflow-y: auto;
+            margin: 15px 0;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .data-table th {
+            background: #667eea;
+            color: white;
+            font-weight: bold;
+        }
+
+        .data-table tr:hover {
+            background: #f5f5f5;
+        }
+
+        .integrity-issue {
+            background: #fff5f5;
+            border: 1px solid #fed7d7;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+
+        .integrity-issue h4 {
+            color: #c53030;
+            margin-bottom: 10px;
+        }
+
+        .integrity-issue p {
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .metric-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .metric-label {
+            color: #666;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 Data Integrity Diagnostic Tool</h1>
+            <p>Comprehensive analysis and validation of Google Sheets to IndexedDB synchronization</p>
+        </div>
+
+        <div class="content">
+            <!-- Quick Actions -->
+            <div class="section">
+                <h2>🚀 Quick Actions</h2>
+                <button class="btn" onclick="runFullDiagnostic()">Run Full Diagnostic</button>
+                <button class="btn" onclick="validateAllCollections()">Validate All Collections</button>
+                <button class="btn" onclick="checkDataConsistency()">Check Data Consistency</button>
+                <button class="btn" onclick="analyzeIntegrityIssues()">Analyze Integrity Issues</button>
+                <button class="btn" onclick="clearLogs()">Clear Logs</button>
+            </div>
+
+            <!-- Diagnostic Status -->
+            <div class="section">
+                <h2>📊 Diagnostic Status</h2>
+                <div id="diagnosticStatus" class="status info">Ready to run diagnostics...</div>
+                <div class="progress-bar">
+                    <div id="progressFill" class="progress-fill"></div>
+                </div>
+                <div id="progressText">0% Complete</div>
+            </div>
+
+            <!-- Data Integrity Metrics -->
+            <div class="section">
+                <h2>📈 Data Integrity Metrics</h2>
+                <div class="grid" id="metricsGrid">
+                    <!-- Metrics will be populated here -->
+                </div>
+            </div>
+
+            <!-- Integrity Issues -->
+            <div class="section">
+                <h2>⚠️ Integrity Issues</h2>
+                <div id="integrityIssues">
+                    <p>No issues detected yet. Run a diagnostic to check for problems.</p>
+                </div>
+            </div>
+
+            <!-- Data Validation Results -->
+            <div class="section">
+                <h2>✅ Data Validation Results</h2>
+                <div id="validationResults">
+                    <p>No validation results yet. Run validation to see results.</p>
+                </div>
+            </div>
+
+            <!-- Consistency Check Results -->
+            <div class="section">
+                <h2>🔄 Consistency Check Results</h2>
+                <div id="consistencyResults">
+                    <p>No consistency check results yet. Run consistency check to see results.</p>
+                </div>
+            </div>
+
+            <!-- Diagnostic Logs -->
+            <div class="section">
+                <h2>📝 Diagnostic Logs</h2>
+                <div id="logContainer" class="log-container">
+                    <div>Data Integrity Diagnostic Tool initialized...</div>
+                    <div>Ready to perform diagnostics.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Include required scripts -->
+    <script src="js/indexeddb-manager.js"></script>
+    <script src="js/google-sheets-auto-config.js"></script>
+    <script src="js/sheets-to-indexeddb-sync.js"></script>
+
+    <script>
+        class DataIntegrityDiagnostic {
+            constructor() {
+                this.dbManager = null;
+                this.syncManager = null;
+                this.sheetsService = null;
+                this.issues = [];
+                this.metrics = {};
+                this.isRunning = false;
+                
+                this.init();
+            }
+
+            async init() {
+                try {
+                    // Initialize managers
+                    this.dbManager = new IndexedDBManager();
+                    await this.dbManager.initialize();
+                    
+                    this.syncManager = new SheetsToIndexedDBSync({
+                        dbManager: this.dbManager
+                    });
+                    
+                    this.sheetsService = new GoogleSheetsService();
+                    
+                    this.log('✅ All services initialized successfully', 'success');
+                } catch (error) {
+                    this.log(`❌ Initialization failed: ${error.message}`, 'error');
+                }
+            }
+
+            async runFullDiagnostic() {
+                if (this.isRunning) return;
+                
+                this.isRunning = true;
+                this.issues = [];
+                this.updateProgress(0, 'Starting full diagnostic...');
+                
+                try {
+                    // Step 1: Check database connection
+                    this.updateProgress(10, 'Checking database connection...');
+                    await this.checkDatabaseConnection();
+                    
+                    // Step 2: Validate configurations
+                    this.updateProgress(25, 'Validating configurations...');
+                    await this.validateConfigurations();
+                    
+                    // Step 3: Check data schemas
+                    this.updateProgress(40, 'Checking data schemas...');
+                    await this.checkDataSchemas();
+                    
+                    // Step 4: Validate existing data
+                    this.updateProgress(60, 'Validating existing data...');
+                    await this.validateExistingData();
+                    
+                    // Step 5: Check data consistency
+                    this.updateProgress(80, 'Checking data consistency...');
+                    await this.checkDataConsistency();
+                    
+                    // Step 6: Generate report
+                    this.updateProgress(100, 'Generating diagnostic report...');
+                    await this.generateDiagnosticReport();
+                    
+                    this.updateStatus('✅ Full diagnostic completed successfully', 'success');
+                    
+                } catch (error) {
+                    this.updateStatus(`❌ Diagnostic failed: ${error.message}`, 'error');
+                    this.log(`Diagnostic error: ${error.message}`, 'error');
+                } finally {
+                    this.isRunning = false;
+                }
+            }
+
+            async checkDatabaseConnection() {
+                try {
+                    const stats = await this.dbManager.getStats();
+                    this.log(`📊 Database stats: ${JSON.stringify(stats, null, 2)}`, 'info');
+                    
+                    if (!stats || Object.keys(stats).length === 0) {
+                        this.addIssue('Database Connection', 'No database statistics available', 'high');
+                    }
+                } catch (error) {
+                    this.addIssue('Database Connection', `Failed to get database stats: ${error.message}`, 'critical');
+                }
+            }
+
+            async validateConfigurations() {
+                try {
+                    // Check sync configurations
+                    const collections = ['products', 'clients', 'salespeople', 'priceLists', 'colors', 'styles', 'companies'];
+                    
+                    for (const collection of collections) {
+                        const config = this.syncManager.sheetConfig[collection];
+                        if (!config) {
+                            this.addIssue('Configuration', `Missing configuration for collection: ${collection}`, 'high');
+                            continue;
+                        }
+                        
+                        // Check required fields
+                        if (!config.required || config.required.length === 0) {
+                            this.addIssue('Configuration', `No required fields defined for ${collection}`, 'medium');
+                        }
+                        
+                        // Check headers
+                        if (!config.headers || config.headers.length === 0) {
+                            this.addIssue('Configuration', `No headers defined for ${collection}`, 'medium');
+                        }
+                        
+                        // Check transform function
+                        if (!config.transform || typeof config.transform !== 'function') {
+                            this.addIssue('Configuration', `No transform function for ${collection}`, 'high');
+                        }
+                    }
+                    
+                    this.log('✅ Configuration validation completed', 'success');
+                } catch (error) {
+                    this.addIssue('Configuration', `Configuration validation failed: ${error.message}`, 'critical');
+                }
+            }
+
+            async checkDataSchemas() {
+                try {
+                    const schema = this.dbManager.schema;
+                    
+                    for (const [storeName, storeSchema] of Object.entries(schema)) {
+                        // Check if store exists
+                        try {
+                            await this.dbManager.count(storeName);
+                        } catch (error) {
+                            this.addIssue('Schema', `Store ${storeName} does not exist or is inaccessible`, 'high');
+                            continue;
+                        }
+                        
+                        // Check key path
+                        if (!storeSchema.keyPath) {
+                            this.addIssue('Schema', `No key path defined for store ${storeName}`, 'medium');
+                        }
+                        
+                        // Check indexes
+                        if (!storeSchema.indexes || storeSchema.indexes.length === 0) {
+                            this.addIssue('Schema', `No indexes defined for store ${storeName}`, 'low');
+                        }
+                    }
+                    
+                    this.log('✅ Schema validation completed', 'success');
+                } catch (error) {
+                    this.addIssue('Schema', `Schema validation failed: ${error.message}`, 'critical');
+                }
+            }
+
+            async validateExistingData() {
+                try {
+                    const collections = ['products', 'clients', 'salespeople', 'priceLists', 'colors', 'styles', 'companies'];
+                    
+                    for (const collection of collections) {
+                        try {
+                            const records = await this.dbManager.getAll(collection);
+                            const config = this.syncManager.sheetConfig[collection];
+                            
+                            if (!records || records.length === 0) {
+                                this.addIssue('Data Validation', `No records found in ${collection}`, 'medium');
+                                continue;
+                            }
+                            
+                            // Validate each record
+                            let invalidRecords = 0;
+                            for (const record of records) {
+                                if (!this.validateRecord(record, config)) {
+                                    invalidRecords++;
+                                }
+                            }
+                            
+                            if (invalidRecords > 0) {
+                                this.addIssue('Data Validation', 
+                                    `${invalidRecords} invalid records found in ${collection}`, 
+                                    invalidRecords > records.length * 0.1 ? 'high' : 'medium');
+                            }
+                            
+                            this.log(`📊 ${collection}: ${records.length} records, ${invalidRecords} invalid`, 'info');
+                            
+                        } catch (error) {
+                            this.addIssue('Data Validation', `Failed to validate ${collection}: ${error.message}`, 'high');
+                        }
+                    }
+                    
+                    this.log('✅ Data validation completed', 'success');
+                } catch (error) {
+                    this.addIssue('Data Validation', `Data validation failed: ${error.message}`, 'critical');
+                }
+            }
+
+            validateRecord(record, config) {
+                if (!config || !config.required) return true;
+                
+                // Check required fields
+                for (const field of config.required) {
+                    if (!record[field] || (typeof record[field] === 'string' && record[field].trim() === '')) {
+                        return false;
+                    }
+                }
+                
+                // Check data types
+                if (record.id && typeof record.id !== 'string') return false;
+                if (record.price && isNaN(parseFloat(record.price))) return false;
+                if (record.email && record.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(record.email)) return false;
+                
+                return true;
+            }
+
+            async checkDataConsistency() {
+                try {
+                    const consistencyResults = document.getElementById('consistencyResults');
+                    consistencyResults.innerHTML = '<h3>🔄 Running consistency checks...</h3>';
+                    
+                    const collections = ['products', 'clients', 'salespeople', 'priceLists', 'colors', 'styles', 'companies'];
+                    const results = [];
+                    
+                    for (const collection of collections) {
+                        try {
+                            const dbRecords = await this.dbManager.getAll(collection);
+                            const dbCount = dbRecords ? dbRecords.length : 0;
+                            
+                            // Check for duplicates
+                            const ids = dbRecords.map(r => r.id);
+                            const uniqueIds = [...new Set(ids)];
+                            const duplicates = ids.length - uniqueIds.length;
+                            
+                            if (duplicates > 0) {
+                                this.addIssue('Data Consistency', 
+                                    `${duplicates} duplicate IDs found in ${collection}`, 'high');
+                            }
+                            
+                            // Check for orphaned references
+                            if (collection === 'products') {
+                                const orphanedProducts = dbRecords.filter(p => {
+                                    // Check if referenced entities exist
+                                    return false; // Simplified for now
+                                });
+                            }
+                            
+                            results.push({
+                                collection,
+                                recordCount: dbCount,
+                                duplicates,
+                                status: duplicates === 0 ? 'good' : 'issues'
+                            });
+                            
+                        } catch (error) {
+                            this.addIssue('Data Consistency', 
+                                `Failed to check consistency for ${collection}: ${error.message}`, 'high');
+                            results.push({
+                                collection,
+                                recordCount: 0,
+                                duplicates: 0,
+                                status: 'error',
+                                error: error.message
+                            });
+                        }
+                    }
+                    
+                    // Display results
+                    let html = '<h3>📊 Consistency Check Results</h3>';
+                    html += '<table class="data-table">';
+                    html += '<tr><th>Collection</th><th>Records</th><th>Duplicates</th><th>Status</th></tr>';
+                    
+                    for (const result of results) {
+                        const statusColor = result.status === 'good' ? '#28a745' : 
+                                          result.status === 'issues' ? '#ffc107' : '#dc3545';
+                        html += `<tr>
+                            <td>${result.collection}</td>
+                            <td>${result.recordCount}</td>
+                            <td>${result.duplicates}</td>
+                            <td style="color: ${statusColor}; font-weight: bold;">${result.status.toUpperCase()}</td>
+                        </tr>`;
+                    }
+                    
+                    html += '</table>';
+                    consistencyResults.innerHTML = html;
+                    
+                    this.log('✅ Consistency check completed', 'success');
+                } catch (error) {
+                    this.addIssue('Data Consistency', `Consistency check failed: ${error.message}`, 'critical');
+                }
+            }
+
+            async generateDiagnosticReport() {
+                // Update metrics
+                const stats = await this.dbManager.getStats();
+                this.metrics = {
+                    totalRecords: Object.values(stats).reduce((sum, count) => sum + count, 0),
+                    collections: Object.keys(stats).length,
+                    issues: this.issues.length,
+                    criticalIssues: this.issues.filter(i => i.severity === 'critical').length
+                };
+                
+                this.updateMetrics();
+                this.displayIssues();
+                
+                this.log('📋 Diagnostic report generated', 'success');
+            }
+
+            updateMetrics() {
+                const metricsGrid = document.getElementById('metricsGrid');
+                metricsGrid.innerHTML = `
+                    <div class="metric-card">
+                        <div class="metric-value">${this.metrics.totalRecords || 0}</div>
+                        <div class="metric-label">Total Records</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">${this.metrics.collections || 0}</div>
+                        <div class="metric-label">Collections</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" style="color: ${this.metrics.issues > 0 ? '#dc3545' : '#28a745'}">${this.metrics.issues || 0}</div>
+                        <div class="metric-label">Total Issues</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" style="color: ${this.metrics.criticalIssues > 0 ? '#dc3545' : '#28a745'}">${this.metrics.criticalIssues || 0}</div>
+                        <div class="metric-label">Critical Issues</div>
+                    </div>
+                `;
+            }
+
+            displayIssues() {
+                const issuesContainer = document.getElementById('integrityIssues');
+                
+                if (this.issues.length === 0) {
+                    issuesContainer.innerHTML = '<div class="status success">✅ No integrity issues detected!</div>';
+                    return;
+                }
+                
+                let html = '';
+                for (const issue of this.issues) {
+                    const severityColor = {
+                        'critical': '#dc3545',
+                        'high': '#fd7e14',
+                        'medium': '#ffc107',
+                        'low': '#6c757d'
+                    }[issue.severity];
+                    
+                    html += `
+                        <div class="integrity-issue">
+                            <h4 style="color: ${severityColor}">
+                                ${issue.severity.toUpperCase()}: ${issue.category}
+                            </h4>
+                            <p>${issue.description}</p>
+                            <p><small>Detected at: ${issue.timestamp}</small></p>
+                        </div>
+                    `;
+                }
+                
+                issuesContainer.innerHTML = html;
+            }
+
+            addIssue(category, description, severity = 'medium') {
+                this.issues.push({
+                    category,
+                    description,
+                    severity,
+                    timestamp: new Date().toLocaleString()
+                });
+                
+                this.log(`⚠️ ${severity.toUpperCase()}: ${category} - ${description}`, 'warning');
+            }
+
+            updateProgress(percent, message) {
+                const progressFill = document.getElementById('progressFill');
+                const progressText = document.getElementById('progressText');
+                
+                progressFill.style.width = `${percent}%`;
+                progressText.textContent = `${percent}% Complete - ${message}`;
+                
+                this.log(`📊 Progress: ${percent}% - ${message}`, 'info');
+            }
+
+            updateStatus(message, type = 'info') {
+                const statusElement = document.getElementById('diagnosticStatus');
+                statusElement.textContent = message;
+                statusElement.className = `status ${type}`;
+            }
+
+            log(message, level = 'info') {
+                const logContainer = document.getElementById('logContainer');
+                const timestamp = new Date().toLocaleTimeString();
+                const logEntry = document.createElement('div');
+                
+                const levelColors = {
+                    'info': '#00ff00',
+                    'success': '#00ff00',
+                    'warning': '#ffff00',
+                    'error': '#ff0000'
+                };
+                
+                logEntry.style.color = levelColors[level] || '#00ff00';
+                logEntry.textContent = `[${timestamp}] ${message}`;
+                
+                logContainer.appendChild(logEntry);
+                logContainer.scrollTop = logContainer.scrollHeight;
+            }
+
+            clearLogs() {
+                const logContainer = document.getElementById('logContainer');
+                logContainer.innerHTML = '<div>Logs cleared...</div>';
+            }
+        }
+
+        // Global functions for buttons
+        let diagnostic;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            diagnostic = new DataIntegrityDiagnostic();
+        });
+
+        function runFullDiagnostic() {
+            diagnostic.runFullDiagnostic();
+        }
+
+        function validateAllCollections() {
+            diagnostic.validateExistingData();
+        }
+
+        function checkDataConsistency() {
+            diagnostic.checkDataConsistency();
+        }
+
+        function analyzeIntegrityIssues() {
+            diagnostic.generateDiagnosticReport();
+        }
+
+        function clearLogs() {
+            diagnostic.clearLogs();
+        }
+    </script>
+</body>
+</html>

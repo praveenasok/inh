@@ -1,12 +1,12 @@
 {
   "projects": {
-    "default": "inhpricelistgenerator"
+    "default": "inhsuite"
   },
   "targets": {
-    "inhpricelistgenerator": {
+    "inhsuite": {
       "hosting": {
         "inhpricelistgenerator": [
-          "inhpricelistgenerator"
+          "inhsuite"
         ]
       }
     }

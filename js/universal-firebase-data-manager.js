@@ -85,9 +85,8 @@ class UniversalFirebaseDataManager {
             await this.initialize();
             await this.loadAllData();
             this._setupAutoRefresh();
-            console.log(`🚀 Universal Firebase Data Manager ready (${this.fallbackFirstMode ? 'Fallback-First Mode' : 'Admin Mode'})`);
+
         } catch (error) {
-            console.error('❌ Universal Firebase Data Manager initialization failed:', error);
             this._handleInitializationError(error);
         }
     }
@@ -109,11 +108,11 @@ class UniversalFirebaseDataManager {
             if (this.fallbackFirstMode) {
                 // Initialize fallback manager for non-admin pages
                 await this._initializeFallbackManager();
-                console.log('📦 Fallback-first mode initialized');
+
             } else {
                 // Initialize Firebase for admin panel
                 await this._initializeFirebase();
-                console.log('🔥 Firebase admin mode initialized');
+
             }
             
             this.isInitialized = true;
@@ -176,7 +175,6 @@ class UniversalFirebaseDataManager {
         try {
             await this.initialize();
             
-            console.log(`🚀 Starting ${this.fallbackFirstMode ? 'fallback-first' : 'Firebase'} data loading...`);
             const startTime = Date.now();
             
             // Load critical collections first (products is most important)
@@ -202,18 +200,15 @@ class UniversalFirebaseDataManager {
             
             // Continue loading other collections in background
             Promise.allSettled(otherPromises).then(() => {
-                console.log(`⚡ Background data loading completed in ${Date.now() - startTime}ms`);
                 this._dispatchEvent('backgroundDataLoaded', { success: true });
             });
             
             this.isDataLoaded = true;
             const loadTime = Date.now() - startTime;
-            console.log(`✅ Critical data loaded in ${loadTime}ms`);
             this._dispatchEvent('dataLoaded', { success: true, loadTime });
             
         } catch (error) {
             this.isDataLoaded = false;
-            console.error('❌ Data loading failed:', error);
             this._dispatchEvent('dataLoaded', { success: false, error });
             throw error;
         }
@@ -235,11 +230,9 @@ class UniversalFirebaseDataManager {
             if (this.fallbackFirstMode) {
                 // Fallback-first mode: Load from local storage first
                 data = await this._loadFromFallback(collectionName);
-                console.log(`📦 Loaded ${data.length} items from fallback storage: ${collectionName}`);
             } else {
                 // Admin mode: Load from Firebase
                 data = await this._loadFromFirebase(collectionName);
-                console.log(`🔥 Loaded ${data.length} items from Firebase: ${collectionName}`);
             }
             
             // Update cache and data
@@ -252,13 +245,11 @@ class UniversalFirebaseDataManager {
             return data;
             
         } catch (error) {
-            console.error(`❌ Failed to load ${collectionName}:`, error);
             this.errors.set(collectionName, error);
             
             // Fallback strategy for errors
             if (this.fallbackFirstMode) {
                 // If fallback fails, return empty array to maintain consistency
-                console.warn(`📦 Fallback loading failed for ${collectionName}, using empty array`);
                 const emptyData = [];
                 this.data[collectionName] = emptyData;
                 return emptyData;
@@ -269,7 +260,6 @@ class UniversalFirebaseDataManager {
                                         error.message?.includes('insufficient');
                 
                 if (isPermissionError) {
-                    console.warn(`🔒 Permission denied for ${collectionName}, trying API fallback...`);
                     try {
                         const apiData = await this._loadFromAPI(collectionName);
                         this.cache.set(collectionName, apiData);
@@ -277,7 +267,6 @@ class UniversalFirebaseDataManager {
                         this.errors.delete(collectionName);
                         return apiData;
                     } catch (apiError) {
-                        console.error(`❌ API fallback failed for ${collectionName}:`, apiError);
                         this.data[collectionName] = [];
                         return [];
                     }
@@ -287,7 +276,6 @@ class UniversalFirebaseDataManager {
                 const attempts = this.retryAttempts.get(collectionName) || 0;
                 if (attempts < this.maxRetries) {
                     this.retryAttempts.set(collectionName, attempts + 1);
-                    console.log(`🔄 Retrying ${collectionName} (attempt ${attempts + 1}/${this.maxRetries})`);
                     await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempts)));
                     return this._loadCollection(collectionName);
                 }
@@ -296,7 +284,6 @@ class UniversalFirebaseDataManager {
                 try {
                     return await this._loadFromAPI(collectionName);
                 } catch (apiError) {
-                    console.error(`❌ API fallback failed for ${collectionName}:`, apiError);
                     // Provide empty array as final fallback
                     this.data[collectionName] = [];
                     return [];
@@ -356,7 +343,6 @@ class UniversalFirebaseDataManager {
         
         const data = await response.json();
         this.data[collectionName] = data;
-        console.log(`✅ Loaded ${data.length} items from API for ${collectionName}`);
         return data;
     }
     
@@ -390,7 +376,7 @@ class UniversalFirebaseDataManager {
         ).filter(Boolean))];
         this.data.priceLists = priceLists.map(pl => ({ id: pl, name: pl }));
         
-        console.log(`📊 Extracted derived data: ${categories.length} categories, ${subcategories.length} subcategories, ${brands.length} brands, ${priceLists.length} price lists`);
+
     }
     
     /**
@@ -581,7 +567,6 @@ class UniversalFirebaseDataManager {
                 try {
                     callback(newValue, oldValue);
                 } catch (error) {
-                    console.error('Error in data change listener:', error);
                 }
             });
         }
@@ -594,7 +579,6 @@ class UniversalFirebaseDataManager {
                 try {
                     listener(detail);
                 } catch (error) {
-                    console.error('Error in event listener:', error);
                 }
             });
         }
@@ -605,7 +589,6 @@ class UniversalFirebaseDataManager {
         setInterval(() => {
             if (this.isInitialized && this.isDataLoaded) {
                 this.refreshData().catch(error => {
-                    console.error('Auto-refresh failed:', error);
                 });
             }
         }, 10 * 60 * 1000);
@@ -613,7 +596,6 @@ class UniversalFirebaseDataManager {
     
     _handleInitializationError(error) {
         // Provide fallback or retry logic
-        console.error('Initialization error, attempting fallback...', error);
         // Could implement offline mode or API-only mode here
     }
 }
@@ -653,7 +635,6 @@ const UniversalDataUtils = {
             });
             
         } catch (error) {
-            console.error(`Failed to populate ${dataType} select:`, error);
         }
     },
     
@@ -709,7 +690,6 @@ const UniversalDataUtils = {
             });
             
         } catch (error) {
-            console.error('Failed to populate subcategories select:', error);
         }
     },
     

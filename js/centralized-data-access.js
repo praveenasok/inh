@@ -14,7 +14,6 @@ class CentralizedDataAccess {
     
     async initializeAccess() {
         try {
-            console.log('🔄 Starting centralized data access initialization...');
             await Promise.race([
                 this.loadFromFirebase(),
                 new Promise((_, reject) => 
@@ -24,10 +23,8 @@ class CentralizedDataAccess {
             
             this.isReady = true;
             this.status = 'ready';
-            console.log('✅ Centralized data access initialization completed successfully');
             
         } catch (error) {
-            console.error('❌ Firebase data access failed:', error);
             this.isReady = false;
             this.status = 'error';
             
@@ -60,7 +57,6 @@ class CentralizedDataAccess {
         try {
             // Check if API adapter is available first
             if (window.firebaseAPIAdapter && window.firebaseAPIAdapter.isAvailable()) {
-                console.log('🔥 Using Firebase API adapter for data loading');
                 
                 // Load data using API adapter
                 const [clients, products, salespeople, colors, styles, quotes, orders] = await Promise.all([
@@ -81,7 +77,6 @@ class CentralizedDataAccess {
                 this.data.quotes = quotes || [];
                 this.data.orders = orders || [];
                 
-                console.log('✅ All data loaded via API adapter');
                 this.dataSource = 'api-adapter';
                 this.lastUpdate = new Date().toISOString();
                 return;
@@ -89,14 +84,9 @@ class CentralizedDataAccess {
             
             // Use centralized Firebase manager for initialization
             if (window.centralizedFirebaseManager) {
-                console.log('🔥 Using centralized Firebase manager for initialization');
                 try {
-                    console.log('⏳ Initializing centralized Firebase manager...');
                     await window.centralizedFirebaseManager.initialize();
-                    console.log('✅ Centralized Firebase manager initialized');
-                    console.log('⏳ Loading all data from Firebase...');
                     await window.centralizedFirebaseManager.loadAllData();
-                    console.log('✅ All data loaded from Firebase');
                     
                     // Get data from centralized manager
                     this.data.clients = window.centralizedFirebaseManager.getData('clients') || [];
@@ -124,7 +114,6 @@ class CentralizedDataAccess {
                     
                     this.dataSource = 'firebase';
                 } catch (firebaseError) {
-                    console.warn('⚠️ Firebase centralized manager failed, trying server API fallback:', firebaseError.message);
                     
                     // Fallback to server API
                     const [clients, products, salespeople, colors, styles, quotes, orders] = await Promise.all([
@@ -149,7 +138,6 @@ class CentralizedDataAccess {
                 }
             } else {
                 // Fallback to direct Firebase initialization
-                console.log('⚠️ Centralized Firebase manager not available, using direct initialization');
                 try {
                     await this.waitForFirebaseInitialization();
                     
@@ -180,7 +168,6 @@ class CentralizedDataAccess {
                     
                     this.dataSource = 'firebase';
                 } catch (firebaseError) {
-                    console.warn('⚠️ Firebase direct access failed, trying server API fallback:', firebaseError.message);
                     
                     // Fallback to server API
                     const [clients, products, salespeople, colors, styles, quotes, orders] = await Promise.all([
@@ -220,8 +207,6 @@ class CentralizedDataAccess {
             const elapsed = Date.now() - startTime;
             
             if (elapsed > maxWait) {
-                console.error(`❌ Firebase initialization timeout after ${elapsed}ms (${attempts} attempts)`);
-                console.error('Firebase status:', {
                     firebase: !!window.firebase,
                     firestore: !!(window.firebase && window.firebase.firestore),
                     firebaseGlobalApp: !!window.firebaseGlobalApp,
@@ -232,13 +217,11 @@ class CentralizedDataAccess {
             
             // Log progress every 1 second
             if (attempts % 10 === 0) {
-                console.log(`⏳ Waiting for Firebase initialization... (${elapsed}ms elapsed)`);
             }
             
             await new Promise(resolve => setTimeout(resolve, 100));
         }
         
-        console.log(`✅ Firebase initialized after ${Date.now() - startTime}ms (${attempts} attempts)`);
     }
     
     async loadFirebaseCollection(collectionName) {
@@ -255,7 +238,6 @@ class CentralizedDataAccess {
                 ...doc.data()
             }));
         } catch (error) {
-            console.error(`❌ Failed to load ${collectionName} after retries:`, error);
             return [];
         }
     }
@@ -272,14 +254,12 @@ class CentralizedDataAccess {
                 ...doc.data()
             }));
         } catch (error) {
-            console.error(`❌ Failed to load ${collectionName} after retries:`, error);
             return [];
         }
     }
 
     async loadDataViaAPI(collectionName) {
         try {
-            console.log(`⏳ Loading ${collectionName} via server API...`);
             
             // Map collection names to server endpoints
             const endpointMap = {
@@ -294,7 +274,6 @@ class CentralizedDataAccess {
             
             const endpoint = endpointMap[collectionName];
             if (!endpoint) {
-                console.warn(`⚠️ No API endpoint available for ${collectionName}`);
                 return [];
             }
             
@@ -304,10 +283,8 @@ class CentralizedDataAccess {
             }
             
             const data = await response.json();
-            console.log(`✅ Loaded ${data.length || 0} ${collectionName} via server API`);
             return data || [];
         } catch (error) {
-            console.error(`❌ Failed to load ${collectionName} via server API:`, error);
             return [];
         }
     }
@@ -469,7 +446,6 @@ class CentralizedDataAccess {
                 }
                 
                 const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
-                console.warn(`⚠️ Firestore operation failed (attempt ${attempt}/${maxRetries}), retrying in ${delay}ms:`, error.message);
                 await new Promise(resolve => setTimeout(resolve, delay));
             }
         }

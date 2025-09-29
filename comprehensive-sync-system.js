@@ -8,8 +8,7 @@ class ComprehensiveSyncSystem {
     constructor() {
         this.syncStatus = {
             googleSheets: { connected: false, lastSync: null, recordCount: 0 },
-            firebase: { connected: false, lastSync: null, recordCount: 0 },
-            localStorage: { connected: true, lastSync: null, recordCount: 0 }
+            indexeddb: { connected: false, lastSync: null, recordCount: 0 }
         };
         
         this.syncProgress = {
@@ -21,8 +20,7 @@ class ComprehensiveSyncSystem {
         };
         
         this.collections = [
-            'products', 'clients', 'quotes', 'orders', 
-            'salesmen', 'pricelists', 'categories', 'colors', 'styles'
+            'products', 'clients', 'salesmen', 'pricelists', 'colors', 'styles'
         ];
         
         this.eventListeners = new Map();
@@ -48,14 +46,14 @@ class ComprehensiveSyncSystem {
         try {
             this.emit('sync-status', { message: 'Initializing synchronization system...', type: 'info' });
             
-            // Check Firebase connection
-            await this.checkFirebaseConnection();
+            // Check IndexedDB connection
+            await this.checkIndexedDBConnection();
             
             // Check Google Sheets connection
             await this.checkGoogleSheetsConnection();
             
             // Update local storage status
-            await this.updateLocalStorageStatus();
+            await this.updateIndexedDBStatus();
             
             this.isInitialized = true;
             this.emit('sync-status', { message: 'Synchronization system initialized successfully', type: 'success' });
@@ -67,37 +65,38 @@ class ComprehensiveSyncSystem {
         }
     }
 
-    // Check Firebase connection and get record counts
-    async checkFirebaseConnection() {
+
+
+    // Check IndexedDB connection and update status
+    async checkIndexedDBConnection() {
         try {
-            if (typeof firebase === 'undefined' || !firebase.apps.length) {
-                throw new Error('Firebase not initialized');
+            // Initialize IndexedDB manager if not already done
+            if (!this.indexedDBManager) {
+                this.indexedDBManager = new IndexedDBManager();
+                await this.indexedDBManager.initialize();
             }
-
-            const db = firebase.firestore();
+            
+            // Test IndexedDB connection by attempting to read from it
             let totalRecords = 0;
-
-            // Count records in each collection
             for (const collection of this.collections) {
                 try {
-                    const snapshot = await db.collection(collection).get();
-                    totalRecords += snapshot.size;
+                    const data = await this.indexedDBManager.getAll(collection);
+                    totalRecords += Array.isArray(data) ? data.length : 0;
                 } catch (error) {
-                    console.warn(`Could not access collection ${collection}:`, error);
                 }
             }
 
-            this.syncStatus.firebase = {
+            this.syncStatus.indexeddb = {
                 connected: true,
                 lastSync: new Date().toISOString(),
                 recordCount: totalRecords
             };
 
-            this.emit('firebase-status', this.syncStatus.firebase);
+            this.emit('indexeddb-status', this.syncStatus.indexeddb);
             return true;
         } catch (error) {
-            this.syncStatus.firebase.connected = false;
-            this.emit('firebase-status', this.syncStatus.firebase);
+            this.syncStatus.indexeddb.connected = false;
+            this.emit('indexeddb-status', this.syncStatus.indexeddb);
             throw error;
         }
     }
@@ -110,7 +109,6 @@ class ComprehensiveSyncSystem {
         while (Date.now() - startTime < maxWaitTime) {
             const currentStatus = this.getGoogleSheetsStatus();
             if (currentStatus !== lastStatus) {
-                console.log('Google Sheets status:', currentStatus);
                 lastStatus = currentStatus;
             }
             
@@ -119,13 +117,12 @@ class ComprehensiveSyncSystem {
                 gapi.client && 
                 gapi.client.sheets) {
                 // Additional check to ensure service methods are available
-                const requiredMethods = ['fetchProductData', 'fetchSalesmanData', 'fetchClientData', 'fetchColorsData', 'fetchStylesData'];
+                const requiredMethods = ['fetchProductData', 'fetchSalesmanData', 'fetchClientData', 'fetchColorsData', 'fetchStylesData', 'fetchPriceListsData'];
                 const allMethodsAvailable = requiredMethods.every(method => 
                     typeof window.googleSheetsService[method] === 'function'
                 );
                 
                 if (allMethodsAvailable) {
-                    console.log('Google Sheets service is ready with all required methods');
                     return true;
                 }
             }
@@ -135,9 +132,10 @@ class ComprehensiveSyncSystem {
         }
         
         const finalStatus = this.getGoogleSheetsStatus();
-        console.error('Google Sheets service initialization timeout after', maxWaitTime, 'ms');
-        console.error('Final status:', finalStatus);
-        throw new Error(`Google Sheets service initialization timeout. Status: ${finalStatus}`);
+        
+        // Instead of throwing an error, set the skip flag and continue
+        window.googleSheetsSkipped = true;
+        return false;
     }
 
     getGoogleSheetsStatus() {
@@ -151,78 +149,69 @@ class ComprehensiveSyncSystem {
 
     async checkGoogleSheetsConnection() {
         try {
-            // Check if Google API client is available and initialized
-            const hasGoogleSheetsAccess = typeof gapi !== 'undefined' && 
-                                        gapi.client && 
-                                        gapi.client.sheets &&
-                                        window.GOOGLE_SHEETS_API_KEY &&
-                                        window.GOOGLE_SHEETS_API_KEY !== 'YOUR_GOOGLE_SHEETS_API_KEY' &&
-                                        window.googleSheetsService;
+            // Use server-side endpoint to check Google Sheets connection
+            const response = await fetch('/api/google-sheets-status');
+            const statusData = await response.json();
             
             let recordCount = 0;
             
-            // If connected, try to get a sample record count
-            if (hasGoogleSheetsAccess) {
-                try {
-                    // Test connection by trying to access the spreadsheet
-                    const SHEET_ID = '1hlfrnZnNQ0u8idg5KDmkSY4zFhLyvjLqUwAZn6HmW3s';
-                    const response = await gapi.client.sheets.spreadsheets.get({
-                        spreadsheetId: SHEET_ID
-                    });
-                    
-                    if (response.result && response.result.sheets) {
-                        recordCount = response.result.sheets.length * 100; // Estimate
-                    }
-                } catch (apiError) {
-                    console.warn('Google Sheets API test failed:', apiError);
-                    // Still mark as connected if API is available, even if test fails
-                }
+            // If connected, estimate record count based on sheet count
+            if (statusData.connected && statusData.sheetCount) {
+                recordCount = statusData.sheetCount * 100; // Estimate
             }
             
             this.syncStatus.googleSheets = {
-                connected: hasGoogleSheetsAccess,
-                lastSync: hasGoogleSheetsAccess ? new Date().toISOString() : null,
-                recordCount: recordCount
+                connected: statusData.connected,
+                lastSync: statusData.connected ? statusData.lastChecked : null,
+                recordCount: recordCount,
+                error: statusData.error,
+                spreadsheetId: statusData.spreadsheetId
             };
 
             this.emit('sheets-status', this.syncStatus.googleSheets);
-            return hasGoogleSheetsAccess;
+            return statusData.connected;
         } catch (error) {
-            this.syncStatus.googleSheets.connected = false;
+            this.syncStatus.googleSheets = {
+                connected: false,
+                lastSync: null,
+                recordCount: 0,
+                error: 'Failed to check connection: ' + error.message
+            };
             this.emit('sheets-status', this.syncStatus.googleSheets);
-            console.error('Google Sheets connection check failed:', error);
             return false;
         }
     }
 
     // Update local storage status and count records
-    async updateLocalStorageStatus() {
+    async updateIndexedDBStatus() {
         try {
             let totalRecords = 0;
 
+            // Initialize IndexedDB manager if not already done
+            if (!this.indexedDBManager) {
+                this.indexedDBManager = new IndexedDBManager();
+                await this.indexedDBManager.initialize();
+            }
+
             for (const collection of this.collections) {
-                const data = localStorage.getItem(collection);
-                if (data) {
-                    try {
-                        const parsed = JSON.parse(data);
-                        totalRecords += Array.isArray(parsed) ? parsed.length : 1;
-                    } catch (error) {
-                        console.warn(`Invalid JSON in localStorage for ${collection}`);
-                    }
+                try {
+                    const data = await this.indexedDBManager.getAll(collection);
+                    totalRecords += Array.isArray(data) ? data.length : 0;
+                } catch (error) {
                 }
             }
 
-            this.syncStatus.localStorage = {
+            this.syncStatus.indexeddb = {
                 connected: true,
                 lastSync: new Date().toISOString(),
                 recordCount: totalRecords
             };
 
-            this.emit('localStorage-status', this.syncStatus.localStorage);
+            this.emit('indexeddb-status', this.syncStatus.indexeddb);
             return true;
         } catch (error) {
-            this.syncStatus.localStorage.connected = false;
-            this.emit('localStorage-status', this.syncStatus.localStorage);
+            this.syncStatus.indexeddb.connected = false;
+            this.emit('indexeddb-status', this.syncStatus.indexeddb);
             throw error;
         }
     }
@@ -234,7 +223,6 @@ class ComprehensiveSyncSystem {
         try {
             // Check if Google Sheets has been manually skipped
             if (window.googleSheetsSkipped) {
-                console.log('Google Sheets has been skipped, proceeding without Google Sheets sync...');
                 this.emit('sync-progress', { 
                     stage: 1, 
                     message: 'Google Sheets skipped - proceeding to Firebase sync...', 
@@ -244,7 +232,15 @@ class ComprehensiveSyncSystem {
             }
             
             // Wait for Google Sheets service to be fully ready before starting sync
-            await this.waitForGoogleSheetsService();
+            const googleSheetsReady = await this.waitForGoogleSheetsService();
+            if (!googleSheetsReady) {
+                this.emit('sync-progress', { 
+                    stage: 1, 
+                    message: 'Google Sheets service unavailable - skipping to Firebase sync...', 
+                    percentage: 100 
+                });
+                return;
+            }
             
             const db = firebase.firestore();
             let processedCollections = 0;
@@ -270,8 +266,6 @@ class ComprehensiveSyncSystem {
                     // Get data from Google Sheets
                     const fetcherMethod = sheetsFetchers[collection];
                     if (fetcherMethod && window.googleSheetsService && window.googleSheetsService[fetcherMethod]) {
-                        console.log(`Fetching ${collection} data from Google Sheets...`);
-                        
                         let sheetsData;
                         try {
                             sheetsData = await window.googleSheetsService[fetcherMethod]();
@@ -284,7 +278,6 @@ class ComprehensiveSyncSystem {
                         
                         if (sheetsData && sheetsData.length > 0) {
                             // Upload to Firebase
-                            console.log(`Uploading ${sheetsData.length} ${collection} records to Firebase...`);
                             
                             // Special handling for pricelists which returns array of strings
                             if (collection === 'pricelists') {
@@ -306,17 +299,15 @@ class ComprehensiveSyncSystem {
                                     await this.writeToFirebaseWithRetry(db, collection, docId, item);
                                 }
                             }
-                            console.log(`Successfully synced ${sheetsData.length} ${collection} records`);
                         } else {
-                            console.log(`No data found for ${collection} in Google Sheets`);
+                            // No data found for collection in Google Sheets
                         }
                     } else {
-                        console.log(`No fetcher method found for ${collection}, using sample data`);
+                        // No fetcher method found for collection, using sample data
                         // Fallback to sample data for collections without specific fetchers
                         await this.simulateGoogleSheetsToFirebaseSync(collection, db);
                     }
                 } catch (collectionError) {
-                    console.error(`Error syncing ${collection}:`, collectionError);
                     // Continue with other collections even if one fails
                     this.syncProgress.errors.push(`${collection} sync error: ${collectionError.message}`);
                 }
@@ -332,7 +323,6 @@ class ComprehensiveSyncSystem {
             
             return true;
         } catch (error) {
-            console.error('Google Sheets to Firebase sync failed:', error);
             this.syncProgress.errors.push(`Stage 1 error: ${error.message}`);
             throw error;
         }
@@ -354,7 +344,6 @@ class ComprehensiveSyncSystem {
                 });
 
                 try {
-                    console.log(`Fetching ${collection} from Firebase...`);
                     const snapshot = await db.collection(collection).get();
                     const data = [];
                     
@@ -362,13 +351,10 @@ class ComprehensiveSyncSystem {
                         data.push({ id: doc.id, ...doc.data() });
                     });
 
-                    console.log(`Found ${data.length} records in ${collection}, storing to localStorage...`);
                     // Store in localStorage
                     localStorage.setItem(collection, JSON.stringify(data));
-                    console.log(`Successfully stored ${collection} to localStorage`);
                     
                 } catch (error) {
-                    console.warn(`Error syncing collection ${collection}:`, error);
                     this.syncProgress.errors.push(`Collection ${collection}: ${error.message}`);
                 }
                 
@@ -379,7 +365,7 @@ class ComprehensiveSyncSystem {
             }
 
             this.emit('sync-progress', { stage: 2, message: 'Firebase to Local Storage sync completed', percentage: 100 });
-            await this.updateLocalStorageStatus(); // Update localStorage status
+            await this.updateIndexedDBStatus(); // Update IndexedDB status
             
             return true;
         } catch (error) {
@@ -420,18 +406,111 @@ class ComprehensiveSyncSystem {
         }
     }
 
+    // Stage 4: Sync Count Data
+    async syncCountData() {
+        this.syncProgress.stage = 4;
+        this.syncProgress.currentOperation = 'Syncing Count Data';
+        this.emit('sync-progress', this.syncProgress);
+
+        try {
+            // Fetch salesmen count
+            let salesmenCount = 0;
+            try {
+                const response = await fetch('/api/salesmen-count');
+                if (response.ok) {
+                    const data = await response.json();
+                    salesmenCount = data.count || 0;
+                } else {
+                }
+            } catch (error) {
+                this.syncProgress.errors.push({
+                    stage: 'Count Data Sync',
+                    error: `Salesmen count fetch failed: ${error.message}`,
+                    timestamp: new Date().toISOString()
+                });
+            }
+
+            // Fetch price lists count
+            let priceListsCount = 0;
+            try {
+                const response = await fetch('/api/price-lists-count');
+                if (response.ok) {
+                    const data = await response.json();
+                    priceListsCount = data.count || 0;
+                } else {
+                }
+            } catch (error) {
+                this.syncProgress.errors.push({
+                    stage: 'Count Data Sync',
+                    error: `Price lists count fetch failed: ${error.message}`,
+                    timestamp: new Date().toISOString()
+                });
+            }
+
+            // Store count data in local storage
+            const countData = {
+                salesmenCount,
+                priceListsCount,
+                lastUpdated: new Date().toISOString()
+            };
+
+            localStorage.setItem('countData', JSON.stringify(countData));
+
+            // Also sync count data to Firebase
+            try {
+                const firebaseResponse = await fetch('/api/sync/count-data', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        salesmenCount,
+                        priceListsCount
+                    })
+                });
+
+                if (firebaseResponse.ok) {
+                    const firebaseResult = await firebaseResponse.json();
+                } else {
+                    this.syncProgress.errors.push({
+                        stage: 'Count Data Sync',
+                        error: `Firebase sync failed: ${firebaseResponse.statusText}`,
+                        timestamp: new Date().toISOString()
+                    });
+                }
+            } catch (firebaseError) {
+                this.syncProgress.errors.push({
+                    stage: 'Count Data Sync',
+                    error: `Firebase sync error: ${firebaseError.message}`,
+                    timestamp: new Date().toISOString()
+                });
+            }
+
+            // Update sync status
+            this.syncStatus.countData = countData;
+            this.syncStatus.lastCountSync = new Date().toISOString();
+            this.syncProgress.percentage = 100;
+            this.emit('sync-progress', this.syncProgress);
+
+        } catch (error) {
+            this.syncProgress.errors.push({
+                stage: 'Count Data Sync',
+                error: error.message,
+                timestamp: new Date().toISOString()
+            });
+            throw error;
+        }
+    }
+
     // Main synchronization method - executes all 3 stages
     async performComprehensiveSync() {
-        console.log('Starting comprehensive sync...');
-        
         if (!this.isInitialized) {
-            console.log('System not initialized, initializing now...');
             await this.initialize();
         }
 
         this.syncProgress = {
             stage: 0,
-            totalStages: 3,
+            totalStages: 4,
             currentOperation: '',
             percentage: 0,
             errors: []
@@ -441,27 +520,22 @@ class ComprehensiveSyncSystem {
 
         try {
             // Stage 1: Google Sheets → Firebase
-            console.log('Stage 1: Starting Google Sheets → Firebase sync');
             await this.syncGoogleSheetsToFirebase();
-            console.log('Stage 1: Completed Google Sheets → Firebase sync');
             
             // Stage 2: Firebase → Local Storage
-            console.log('Stage 2: Starting Firebase → Local Storage sync');
             await this.syncFirebaseToLocalStorage();
-            console.log('Stage 2: Completed Firebase → Local Storage sync');
             
             // Stage 3: Local Storage → Application
-            console.log('Stage 3: Starting Local Storage → Application sync');
             await this.syncLocalStorageToApplication();
-            console.log('Stage 3: Completed Local Storage → Application sync');
+
+            // Stage 4: Sync Count Data
+            await this.syncCountData();
 
             const syncReport = this.generateSyncReport();
-            console.log('Comprehensive sync completed successfully:', syncReport);
             this.emit('sync-completed', syncReport);
             
             return syncReport;
         } catch (error) {
-            console.error('Comprehensive sync failed:', error);
             this.emit('sync-error', { error: error.message, stage: this.syncProgress.stage });
             throw error;
         }
@@ -496,7 +570,6 @@ class ComprehensiveSyncSystem {
             const data = localStorage.getItem(collection);
             return data ? JSON.parse(data) : [];
         } catch (error) {
-            console.warn(`Error reading ${collection} from localStorage:`, error);
             return [];
         }
     }
@@ -565,7 +638,6 @@ class ComprehensiveSyncSystem {
     // Push data to Google Sheets
     async pushToGoogleSheets(appData) {
         // This would implement actual Google Sheets API calls
-        console.log('Pushing to Google Sheets:', appData);
         // Simulate the operation
         await new Promise(resolve => setTimeout(resolve, 1000));
     }
@@ -578,9 +650,11 @@ class ComprehensiveSyncSystem {
             stages: {
                 stage1: { name: 'Google Sheets → Firebase', completed: true },
                 stage2: { name: 'Firebase → Local Storage', completed: true },
-                stage3: { name: 'Local Storage → Application', completed: true }
+                stage3: { name: 'Local Storage → Application', completed: true },
+                stage4: { name: 'Count Data Sync', completed: true }
             },
             recordCounts: this.syncStatus,
+            countData: this.syncStatus.countData || null,
             errors: this.syncProgress.errors,
             collections: this.collections.map(collection => ({
                 name: collection,
@@ -597,7 +671,6 @@ class ComprehensiveSyncSystem {
                 await db.collection(collection).doc(docId).set(data);
                 return; // Success, exit the retry loop
             } catch (error) {
-                console.warn(`Firebase write attempt ${attempt} failed for ${collection}/${docId}:`, error.message);
                 
                 if (attempt === maxRetries) {
                     throw new Error(`Failed to write to Firebase after ${maxRetries} attempts: ${error.message}`);

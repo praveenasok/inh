@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IndexedDB Diagnostic Tool</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .status-section {
+            background: #f8f9fa;
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .data-section {
+            margin-bottom: 30px;
+        }
+        .data-section h3 {
+            color: #495057;
+            border-bottom: 2px solid #dee2e6;
+            padding-bottom: 10px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+        }
+        .stat-label {
+            font-size: 14px;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        .data-table th,
+        .data-table td {
+            border: 1px solid #dee2e6;
+            padding: 8px 12px;
+            text-align: left;
+        }
+        .data-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+        .data-table tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        .btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+        }
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #6c757d;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .json-data {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🗄️ IndexedDB Diagnostic Tool</h1>
+        
+        <div class="status-section">
+            <h3>Database Status</h3>
+            <div id="dbStatus" class="loading">Checking IndexedDB status...</div>
+        </div>
+
+        <div class="status-section">
+            <h3>Database Statistics</h3>
+            <div id="dbStats" class="stats-grid"></div>
+        </div>
+
+        <div class="data-section">
+            <h3>Actions</h3>
+            <button class="btn" onclick="refreshData()">🔄 Refresh Data</button>
+            <button class="btn" onclick="exportData()">📤 Export All Data</button>
+            <button class="btn btn-danger" onclick="clearDatabase()">🗑️ Clear Database</button>
+        </div>
+
+        <div id="dataContent"></div>
+    </div>
+
+    <!-- Include IndexedDB Manager -->
+    <script src="js/indexeddb-manager.js"></script>
+
+    <script>
+        let dbManager = null;
+        let isInitialized = false;
+
+        // Initialize the diagnostic tool
+        async function initializeDiagnostic() {
+            try {
+                console.log('🚀 Initializing IndexedDB diagnostic...');
+                
+                // Initialize IndexedDB Manager
+                dbManager = new IndexedDBManager({
+                    dbName: 'INH_SyncDatabase',
+                    logLevel: 'info'
+                });
+
+                await dbManager.initialize();
+                isInitialized = true;
+
+                document.getElementById('dbStatus').innerHTML = `
+                    <div class="success">
+                        ✅ IndexedDB initialized successfully<br>
+                        Database: ${dbManager.dbName} (Version: ${dbManager.dbVersion})
+                    </div>
+                `;
+
+                await loadDatabaseStats();
+                await loadAllData();
+
+            } catch (error) {
+                document.getElementById('dbStatus').innerHTML = `
+                    <div class="error">
+                        ❌ Failed to initialize IndexedDB: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        // Load database statistics
+        async function loadDatabaseStats() {
+            try {
+                const stats = await dbManager.getStats();
+                
+                let statsHtml = '';
+                for (const [storeName, storeStats] of Object.entries(stats.stores)) {
+                    statsHtml += `
+                        <div class="stat-card">
+                            <div class="stat-number">${storeStats.recordCount || 0}</div>
+                            <div class="stat-label">${storeName}</div>
+                            ${storeStats.lastSync ? `<div style="font-size: 10px; color: #6c757d;">Last sync: ${new Date(storeStats.lastSync).toLocaleString()}</div>` : ''}
+                        </div>
+                    `;
+                }
+
+                document.getElementById('dbStats').innerHTML = statsHtml;
+
+            } catch (error) {
+                document.getElementById('dbStats').innerHTML = `
+                    <div class="error">Failed to load statistics: ${error.message}</div>
+                `;
+            }
+        }
+
+        // Load all data from IndexedDB
+        async function loadAllData() {
+            try {
+                const dataContent = document.getElementById('dataContent');
+                let contentHtml = '';
+
+                const storeNames = Object.keys(dbManager.schema);
+                
+                for (const storeName of storeNames) {
+                    try {
+                        const data = await dbManager.getAll(storeName);
+                        
+                        contentHtml += `
+                            <div class="data-section">
+                                <h3>${storeName.charAt(0).toUpperCase() + storeName.slice(1)} (${data.length} records)</h3>
+                        `;
+
+                        if (data.length > 0) {
+                            // Show first few records in table format
+                            const displayData = data.slice(0, 10); // Show first 10 records
+                            const keys = Object.keys(displayData[0]);
+                            
+                            contentHtml += `
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>${keys.map(key => `<th>${key}</th>`).join('')}</tr>
+                                    </thead>
+                                    <tbody>
+                                        ${displayData.map(record => 
+                                            `<tr>${keys.map(key => `<td>${JSON.stringify(record[key]) || ''}</td>`).join('')}</tr>`
+                                        ).join('')}
+                                    </tbody>
+                                </table>
+                            `;
+
+                            if (data.length > 10) {
+                                contentHtml += `<p><em>... and ${data.length - 10} more records</em></p>`;
+                            }
+
+                            // Add raw JSON data (collapsed)
+                            contentHtml += `
+                                <details style="margin-top: 15px;">
+                                    <summary>View Raw JSON Data</summary>
+                                    <div class="json-data">${JSON.stringify(data, null, 2)}</div>
+                                </details>
+                            `;
+                        } else {
+                            contentHtml += `<p><em>No data found in ${storeName}</em></p>`;
+                        }
+
+                        contentHtml += `</div>`;
+
+                    } catch (error) {
+                        contentHtml += `
+                            <div class="data-section">
+                                <h3>${storeName}</h3>
+                                <div class="error">Error loading ${storeName}: ${error.message}</div>
+                            </div>
+                        `;
+                    }
+                }
+
+                dataContent.innerHTML = contentHtml;
+
+            } catch (error) {
+                document.getElementById('dataContent').innerHTML = `
+                    <div class="error">Failed to load data: ${error.message}</div>
+                `;
+            }
+        }
+
+        // Refresh all data
+        async function refreshData() {
+            if (!isInitialized) {
+                alert('Database not initialized');
+                return;
+            }
+
+            document.getElementById('dataContent').innerHTML = '<div class="loading">Refreshing data...</div>';
+            await loadDatabaseStats();
+            await loadAllData();
+        }
+
+        // Export all data
+        async function exportData() {
+            if (!isInitialized) {
+                alert('Database not initialized');
+                return;
+            }
+
+            try {
+                const allData = {};
+                const storeNames = Object.keys(dbManager.schema);
+                
+                for (const storeName of storeNames) {
+                    allData[storeName] = await dbManager.getAll(storeName);
+                }
+
+                const dataStr = JSON.stringify(allData, null, 2);
+                const dataBlob = new Blob([dataStr], {type: 'application/json'});
+                
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(dataBlob);
+                link.download = `indexeddb_export_${new Date().toISOString().slice(0,19).replace(/:/g, '-')}.json`;
+                link.click();
+
+            } catch (error) {
+                alert(`Export failed: ${error.message}`);
+            }
+        }
+
+        // Clear database
+        async function clearDatabase() {
+            if (!isInitialized) {
+                alert('Database not initialized');
+                return;
+            }
+
+            if (!confirm('Are you sure you want to clear all data from IndexedDB? This action cannot be undone.')) {
+                return;
+            }
+
+            try {
+                await dbManager.deleteDatabase();
+                location.reload(); // Reload page to reinitialize
+            } catch (error) {
+                alert(`Failed to clear database: ${error.message}`);
+            }
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', initializeDiagnostic);
+    </script>
+</body>
+</html>
