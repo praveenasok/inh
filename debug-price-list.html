@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Price List Issue</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        .warning { background-color: #fff3cd; color: #856404; }
+        pre { background-color: #f8f9fa; padding: 10px; border-radius: 5px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>Price List Debug Tool</h1>
+    <div id="status-container"></div>
+    <button onclick="runDebug()">Run Debug</button>
+    <button onclick="clearStorage()">Clear Local Storage</button>
+    <button onclick="populateTestData()">Populate Test Data</button>
+
+    <!-- Include required scripts -->
+    <script src="js/local-fallback-manager.js"></script>
+    <script src="js/universal-firebase-data-manager.js"></script>
+
+    <script>
+        function addStatus(message, type = 'info') {
+            const container = document.getElementById('status-container');
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.innerHTML = message;
+            container.appendChild(div);
+        }
+
+        async function runDebug() {
+            document.getElementById('status-container').innerHTML = '';
+            addStatus('Starting debug process...', 'info');
+
+            try {
+                // Check localStorage availability
+                addStatus('Checking localStorage availability...', 'info');
+                if (typeof Storage === 'undefined') {
+                    addStatus('ERROR: localStorage not available', 'error');
+                    return;
+                }
+                addStatus('✓ localStorage is available', 'success');
+
+                // Check local fallback manager
+                addStatus('Checking local fallback manager...', 'info');
+                if (!window.localFallbackManager) {
+                    addStatus('ERROR: localFallbackManager not available', 'error');
+                    return;
+                }
+                addStatus('✓ Local fallback manager is available', 'success');
+
+                // Check universal data manager
+                addStatus('Checking universal data manager...', 'info');
+                if (!window.universalDataManager) {
+                    addStatus('ERROR: universalDataManager not available', 'error');
+                    return;
+                }
+                addStatus('✓ Universal data manager is available', 'success');
+
+                // Wait for initialization
+                addStatus('Waiting for data manager initialization...', 'info');
+                await window.universalDataManager.waitForReady();
+                addStatus('✓ Data manager is ready', 'success');
+
+                // Check product data
+                addStatus('Loading product data...', 'info');
+                const products = await window.universalDataManager.getProducts();
+                addStatus(`✓ Products loaded: ${products.length} items`, 'success');
+
+                if (products.length === 0) {
+                    addStatus('WARNING: No products found in data', 'warning');
+                    
+                    // Check localStorage directly
+                    addStatus('Checking localStorage directly...', 'info');
+                    const keys = Object.keys(localStorage);
+                    const relevantKeys = keys.filter(key => key.includes('product') || key.includes('fallback'));
+                    addStatus(`Found localStorage keys: ${relevantKeys.join(', ')}`, 'info');
+                    
+                    for (const key of relevantKeys) {
+                        try {
+                            const data = JSON.parse(localStorage.getItem(key));
+                            addStatus(`${key}: ${Array.isArray(data) ? data.length : 'not array'} items`, 'info');
+                        } catch (e) {
+                            addStatus(`${key}: invalid JSON`, 'warning');
+                        }
+                    }
+                } else {
+                    // Analyze first product
+                    const firstProduct = products[0];
+                    addStatus(`First product fields: ${Object.keys(firstProduct).join(', ')}`, 'info');
+                    
+                    // Check for PriceList field
+                    if (firstProduct.PriceList) {
+                        addStatus(`✓ PriceList field found: "${firstProduct.PriceList}"`, 'success');
+                    } else if (firstProduct.priceList) {
+                        addStatus(`✓ priceList field found: "${firstProduct.priceList}"`, 'success');
+                    } else {
+                        addStatus('ERROR: No PriceList/priceList field found', 'error');
+                    }
+
+                    // Extract unique price lists
+                    const priceLists = [...new Set(products
+                        .map(product => product.PriceList || product.priceList)
+                        .filter(priceList => priceList && priceList.trim() !== ''))];
+                    
+                    addStatus(`Unique price lists found: ${priceLists.length}`, priceLists.length > 0 ? 'success' : 'error');
+                    if (priceLists.length > 0) {
+                        addStatus(`<pre>${JSON.stringify(priceLists, null, 2)}</pre>`, 'info');
+                    }
+                }
+
+            } catch (error) {
+                addStatus(`ERROR: ${error.message}`, 'error');
+                console.error('Debug error:', error);
+            }
+        }
+
+        function clearStorage() {
+            localStorage.clear();
+            addStatus('✓ Local storage cleared', 'success');
+        }
+
+        async function populateTestData() {
+            try {
+                const testProducts = [
+                    { id: 1, name: 'Test Product 1', PriceList: 'Retail', price: 100 },
+                    { id: 2, name: 'Test Product 2', PriceList: 'Wholesale', price: 80 },
+                    { id: 3, name: 'Test Product 3', PriceList: 'Retail', price: 120 },
+                    { id: 4, name: 'Test Product 4', PriceList: 'VIP', price: 90 }
+                ];
+
+                if (window.localFallbackManager) {
+                    await window.localFallbackManager.saveData('products', testProducts);
+                    addStatus('✓ Test data populated', 'success');
+                } else {
+                    addStatus('ERROR: Cannot populate test data - fallback manager not available', 'error');
+                }
+            } catch (error) {
+                addStatus(`ERROR populating test data: ${error.message}`, 'error');
+            }
+        }
+
+        // Auto-run debug on page load
+        window.addEventListener('load', () => {
+            setTimeout(runDebug, 1000);
+        });
+    </script>
+</body>
+</html>

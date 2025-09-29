@@ -230,6 +230,23 @@ class UniversalFirebaseDataManager {
             if (this.fallbackFirstMode) {
                 // Fallback-first mode: Load from local storage first
                 data = await this._loadFromFallback(collectionName);
+                
+                // If fallback returns empty data, try API as secondary source
+                if (!data || (Array.isArray(data) && data.length === 0)) {
+                    try {
+                        const apiData = await this._loadFromAPI(collectionName);
+                        if (apiData && apiData.length > 0) {
+                            data = apiData;
+                            // Save to fallback for future use
+                            if (this.localFallbackManager) {
+                                await this.localFallbackManager.saveData(collectionName, apiData);
+                            }
+                        }
+                    } catch (apiError) {
+                        // If API fails, keep the empty data from fallback
+                        console.warn(`API fallback failed for ${collectionName}:`, apiError);
+                    }
+                }
             } else {
                 // Admin mode: Load from Firebase
                 data = await this._loadFromFirebase(collectionName);
@@ -249,10 +266,20 @@ class UniversalFirebaseDataManager {
             
             // Fallback strategy for errors
             if (this.fallbackFirstMode) {
-                // If fallback fails, return empty array to maintain consistency
-                const emptyData = [];
-                this.data[collectionName] = emptyData;
-                return emptyData;
+                // If fallback fails, try API as secondary fallback
+                try {
+                    const apiData = await this._loadFromAPI(collectionName);
+                    this.cache.set(collectionName, apiData);
+                    this.lastFetchTime.set(collectionName, Date.now());
+                    this.data[collectionName] = apiData;
+                    this.errors.delete(collectionName);
+                    return apiData;
+                } catch (apiError) {
+                    // If both fallback and API fail, return empty array
+                    const emptyData = [];
+                    this.data[collectionName] = emptyData;
+                    return emptyData;
+                }
             } else {
                 // Admin mode: try API fallback for permission errors
                 const isPermissionError = error.code === 'permission-denied' || 
@@ -336,7 +363,7 @@ class UniversalFirebaseDataManager {
      * API fallback for data loading
      */
     async _loadFromAPI(collectionName) {
-        const response = await fetch(`/api/${collectionName}`);
+        const response = await fetch(`/api/get-data?collection=${collectionName}`);
         if (!response.ok) {
             throw new Error(`API request failed: ${response.status}`);
         }

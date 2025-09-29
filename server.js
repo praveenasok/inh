@@ -264,24 +264,19 @@ const server = http.createServer(async (req, res) => {
             res.end(JSON.stringify({ error: 'Document not found' }));
           }
         } else {
-          // Handle special collections that are stored in config documents
+          // Handle special collections that are stored in collections
           if (collection === 'salespeople') {
             try {
-              const configDoc = await syncService.db.collection('config').doc('salesmen').get();
-              if (configDoc.exists) {
-                const configData = configDoc.data();
-                const salespeople = configData.salesmen || configData.list || [];
-                // Add IDs to salespeople data for consistency
-                const salesmenWithIds = salespeople.map((salesman, index) => ({
-                  id: `salesman_${index}`,
-                  ...salesman
-                }));
-                res.writeHead(200, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify(salesmenWithIds));
-              } else {
-                res.writeHead(200, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify([]));
-              }
+              const snapshot = await syncService.db.collection('salespeople').get();
+              const salespeople = [];
+              snapshot.forEach(doc => {
+                salespeople.push({
+                  id: doc.id,
+                  ...doc.data()
+                });
+              });
+              res.writeHead(200, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify(salespeople));
             } catch (error) {
               res.writeHead(200, { 'Content-Type': 'application/json' });
               res.end(JSON.stringify([]));
@@ -1454,11 +1449,11 @@ const server = http.createServer(async (req, res) => {
       if (!syncService || !syncService.db) {
         // Temporary fallback data for testing
         const sampleProducts = [
-          { id: 'product_1', name: 'Bulk Hair', category: 'Hair Extensions', basePrice: 150 },
-          { id: 'product_2', name: 'ClipOn Extensions', category: 'Hair Extensions', basePrice: 120 },
-          { id: 'product_3', name: 'Tape Extensions', category: 'Hair Extensions', basePrice: 180 },
-          { id: 'product_4', name: 'Weft Hair', category: 'Hair Extensions', basePrice: 200 },
-          { id: 'product_5', name: 'Closure', category: 'Hair Closures', basePrice: 250 }
+          { id: 'product_1', name: 'Bulk Hair', category: 'Hair Extensions', basePrice: 150, PriceList: 'Retail' },
+          { id: 'product_2', name: 'ClipOn Extensions', category: 'Hair Extensions', basePrice: 120, PriceList: 'Wholesale' },
+          { id: 'product_3', name: 'Tape Extensions', category: 'Hair Extensions', basePrice: 180, PriceList: 'Retail' },
+          { id: 'product_4', name: 'Weft Hair', category: 'Hair Extensions', basePrice: 200, PriceList: 'VIP' },
+          { id: 'product_5', name: 'Closure', category: 'Hair Closures', basePrice: 250, PriceList: 'Wholesale' }
         ];
         
         res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -1474,11 +1469,11 @@ const server = http.createServer(async (req, res) => {
       // If Firebase collection is empty, fall back to sample data
       if (data.length === 0) {
         const sampleProducts = [
-          { id: 'product_1', name: 'Bulk Hair', category: 'Hair Extensions', basePrice: 150 },
-          { id: 'product_2', name: 'ClipOn Extensions', category: 'Hair Extensions', basePrice: 120 },
-          { id: 'product_3', name: 'Tape Extensions', category: 'Hair Extensions', basePrice: 180 },
-          { id: 'product_4', name: 'Weft Hair', category: 'Hair Extensions', basePrice: 200 },
-          { id: 'product_5', name: 'Closure', category: 'Hair Closures', basePrice: 250 }
+          { id: 'product_1', name: 'Bulk Hair', category: 'Hair Extensions', basePrice: 150, PriceList: 'Retail' },
+          { id: 'product_2', name: 'ClipOn Extensions', category: 'Hair Extensions', basePrice: 120, PriceList: 'Wholesale' },
+          { id: 'product_3', name: 'Tape Extensions', category: 'Hair Extensions', basePrice: 180, PriceList: 'Retail' },
+          { id: 'product_4', name: 'Weft Hair', category: 'Hair Extensions', basePrice: 200, PriceList: 'VIP' },
+          { id: 'product_5', name: 'Closure', category: 'Hair Closures', basePrice: 250, PriceList: 'Wholesale' }
         ];
         
         res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -1513,21 +1508,17 @@ const server = http.createServer(async (req, res) => {
         res.end(JSON.stringify(sampleSalespeople));
         return;
       }
-      // Salespeople are stored in config/salesmen document
-      const configDoc = await syncService.db.collection('config').doc('salesmen').get();
-      if (configDoc.exists) {
-        const configData = configDoc.data();
-        const salespeople = configData.salesmen || configData.list || [];
-        const salesmenWithIds = salespeople.map((salesman, index) => ({
-          id: `salesman_${index}`,
-          ...salesman
-        }));
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify(salesmenWithIds));
-      } else {
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify([]));
-      }
+      // Salespeople are stored in salespeople collection
+      const snapshot = await syncService.db.collection('salespeople').get();
+      const salespeople = [];
+      snapshot.forEach(doc => {
+        salespeople.push({
+          id: doc.id,
+          ...doc.data()
+        });
+      });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(salespeople));
     } catch (error) {
       res.writeHead(500, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ error: 'Failed to fetch salespeople: ' + error.message }));
@@ -1778,7 +1769,7 @@ const server = http.createServer(async (req, res) => {
       // Fallback to Firebase
       if (syncService && syncService.db) {
         try {
-          const snapshot = await syncService.db.collection('salesmen').get();
+          const snapshot = await syncService.db.collection('salespeople').get();
           salesmenCount = snapshot.size;
           res.writeHead(200, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ 

@@ -991,10 +991,86 @@ class UnifiedDataAccess {
         return await this.getData('orders', options);
     }
     
-    async getCategories(options = {}) {
-        return await this.getData('categories', options);
+    async getCategories(priceList = null, options = {}) {
+        try {
+            // Get pricelists data first
+            const pricelists = await this.getData('pricelists', options);
+            
+            if (!pricelists || !Array.isArray(pricelists)) {
+                console.warn('No pricelists data available for categories');
+                return [];
+            }
+            
+            // Filter by price list if specified
+            let filteredPricelists = pricelists;
+            if (priceList) {
+                filteredPricelists = pricelists.filter(item => 
+                    item.PriceList === priceList || 
+                    item['Price List Name'] === priceList ||
+                    item.priceList === priceList
+                );
+            }
+            
+            // Extract unique categories
+            const categories = [...new Set(
+                filteredPricelists
+                    .map(item => item.Category || item.category)
+                    .filter(Boolean)
+            )].sort();
+            
+            console.log(`✅ Extracted ${categories.length} categories from pricelists${priceList ? ` for price list: ${priceList}` : ''}:`, categories);
+            
+            return categories;
+        } catch (error) {
+            console.error('Error getting categories from pricelists:', error);
+            // Return default categories as fallback
+            return ['Bulk', 'Weaves', 'Weaves DD', 'Tapes', 'Closures', 'Frontals', 'I Tips', 'ClipOn', 'Genius Weaves', 'Toppers'];
+        }
     }
     
+    async getSubcategories(category = null, priceList = null, options = {}) {
+        try {
+            // Get pricelists data first
+            const pricelists = await this.getData('pricelists', options);
+            
+            if (!pricelists || !Array.isArray(pricelists)) {
+                console.warn('No pricelists data available for subcategories');
+                return [];
+            }
+            
+            // Filter by price list if specified
+            let filteredPricelists = pricelists;
+            if (priceList) {
+                filteredPricelists = pricelists.filter(item => 
+                    item.PriceList === priceList || 
+                    item['Price List Name'] === priceList ||
+                    item.priceList === priceList
+                );
+            }
+            
+            // Filter by category if specified
+            if (category) {
+                filteredPricelists = filteredPricelists.filter(item => 
+                    item.Category === category || item.category === category
+                );
+            }
+            
+            // Extract unique subcategories
+            const subcategories = [...new Set(
+                filteredPricelists
+                    .map(item => item.Subcategory || item.subcategory || item.SubCategory)
+                    .filter(Boolean)
+            )].sort();
+            
+            console.log(`✅ Extracted ${subcategories.length} subcategories from pricelists${category ? ` for category: ${category}` : ''}${priceList ? ` and price list: ${priceList}` : ''}:`, subcategories);
+            
+            return subcategories;
+        } catch (error) {
+            console.error('Error getting subcategories from pricelists:', error);
+            return [];
+        }
+    }
+
     async getPriceLists(options = {}) {
         return await this.getData('priceLists', options);
     }

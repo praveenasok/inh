@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Fallback Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        pre { background: #f5f5f5; padding: 10px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>API Fallback Test</h1>
+    
+    <div class="test-section">
+        <h2>Test Results</h2>
+        <div id="results"></div>
+    </div>
+
+    <script src="js/local-fallback-manager.js"></script>
+    <script src="js/universal-firebase-data-manager.js"></script>
+    
+    <script>
+        async function runComprehensiveTest() {
+            const results = document.getElementById('results');
+            
+            function log(message, type = 'info') {
+                const div = document.createElement('div');
+                div.className = type;
+                div.innerHTML = message;
+                results.appendChild(div);
+                console.log(message);
+            }
+            
+            try {
+                log('<h3>Step 1: Clear local storage to force API fallback</h3>');
+                localStorage.clear();
+                log('✓ Local storage cleared', 'success');
+                
+                log('<h3>Step 2: Initialize Universal Data Manager</h3>');
+                const dataManager = new UniversalFirebaseDataManager();
+                await dataManager.autoInitialize();
+                log('✓ Data manager initialized', 'success');
+                
+                log('<h3>Step 3: Test direct API call</h3>');
+                try {
+                    const response = await fetch('/api/get-data?collection=products');
+                    const apiData = await response.json();
+                    log(`✓ Direct API call successful: ${apiData.length} products`, 'success');
+                } catch (error) {
+                    log(`✗ Direct API call failed: ${error.message}`, 'error');
+                }
+                
+                log('<h3>Step 4: Test data manager fallback to API</h3>');
+                const products = await dataManager.getProducts();
+                log(`Products from data manager: ${products ? products.length : 0}`, products && products.length > 0 ? 'success' : 'error');
+                
+                const categories = await dataManager.getCategories();
+                log(`Categories from data manager: ${categories ? categories.length : 0}`, categories && categories.length > 0 ? 'success' : 'error');
+                
+                const salespeople = await dataManager.getSalespeople();
+                log(`Salespeople from data manager: ${salespeople ? salespeople.length : 0}`, salespeople && salespeople.length > 0 ? 'success' : 'error');
+                
+                const priceLists = await dataManager.getPriceLists();
+                log(`Price lists from data manager: ${priceLists ? priceLists.length : 0}`, priceLists && priceLists.length > 0 ? 'success' : 'error');
+                
+                log('<h3>Step 5: Check if data was saved to local storage</h3>');
+                const savedProducts = localStorage.getItem('inh_fallback_products');
+                log(`Products saved to local storage: ${savedProducts ? 'Yes' : 'No'}`, savedProducts ? 'success' : 'error');
+                
+                log('<h3>Test Complete</h3>');
+                
+            } catch (error) {
+                log(`✗ Test failed: ${error.message}`, 'error');
+                console.error('Test error:', error);
+            }
+        }
+        
+        // Run test when page loads
+        window.addEventListener('load', () => {
+            setTimeout(runComprehensiveTest, 1000);
+        });
+    </script>
+</body>
+</html>

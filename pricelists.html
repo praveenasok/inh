@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes"/>
+  <title>Price List Calculator — InstaQuote</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- jsPDF for PDF export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <!-- html2canvas for HTML to canvas conversion -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+  
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
+  
+  <!-- Firebase Configuration -->
+  <script src="firebase-config.js"></script>
+  <!-- Firebase global initialization -->
+  <script src="firebase-global-init.js"></script>
+  
+  <!-- Firebase Database Service -->
+  <script src="firebase-database.js"></script>
+  <script src="google-sheets-config.js"></script>
+  
+  <!-- Firebase Error Handler -->
+  <script src="firebase-error-handler.js"></script>
+  
+  <!-- Universal Firebase Data Manager -->
+  <script src="js/universal-firebase-data-manager.js"></script>
+  
+  <!-- Fallback System Components -->
+  <script src="js/local-fallback-manager.js"></script>
+  <script src="js/fallback-detector.js"></script>
+  <script src="js/unified-data-access.js"></script>
+  
+  <!-- Local Storage Dropdown Manager - REMOVED: Now using Firebase-only data -->
+  
+  <!-- Unified Button System -->
+  <link rel="stylesheet" href="unified-button-system.css">
+
+  <style>
+    /* Custom CSS for responsive design and styling */
+    .mobile-padding { padding: 1rem; }
+    .shadow-soft { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+    /* Button styles now handled by unified-button-system.css */
+    .chip { @apply inline-block px-3 py-1 text-xs font-medium rounded-full; }
+    
+    /* Mobile-first responsive design */
+    @media (max-width: 640px) {
+      .mobile-padding { padding: 0.75rem; }
+      .text-lg { font-size: 1rem; }
+      .text-xl { font-size: 1.125rem; }
+      .grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+      .gap-4 { gap: 0.75rem; }
+      .gap-6 { gap: 1rem; }
+      .p-4 { padding: 0.75rem; }
+      .p-6 { padding: 1rem; }
+      .px-4 { padding-left: 0.75rem; padding-right: 0.75rem; }
+      .py-8 { padding-top: 1.5rem; padding-bottom: 1.5rem; }
+    }
+    
+    @media (max-width: 480px) {
+      .mobile-padding { padding: 0.5rem; }
+      .text-base { font-size: 0.875rem; }
+      .text-lg { font-size: 0.875rem; }
+      .text-xl { font-size: 1rem; }
+      .gap-2 { gap: 0.375rem; }
+      .gap-3 { gap: 0.5rem; }
+      .gap-4 { gap: 0.5rem; }
+      .p-2 { padding: 0.375rem; }
+      .p-4 { padding: 0.5rem; }
+      .px-3 { padding-left: 0.5rem; padding-right: 0.5rem; }
+      .py-2 { padding-top: 0.375rem; padding-bottom: 0.375rem; }
+    }
+    
+    /* Form elements styling */
+    input, select, textarea {
+      transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+    
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    
+    /* Card hover effects */
+    .card-hover {
+      transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+    
+    .card-hover:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+    
+    /* Navigation styles */
+    .nav-button {
+      transition: all 0.2s ease-in-out;
+    }
+    
+    .nav-button:hover {
+      background-color: #f3f4f6;
+      transform: translateY(-1px);
+    }
+    
+    .nav-button.active {
+      background-color: #3b82f6;
+      color: white;
+    }
+    
+    /* Loading spinner animation */
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    
+    .loading-spinner {
+      animation: spin 1s linear infinite;
+    }
+    
+    /* Enhanced button styles with better touch targets */
+    button {
+      min-height: 48px;
+      padding: 12px 16px;
+      font-weight: 500;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+    
+    button:focus { 
+      outline: 3px solid #3b82f6; 
+      outline-offset: 2px; 
+    }
+    
+    button:disabled { 
+      cursor: not-allowed; 
+      opacity: 0.6;
+    }
+    
+    /* Button styles now handled by unified-button-system.css */
+    
+    /* Responsive navigation */
+    @media (max-width: 640px) {
+      .nav-btn span:last-child {
+        display: none;
+      }
+      
+      .nav-btn {
+        min-width: 60px;
+        justify-content: center;
+      }
+    }
+    
+    /* Mobile-first responsive breakpoints */
+    @media (max-width: 640px) { 
+      .stack-mobile { 
+        flex-direction: column; 
+        gap: 1rem;
+      }
+      
+      /* Enhanced mobile typography */
+      body {
+        font-size: 16px; /* Prevents zoom on iOS */
+        line-height: 1.7;
+      }
+      
+      /* Better spacing on mobile */
+      .mobile-padding {
+        padding: 1rem;
+      }
+      
+      /* Full-width elements on mobile */
+      .mobile-full {
+        width: 100%;
+      }
+      
+      /* Hide less important elements on very small screens */
+      .mobile-hide {
+        display: none;
+      }
+      
+      /* Improved mobile text spacing */
+      p, div, span {
+        line-height: 1.7;
+      }
+      
+      /* Better button text on mobile */
+      button {
+        font-size: 16px;
+        line-height: 1.4;
+        letter-spacing: 0.025em;
+      }
+      
+      /* Make icons 2x bigger on mobile */
+      .md\:hidden button span:first-child,
+      .mobile-full span[aria-hidden="true"],
+      button span.text-base,
+      button span.text-lg {
+        font-size: 2em !important;
+        line-height: 1;
+      }
+    }
+    
+    /* Navigation link styles */
+    .nav-btn {
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 48px;
+      padding: 12px 16px;
+      font-weight: 500;
+      cursor: pointer;
+      touch-action: manipulation;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+      background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+      border: 2px solid #e2e8f0;
+      box-shadow: 0 4px 12px rgba(71, 85, 105, 0.15);
+    }
+    
+    .nav-btn:hover {
+      text-decoration: none;
+      background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+      border-color: #cbd5e1;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(71, 85, 105, 0.2);
+    }
+    
+    .nav-btn.nav-btn-active {
+      background: #081249;
+      color: white !important;
+      border: 2px solid #081249;
+      box-shadow: 0 4px 12px rgba(8, 18, 73, 0.3);
+    }
+    
+    .nav-btn.nav-btn-active:hover {
+      background: #0a1555;
+      border-color: #0a1555;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(8, 18, 73, 0.4);
+    }
+    
+    /* Remove default link styles */
+    .no-underline {
+      text-decoration: none !important;
+    }
+    
+    .no-underline:hover {
+      text-decoration: none !important;
+    }
+
+    /* Hamburger Menu Styles */
+    .hamburger-menu {
+      display: none;
+      flex-direction: column;
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 4px;
+      transition: background-color 0.3s ease;
+    }
+
+    .hamburger-menu:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .hamburger-line {
+      width: 25px;
+      height: 3px;
+      background-color: white;
+      margin: 3px 0;
+      transition: 0.3s;
+      border-radius: 2px;
+    }
+
+    .hamburger-menu.active .hamburger-line:nth-child(1) {
+      transform: rotate(-45deg) translate(-5px, 6px);
+    }
+
+    .hamburger-menu.active .hamburger-line:nth-child(2) {
+      opacity: 0;
+    }
+
+    .hamburger-menu.active .hamburger-line:nth-child(3) {
+      transform: rotate(45deg) translate(-5px, -6px);
+    }
+
+    /* Mobile Menu Styles */
+    .mobile-menu {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #d97706 100%);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      z-index: 1000;
+      padding: 1rem;
+      animation: slideDown 0.3s ease-out;
+    }
+
+    .mobile-menu.show {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .mobile-menu a {
+      padding: 12px 16px;
+      border-radius: 8px;
+      transition: background-color 0.3s ease;
+      text-decoration: none;
+      color: white;
+      font-weight: 500;
+    }
+
+    .mobile-menu a:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+      text-decoration: none;
+    }
+
+    /* Desktop Menu Styles */
+    .desktop-menu {
+      display: flex;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .desktop-menu {
+        display: none;
+      }
+      
+      .hamburger-menu {
+        display: flex;
+      }
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+  <script src="main-functions.js"></script>
+</head>
+<body class="bg-gray-50 min-h-screen text-slate-800">
+
+  <!-- Navigation Component -->
+  <nav class="bg-gradient-to-r from-blue-900 via-blue-800 to-amber-700 text-white shadow-lg sticky top-0 z-50 relative">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="flex items-center justify-between h-16">
+              <!-- Logo and Title -->
+              <div class="flex items-center space-x-3">
+                  <img src="images/logo.png" alt="Logo" class="h-8 w-auto opacity-90">
+                  <span class="text-lg font-bold">instaQuote - Price Lists</span>
+              </div>
+              
+              <!-- Desktop Menu -->
+              <div class="desktop-menu items-center space-x-4">
+                  <a href="quotemaker.html" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-white/10 transition-colors">
+                      <i class="fas fa-file-invoice-dollar mr-1"></i> Quote Maker
+                  </a>
+                  <a href="product-catalog.html" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-white/10 transition-colors">
+                      <i class="fas fa-th-large mr-1"></i> Product Catalog
+                  </a>
+                  <a href="admin-sync-panel.html" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-white/10 transition-colors">
+                      <i class="fas fa-cog mr-1"></i> Admin Panel
+                  </a>
+              </div>
+              
+              <!-- Hamburger Menu Button -->
+              <div class="hamburger-menu" onclick="toggleMobileMenu()">
+                  <div class="hamburger-line"></div>
+                  <div class="hamburger-line"></div>
+                  <div class="hamburger-line"></div>
+              </div>
+          </div>
+      </div>
+      
+      <!-- Mobile Menu -->
+      <div class="mobile-menu" id="mobileMenu">
+          <a href="quotemaker.html" class="text-white hover:text-gray-200">
+              <i class="fas fa-file-invoice-dollar mr-2"></i> Quote Maker
+          </a>
+          <a href="product-catalog.html" class="text-white hover:text-gray-200">
+              <i class="fas fa-th-large mr-2"></i> Product Catalog
+          </a>
+          <a href="admin-sync-panel.html" class="text-white hover:text-gray-200">
+              <i class="fas fa-cog mr-2"></i> Admin Panel
+          </a>
+      </div>
+  </nav>
+
+  <div class="container mx-auto px-4 py-6">
+    <!-- Page Header -->
+    <div class="text-left mb-8">
+    </div>
+
+    <!-- Price List Calculator Content will be inserted here -->
+    <div id="price-calculator-content">
+      
+      <!-- Price List Calculator Module Content -->
+      <section class="bg-white rounded-xl shadow-soft p-4 sm:p-6 mb-4 mobile-padding" style="background: #eef2ff;">
+        <div class="flex items-center justify-between mb-4">
+          <span class="chip no-print" id="price-chip">Ready</span>
+        </div>
+        
+        <!-- Controls -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+          <div>
+            <select id="price-list" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
+              <option value="">Select Price List</option>
+            </select>
+          </div>
+          <div>
+            <select id="currency" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
+              <option value="INR" selected>INR (₹) - Indian Rupee</option>
+              <option value="USD">USD ($) - US Dollar</option>
+              <option value="EUR">EUR (€) - Euro</option>
+              <option value="GBP">GBP (£) - British Pound</option>
+              <option value="AUD">AUD (A$) - Australian Dollar</option>
+              <option value="AED">AED (د.إ) - UAE Dirham</option>
+              <option value="NGN">NGN (₦) - Nigerian Naira</option>
+              <option value="SAR">SAR (SAR) - Saudi Riyal</option>
+              <option value="JPY">JPY (¥) - Japanese Yen</option>
+            </select>
+          </div>
+          <div>
+            <input type="number" id="factor" value="1" step="0.01" min="0.01" placeholder="Factor" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none" />
+          </div>
+          <div>
+            <select id="salesman" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
+              <option value="">Select Sales Representative</option>
+            </select>
+          </div>
+          <div>
+            <select id="category" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
+              <option value="">All Categories</option>
+            </select>
+          </div>
+          <div class="flex items-center gap-2">
+            <input type="checkbox" id="kg-toggle" class="w-5 h-5 text-blue-600 border-2 border-gray-300 rounded focus:ring-blue-500 focus:ring-2" />
+            <label for="kg-toggle" class="text-sm font-medium text-gray-700">Price per KG</label>
+          </div>
+        </div>
+        
+        <!-- Product/Density/Color Dropdowns -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div>
+            <select id="product" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
+              <option value="">All Products</option>
+            </select>
+          </div>
+          <div>
+            <select id="density" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
+              <option value="">All Densities</option>
+            </select>
+          </div>
+          <div>
+            <select id="color" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
+              <option value="">All Shades</option>
+            </select>
+          </div>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="flex flex-wrap gap-3 mb-6">
+          <button onclick="clearAll()" class="btn-secondary">
+            <span>🗑️</span> <span>Clear All</span>
+          </button>
+          <button onclick="generatePreview()" class="btn-primary">
+            <span>📋</span> <span>Generate Preview</span>
+          </button>
+        </div>
+      </section>
+      
+      <!-- Preview Section -->
+      <section id="preview-section" class="bg-white rounded-xl shadow-soft p-4 sm:p-6 mobile-padding" style="display: none;">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="section-heading">Preview</h3>
+          <div class="flex gap-2">
+            <div class="relative">
+              <button id="shareMenuBtn" onclick="toggleShareMenu()" class="btn-success btn-sm">
+                <span>📤</span> <span>Share</span>
+                <span class="ml-1">▼</span>
+              </button>
+              
+              <!-- Share Dropdown Menu -->
+                <div id="shareDropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50 min-w-48">
+                  <button onclick="downloadPDFFromMenu()" class="w-full text-left px-2 md:px-4 py-2 hover:bg-gray-100 flex items-center gap-2">
+                    <span>📄</span> <span class="hidden md:inline">Share PDF</span>
+                  </button>
+                </div>
+            </div>
+          </div>
+        </div>
+        <div id="htmlPreview" class="border border-gray-200 rounded-lg p-4 bg-gray-50"></div>
+      </section>
+      
+      <!-- Footer with Asset Info -->
+      <footer class="mt-8 text-center text-sm text-gray-500">
+        <p>© 2024 Indian Natural Hair Pvt Ltd. All rights reserved.</p>
+        <p class="mt-1">Made with f10w</p>
+        <p class="mt-1">Asset Version: 2.1.0 | Last Updated: January 2024</p>
+      </footer>
+    </div>
+  </div>
+
+  <script>
+    // FX API Configuration
+    const FX_API_KEY = 'fca_live_VQSyOjJhKJhGGJhGGJhGGJhGGJhGGJhG';
+    const FX_API_URL = 'https://api.freecurrencyapi.com/v1/latest';
+    
+    // Supported currencies with their symbols
+    const SUPPORTED_CURRENCIES = {
+      'INR': { symbol: '₹', name: 'Indian Rupee' },
+      'USD': { symbol: '$', name: 'US Dollar' },
+      'EUR': { symbol: '€', name: 'Euro' },
+      'GBP': { symbol: '£', name: 'British Pound' },
+      'AUD': { symbol: 'A$', name: 'Australian Dollar' },
+      'SAR': { symbol: 'SAR ', name: 'Saudi Riyal' },
+      'NGN': { symbol: '₦', name: 'Nigerian Naira' },
+      'AED': { symbol: 'د.إ ', name: 'UAE Dirham' },
+      'JPY': { symbol: '¥', name: 'Japanese Yen' }
+    };
+    
+    // Default exchange rates (fallback)
+    const DEFAULT_RATES = {
+      'INR': 1,
+      'USD': 0.012,
+      'EUR': 0.011,
+      'GBP': 0.0095,
+      'AUD': 0.018,
+      'SAR': 0.045,
+      'NGN': 19.2,
+      'AED': 0.044,
+      'JPY': 1.8
+    };
+    
+    // Product data will be loaded here
+    let productData = [];
+    
+    // LocalStorageDropdownManager removed - using Firebase-only data
+    
+    // Product data and salesmen data will be loaded from Firebase
+    
+    // Application state
+    let state = {
+      segments: [],
+      currency: 'INR',
+      factor: 1,
+      kg: false,
+      salesman: '',
+      exchangeRates: DEFAULT_RATES
+    };
+    
+    // Wait for Firebase to be ready
+    async function waitForFirebase() {
+      let attempts = 0;
+      const maxAttempts = 20; // 10 seconds max wait
+      
+      while ((!window.firebase || !window.firebaseConfig) && attempts < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+        attempts++;
+      }
+      
+      if (!window.firebase || !window.firebaseConfig) {
+        throw new Error('Firebase not available after waiting');
+      }
+    }
+
+    // Initialize Firebase
+    async function initializeFirebase() {
+      try {
+        
+        // Wait for universal data manager to be available
+        let attempts = 0;
+        const maxAttempts = 20; // 10 seconds max wait
+        
+        while (!window.UniversalFirebaseDataManager && attempts < maxAttempts) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+          attempts++;
+        }
+        
+        if (!window.UniversalFirebaseDataManager) {
+          throw new Error('UniversalFirebaseDataManager not available after waiting');
+        }
+        
+        // Initialize the data manager
+        window.dataManager = new UniversalFirebaseDataManager();
+        
+        console.log('Firebase initialized successfully');
+        return true;
+        
+      } catch (error) {
+        console.error('Error initializing Firebase:', error);
+        throw error;
+      }
+    }
+
+    // Load data from Firebase
+    async function loadData() {
+      try {
+        console.log('Loading data from Firebase...');
+        
+        // Load all required data
+        const [products, salespeople, categories, priceLists] = await Promise.all([
+          dataManager.loadCollection('products'),
+          dataManager.loadCollection('salespeople'),
+          dataManager.loadCollection('categories'),
+          dataManager.loadCollection('price-lists')
+        ]);
+        
+        console.log('Data loaded:', { products, salespeople, categories, priceLists });
+        
+        // Store data globally
+        window.productData = products || [];
+        window.salespeople = salespeople || [];
+        window.categories = categories || [];
+        window.priceLists = priceLists || [];
+        
+        // Populate dropdowns
+        populateDropdowns();
+        
+        console.log('Data loading completed');
+        
+      } catch (error) {
+        console.error('Error loading data:', error);
+        // Show user-friendly error message
+        showNotification('Error loading data. Please refresh the page.', 'error');
+      }
+    }
+
+    // Populate all dropdowns
+    function populateDropdowns() {
+      try {
+        // Populate price lists
+        populatePriceLists();
+        
+        // Populate salespeople
+        populateSalespeople();
+        
+        // Populate categories
+        populateCategories();
+        
+        // Populate products
+        populateProducts();
+        
+        console.log('All dropdowns populated');
+        
+      } catch (error) {
+        console.error('Error populating dropdowns:', error);
+      }
+    }
+
+    // Populate price lists dropdown
+    function populatePriceLists() {
+      const priceListSelect = document.getElementById('price-list');
+      if (!priceListSelect) return;
+      
+      // Clear existing options except the first one
+      priceListSelect.innerHTML = '<option value="">Select Price List</option>';
+      
+      if (window.priceLists && window.priceLists.length > 0) {
+        window.priceLists.forEach(priceList => {
+          const option = document.createElement('option');
+          option.value = priceList.id || priceList.name;
+          option.textContent = priceList.name || priceList.id;
+          priceListSelect.appendChild(option);
+        });
+      }
+    }
+
+    // Populate salespeople dropdown
+    function populateSalespeople() {
+      const salesmanSelect = document.getElementById('salesman');
+      if (!salesmanSelect) return;
+      
+      // Clear existing options except the first one
+      salesmanSelect.innerHTML = '<option value="">Select Sales Representative</option>';
+      
+      if (window.salespeople && window.salespeople.length > 0) {
+        window.salespeople.forEach(salesperson => {
+          const option = document.createElement('option');
+          option.value = salesperson.id || salesperson.name;
+          option.textContent = salesperson.name || salesperson.id;
+          salesmanSelect.appendChild(option);
+        });
+      }
+    }
+
+    // Populate categories dropdown
+    function populateCategories() {
+      const categorySelect = document.getElementById('category');
+      if (!categorySelect) return;
+      
+      // Clear existing options except the first one
+      categorySelect.innerHTML = '<option value="">All Categories</option>';
+      
+      if (window.categories && window.categories.length > 0) {
+        window.categories.forEach(category => {
+          const option = document.createElement('option');
+          option.value = category.id || category.name;
+          option.textContent = category.name || category.id;
+          categorySelect.appendChild(option);
+        });
+      }
+    }
+
+    // Populate products dropdown
+    function populateProducts() {
+      const productSelect = document.getElementById('product');
+      if (!productSelect) return;
+      
+      // Clear existing options except the first one
+      productSelect.innerHTML = '<option value="">All Products</option>';
+      
+      if (window.productData && window.productData.length > 0) {
+        // Get unique products
+        const uniqueProducts = [...new Set(window.productData.map(p => p.product))].filter(Boolean);
+        
+        uniqueProducts.forEach(product => {
+          const option = document.createElement('option');
+          option.value = product;
+          option.textContent = product;
+          productSelect.appendChild(option);
+        });
+      }
+    }
+
+    // Update density dropdown based on selected product
+    function updateDensityDropdown() {
+      const productSelect = document.getElementById('product');
+      const densitySelect = document.getElementById('density');
+      
+      if (!productSelect || !densitySelect) return;
+      
+      const selectedProduct = productSelect.value;
+      
+      // Clear density options
+      densitySelect.innerHTML = '<option value="">All Densities</option>';
+      
+      if (selectedProduct && window.productData) {
+        // Get densities for selected product
+        const densities = [...new Set(
+          window.productData
+            .filter(p => p.product === selectedProduct)
+            .map(p => p.density)
+            .filter(Boolean)
+        )];
+        
+        densities.forEach(density => {
+          const option = document.createElement('option');
+          option.value = density;
+          option.textContent = density;
+          densitySelect.appendChild(option);
+        });
+      }
+    }
+
+    // Update color dropdown based on selected product and density
+    function updateColorDropdown() {
+      const productSelect = document.getElementById('product');
+      const densitySelect = document.getElementById('density');
+      const colorSelect = document.getElementById('color');
+      
+      if (!productSelect || !densitySelect || !colorSelect) return;
+      
+      const selectedProduct = productSelect.value;
+      const selectedDensity = densitySelect.value;
+      
+      // Clear color options
+      colorSelect.innerHTML = '<option value="">All Shades</option>';
+      
+      if (window.productData) {
+        let filteredData = window.productData;
+        
+        if (selectedProduct) {
+          filteredData = filteredData.filter(p => p.product === selectedProduct);
+        }
+        
+        if (selectedDensity) {
+          filteredData = filteredData.filter(p => p.density === selectedDensity);
+        }
+        
+        // Get unique colors
+        const colors = [...new Set(filteredData.map(p => p.color).filter(Boolean))];
+        
+        colors.forEach(color => {
+          const option = document.createElement('option');
+          option.value = color;
+          option.textContent = color;
+          colorSelect.appendChild(option);
+        });
+      }
+    }
+
+    // Event listeners for dropdown changes
+    document.addEventListener('DOMContentLoaded', function() {
+      const productSelect = document.getElementById('product');
+      const densitySelect = document.getElementById('density');
+      
+      if (productSelect) {
+        productSelect.addEventListener('change', function() {
+          updateDensityDropdown();
+          updateColorDropdown();
+        });
+      }
+      
+      if (densitySelect) {
+        densitySelect.addEventListener('change', updateColorDropdown);
+      }
+    });
+
+    // Fetch exchange rates
+    async function fetchExchangeRates() {
+      try {
+        const response = await fetch(`${FX_API_URL}?apikey=${FX_API_KEY}&base_currency=INR`);
+        const data = await response.json();
+        
+        if (data && data.data) {
+          state.exchangeRates = { ...DEFAULT_RATES, ...data.data };
+          console.log('Exchange rates updated:', state.exchangeRates);
+        }
+      } catch (error) {
+        console.error('Error fetching exchange rates:', error);
+        // Use default rates
+        state.exchangeRates = DEFAULT_RATES;
+      }
+    }
+
+    // Format currency
+    function formatCurrency(amount, currency = 'INR') {
+      const currencyInfo = SUPPORTED_CURRENCIES[currency] || SUPPORTED_CURRENCIES['INR'];
+      const convertedAmount = amount * (state.exchangeRates[currency] || 1);
+      
+      return `${currencyInfo.symbol}${convertedAmount.toFixed(2)}`;
+    }
+
+    // Clear all filters
+    function clearAll() {
+      document.getElementById('price-list').value = '';
+      document.getElementById('currency').value = 'INR';
+      document.getElementById('factor').value = '1';
+      document.getElementById('salesman').value = '';
+      document.getElementById('category').value = '';
+      document.getElementById('product').value = '';
+      document.getElementById('density').value = '';
+      document.getElementById('color').value = '';
+      document.getElementById('kg-toggle').checked = false;
+      
+      // Update state
+      state.currency = 'INR';
+      state.factor = 1;
+      state.kg = false;
+      state.salesman = '';
+      
+      // Hide preview
+      document.getElementById('preview-section').style.display = 'none';
+      
+      // Update dropdowns
+      updateDensityDropdown();
+      updateColorDropdown();
+    }
+
+    // Generate preview
+    function generatePreview() {
+      const priceList = document.getElementById('price-list').value;
+      const currency = document.getElementById('currency').value;
+      const factor = parseFloat(document.getElementById('factor').value) || 1;
+      const salesman = document.getElementById('salesman').value;
+      const category = document.getElementById('category').value;
+      const product = document.getElementById('product').value;
+      const density = document.getElementById('density').value;
+      const color = document.getElementById('color').value;
+      const isKg = document.getElementById('kg-toggle').checked;
+      
+      if (!priceList) {
+        showNotification('Please select a price list', 'error');
+        return;
+      }
+      
+      // Update state
+      state.currency = currency;
+      state.factor = factor;
+      state.kg = isKg;
+      state.salesman = salesman;
+      
+      // Filter data
+      let filteredData = window.productData || [];
+      
+      if (category) {
+        filteredData = filteredData.filter(item => item.category === category);
+      }
+      
+      if (product) {
+        filteredData = filteredData.filter(item => item.product === product);
+      }
+      
+      if (density) {
+        filteredData = filteredData.filter(item => item.density === density);
+      }
+      
+      if (color) {
+        filteredData = filteredData.filter(item => item.color === color);
+      }
+      
+      // Generate HTML preview
+      generateHTMLPreview(filteredData, priceList, salesman);
+      
+      // Show preview section
+      document.getElementById('preview-section').style.display = 'block';
+      
+      // Scroll to preview
+      document.getElementById('preview-section').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // Generate HTML preview
+    function generateHTMLPreview(data, priceListName, salesmanName) {
+      const currencyInfo = SUPPORTED_CURRENCIES[state.currency] || SUPPORTED_CURRENCIES['INR'];
+      const salesmanInfo = window.salespeople?.find(s => (s.id || s.name) === salesmanName);
+      
+      let html = `
+        <div class="price-list-preview">
+          <div class="header text-center mb-6">
+            <h1 class="text-2xl font-bold text-gray-800 mb-2">Price List</h1>
+            <div class="text-lg text-gray-600">${priceListName}</div>
+            ${salesmanInfo ? `<div class="text-sm text-gray-500 mt-1">Sales Representative: ${salesmanInfo.name}</div>` : ''}
+            <div class="text-sm text-gray-500 mt-1">Currency: ${currencyInfo.name} (${currencyInfo.symbol})</div>
+            ${state.factor !== 1 ? `<div class="text-sm text-gray-500">Factor: ${state.factor}</div>` : ''}
+            ${state.kg ? `<div class="text-sm text-gray-500">Prices shown per KG</div>` : ''}
+          </div>
+          
+          <div class="overflow-x-auto">
+            <table class="w-full border-collapse border border-gray-300">
+              <thead>
+                <tr class="bg-gray-100">
+                  <th class="border border-gray-300 px-4 py-2 text-left">Product</th>
+                  <th class="border border-gray-300 px-4 py-2 text-left">Category</th>
+                  <th class="border border-gray-300 px-4 py-2 text-left">Density</th>
+                  <th class="border border-gray-300 px-4 py-2 text-left">Color</th>
+                  <th class="border border-gray-300 px-4 py-2 text-right">Price</th>
+                </tr>
+              </thead>
+              <tbody>
+      `;
+      
+      if (data.length === 0) {
+        html += `
+          <tr>
+            <td colspan="5" class="border border-gray-300 px-4 py-8 text-center text-gray-500">
+              No products found matching the selected criteria.
+            </td>
+          </tr>
+        `;
+      } else {
+        data.forEach(item => {
+          let price = parseFloat(item.price) || 0;
+          
+          // Apply factor
+          price *= state.factor;
+          
+          // Convert to KG if needed
+          if (state.kg && item.weight) {
+            const weight = parseFloat(item.weight) || 1;
+            price = price / weight;
+          }
+          
+          const formattedPrice = formatCurrency(price, state.currency);
+          
+          html += `
+            <tr>
+              <td class="border border-gray-300 px-4 py-2">${item.product || '-'}</td>
+              <td class="border border-gray-300 px-4 py-2">${item.category || '-'}</td>
+              <td class="border border-gray-300 px-4 py-2">${item.density || '-'}</td>
+              <td class="border border-gray-300 px-4 py-2">${item.color || '-'}</td>
+              <td class="border border-gray-300 px-4 py-2 text-right font-mono">${formattedPrice}</td>
+            </tr>
+          `;
+        });
+      }
+      
+      html += `
+              </tbody>
+            </table>
+          </div>
+          
+          <div class="footer mt-6 text-center text-sm text-gray-500">
+            <p>Generated on ${new Date().toLocaleDateString()}</p>
+            <p>© 2024 Indian Natural Hair Pvt Ltd. All rights reserved.</p>
+          </div>
+        </div>
+      `;
+      
+      document.getElementById('htmlPreview').innerHTML = html;
+    }
+
+    // Toggle share menu
+    function toggleShareMenu() {
+      const dropdown = document.getElementById('shareDropdown');
+      dropdown.classList.toggle('hidden');
+    }
+
+    // Download PDF from menu
+    async function downloadPDFFromMenu() {
+      // Hide the dropdown first
+      document.getElementById('shareDropdown').classList.add('hidden');
+      
+      try {
+        const element = document.getElementById('htmlPreview');
+        
+        if (!element || !element.innerHTML.trim()) {
+          showNotification('Please generate a preview first', 'error');
+          return;
+        }
+        
+        // Show loading
+        showNotification('Generating PDF...', 'info');
+        
+        // Generate PDF using html2canvas and jsPDF
+        const canvas = await html2canvas(element, {
+          scale: 2,
+          useCORS: true,
+          allowTaint: true
+        });
+        
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        
+        const imgWidth = 210;
+        const pageHeight = 295;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        let heightLeft = imgHeight;
+        
+        let position = 0;
+        
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+        
+        while (heightLeft >= 0) {
+          position = heightLeft - imgHeight;
+          pdf.addPage();
+          pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+          heightLeft -= pageHeight;
+        }
+        
+        // Save the PDF
+        const priceList = document.getElementById('price-list').value || 'PriceList';
+        const fileName = `${priceList}_${new Date().toISOString().split('T')[0]}.pdf`;
+        pdf.save(fileName);
+        
+        showNotification('PDF downloaded successfully!', 'success');
+        
+      } catch (error) {
+        console.error('Error generating PDF:', error);
+        showNotification('Error generating PDF. Please try again.', 'error');
+      }
+    }
+
+    // Show notification
+    function showNotification(message, type = 'info') {
+      // Create notification element
+      const notification = document.createElement('div');
+      notification.className = `fixed top-4 right-4 z-50 px-4 py-2 rounded-lg text-white font-medium ${
+        type === 'error' ? 'bg-red-500' : 
+        type === 'success' ? 'bg-green-500' : 
+        'bg-blue-500'
+      }`;
+      notification.textContent = message;
+      
+      // Add to page
+      document.body.appendChild(notification);
+      
+      // Remove after 3 seconds
+      setTimeout(() => {
+        if (notification.parentNode) {
+          notification.parentNode.removeChild(notification);
+        }
+      }, 3000);
+    }
+
+    // Mobile menu toggle
+    function toggleMobileMenu() {
+      const mobileMenu = document.getElementById('mobileMenu');
+      const hamburger = document.querySelector('.hamburger-menu');
+      
+      mobileMenu.classList.toggle('show');
+      hamburger.classList.toggle('active');
+    }
+
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', function(event) {
+      const shareDropdown = document.getElementById('shareDropdown');
+      const shareBtn = document.getElementById('shareMenuBtn');
+      
+      if (!shareBtn.contains(event.target)) {
+        shareDropdown.classList.add('hidden');
+      }
+      
+      // Close mobile menu when clicking outside
+      const mobileMenu = document.getElementById('mobileMenu');
+      const hamburger = document.querySelector('.hamburger-menu');
+      
+      if (!hamburger.contains(event.target) && !mobileMenu.contains(event.target)) {
+        mobileMenu.classList.remove('show');
+        hamburger.classList.remove('active');
+      }
+    });
+
+    // Initialize the application
+    async function initializeApp() {
+      try {
+        console.log('Initializing application...');
+        
+        // Wait for Firebase to be ready
+        await waitForFirebase();
+        
+        // Initialize Firebase
+        await initializeFirebase();
+        
+        // Load data
+        await loadData();
+        
+        // Fetch exchange rates
+        await fetchExchangeRates();
+        
+        console.log('Application initialized successfully');
+        
+      } catch (error) {
+        console.error('Error initializing application:', error);
+        showNotification('Error initializing application. Please refresh the page.', 'error');
+      }
+    }
+
+    // Start the application when DOM is loaded
+    document.addEventListener('DOMContentLoaded', initializeApp);
+  </script>
+</body>
+</html>

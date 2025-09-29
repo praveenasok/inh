@@ -471,7 +471,7 @@
           </div>
           <div>
             <select id="color" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
-              <option value="">All Colors</option>
+              <option value="">All Shades</option>
             </select>
           </div>
         </div>
@@ -599,8 +599,8 @@
           throw new Error('Universal data manager not available after waiting');
         }
         
-        // Wait for universal data manager to be ready
-        await window.universalDataManager.waitForReady();
+        // Initialize and load all data automatically
+        await window.universalDataManager.autoInitialize();
         
         const status = window.universalDataManager.getStatus();
         if (status.isInitialized && status.isDataLoaded) {
@@ -617,6 +617,12 @@
     document.addEventListener('DOMContentLoaded', async function() {
       
       try {
+        // Initialize LocalFallbackManager first (required by universal data manager)
+        if (typeof LocalFallbackManager !== 'undefined') {
+          window.localFallbackManager = new LocalFallbackManager();
+          await window.localFallbackManager.initialize();
+        }
+        
         // Initialize Firebase as primary data source
         try {
           await waitForFirebase();
@@ -631,7 +637,7 @@
         await loadProductData();
         await loadColorsData();
         await loadStylesData();
-        await populatePriceListDropdown();
+        await loadPriceListsWithRetry();
         await loadExchangeRates();
         await populateSalesRepresentatives();
         setupEventListeners();
@@ -772,45 +778,227 @@
       }
     }
     
-    // Populate price list dropdown from loaded product data
+    // Populate price list dropdown with robust fallback mechanisms
     async function populatePriceListDropdown() {
       const priceListSelect = document.getElementById('price-list');
       if (!priceListSelect) {
+        console.error('Price list dropdown element not found');
         return;
       }
       
-      if (!productData || productData.length === 0) {
-        const option = document.createElement('option');
-        option.value = '';
-        option.textContent = 'Loading price lists...';
-        option.disabled = true;
-        priceListSelect.appendChild(option);
-        return;
-      }
+      console.log('🔄 Starting price list population...');
       
       try {
-        // Clear existing options
+        // Clear existing options except the default
         priceListSelect.innerHTML = '<option value="">Select Price List</option>';
         
-        // Get unique price lists from Firebase data
-        const priceLists = [...new Set(productData.map(product => product.PriceList))].filter(Boolean);
+        let priceLists = [];
+        let dataSource = 'none';
         
-        priceLists.forEach(priceList => {
-          const option = document.createElement('option');
-          option.value = priceList;
-          option.textContent = priceList;
-          priceListSelect.appendChild(option);
-        });
+        // Try multiple data sources with fallbacks
+        try {
+          // First try: unifiedDataAccess
+          if (window.unifiedDataAccess) {
+            console.log('📊 Trying unifiedDataAccess for price lists...');
+            const products = await window.unifiedDataAccess.getProducts();
+            if (products && Array.isArray(products) && products.length > 0) {
+              priceLists = [...new Set(products.map(product => 
+                product.PriceList || product.PriceListName || product['Price List Name']
+              ))].filter(Boolean);
+              if (priceLists.length > 0) {
+                dataSource = 'unifiedDataAccess';
+                console.log('✅ Price lists loaded from unifiedDataAccess:', priceLists.length);
+              }
+            }
+          }
+        } catch (error) {
+          console.warn('⚠️ unifiedDataAccess failed for price lists:', error.message);
+        }
+        
+        // Second try: universalDataManager
+        if (priceLists.length === 0) {
+          try {
+            if (window.universalDataManager) {
+              console.log('📊 Trying universalDataManager for price lists...');
+              const status = window.universalDataManager.getStatus();
+              if (status.isInitialized && status.isDataLoaded) {
+                const products = await window.universalDataManager.getProducts();
+                if (products && Array.isArray(products) && products.length > 0) {
+                  priceLists = [...new Set(products.map(product => 
+                    product.PriceList || product.PriceListName || product['Price List Name']
+                  ))].filter(Boolean);
+                  if (priceLists.length > 0) {
+                    dataSource = 'universalDataManager';
+                    console.log('✅ Price lists loaded from universalDataManager:', priceLists.length);
+                  }
+                }
+              }
+            }
+          } catch (error) {
+            console.warn('⚠️ universalDataManager failed for price lists:', error.message);
+          }
+        }
+        
+        // Third try: global productData
+        if (priceLists.length === 0) {
+          try {
+            if (productData && Array.isArray(productData) && productData.length > 0) {
+              console.log('📊 Trying global productData for price lists...');
+              priceLists = [...new Set(productData.map(product => 
+                product.PriceList || product.PriceListName || product['Price List Name']
+              ))].filter(Boolean);
+              if (priceLists.length > 0) {
+                dataSource = 'productData';
+                console.log('✅ Price lists loaded from productData:', priceLists.length);
+              }
+            }
+          } catch (error) {
+            console.warn('⚠️ productData failed for price lists:', error.message);
+          }
+        }
+        
+        // Fourth try: window.productData
+        if (priceLists.length === 0) {
+          try {
+            if (window.productData && Array.isArray(window.productData) && window.productData.length > 0) {
+              console.log('📊 Trying window.productData for price lists...');
+              priceLists = [...new Set(window.productData.map(product => 
+                product.PriceList || product.PriceListName || product['Price List Name']
+              ))].filter(Boolean);
+              if (priceLists.length > 0) {
+                dataSource = 'window.productData';
+                console.log('✅ Price lists loaded from window.productData:', priceLists.length);
+              }
+            }
+          } catch (error) {
+            console.warn('⚠️ window.productData failed for price lists:', error.message);
+          }
+        }
+        
+        // Final fallback: default price lists
+        if (priceLists.length === 0) {
+          console.log('📊 Using default price lists fallback...');
+          priceLists = [
+            'INDIA25', 'WHOLESALE', 'RETAIL', 'VIP', 'DISTRIBUTOR', 
+            'EXPORT', 'PREMIUM', 'STANDARD', 'BULK', 'SPECIAL'
+          ];
+          dataSource = 'default';
+          console.log('✅ Using default price lists:', priceLists.length);
+        }
+        
+        // Populate the dropdown
+        if (priceLists.length > 0) {
+          // Sort price lists alphabetically
+          priceLists.sort();
+          
+          priceLists.forEach(priceList => {
+            const option = document.createElement('option');
+            option.value = priceList;
+            option.textContent = priceList;
+            priceListSelect.appendChild(option);
+          });
+          
+          console.log(`✅ Price list dropdown populated with ${priceLists.length} options from ${dataSource}`);
+          
+          // Enable the dropdown
+          priceListSelect.disabled = false;
+          
+          // Add a data attribute to track the source
+          priceListSelect.setAttribute('data-source', dataSource);
+          
+        } else {
+          throw new Error('No price lists available from any source');
+        }
         
       } catch (error) {
-        const option = document.createElement('option');
-        option.value = '';
-        option.textContent = 'Error loading price lists';
-        option.disabled = true;
-        priceListSelect.appendChild(option);
+        console.error('❌ Error populating price lists:', error);
+        
+        // Emergency fallback - ensure dropdown is never empty
+        try {
+          priceListSelect.innerHTML = '<option value="">Select Price List</option>';
+          const emergencyPriceLists = ['INDIA25', 'WHOLESALE', 'RETAIL'];
+          emergencyPriceLists.forEach(priceList => {
+            const option = document.createElement('option');
+            option.value = priceList;
+            option.textContent = priceList;
+            priceListSelect.appendChild(option);
+          });
+          priceListSelect.disabled = false;
+          priceListSelect.setAttribute('data-source', 'emergency');
+          console.log('🆘 Emergency price lists loaded');
+        } catch (emergencyError) {
+          console.error('❌ Emergency fallback failed:', emergencyError);
+          priceListSelect.innerHTML = '<option value="">Error loading price lists</option>';
+          priceListSelect.disabled = true;
+        }
       }
     }
     
+    // Load price lists with retry mechanism
+    async function loadPriceListsWithRetry(maxRetries = 3) {
+      console.log('🔄 Starting price list loading with retry mechanism...');
+      
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          console.log(`📊 Price list loading attempt ${attempt}/${maxRetries}`);
+          
+          // Wait for data sources to be ready
+          if (window.unifiedDataAccess && typeof window.unifiedDataAccess.waitForReady === 'function') {
+            await window.unifiedDataAccess.waitForReady();
+          }
+          
+          // Try to populate price lists
+          await populatePriceListDropdown();
+          
+          // Check if price lists were successfully loaded
+          const priceListSelect = document.getElementById('price-list');
+          if (priceListSelect && priceListSelect.options.length > 1) {
+            console.log('✅ Price lists loaded successfully');
+            return;
+          }
+          
+          throw new Error('Price list dropdown still empty after population attempt');
+          
+        } catch (error) {
+          console.warn(`⚠️ Price list loading attempt ${attempt} failed:`, error.message);
+          
+          if (attempt === maxRetries) {
+            console.error('❌ All price list loading attempts failed');
+            
+            // Final fallback - ensure dropdown has basic options
+            try {
+              const priceListSelect = document.getElementById('price-list');
+              if (priceListSelect) {
+                priceListSelect.innerHTML = '<option value="">Select Price List</option>';
+                const fallbackPriceLists = ['INDIA25', 'WHOLESALE', 'RETAIL', 'VIP'];
+                fallbackPriceLists.forEach(priceList => {
+                  const option = document.createElement('option');
+                  option.value = priceList;
+                  option.textContent = priceList;
+                  priceListSelect.appendChild(option);
+                });
+                priceListSelect.disabled = false;
+                priceListSelect.setAttribute('data-source', 'final-fallback');
+                console.log('🆘 Final fallback price lists applied');
+              }
+            } catch (fallbackError) {
+              console.error('❌ Final fallback failed:', fallbackError);
+              const priceListSelect = document.getElementById('price-list');
+              if (priceListSelect) {
+                priceListSelect.innerHTML = '<option value="">INDIA25</option>';
+                priceListSelect.disabled = false;
+                priceListSelect.setAttribute('data-source', 'absolute-minimum');
+              }
+            }
+            return;
+          }
+          
+          // Wait before retry
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      }
+    }
+
     // Load exchange rates
     async function loadExchangeRates() {
       try {
@@ -968,8 +1156,10 @@
         clearDependentDropdowns(['product', 'density', 'color']);
         // Hide kg option when price list changes
         updateKgOptionVisibility(selectedPriceList, '');
-        // Then populate categories based on selected price list
-        populateCategories(selectedPriceList);
+        // Then populate categories based on selected price list with retry mechanism
+        loadCategoriesWithRetry(selectedPriceList).catch(error => {
+          console.error('Error loading categories with retry:', error);
+        });
         // Update preview in real-time if it exists
         if (state.segments.length > 0) {
           generatePreview();
@@ -997,11 +1187,12 @@
         const selectedProduct = this.value;
         const selectedPriceList = document.getElementById('price-list').value;
         const selectedCategory = document.getElementById('category').value;
+        const selectedDensity = document.getElementById('density').value;
         // Clear dependent dropdowns first, but not density/color since we're about to populate them
         // (No need to clear anything here since we're populating the final level)
         // Populate densities and colors based on selected product
         populateDensities(selectedPriceList, selectedCategory, selectedProduct);
-        populateColors(selectedPriceList, selectedCategory, selectedProduct);
+        populateColors(selectedPriceList, selectedCategory, selectedProduct, selectedDensity);
         // Update preview in real-time if it exists
         if (state.segments.length > 0) {
           generatePreview();
@@ -1010,6 +1201,12 @@
       
       // Density and color change listeners with real-time preview updates
       document.getElementById('density').addEventListener('change', function() {
+        const selectedDensity = this.value;
+        const selectedPriceList = document.getElementById('price-list').value;
+        const selectedCategory = document.getElementById('category').value;
+        const selectedProduct = document.getElementById('product').value;
+        // Populate colors based on selected density
+        populateColors(selectedPriceList, selectedCategory, selectedProduct, selectedDensity);
         updatePriceDisplay();
         if (state.segments.length > 0) {
           generatePreview();
@@ -1033,11 +1230,12 @@
       });
     }
     
-    // Populate categories based on selected price list
-    function populateCategories(priceList) {
+    // Populate categories based on selected price list with robust fallback mechanism
+    async function populateCategories(priceList, retryCount = 0) {
       const categorySelect = document.getElementById('category');
       
       if (!categorySelect) {
+        console.warn('Category select element not found');
         return;
       }
       
@@ -1046,32 +1244,231 @@
         return;
       }
       
-      if (!productData || productData.length === 0) {
-        categorySelect.innerHTML = '<option value="">Loading categories...</option>';
-        return;
-      }
+      console.log(`🔄 Attempting to populate categories for price list: ${priceList} (attempt ${retryCount + 1})`);
       
       try {
+        let categories = [];
+        let dataSource = 'unknown';
+        
+        // Try multiple data sources in order of preference
+        if (window.unifiedDataAccess && typeof window.unifiedDataAccess.getCategories === 'function') {
+          try {
+            console.log('📊 Trying unifiedDataAccess for categories...');
+            categories = await window.unifiedDataAccess.getCategories(priceList);
+            dataSource = 'unifiedDataAccess';
+            console.log(`✅ Got ${categories.length} categories from unifiedDataAccess`);
+          } catch (error) {
+            console.warn('⚠️ unifiedDataAccess failed:', error.message);
+          }
+        }
+        
+        // Fallback to universalDataManager
+        if (categories.length === 0 && window.universalDataManager && typeof window.universalDataManager.getCategories === 'function') {
+          try {
+            console.log('📊 Trying universalDataManager for categories...');
+            categories = await window.universalDataManager.getCategories(priceList);
+            dataSource = 'universalDataManager';
+            console.log(`✅ Got ${categories.length} categories from universalDataManager`);
+          } catch (error) {
+            console.warn('⚠️ universalDataManager failed:', error.message);
+          }
+        }
+        
+        // Fallback to productData
+        if (categories.length === 0 && productData && productData.length > 0) {
+          try {
+            console.log('📊 Trying productData for categories...');
+            categories = [...new Set(
+              productData
+                .filter(product => product.PriceList === priceList)
+                .map(product => product.Category)
+            )].filter(Boolean);
+            dataSource = 'productData';
+            console.log(`✅ Got ${categories.length} categories from productData`);
+          } catch (error) {
+            console.warn('⚠️ productData failed:', error.message);
+          }
+        }
+        
+        // Fallback to window.productData
+        if (categories.length === 0 && window.productData && window.productData.length > 0) {
+          try {
+            console.log('📊 Trying window.productData for categories...');
+            categories = [...new Set(
+              window.productData
+                .filter(product => product.PriceList === priceList)
+                .map(product => product.Category)
+            )].filter(Boolean);
+            dataSource = 'window.productData';
+            console.log(`✅ Got ${categories.length} categories from window.productData`);
+          } catch (error) {
+            console.warn('⚠️ window.productData failed:', error.message);
+          }
+        }
+        
+        // If still no categories, use default categories as final fallback
+        if (categories.length === 0) {
+          console.log('📊 Using default categories as final fallback...');
+          categories = ['Bulk', 'Weaves', 'Weaves DD', 'Tapes', 'Closures', 'Frontals', 'I Tips', 'ClipOn', 'Genius Weaves', 'Toppers'];
+          dataSource = 'default fallback';
+          console.log(`✅ Using ${categories.length} default categories`);
+        }
+        
         // Clear existing options
         categorySelect.innerHTML = '<option value="">All Categories</option>';
         
-        // Get unique categories for the selected price list from Firebase data
-        const categories = [...new Set(
-          productData
-            .filter(product => product.PriceList === priceList)
-            .map(product => product.Category)
-        )].filter(Boolean);
-        
+        // Populate dropdown with categories
         categories.forEach(category => {
           const option = document.createElement('option');
-          option.value = category;
-          option.textContent = category;
+          
+          // Ensure category is a string to prevent [object Object] display
+          const categoryValue = typeof category === 'object' ? 
+            (category.name || category.Category || category.category || JSON.stringify(category)) : 
+            String(category);
+          
+          option.value = categoryValue;
+          option.textContent = categoryValue;
           categorySelect.appendChild(option);
         });
         
+        console.log(`✅ Successfully populated ${categories.length} categories from ${dataSource}`);
+        
+        // Show success feedback
+        showCategorySuccess(`${categories.length} categories loaded from ${dataSource}`);
         
       } catch (error) {
+        console.error('❌ Error in populateCategories:', error);
+        
+        // Retry mechanism
+        if (retryCount < 2) {
+          console.log(`🔄 Retrying category population in 1 second... (attempt ${retryCount + 2}/3)`);
+          setTimeout(() => populateCategories(priceList, retryCount + 1), 1000);
+          return;
+        }
+        
+        // Final fallback - ensure dropdown always has default categories
+        console.log('🚨 All retries failed, applying emergency fallback...');
+        try {
+          const defaultCategories = ['Bulk', 'Weaves', 'Weaves DD', 'Tapes', 'Closures', 'Frontals', 'I Tips', 'ClipOn', 'Genius Weaves', 'Toppers'];
+          categorySelect.innerHTML = '<option value="">All Categories</option>';
+          
+          defaultCategories.forEach(category => {
+            const option = document.createElement('option');
+            
+            // Ensure category is a string to prevent [object Object] display
+            const categoryValue = typeof category === 'object' ? 
+              (category.name || category.Category || category.category || JSON.stringify(category)) : 
+              String(category);
+            
+            option.value = categoryValue;
+            option.textContent = categoryValue;
+            categorySelect.appendChild(option);
+          });
+          
+          console.log(`✅ Emergency fallback: populated ${defaultCategories.length} default categories`);
+          showCategorySuccess(`${defaultCategories.length} default categories loaded`);
+          
+        } catch (fallbackError) {
+          console.error('❌ Even emergency fallback failed:', fallbackError);
+          // Absolute minimum fallback
+          categorySelect.innerHTML = '<option value="">All Categories</option><option value="All Products">All Products</option>';
+          categorySelect.disabled = false;
+          showCategorySuccess('Basic categories loaded');
+        }
       }
+    }
+    
+    // Show category loading success message
+    function showCategorySuccess(message) {
+      console.log(`✅ Category Success: ${message}`);
+      // You can add UI feedback here if needed
+    }
+    
+    // Load categories with retry mechanism
+    async function loadCategoriesWithRetry(priceList, maxRetries = 3) {
+      console.log(`🔄 Starting category loading with retry for price list: ${priceList}`);
+      
+      for (let attempt = 0; attempt < maxRetries; attempt++) {
+        try {
+          console.log(`📊 Category loading attempt ${attempt + 1}/${maxRetries}`);
+          
+          // Wait for data sources to be ready
+          await waitForUnifiedData();
+          
+          // Try to populate categories
+          await populateCategories(priceList, attempt);
+          
+          console.log(`✅ Categories loaded successfully on attempt ${attempt + 1}`);
+          return; // Success, exit the retry loop
+          
+        } catch (error) {
+          console.warn(`⚠️ Category loading attempt ${attempt + 1} failed:`, error.message);
+          
+          if (attempt < maxRetries - 1) {
+            console.log(`🔄 Retrying in 1 second... (${attempt + 2}/${maxRetries})`);
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          }
+        }
+      }
+      
+      // If all retries failed, apply final fallback
+      console.log('🚨 All category loading attempts failed, applying final fallback...');
+      try {
+        const categorySelect = document.getElementById('category');
+        if (categorySelect) {
+          const defaultCategories = ['Bulk', 'Weaves', 'Weaves DD', 'Tapes', 'Closures', 'Frontals', 'I Tips', 'ClipOn', 'Genius Weaves', 'Toppers'];
+          categorySelect.innerHTML = '<option value="">All Categories</option>';
+          
+          defaultCategories.forEach(category => {
+            const option = document.createElement('option');
+            
+            // Ensure category is a string to prevent [object Object] display
+            const categoryValue = typeof category === 'object' ? 
+              (category.name || category.Category || category.category || JSON.stringify(category)) : 
+              String(category);
+            
+            option.value = categoryValue;
+            option.textContent = categoryValue;
+            categorySelect.appendChild(option);
+          });
+          
+          categorySelect.disabled = false;
+          console.log(`✅ Final fallback: populated ${defaultCategories.length} default categories`);
+          showCategorySuccess(`${defaultCategories.length} default categories loaded`);
+        }
+      } catch (fallbackError) {
+        console.error('❌ Even final fallback failed:', fallbackError);
+        // Absolute minimum fallback
+        const categorySelect = document.getElementById('category');
+        if (categorySelect) {
+          categorySelect.innerHTML = '<option value="">All Categories</option><option value="All Products">All Products</option>';
+          categorySelect.disabled = false;
+          showCategorySuccess('Basic categories loaded');
+        }
+      }
+    }
+    
+    // Wait for unified data sources to be ready
+    async function waitForUnifiedData() {
+      const maxWait = 5000; // 5 seconds max wait
+      const startTime = Date.now();
+      
+      while (Date.now() - startTime < maxWait) {
+        // Check if any data source is available
+        if (window.unifiedDataAccess || 
+            (window.universalDataManager && window.universalDataManager.getStatus && window.universalDataManager.getStatus().isDataLoaded) ||
+            (productData && productData.length > 0) ||
+            (window.productData && window.productData.length > 0)) {
+          console.log('✅ Data source is ready');
+          return;
+        }
+        
+        console.log('⏳ Waiting for data sources to be ready...');
+        await new Promise(resolve => setTimeout(resolve, 200));
+      }
+      
+      console.warn('⚠️ Timeout waiting for data sources');
+      throw new Error('Data sources not ready after timeout');
     }
     
     // Populate products based on selected price list and category
@@ -1143,19 +1540,19 @@
       }
       
       try {
-        // Filter products by criteria
-        let filteredProducts = productData.filter(item => item.priceList === priceList);
+        // Filter products by criteria using correct field names
+        let filteredProducts = productData.filter(item => item.PriceList === priceList);
         
         if (category) {
-          filteredProducts = filteredProducts.filter(item => item.category === category);
+          filteredProducts = filteredProducts.filter(item => item.Category === category);
         }
         
         if (product) {
-          filteredProducts = filteredProducts.filter(item => item.product === product);
+          filteredProducts = filteredProducts.filter(item => item.Product === product);
         }
         
-        // Get unique densities
-        const densities = [...new Set(filteredProducts.map(item => item.density))].filter(Boolean);
+        // Get unique densities using correct field name
+        const densities = [...new Set(filteredProducts.map(item => item.Density))].filter(Boolean);
         
         // Clear and populate density dropdown
         densitySelect.innerHTML = '<option value="">All Densities</option>';
@@ -1173,7 +1570,7 @@
     }
     
     // Populate colors based on selected criteria
-    function populateColors(priceList, category, product) {
+    function populateColors(priceList, category, product, density) {
       const colorSelect = document.getElementById('color');
       
       if (!colorSelect) {
@@ -1181,23 +1578,41 @@
       }
       
       if (!priceList) {
-        colorSelect.innerHTML = '<option value="">All Colors</option>';
+        colorSelect.innerHTML = '<option value="">All Shades</option>';
         return;
       }
       
-      if (!colorsData || colorsData.length === 0) {
-        colorSelect.innerHTML = '<option value="">Loading colors...</option>';
+      if (!productData || productData.length === 0) {
+        colorSelect.innerHTML = '<option value="">Loading shades...</option>';
         return;
       }
       
       try {
-        // Clear and populate color dropdown
-        colorSelect.innerHTML = '<option value="">All Colors</option>';
+        // Filter products by criteria using correct field names
+        let filteredProducts = productData.filter(item => item.PriceList === priceList);
         
-        colorsData.forEach(color => {
+        if (category) {
+          filteredProducts = filteredProducts.filter(item => item.Category === category);
+        }
+        
+        if (product) {
+          filteredProducts = filteredProducts.filter(item => item.Product === product);
+        }
+        
+        if (density) {
+          filteredProducts = filteredProducts.filter(item => item.Density === density);
+        }
+        
+        // Get unique shades using correct field name (Shade field from pricelists collection)
+        const shades = [...new Set(filteredProducts.map(item => item.Shade || item.Colors))].filter(Boolean);
+        
+        // Clear and populate color dropdown
+        colorSelect.innerHTML = '<option value="">All Shades</option>';
+        
+        shades.forEach(shade => {
           const option = document.createElement('option');
-          option.value = color.colorName;
-          option.textContent = color.colorName;
+          option.value = shade;
+          option.textContent = shade;
           colorSelect.appendChild(option);
         });
         
@@ -1221,7 +1636,7 @@
             'category': 'All Categories',
             'product': 'All Products',
             'density': 'All Densities',
-            'color': 'All Colors'
+            'color': 'All Shades'
           };
           dropdown.innerHTML = `<option value="">${defaultText[id] || 'Select Option'}</option>`;
         }

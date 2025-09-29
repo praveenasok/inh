@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Dropdown Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { color: green; font-weight: bold; }
+        .error { color: red; font-weight: bold; }
+        .info { color: blue; }
+        .dropdown-test { margin: 10px 0; padding: 10px; background: #f9f9f9; border-radius: 3px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+    <h1>Complete Dropdown Population Test</h1>
+    
+    <div class="test-section">
+        <h3>API Endpoints Test</h3>
+        <div id="api-test">Testing API endpoints...</div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Data Manager Test</h3>
+        <div id="manager-test">Testing data manager...</div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Dropdown Population Test</h3>
+        <div id="dropdown-results">Testing dropdowns...</div>
+        <table id="dropdown-table" style="display: none;">
+            <thead>
+                <tr>
+                    <th>Dropdown</th>
+                    <th>Status</th>
+                    <th>Options Count</th>
+                    <th>Sample Options</th>
+                </tr>
+            </thead>
+            <tbody id="dropdown-tbody">
+            </tbody>
+        </table>
+    </div>
+
+    <script src="js/universal-firebase-data-manager.js"></script>
+    <script>
+        async function testAPIs() {
+            const apiDiv = document.getElementById('api-test');
+            
+            try {
+                apiDiv.innerHTML = '<span class="info">⏳ Testing API endpoints...</span>';
+                
+                const endpoints = ['products', 'salespeople'];
+                const results = [];
+                
+                for (const endpoint of endpoints) {
+                    try {
+                        const response = await fetch(`/api/get-data?collection=${endpoint}`);
+                        if (response.ok) {
+                            const data = await response.json();
+                            results.push(`${endpoint}: ${data.length} items`);
+                        } else {
+                            results.push(`${endpoint}: Error ${response.status}`);
+                        }
+                    } catch (error) {
+                        results.push(`${endpoint}: ${error.message}`);
+                    }
+                }
+                
+                apiDiv.innerHTML = `<span class="success">✅ API Test Results:</span><br>${results.join('<br>')}`;
+                
+            } catch (error) {
+                apiDiv.innerHTML = `<span class="error">❌ API test error: ${error.message}</span>`;
+            }
+        }
+        
+        async function testDataManager() {
+            const managerDiv = document.getElementById('manager-test');
+            
+            try {
+                managerDiv.innerHTML = '<span class="info">⏳ Testing data manager...</span>';
+                
+                if (!window.universalDataManager) {
+                    managerDiv.innerHTML = '<span class="error">❌ Universal Data Manager not found</span>';
+                    return;
+                }
+                
+                // Wait for manager to be ready
+                await window.universalDataManager.waitForReady();
+                
+                // Test data retrieval
+                const products = await window.universalDataManager.getProducts();
+                const priceLists = await window.universalDataManager.getPriceLists();
+                const categories = await window.universalDataManager.getCategories();
+                const salespeople = await window.universalDataManager.getSalespeople();
+                
+                const results = [
+                    `Products: ${products?.length || 0}`,
+                    `Price Lists: ${priceLists?.length || 0}`,
+                    `Categories: ${categories?.length || 0}`,
+                    `Salespeople: ${salespeople?.length || 0}`
+                ];
+                
+                managerDiv.innerHTML = `<span class="success">✅ Data Manager Ready:</span><br>${results.join('<br>')}`;
+                
+                // Test dropdowns
+                await testDropdowns();
+                
+            } catch (error) {
+                managerDiv.innerHTML = `<span class="error">❌ Data manager error: ${error.message}</span>`;
+                console.error('Data manager test error:', error);
+            }
+        }
+        
+        async function testDropdowns() {
+            const resultsDiv = document.getElementById('dropdown-results');
+            const table = document.getElementById('dropdown-table');
+            const tbody = document.getElementById('dropdown-tbody');
+            
+            try {
+                resultsDiv.innerHTML = '<span class="info">⏳ Testing dropdown population...</span>';
+                
+                // Create test dropdowns
+                const dropdownTests = [
+                    { id: 'test-price-list', type: 'priceLists', label: 'Price Lists' },
+                    { id: 'test-categories', type: 'categories', label: 'Categories' },
+                    { id: 'test-salespeople', type: 'salespeople', label: 'Salespeople' },
+                    { id: 'test-products', type: 'products', label: 'Products' }
+                ];
+                
+                tbody.innerHTML = '';
+                
+                for (const test of dropdownTests) {
+                    const row = document.createElement('tr');
+                    
+                    try {
+                        // Get data
+                        let data;
+                        switch (test.type) {
+                            case 'priceLists':
+                                data = await window.universalDataManager.getPriceLists();
+                                break;
+                            case 'categories':
+                                data = await window.universalDataManager.getCategories();
+                                break;
+                            case 'salespeople':
+                                data = await window.universalDataManager.getSalespeople();
+                                break;
+                            case 'products':
+                                data = await window.universalDataManager.getProducts();
+                                break;
+                        }
+                        
+                        const count = data?.length || 0;
+                        const status = count > 0 ? '✅ Working' : '❌ Empty';
+                        const statusClass = count > 0 ? 'success' : 'error';
+                        
+                        // Get sample data
+                        let samples = '';
+                        if (data && data.length > 0) {
+                            const sampleItems = data.slice(0, 3).map(item => {
+                                if (typeof item === 'string') return item;
+                                return item.name || item.Name || item.id || JSON.stringify(item).substring(0, 30);
+                            });
+                            samples = sampleItems.join(', ');
+                            if (data.length > 3) samples += '...';
+                        }
+                        
+                        row.innerHTML = `
+                            <td>${test.label}</td>
+                            <td class="${statusClass}">${status}</td>
+                            <td>${count}</td>
+                            <td>${samples}</td>
+                        `;
+                        
+                    } catch (error) {
+                        row.innerHTML = `
+                            <td>${test.label}</td>
+                            <td class="error">❌ Error</td>
+                            <td>-</td>
+                            <td>${error.message}</td>
+                        `;
+                    }
+                    
+                    tbody.appendChild(row);
+                }
+                
+                table.style.display = 'table';
+                resultsDiv.innerHTML = '<span class="success">✅ Dropdown test completed!</span>';
+                
+            } catch (error) {
+                resultsDiv.innerHTML = `<span class="error">❌ Dropdown test error: ${error.message}</span>`;
+                console.error('Dropdown test error:', error);
+            }
+        }
+        
+        // Start tests
+        window.addEventListener('load', async () => {
+            await testAPIs();
+            setTimeout(testDataManager, 1000);
+        });
+    </script>
+</body>
+</html>

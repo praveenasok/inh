@@ -7,15 +7,15 @@
 class LocalStorageDropdownManager {
     constructor() {
         this.dataKeys = {
-            products: ['products', 'fallback_products', 'firebaseProductData'],
-            clients: ['clientData', 'cloudClients', 'fallback_clients'],
-            salespeople: ['salespeople', 'cloudSalesmen', 'fallback_salespeople'],
-            colors: ['colors', 'fallback_colors'],
-            styles: ['styles', 'fallback_styles'],
-            categories: ['categories', 'fallback_categories'],
-            priceLists: ['priceLists', 'fallback_price_lists'],
-            quotes: ['savedQuotes', 'cloudQuotes', 'fallback_quotes'],
-            companies: ['companies', 'fallback_companies']
+            products: ['fallback_data_products', 'products', 'fallback_products', 'firebaseProductData'],
+            clients: ['fallback_data_clients', 'clientData', 'cloudClients', 'fallback_clients'],
+            salespeople: ['fallback_data_salespeople', 'salespeople', 'cloudSalesmen', 'fallback_salespeople'],
+            colors: ['fallback_data_colors', 'colors', 'fallback_colors'],
+            styles: ['fallback_data_styles', 'styles', 'fallback_styles'],
+            categories: ['fallback_data_categories', 'categories', 'fallback_categories'],
+            priceLists: ['fallback_data_priceLists', 'priceLists', 'fallback_price_lists'],
+            quotes: ['fallback_data_quotes', 'savedQuotes', 'cloudQuotes', 'fallback_quotes'],
+            companies: ['fallback_data_companies', 'companies', 'fallback_companies']
         };
         
         this.cache = new Map();
@@ -86,10 +86,23 @@ class LocalStorageDropdownManager {
     /**
      * Get data from cache or load from localStorage
      */
-    getData(dataType) {
+    async getData(dataType) {
         if (!this.cache.has(dataType)) {
             const keys = this.dataKeys[dataType] || [dataType];
-            this.loadDataToCache(dataType, keys);
+            await this.loadDataToCache(dataType, keys);
+        }
+        
+        // First try to get data from LocalFallbackManager if available
+        if (window.localFallbackManager) {
+            try {
+                const fallbackData = await window.localFallbackManager.getData(dataType);
+                if (fallbackData && fallbackData.length > 0) {
+                    this.cache.set(dataType, fallbackData);
+                    return fallbackData;
+                }
+            } catch (error) {
+                console.warn(`Error getting data from LocalFallbackManager for ${dataType}:`, error);
+            }
         }
         
         return this.cache.get(dataType) || [];
@@ -127,11 +140,11 @@ class LocalStorageDropdownManager {
     /**
      * Populate price list dropdown
      */
-    populatePriceListDropdown(selectElement, options = {}) {
+    async populatePriceListDropdown(selectElement, options = {}) {
         try {
             const element = this.getElement(selectElement);
             
-            const products = this.getData('products');
+            const products = await this.getData('products');
             
             const priceLists = new Set();
             
@@ -162,10 +175,10 @@ class LocalStorageDropdownManager {
     /**
      * Populate client dropdown
      */
-    populateClientDropdown(selectElement, options = {}) {
+    async populateClientDropdown(selectElement, options = {}) {
         try {
             const element = this.getElement(selectElement);
-            const clients = this.getData('clients');
+            const clients = await this.getData('clients');
             const defaultOption = options.defaultOption || 'Select Client';
             const includeAddNew = options.includeAddNew !== false;
             
@@ -193,10 +206,10 @@ class LocalStorageDropdownManager {
     /**
      * Populate salesperson dropdown
      */
-    populateSalespersonDropdown(selectElement, options = {}) {
+    async populateSalespersonDropdown(selectElement, options = {}) {
         try {
             const element = this.getElement(selectElement);
-            const salespeople = this.getData('salespeople');
+            const salespeople = await this.getData('salespeople');
             const defaultOption = options.defaultOption || 'Select Salesperson';
             
             element.innerHTML = `<option value="">${defaultOption}</option>`;
@@ -218,10 +231,10 @@ class LocalStorageDropdownManager {
     /**
      * Populate category dropdown
      */
-    populateCategoryDropdown(selectElement, priceList = null, options = {}) {
+    async populateCategoryDropdown(selectElement, priceList = null, options = {}) {
         try {
             const element = this.getElement(selectElement);
-            const products = this.getData('products');
+            const products = await this.getData('products');
             const categories = new Set();
             
             products.forEach(product => {
@@ -253,10 +266,10 @@ class LocalStorageDropdownManager {
     /**
      * Populate product dropdown
      */
-    populateProductDropdown(selectElement, priceList = null, category = null, options = {}) {
+    async populateProductDropdown(selectElement, priceList = null, category = null, options = {}) {
         try {
             const element = this.getElement(selectElement);
-            const products = this.getData('products');
+            const products = await this.getData('products');
             const filteredProducts = products.filter(product => {
                 const productPriceList = product.PriceListName || product.PriceList || product['Price List Name'];
                 const productCategory = product.Category || product.category;
@@ -285,10 +298,10 @@ class LocalStorageDropdownManager {
     /**
      * Populate color dropdown
      */
-    populateColorDropdown(selectElement, options = {}) {
+    async populateColorDropdown(selectElement, options = {}) {
         try {
             const element = this.getElement(selectElement);
-            const colors = this.getData('colors');
+            const colors = await this.getData('colors');
             const defaultOption = options.defaultOption || 'Select Color';
             const includeCustom = options.includeCustom !== false;
             
@@ -318,10 +331,10 @@ class LocalStorageDropdownManager {
     /**
      * Populate style dropdown
      */
-    populateStyleDropdown(selectElement, options = {}) {
+    async populateStyleDropdown(selectElement, options = {}) {
         try {
             const element = this.getElement(selectElement);
-            const styles = this.getData('styles');
+            const styles = await this.getData('styles');
             const defaultOption = options.defaultOption || 'Select Style';
             const includeCustom = options.includeCustom !== false;
             
@@ -351,10 +364,10 @@ class LocalStorageDropdownManager {
     /**
      * Populate density dropdown from product data
      */
-    populateDensityDropdown(selectElement, priceList, category, product, options = {}) {
+    async populateDensityDropdown(selectElement, priceList, category, product, options = {}) {
         try {
             const element = this.getElement(selectElement);
-            const products = this.getData('products');
+            const products = await this.getData('products');
             const densities = new Set();
             
             products.forEach(prod => {
@@ -390,10 +403,10 @@ class LocalStorageDropdownManager {
     /**
      * Populate length dropdown from product data
      */
-    populateLengthDropdown(selectElement, priceList, category, product, options = {}) {
+    async populateLengthDropdown(selectElement, priceList, category, product, options = {}) {
         try {
             const element = this.getElement(selectElement);
-            const products = this.getData('products');
+            const products = await this.getData('products');
             const lengths = new Set();
             
             products.forEach(prod => {
@@ -434,9 +447,9 @@ class LocalStorageDropdownManager {
     /**
      * Get color types for a specific product
      */
-    getColorTypesByProduct(priceList, category, product) {
+    async getColorTypesByProduct(priceList, category, product) {
         try {
-            const products = this.getData('products');
+            const products = await this.getData('products');
             const colorTypes = new Set();
             
             products.forEach(prod => {
@@ -468,9 +481,9 @@ class LocalStorageDropdownManager {
     /**
      * Get product data for pricing calculations
      */
-    getProductData(priceList, category, product, density = null, length = null) {
+    async getProductData(priceList, category, product, density = null, length = null) {
         try {
-            const products = this.getData('products');
+            const products = await this.getData('products');
             
             return products.find(prod => {
                 const productPriceList = prod.PriceListName || prod.PriceList || prod['Price List Name'];
@@ -493,18 +506,18 @@ class LocalStorageDropdownManager {
     /**
      * Check if data is available
      */
-    isDataAvailable(dataType) {
-        const data = this.getData(dataType);
+    async isDataAvailable(dataType) {
+        const data = await this.getData(dataType);
         return data && data.length > 0;
     }
 
     /**
      * Get data statistics
      */
-    getDataStats() {
+    async getDataStats() {
         const stats = {};
         for (const dataType of Object.keys(this.dataKeys)) {
-            const data = this.getData(dataType);
+            const data = await this.getData(dataType);
             stats[dataType] = data ? data.length : 0;
         }
         return stats;
@@ -513,10 +526,10 @@ class LocalStorageDropdownManager {
     /**
      * Get products filtered by price list and category
      */
-    getProductsByPriceListAndCategory(priceList, category = null) {
+    async getProductsByPriceListAndCategory(priceList, category = null) {
         try {
             
-            const products = this.getData('products');
+            const products = await this.getData('products');
             if (!products || products.length === 0) {
                 return [];
             }

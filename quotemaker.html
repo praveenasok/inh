@@ -951,12 +951,12 @@
                         </div>
                         <div>
                             <select id="color-type-selector" class="form-select" disabled>
-                                <option value="">Color Type</option>
+                                <option value="">Shades</option>
                             </select>
                         </div>
                         <div>
                             <select id="color-selector" class="form-select mb-2" disabled>
-                                <option value="">Select Color</option>
+                                <option value="">Select Shade</option>
                             </select>
                             <div class="custom-color-container" style="display: none;">
                                 <div class="flex gap-2 items-start">
@@ -1584,6 +1584,8 @@
                     if (status.isInitialized && status.isDataLoaded) {
                         productData = await window.universalDataManager.getProducts();
                         console.log('Products loaded:', productData ? productData.length : 0);
+                        // Populate color types after product data is loaded
+                        populateColorTypes();
                         return productData;
                     } else {
                         console.log('Data manager not ready:', status);
@@ -1653,6 +1655,7 @@
                     const status = window.universalDataManager.getStatus();
                     if (status.isInitialized && status.isDataLoaded) {
                         stylesData = await window.universalDataManager.getStyles();
+                        populateStylesFromCollection();
                         return stylesData;
                     } else {
                         throw new Error('Firebase universal data manager not ready');
@@ -1675,6 +1678,7 @@
                     const status = window.universalDataManager.getStatus();
                     if (status.isInitialized && status.isDataLoaded) {
                         colorsData = await window.universalDataManager.getColors();
+                        populateColors();
                         return colorsData;
                     } else {
                         throw new Error('Firebase universal data manager not ready');
@@ -1708,7 +1712,7 @@
             priceListSelector.innerHTML = '<option value="">Select Price List</option>';
             
             // Get unique price lists from Firebase product data
-            const priceLists = [...new Set(productData.map(product => product.PriceList))].filter(Boolean);
+            const priceLists = [...new Set(productData.map(product => product.PriceList || product['Price List Name']))].filter(Boolean);
             console.log('Price lists extracted:', priceLists);
             
             priceLists.forEach(priceList => {
@@ -1791,6 +1795,16 @@
             
             // Other selectors
             document.getElementById('density-selector').addEventListener('change', () => {
+                const priceList = document.getElementById('price-list-selector').value;
+                const category = document.getElementById('category-selector').value;
+                const product = document.getElementById('product-selector').value;
+                const density = document.getElementById('density-selector').value;
+                
+                // Populate color types based on selected density
+                if (priceList && category && product && density) {
+                    populateColorTypes(priceList, category, product, density);
+                }
+                
                 isManualPriceEntry = false; // Reset manual entry flag
                 updatePricing();
             });
@@ -2173,10 +2187,16 @@
             selector.innerHTML = '<option value="">Select Category</option>';
             
             // Get unique categories for the selected price list
+            // Handle different field name variations
+            const filteredProducts = productData.filter(product => {
+                const priceListField = product.PriceList || product['Price List Name'] || product.PriceListName;
+                return priceListField === priceList;
+            });
+            
             const categories = [...new Set(
-                productData
-                    .filter(product => product.PriceList === priceList)
-                    .map(product => product.Category)
+                filteredProducts.map(product => {
+                    return product.Category || product.category;
+                })
             )].filter(Boolean);
             
             categories.forEach(category => {
@@ -2222,10 +2242,15 @@
             }
             
             // Get unique products for the selected price list and category
+            // Handle different field name variations
             const products = [...new Set(
                 productData
-                    .filter(product => product.PriceList === priceList && product.Category === category)
-                    .map(product => product.Product)
+                    .filter(product => {
+                        const priceListField = product.PriceList || product['Price List Name'] || product.PriceListName;
+                        const categoryField = product.Category || product.category;
+                        return priceListField === priceList && categoryField === category;
+                    })
+                    .map(product => product.Product || product.ProductName || product.name)
             )].filter(Boolean);
             
             selector.innerHTML = '<option value="">Select Product</option>';
@@ -2250,11 +2275,12 @@
             const priceList = document.getElementById('price-list-selector').value;
             const category = document.getElementById('category-selector').value;
             const product = document.getElementById('product-selector').value;
+            const density = document.getElementById('density-selector').value;
             
             if (priceList && category && product) {
                 populateDensities(priceList, category, product);
                 populateLengths(priceList, category, product);
-                populateColorTypes(priceList, category, product);
+                populateColorTypes(priceList, category, product, density);
                 
                 enableSelector('density-selector');
                 enableSelector('length-selector');
@@ -2280,6 +2306,12 @@
 
         // Color type change handler
         function onColorTypeChange() {
+            const colorTypeSelector = document.getElementById('color-type-selector');
+            const selectedColorType = colorTypeSelector.value;
+            
+            // Filter and populate colors based on selected color type
+            populateColorsByType(selectedColorType);
+            
             updatePricing();
         }
 
@@ -2294,11 +2326,16 @@
                 return;
             }
             
-            // Get unique densities for the selected product
+            // Get unique densities for the selected product - handle field name variations
             const densities = [...new Set(
                 productData
-                    .filter(item => item.priceList === priceList && item.category === category && item.product === product)
-                    .map(item => item.density)
+                    .filter(item => {
+                        const itemPriceList = item.PriceList || item.priceList || item['Price List Name'] || item.PriceListName;
+                        const itemCategory = item.Category || item.category;
+                        const itemProduct = item.Product || item.ProductName || item.product || item.name;
+                        return itemPriceList === priceList && itemCategory === category && itemProduct === product;
+                    })
+                    .map(item => item.Density || item.density)
             )].filter(Boolean);
             
             selector.innerHTML = '<option value="">Select Density</option>';
@@ -2329,11 +2366,16 @@
                 return;
             }
             
-            // Get unique lengths for the selected product
+            // Get unique lengths for the selected product - handle field name variations
             const lengths = [...new Set(
                 productData
-                    .filter(item => item.priceList === priceList && item.category === category && item.product === product)
-                    .map(item => item.length)
+                    .filter(item => {
+                        const itemPriceList = item.PriceList || item.priceList || item['Price List Name'] || item.PriceListName;
+                        const itemCategory = item.Category || item.category;
+                        const itemProduct = item.Product || item.ProductName || item.product || item.name;
+                        return itemPriceList === priceList && itemCategory === category && itemProduct === product;
+                    })
+                    .map(item => item.Length || item.length)
             )].filter(Boolean);
             
             selector.innerHTML = '<option value="">Select Length</option>';
@@ -2353,8 +2395,8 @@
             }
         }
 
-        // Populate color types using Firebase data
-        function populateColorTypes(priceList, category, product) {
+        // Populate shades using product data (shade column from pricelists sheet)
+        function populateColorTypes(priceList, category, product, density) {
             const selector = document.getElementById('color-type-selector');
             if (!selector) {
                 return;
@@ -2364,31 +2406,65 @@
                 return;
             }
             
-            // Get unique color types for the selected product
-            const colors = [...new Set(
-                productData
-                    .filter(item => item.priceList === priceList && item.category === category && item.product === product)
-                    .map(item => item.colorType)
+            // Filter products by criteria and get unique shades
+            let filteredProducts = productData;
+            
+            if (priceList) {
+                filteredProducts = filteredProducts.filter(item => {
+                    const itemPriceList = item.PriceList || item.priceList || item['Price List Name'] || item.PriceListName;
+                    return itemPriceList === priceList;
+                });
+            }
+            
+            if (category) {
+                filteredProducts = filteredProducts.filter(item => {
+                    const itemCategory = item.Category || item.category;
+                    return itemCategory === category;
+                });
+            }
+            
+            if (product) {
+                filteredProducts = filteredProducts.filter(item => {
+                    const itemProduct = item.Product || item.ProductName || item.product || item.name;
+                    return itemProduct === product;
+                });
+            }
+            
+            if (density) {
+                filteredProducts = filteredProducts.filter(item => {
+                    const itemDensity = item.Density || item.density;
+                    return itemDensity === density;
+                });
+            }
+            
+            // Get unique shades from filtered product data
+            const shades = [...new Set(
+                filteredProducts.map(item => item.Shade || item.shade)
             )].filter(Boolean);
             
-            selector.innerHTML = '<option value="">Select Color Type</option>';
+            selector.innerHTML = '<option value="">Select Shades</option>';
             
-            colors.forEach(color => {
+            shades.forEach(shade => {
                 const option = document.createElement('option');
-                option.value = color;
-                option.textContent = color;
+                option.value = shade;
+                option.textContent = shade;
                 selector.appendChild(option);
             });
             
             // Auto-select if only one option is available
-            if (colors.length === 1) {
-                selector.value = colors[0];
+            if (shades.length === 1) {
+                selector.value = shades[0];
                 onColorTypeChange();
             }
         }
 
         // Populate colors from Firebase data
         function populateColors() {
+            populateColorsByType(''); // Show all colors initially
+        }
+
+        // Populate colors filtered by color type
+        function populateColorsByType(colorType) {
             const colorSelector = document.getElementById('color-selector');
             if (!colorSelector) {
                 return;
@@ -2399,10 +2475,15 @@
             }
             
             // Clear existing options
-            colorSelector.innerHTML = '<option value="">Select Color</option>';
+            colorSelector.innerHTML = '<option value="">Select Shade</option>';
+            
+            // Filter colors by type if specified
+            const filteredColors = colorType ? 
+                colorsData.filter(color => color.category === colorType) : 
+                colorsData;
             
             // Add colors from Firebase data
-            colorsData.forEach(color => {
+            filteredColors.forEach(color => {
                 const option = document.createElement('option');
                 option.value = color.name || color.colorName;
                 option.textContent = color.name || color.colorName;
@@ -2414,8 +2495,6 @@
             customOption.value = 'Custom';
             customOption.textContent = 'Custom Color';
             colorSelector.appendChild(customOption);
-            
-
         }
 
         // Populate styles from Firebase data

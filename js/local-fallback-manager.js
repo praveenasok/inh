@@ -59,11 +59,98 @@ class LocalFallbackManager {
             cacheMisses: 0
         };
         
+        // Smart cache invalidation settings
+        this.cacheInvalidationRules = {
+            products: { maxAge: 30 * 60 * 1000, priority: 'high' }, // 30 minutes
+            clients: { maxAge: 60 * 60 * 1000, priority: 'medium' }, // 1 hour
+            salespeople: { maxAge: 60 * 60 * 1000, priority: 'medium' }, // 1 hour
+            colors: { maxAge: 24 * 60 * 60 * 1000, priority: 'low' }, // 24 hours
+            styles: { maxAge: 24 * 60 * 60 * 1000, priority: 'low' }, // 24 hours
+            quotes: { maxAge: 5 * 60 * 1000, priority: 'high' }, // 5 minutes
+            orders: { maxAge: 5 * 60 * 1000, priority: 'high' }, // 5 minutes
+            categories: { maxAge: 24 * 60 * 60 * 1000, priority: 'low' }, // 24 hours
+            priceLists: { maxAge: 60 * 60 * 1000, priority: 'high' } // 1 hour
+        };
+        
         // Event system initialization
         this.eventListeners = new Map();
         
+        // Background sync settings
+        this.backgroundSync = {
+            enabled: true,
+            interval: 10 * 60 * 1000, // 10 minutes
+            maxConcurrentSyncs: 2,
+            currentSyncs: 0,
+            lastSyncTime: null,
+            syncQueue: []
+        };
+        
+        // Selective loading settings
+        this.selectiveLoading = {
+            enabled: true,
+            batchSize: 50,
+            priorityFields: {
+                products: ['id', 'name', 'price', 'PriceList', 'Price List Name'],
+                clients: ['id', 'name', 'email', 'company'],
+                salespeople: ['id', 'name', 'email'],
+                colors: ['id', 'name', 'value'],
+                styles: ['id', 'name'],
+                quotes: ['id', 'clientId', 'total', 'status'],
+                orders: ['id', 'quoteId', 'status'],
+                categories: ['id', 'name'],
+                priceLists: ['id', 'name', 'currency']
+            },
+            lazyFields: {
+                products: ['description', 'specifications', 'images', 'category'],
+                clients: ['address', 'notes', 'history', 'phone'],
+                salespeople: ['phone', 'department', 'notes'],
+                colors: ['hex', 'description'],
+                styles: ['description', 'category'],
+                quotes: ['items', 'notes', 'terms'],
+                orders: ['items', 'shipping', 'notes'],
+                categories: ['description', 'parent'],
+                priceLists: ['details', 'terms', 'items']
+            }
+        };
+        
         // Defer initialization to first use
         this.deferredInitialize();
+        
+        // Initialize selective loading cache
+        this.selectiveLoadingCache = new Map();
+        this.selectiveLoadingStats = {
+            priorityLoads: 0,
+            lazyLoads: 0,
+            batchLoads: 0,
+            cacheHits: 0,
+            cacheMisses: 0
+        };
+
+        // Cache versioning settings
+        this.cacheVersioning = {
+            enabled: true,
+            currentVersion: '2.0.0',
+            schemaVersions: {
+                products: '1.2.0',
+                clients: '1.1.0',
+                salespeople: '1.0.0',
+                colors: '1.0.0',
+                styles: '1.0.0',
+                quotes: '1.3.0',
+                orders: '1.1.0',
+                categories: '1.0.0',
+                priceLists: '1.2.0'
+            },
+            migrationRules: {
+                '1.0.0': {
+                    products: (data) => this.migrateProductsV1(data),
+                    clients: (data) => this.migrateClientsV1(data)
+                },
+                '1.1.0': {
+                    quotes: (data) => this.migrateQuotesV1_1(data)
+                }
+            }
+        };
     }
     
     // Check if localStorage is available and working
@@ -125,7 +212,13 @@ class LocalFallbackManager {
             // Validate storage integrity
             await this.validateStorageIntegrity();
             
+            // Check and clear incompatible cache versions
+            await this.clearIncompatibleCache();
+            
             this.isInitialized = true;
+            
+            // Start background sync
+            this.startBackgroundSync();
             
         } catch (error) {
             throw error;
@@ -179,22 +272,41 @@ class LocalFallbackManager {
             const cached = this.collectionCache.get(cacheKey);
             if (cached && (Date.now() - cached.timestamp) < this.cacheTimeout) {
                 this.stats.cacheHits++;
+                
+                // Apply selective loading if requested
+                if (options.priorityOnly && this.selectiveLoading.enabled) {
+                    this.selectiveLoadingStats.priorityLoads++;
+                    return this.filterPriorityFields(cached.data, collection);
+                }
+                
                 return cached.data;
             }
             
             this.stats.cacheMisses++;
             const result = await this._performGetData(collection, options);
             
+            // Apply selective loading if requested
+            let finalResult = result;
+            if (result && this.selectiveLoading.enabled) {
+                if (options.priorityOnly) {
+                    this.selectiveLoadingStats.priorityLoads++;
+                    finalResult = this.filterPriorityFields(result, collection);
+                } else if (options.batchLoad && Array.isArray(result)) {
+                    this.selectiveLoadingStats.batchLoads++;
+                    finalResult = await this.loadDataInBatches(collection, result);
+                }
+            }
+            
             // Cache the result
             this.collectionCache.set(cacheKey, {
-                data: result,
+                data: finalResult,
                 timestamp: Date.now()
             });
             
             // Clean up old cache entries
             this._cleanupCache();
             
-            return result;
+            return finalResult;
             
         } catch (error) {
             this.stats.errors++;
@@ -210,6 +322,14 @@ class LocalFallbackManager {
             try {
                 if (!this.collections[collection]) {
                     throw new Error(`Unknown collection: ${collection}`);
+                }
+                
+                // Check cache freshness first
+                if (!options.ignoreCache && !this.isCacheFresh(collection)) {
+                    console.log(`Cache for ${collection} is stale, invalidating...`);
+                    await this.invalidateCache(collection);
+                    this.stats.cacheMisses++;
+                    return null; // Return null to trigger fresh data fetch
                 }
                 
                 const storageKey = this.getStorageKey(collection);
@@ -285,6 +405,13 @@ class LocalFallbackManager {
         for (const [key, value] of this.collectionCache.entries()) {
             if (now - value.timestamp > this.cacheTimeout) {
                 this.collectionCache.delete(key);
+            }
+        }
+        
+        // Also cleanup selective loading cache
+        for (const [key, value] of this.selectiveLoadingCache.entries()) {
+            if (now - value.timestamp > this.cacheTimeout) {
+                this.selectiveLoadingCache.delete(key);
             }
         }
     }
@@ -546,7 +673,15 @@ class LocalFallbackManager {
                 this.metadata[collection] = {};
             }
             
-            this.metadata[collection] = { ...this.metadata[collection], ...updates };
+            // Add timestamp for cache invalidation
+            const timestamp = Date.now();
+            const metadataWithTimestamp = { 
+                ...updates, 
+                lastUpdated: timestamp,
+                cacheVersion: this.metadata[collection]?.cacheVersion || 1
+            };
+            
+            this.metadata[collection] = { ...this.metadata[collection], ...metadataWithTimestamp };
             
             const metadataKey = this.getStorageKey('metadata');
             localStorage.setItem(metadataKey, JSON.stringify(this.metadata));
@@ -554,15 +689,427 @@ class LocalFallbackManager {
         } catch (error) {
         }
     }
+
+    // ==================== SMART CACHE INVALIDATION ====================
     
-    async getMetadata(collection) {
+    /**
+     * Check if cached data is still fresh based on collection-specific rules
+     */
+    isCacheFresh(collection) {
+        try {
+            const metadata = this.metadata[collection];
+            if (!metadata || !metadata.lastUpdated) {
+                return false;
+            }
+            
+            const rule = this.cacheInvalidationRules[collection];
+            if (!rule) {
+                return true; // No rule means always fresh
+            }
+            
+            const age = Date.now() - metadata.lastUpdated;
+            return age < rule.maxAge;
+            
+        } catch (error) {
+            return false;
+        }
+    }
+    
+    /**
+     * Get collections that need cache refresh based on priority and age
+     */
+    getStaleCollections() {
+        const staleCollections = [];
+        
+        for (const [collection, rule] of Object.entries(this.cacheInvalidationRules)) {
+            if (!this.isCacheFresh(collection)) {
+                staleCollections.push({
+                    collection,
+                    priority: rule.priority,
+                    age: this.getCacheAge(collection)
+                });
+            }
+        }
+        
+        // Sort by priority (high first) then by age (oldest first)
+        return staleCollections.sort((a, b) => {
+            const priorityOrder = { high: 3, medium: 2, low: 1 };
+            const priorityDiff = priorityOrder[b.priority] - priorityOrder[a.priority];
+            return priorityDiff !== 0 ? priorityDiff : b.age - a.age;
+        });
+    }
+    
+    /**
+     * Get cache age in milliseconds
+     */
+    getCacheAge(collection) {
+        const metadata = this.metadata[collection];
+        if (!metadata || !metadata.lastUpdated) {
+            return Infinity;
+        }
+        return Date.now() - metadata.lastUpdated;
+    }
+    
+    /**
+     * Invalidate cache for specific collection
+     */
+    async invalidateCache(collection) {
+        try {
+            const storageKey = this.getStorageKey(collection);
+            localStorage.removeItem(storageKey);
+            
+            // Update metadata to reflect invalidation
+            await this.updateMetadata(collection, {
+                lastInvalidated: Date.now(),
+                cacheVersion: (this.metadata[collection]?.cacheVersion || 0) + 1
+            });
+            
+            this.emit('cacheInvalidated', { collection, timestamp: Date.now() });
+            
+        } catch (error) {
+             console.error(`Failed to invalidate cache for ${collection}:`, error);
+         }
+     }
+     
+     // ==================== BACKGROUND SYNC ====================
+     
+     /**
+      * Start background sync process
+      */
+     startBackgroundSync() {
+         if (!this.backgroundSync.enabled) {
+             return;
+         }
+         
+         // Initial sync check
+         this.scheduleBackgroundSync();
+         
+         // Set up periodic sync
+         this.backgroundSyncInterval = setInterval(() => {
+             this.scheduleBackgroundSync();
+         }, this.backgroundSync.interval);
+         
+         console.log('Background sync started');
+     }
+     
+     /**
+      * Stop background sync process
+      */
+     stopBackgroundSync() {
+         if (this.backgroundSyncInterval) {
+             clearInterval(this.backgroundSyncInterval);
+             this.backgroundSyncInterval = null;
+         }
+         console.log('Background sync stopped');
+     }
+     
+     /**
+      * Schedule background sync for stale collections
+      */
+     async scheduleBackgroundSync() {
+         try {
+             const staleCollections = this.getStaleCollections();
+             
+             if (staleCollections.length === 0) {
+                 return;
+             }
+             
+             console.log(`Found ${staleCollections.length} stale collections for background sync`);
+             
+             // Add to sync queue
+             for (const { collection, priority } of staleCollections) {
+                 if (!this.backgroundSync.syncQueue.includes(collection)) {
+                     this.backgroundSync.syncQueue.push(collection);
+                 }
+             }
+             
+             // Process sync queue
+             this.processBackgroundSyncQueue();
+             
+         } catch (error) {
+             console.error('Background sync scheduling failed:', error);
+         }
+     }
+     
+     /**
+      * Process background sync queue
+      */
+     async processBackgroundSyncQueue() {
+         if (this.backgroundSync.currentSyncs >= this.backgroundSync.maxConcurrentSyncs) {
+             return; // Already at max concurrent syncs
+         }
+         
+         const collection = this.backgroundSync.syncQueue.shift();
+         if (!collection) {
+             return; // Queue is empty
+         }
+         
+         this.backgroundSync.currentSyncs++;
+         
+         try {
+             await this.backgroundSyncCollection(collection);
+         } catch (error) {
+             console.error(`Background sync failed for ${collection}:`, error);
+         } finally {
+             this.backgroundSync.currentSyncs--;
+             
+             // Process next item in queue
+             if (this.backgroundSync.syncQueue.length > 0) {
+                 setTimeout(() => this.processBackgroundSyncQueue(), 100);
+             }
+         }
+     }
+     
+     /**
+      * Perform background sync for a specific collection
+      */
+     async backgroundSyncCollection(collection) {
+         try {
+             console.log(`Background syncing ${collection}...`);
+             
+             // Try to fetch fresh data from API or Firebase
+             let freshData = null;
+             
+             if (window.universalDataManager && 
+                 window.universalDataManager.isReady && 
+                 window.universalDataManager.isReady() &&
+                 typeof window.universalDataManager.getData === 'function') {
+                 // Use universal data manager if available
+                 try {
+                     freshData = await window.universalDataManager.getData(collection);
+                 } catch (udmError) {
+                     console.warn(`Universal data manager failed for ${collection}:`, udmError.message);
+                 }
+             } else if (window.apiClient && typeof window.apiClient.get === 'function') {
+                 // Fallback to API client
+                 try {
+                     freshData = await window.apiClient.get(`/api/${collection}`);
+                 } catch (apiError) {
+                     console.warn(`API client failed for ${collection}:`, apiError.message);
+                 }
+             }
+             
+             if (freshData && Array.isArray(freshData) && freshData.length > 0) {
+                 // Update cache with fresh data
+                 await this.saveData(collection, freshData, { 
+                     source: 'backgroundSync',
+                     skipValidation: false 
+                 });
+                 
+                 console.log(`Background sync completed for ${collection}: ${freshData.length} items`);
+                 this.emit('backgroundSyncCompleted', { collection, itemCount: freshData.length });
+             } else {
+                 console.log(`No fresh data available for background sync of ${collection}`);
+             }
+             
+             this.backgroundSync.lastSyncTime = Date.now();
+             
+         } catch (error) {
+             console.error(`Background sync failed for ${collection}:`, error);
+             this.emit('backgroundSyncFailed', { collection, error: error.message });
+         }
+     }
+     
+     /**
+      * Get background sync status
+      */
+     getBackgroundSyncStatus() {
+         return {
+             enabled: this.backgroundSync.enabled,
+             currentSyncs: this.backgroundSync.currentSyncs,
+             queueLength: this.backgroundSync.syncQueue.length,
+             lastSyncTime: this.backgroundSync.lastSyncTime,
+             nextSyncIn: this.backgroundSync.lastSyncTime ? 
+                 Math.max(0, this.backgroundSync.interval - (Date.now() - this.backgroundSync.lastSyncTime)) : 0
+         };
+     }
+     
+     // ==================== SELECTIVE LOADING ====================
+     
+     /**
+      * Filter data to only include priority fields for faster initial loading
+      */
+     filterPriorityFields(data, collectionName) {
+         if (!this.selectiveLoading.enabled || !data) return data;
+         
+         const priorityFields = this.selectiveLoading.priorityFields[collectionName];
+         if (!priorityFields) return data;
+         
+         if (Array.isArray(data)) {
+             return data.map(item => this.extractFields(item, priorityFields));
+         } else {
+             return this.extractFields(data, priorityFields);
+         }
+     }
+
+     /**
+      * Extract specific fields from an object
+      */
+     extractFields(item, fields) {
+         if (!item || typeof item !== 'object') return item;
+         
+         const filtered = {};
+         fields.forEach(field => {
+             if (item.hasOwnProperty(field)) {
+                 filtered[field] = item[field];
+             }
+         });
+         return filtered;
+     }
+
+     /**
+      * Load lazy fields for a specific item on demand
+      */
+     async loadLazyFields(collectionName, itemId, fields = null) {
+         if (!this.selectiveLoading.enabled) return null;
+         
+         const lazyFields = fields || this.selectiveLoading.lazyFields[collectionName];
+         if (!lazyFields) return null;
+         
+         try {
+             // Try to get from cache first
+             const cacheKey = `${collectionName}_lazy_${itemId}`;
+             const cached = this.collectionCache.get(cacheKey);
+             if (cached && (Date.now() - cached.timestamp) < this.cacheTimeout) {
+                 return cached.data;
+             }
+             
+             // Fetch lazy fields from storage
+             const fullData = await this._performGetData(collectionName, { ignoreCache: true });
+             if (fullData && Array.isArray(fullData)) {
+                 const item = fullData.find(item => item.id === itemId || item._id === itemId);
+                 if (item) {
+                     const lazyData = this.extractFields(item, lazyFields);
+                     this.collectionCache.set(cacheKey, {
+                         data: lazyData,
+                         timestamp: Date.now()
+                     });
+                     return lazyData;
+                 }
+             }
+             
+             return null;
+         } catch (error) {
+             console.warn(`Failed to load lazy fields for ${collectionName}:${itemId}:`, error);
+             return null;
+         }
+     }
+
+     /**
+      * Load data in batches for better performance
+      */
+     async loadDataInBatches(collectionName, items) {
+         if (!this.selectiveLoading.enabled || !Array.isArray(items)) return items;
+         
+         const batchSize = this.selectiveLoading.batchSize;
+         const batches = [];
+         
+         for (let i = 0; i < items.length; i += batchSize) {
+             batches.push(items.slice(i, i + batchSize));
+         }
+         
+         const results = [];
+         for (const batch of batches) {
+             const batchResults = await Promise.all(
+                 batch.map(item => this.processBatchItem(collectionName, item))
+             );
+             results.push(...batchResults);
+         }
+         
+         return results;
+     }
+
+     /**
+      * Process individual batch item
+      */
+     async processBatchItem(collectionName, item) {
+         // Filter to priority fields for initial load
+         const priorityData = this.filterPriorityFields(item, collectionName);
+         
+         // Mark that lazy fields are available
+         if (this.selectiveLoading.lazyFields[collectionName]) {
+             priorityData._hasLazyFields = true;
+             priorityData._itemId = item.id || item._id;
+         }
+         
+         return priorityData;
+     }
+     
+     async getMetadata(collection) {
         return this.metadata[collection] || null;
+    }
+    
+    // Initialize metadata if not exists
+    get metadata() {
+        if (!this._metadata) {
+            this._metadata = {};
+        }
+        return this._metadata;
+    }
+    
+    set metadata(value) {
+        this._metadata = value;
+    }
+    
+    // Initialize storage prefix
+    get storagePrefix() {
+        return this.storageKey + '_';
+    }
+    
+    // Initialize validation schemas
+    get validationSchemas() {
+        if (!this._validationSchemas) {
+            this._validationSchemas = {
+                products: {
+                    required: ['id', 'name'],
+                    types: { id: 'string', name: 'string', price: 'number' }
+                },
+                clients: {
+                    required: ['id', 'name'],
+                    types: { id: 'string', name: 'string', email: 'string' }
+                },
+                salespeople: {
+                    required: ['id', 'name'],
+                    types: { id: 'string', name: 'string', email: 'string' }
+                },
+                colors: {
+                    required: ['id', 'name'],
+                    types: { id: 'string', name: 'string', value: 'string' }
+                },
+                styles: {
+                    required: ['id', 'name'],
+                    types: { id: 'string', name: 'string' }
+                },
+                quotes: {
+                    required: ['id', 'clientId'],
+                    types: { id: 'string', clientId: 'string' }
+                },
+                orders: {
+                    required: ['id', 'quoteId'],
+                    types: { id: 'string', quoteId: 'string' }
+                },
+                categories: {
+                    required: ['id', 'name'],
+                    types: { id: 'string', name: 'string' }
+                },
+                priceLists: {
+                    required: ['id', 'name'],
+                    types: { id: 'string', name: 'string' }
+                }
+            };
+        }
+        return this._validationSchemas;
     }
     
     // ==================== STORAGE UTILITIES ====================
     
     getStorageKey(collection) {
         return `${this.storagePrefix}${collection}`;
+    }
+    
+    // Initialize version for compatibility
+    get version() {
+        return '1.0.0';
     }
     
     async validateStorageIntegrity() {
@@ -589,6 +1136,28 @@ class LocalFallbackManager {
         }
     }
     
+    /**
+     * Get selective loading configuration
+     */
+    getSelectiveLoadingConfig() {
+        return {
+            enabled: this.selectiveLoading.enabled,
+            batchSize: this.selectiveLoading.batchSize,
+            priorityFields: this.selectiveLoading.priorityFields,
+            lazyFields: this.selectiveLoading.lazyFields
+        };
+    }
+    
+    /**
+     * Update selective loading configuration
+     */
+    updateSelectiveLoadingConfig(config) {
+        this.selectiveLoading = {
+            ...this.selectiveLoading,
+            ...config
+        };
+    }
+    
     async initializeCollections() {
         for (const collection of Object.keys(this.collections)) {
             const data = await this.getData(collection);
@@ -596,6 +1165,28 @@ class LocalFallbackManager {
                 await this.saveData(collection, [], { source: 'initialization' });
             }
         }
+    }
+    
+    /**
+     * Get data with selective loading support
+     */
+    async getDataSelective(collection, options = {}) {
+        const data = await this.getData(collection, options);
+        
+        if (!data || !this.selectiveLoading.enabled) {
+            return data;
+        }
+        
+        // Apply selective loading if enabled
+        if (options.priorityOnly) {
+            return this.filterPriorityFields(data, collection);
+        }
+        
+        if (options.batchLoad && Array.isArray(data)) {
+            return await this.loadDataInBatches(collection, data);
+        }
+        
+        return data;
     }
     
     // ==================== STATISTICS AND MONITORING ====================
@@ -639,14 +1230,18 @@ class LocalFallbackManager {
             const data = localStorage.getItem(storageKey);
             const size = data ? new Blob([data]).size : 0;
             
-            usage[collection] = size;
+            usage[collection] = {
+                size: size,
+                formatted: this.formatBytes(size)
+            };
             totalSize += size;
         }
         
         return {
             total: totalSize,
             collections: usage,
-            totalFormatted: this.formatBytes(totalSize)
+            totalFormatted: this.formatBytes(totalSize),
+            selectiveLoading: this.getSelectiveLoadingConfig()
         };
     }
     
@@ -656,6 +1251,117 @@ class LocalFallbackManager {
         const sizes = ['Bytes', 'KB', 'MB', 'GB'];
         const i = Math.floor(Math.log(bytes) / Math.log(k));
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+    
+    /**
+     * Get performance metrics including selective loading stats
+     */
+    getPerformanceMetrics() {
+        return {
+            ...this.stats,
+            selectiveLoading: {
+                enabled: this.selectiveLoading.enabled,
+                batchSize: this.selectiveLoading.batchSize,
+                cacheSize: this.collectionCache.size
+            },
+            backgroundSync: this.getBackgroundSyncStatus(),
+            cacheVersioning: this.getVersioningStatus()
+        };
+    }
+
+    // ==================== CACHE VERSIONING ====================
+
+    /**
+     * Get versioning status for all collections
+     */
+    getVersioningStatus() {
+        if (!this.cacheVersioning.enabled) {
+            return { enabled: false };
+        }
+
+        const status = {
+            enabled: true,
+            currentVersion: this.cacheVersioning.currentVersion,
+            collections: {}
+        };
+
+        for (const collection of Object.keys(this.collections)) {
+            const cachedVersion = this.getCacheVersion(collection);
+            const currentVersion = this.cacheVersioning.schemaVersions[collection];
+
+            status.collections[collection] = {
+                cached: cachedVersion,
+                current: currentVersion,
+                compatible: this.isVersionCompatible(cachedVersion, currentVersion)
+            };
+        }
+
+        return status;
+    }
+
+    /**
+     * Get cache version for a collection
+     */
+    getCacheVersion(collection) {
+        const metadata = this.metadata[collection];
+        return metadata?.version || '1.0.0';
+    }
+
+    /**
+     * Check if cached version is compatible with current version
+     */
+    isVersionCompatible(cachedVersion, currentVersion) {
+        if (!this.cacheVersioning.enabled) return true;
+        if (!cachedVersion || !currentVersion) return false;
+
+        const cached = this.parseVersion(cachedVersion);
+        const current = this.parseVersion(currentVersion);
+
+        // Major version must match
+        if (cached.major !== current.major) return false;
+
+        // Minor version can be older but not newer
+        if (cached.minor > current.minor) return false;
+
+        return true;
+    }
+
+    /**
+     * Parse version string into components
+     */
+    parseVersion(version) {
+        const parts = version.split('.').map(Number);
+        return {
+            major: parts[0] || 0,
+            minor: parts[1] || 0,
+            patch: parts[2] || 0
+        };
+    }
+
+    /**
+     * Clear cache for collections with incompatible versions
+     */
+    async clearIncompatibleCache() {
+        if (!this.cacheVersioning.enabled) return;
+
+        const collectionsToMigrate = [];
+
+        for (const collection of Object.keys(this.collections)) {
+            const cachedVersion = this.getCacheVersion(collection);
+            const currentVersion = this.cacheVersioning.schemaVersions[collection];
+
+            if (!this.isVersionCompatible(cachedVersion, currentVersion)) {
+                collectionsToMigrate.push(collection);
+            }
+        }
+
+        if (collectionsToMigrate.length > 0) {
+            console.log(`Clearing incompatible cache for collections: ${collectionsToMigrate.join(', ')}`);
+
+            for (const collection of collectionsToMigrate) {
+                await this.invalidateCache(collection);
+            }
+        }
     }
     
     // ==================== EVENT SYSTEM ====================
@@ -757,7 +1463,11 @@ class LocalFallbackManager {
                 version: this.version,
                 timestamp: new Date().toISOString(),
                 metadata: this.metadata,
-                collections: {}
+                collections: {},
+                config: {
+                    selectiveLoading: this.getSelectiveLoadingConfig(),
+                    backgroundSync: this.getBackgroundSyncStatus()
+                }
             };
             
             for (const collection of Object.keys(this.collections)) {
@@ -775,6 +1485,13 @@ class LocalFallbackManager {
         try {
             if (!importData.collections) {
                 throw new Error('Invalid import data format');
+            }
+            
+            // Import configuration if available
+            if (importData.config) {
+                if (importData.config.selectiveLoading) {
+                    this.updateSelectiveLoadingConfig(importData.config.selectiveLoading);
+                }
             }
             
             for (const [collection, data] of Object.entries(importData.collections)) {
@@ -800,4 +1517,14 @@ window.localFallbackManager = new LocalFallbackManager();
 // Export for module systems
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = LocalFallbackManager;
+}
+
+// Add selective loading utilities to global scope
+if (typeof window !== 'undefined') {
+    window.selectiveLoadingUtils = {
+        filterPriorityFields: (data, collection) => window.localFallbackManager.filterPriorityFields(data, collection),
+        loadLazyFields: (collection, itemId, fields) => window.localFallbackManager.loadLazyFields(collection, itemId, fields),
+        getConfig: () => window.localFallbackManager.getSelectiveLoadingConfig(),
+        updateConfig: (config) => window.localFallbackManager.updateSelectiveLoadingConfig(config)
+    };
 }

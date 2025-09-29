@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Current Categories Issue</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .output {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            border-left: 4px solid #007bff;
+            margin: 10px 0;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        select {
+            padding: 8px;
+            font-size: 14px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 300px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Current Categories Issue</h1>
+    
+    <div class="test-section">
+        <h2>Direct Test of getCategories</h2>
+        <button onclick="testGetCategories()">Test getCategories()</button>
+        <button onclick="testGetCategoriesWithPriceList()">Test getCategories('INDIA25')</button>
+        <div id="getCategoriesOutput" class="output">Click button to test...</div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test Dropdown Population</h2>
+        <select id="testDropdown">
+            <option value="">Select Category</option>
+        </select>
+        <button onclick="testDropdownPopulation()">Populate Dropdown</button>
+        <div id="dropdownOutput" class="output">Click button to test...</div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test Pricelists Data</h2>
+        <button onclick="testPricelistsData()">Test Pricelists Data</button>
+        <div id="pricelistsOutput" class="output">Click button to test...</div>
+    </div>
+
+    <script src="firebase-config.js"></script>
+    <script src="js/unified-data-access.js"></script>
+    <script>
+        let dataAccess;
+
+        async function initializeDataAccess() {
+            if (!dataAccess) {
+                dataAccess = new UnifiedDataAccess();
+                await dataAccess.ensureInitialized();
+            }
+            return dataAccess;
+        }
+
+        async function testGetCategories() {
+            const output = document.getElementById('getCategoriesOutput');
+            try {
+                output.textContent = 'Loading...';
+                
+                await initializeDataAccess();
+                const categories = await dataAccess.getCategories();
+                
+                output.textContent = `Result: ${JSON.stringify(categories, null, 2)}
+Type: ${typeof categories}
+Is Array: ${Array.isArray(categories)}
+Length: ${categories ? categories.length : 'N/A'}
+
+Individual items:
+${categories ? categories.map((cat, i) => `[${i}] "${cat}" (type: ${typeof cat})`).join('\n') : 'No categories'}`;
+                
+            } catch (error) {
+                output.textContent = `Error: ${error.message}\n${error.stack}`;
+            }
+        }
+
+        async function testGetCategoriesWithPriceList() {
+            const output = document.getElementById('getCategoriesOutput');
+            try {
+                output.textContent = 'Loading with INDIA25...';
+                
+                await initializeDataAccess();
+                const categories = await dataAccess.getCategories('INDIA25');
+                
+                output.textContent = `Result for INDIA25: ${JSON.stringify(categories, null, 2)}
+Type: ${typeof categories}
+Is Array: ${Array.isArray(categories)}
+Length: ${categories ? categories.length : 'N/A'}
+
+Individual items:
+${categories ? categories.map((cat, i) => `[${i}] "${cat}" (type: ${typeof cat})`).join('\n') : 'No categories'}`;
+                
+            } catch (error) {
+                output.textContent = `Error: ${error.message}\n${error.stack}`;
+            }
+        }
+
+        async function testDropdownPopulation() {
+            const output = document.getElementById('dropdownOutput');
+            const dropdown = document.getElementById('testDropdown');
+            
+            try {
+                output.textContent = 'Populating dropdown...';
+                
+                await initializeDataAccess();
+                const categories = await dataAccess.getCategories('INDIA25');
+                
+                // Clear dropdown
+                dropdown.innerHTML = '<option value="">Select Category</option>';
+                
+                let populationLog = `Categories received: ${JSON.stringify(categories, null, 2)}\n\nPopulation process:\n`;
+                
+                if (Array.isArray(categories)) {
+                    categories.forEach((category, index) => {
+                        populationLog += `[${index}] Adding "${category}" (type: ${typeof category})\n`;
+                        
+                        const option = document.createElement('option');
+                        option.value = category;
+                        option.textContent = category;
+                        dropdown.appendChild(option);
+                        
+                        populationLog += `  - option.value = "${option.value}"\n`;
+                        populationLog += `  - option.textContent = "${option.textContent}"\n`;
+                    });
+                } else {
+                    populationLog += `ERROR: categories is not an array (type: ${typeof categories})\n`;
+                }
+                
+                populationLog += `\nDropdown now has ${dropdown.options.length} options`;
+                output.textContent = populationLog;
+                
+            } catch (error) {
+                output.textContent = `Error: ${error.message}\n${error.stack}`;
+            }
+        }
+
+        async function testPricelistsData() {
+            const output = document.getElementById('pricelistsOutput');
+            try {
+                output.textContent = 'Loading pricelists data...';
+                
+                await initializeDataAccess();
+                const pricelists = await dataAccess.getData('pricelists');
+                
+                output.textContent = `Pricelists data:
+Type: ${typeof pricelists}
+Is Array: ${Array.isArray(pricelists)}
+Length: ${pricelists ? pricelists.length : 'N/A'}
+
+Sample items (first 3):
+${pricelists && Array.isArray(pricelists) ? 
+    pricelists.slice(0, 3).map((item, i) => 
+        `[${i}] ${JSON.stringify(item, null, 2)}`
+    ).join('\n\n') : 'No data'}
+
+Categories found in data:
+${pricelists && Array.isArray(pricelists) ? 
+    [...new Set(pricelists.map(item => item.Category || item.category).filter(Boolean))].join(', ') : 'No categories'}`;
+                
+            } catch (error) {
+                output.textContent = `Error: ${error.message}\n${error.stack}`;
+            }
+        }
+    </script>
+</body>
+</html>

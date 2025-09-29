@@ -268,23 +268,23 @@ class FirebaseSyncService {
         return { recordsProcessed: 0, changes: 0 };
       }
 
-      // Get existing salesmen from the salesmen collection
-      const salesmenCollection = this.db.collection('salesmen');
-      const existingSnapshot = await salesmenCollection.get();
+      // Get existing salespeople from the salespeople collection
+      const salespeopleCollection = this.db.collection('salespeople');
+      const existingSnapshot = await salespeopleCollection.get();
       const existingData = existingSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       
       let changes = 0;
       
       if (this.compareData(existingData, salesmanData)) {
-        // Clear existing salesmen collection
+        // Clear existing salespeople collection
         const batch = this.db.batch();
         existingSnapshot.docs.forEach(doc => {
           batch.delete(doc.ref);
         });
         
-        // Add new salesmen data
+        // Add new salespeople data
         salesmanData.forEach((salesman, index) => {
-          const docRef = salesmenCollection.doc(`salesman_${index + 1}`);
+          const docRef = salespeopleCollection.doc(`salesperson_${index + 1}`);
           batch.set(docRef, salesman);
         });
         
@@ -416,6 +416,57 @@ class FirebaseSyncService {
       return { recordsProcessed: stylesData.length, changes };
     } catch (error) {
       throw new Error(`Failed to sync styles data: ${error.message}`);
+    }
+  }
+
+  async syncShadesData(spreadsheetId = googleSheetsAutoConfig.getSheetId()) {
+    if (this.fallbackMode) {
+      return { success: false, message: 'Firebase not available' };
+    }
+    
+    try {
+      if (!this.db) {
+        throw new Error('Firebase not initialized');
+      }
+
+      const shadesData = await this.googleSheetsService.fetchShadesData(spreadsheetId);
+      
+      if (!shadesData || shadesData.length === 0) {
+        return { recordsProcessed: 0, changes: 0 };
+      }
+
+      // Get existing shades from the shades collection
+      const shadesCollection = this.db.collection('shades');
+      const existingSnapshot = await shadesCollection.get();
+      const existingData = existingSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      
+      let changes = 0;
+      
+      if (this.compareData(existingData, shadesData)) {
+        // Clear existing shades collection
+        const batch = this.db.batch();
+        existingSnapshot.docs.forEach(doc => {
+          batch.delete(doc.ref);
+        });
+        
+        // Add new shades data
+        shadesData.forEach((shade, index) => {
+          const docRef = shadesCollection.doc(`shade_${index + 1}`);
+          batch.set(docRef, {
+            ...shade,
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            syncedAt: admin.firestore.FieldValue.serverTimestamp()
+          });
+        });
+        
+        await batch.commit();
+        changes = shadesData.length;
+      }
+
+      return { recordsProcessed: shadesData.length, changes };
+    } catch (error) {
+      throw new Error(`Failed to sync shades data: ${error.message}`);
     }
   }
 

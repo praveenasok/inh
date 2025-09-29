@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Dropdown Fix</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+    </style>
+</head>
+<body>
+    <h1>Dropdown Population Test</h1>
+    
+    <div class="test-section">
+        <h3>Data Manager Status</h3>
+        <div id="manager-status">Checking...</div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Data Loading Test</h3>
+        <div id="data-test">Testing...</div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Price Calculator Dropdown Test</h3>
+        <div id="dropdown-test">Testing...</div>
+        <iframe src="price-calculator.html" width="100%" height="400" style="margin-top: 10px;"></iframe>
+    </div>
+
+    <script src="js/universal-firebase-data-manager.js"></script>
+    <script>
+        async function testDataManager() {
+            const statusDiv = document.getElementById('manager-status');
+            
+            try {
+                // Check if manager exists
+                if (!window.universalDataManager) {
+                    statusDiv.innerHTML = '<span class="error">❌ Universal Data Manager not found</span>';
+                    return;
+                }
+                
+                statusDiv.innerHTML = '<span class="info">⏳ Waiting for data manager to initialize...</span>';
+                
+                // Wait for manager to be ready
+                await window.universalDataManager.waitForReady();
+                
+                statusDiv.innerHTML = '<span class="success">✅ Universal Data Manager is ready</span>';
+                
+                // Test data loading
+                await testDataLoading();
+                
+            } catch (error) {
+                statusDiv.innerHTML = `<span class="error">❌ Error: ${error.message}</span>`;
+                console.error('Data manager test error:', error);
+            }
+        }
+        
+        async function testDataLoading() {
+            const testDiv = document.getElementById('data-test');
+            
+            try {
+                testDiv.innerHTML = '<span class="info">⏳ Testing data loading...</span>';
+                
+                // Test products
+                const products = await window.universalDataManager.getProducts();
+                console.log('Products loaded:', products?.length || 0);
+                
+                // Test price lists
+                const priceLists = await window.universalDataManager.getPriceLists();
+                console.log('Price lists loaded:', priceLists?.length || 0);
+                
+                // Test categories
+                const categories = await window.universalDataManager.getCategories();
+                console.log('Categories loaded:', categories?.length || 0);
+                
+                // Test salespeople
+                const salespeople = await window.universalDataManager.getSalespeople();
+                console.log('Salespeople loaded:', salespeople?.length || 0);
+                
+                let results = [];
+                results.push(`Products: ${products?.length || 0}`);
+                results.push(`Price Lists: ${priceLists?.length || 0}`);
+                results.push(`Categories: ${categories?.length || 0}`);
+                results.push(`Salespeople: ${salespeople?.length || 0}`);
+                
+                if (products?.length > 0 && priceLists?.length > 0) {
+                    testDiv.innerHTML = `<span class="success">✅ Data loaded successfully!</span><br>${results.join('<br>')}`;
+                } else {
+                    testDiv.innerHTML = `<span class="error">❌ Some data missing</span><br>${results.join('<br>')}`;
+                }
+                
+                // Test dropdown population
+                await testDropdownPopulation();
+                
+            } catch (error) {
+                testDiv.innerHTML = `<span class="error">❌ Data loading error: ${error.message}</span>`;
+                console.error('Data loading test error:', error);
+            }
+        }
+        
+        async function testDropdownPopulation() {
+            const dropdownDiv = document.getElementById('dropdown-test');
+            
+            try {
+                dropdownDiv.innerHTML = '<span class="info">⏳ Testing dropdown population...</span>';
+                
+                // Wait a bit for iframe to load
+                setTimeout(async () => {
+                    try {
+                        const iframe = document.querySelector('iframe');
+                        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                        
+                        // Check if dropdowns exist and have options
+                        const dropdowns = ['price-list', 'category', 'salesman'];
+                        let results = [];
+                        
+                        for (const id of dropdowns) {
+                            const dropdown = iframeDoc.getElementById(id);
+                            if (dropdown) {
+                                const optionCount = dropdown.options.length;
+                                results.push(`${id}: ${optionCount} options`);
+                            } else {
+                                results.push(`${id}: not found`);
+                            }
+                        }
+                        
+                        dropdownDiv.innerHTML = `<span class="info">📊 Dropdown status:</span><br>${results.join('<br>')}`;
+                        
+                    } catch (error) {
+                        dropdownDiv.innerHTML = `<span class="error">❌ Dropdown test error: ${error.message}</span>`;
+                    }
+                }, 3000);
+                
+            } catch (error) {
+                dropdownDiv.innerHTML = `<span class="error">❌ Dropdown test error: ${error.message}</span>`;
+            }
+        }
+        
+        // Start tests when page loads
+        window.addEventListener('load', () => {
+            setTimeout(testDataManager, 1000);
+        });
+    </script>
+</body>
+</html>

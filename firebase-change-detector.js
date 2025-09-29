@@ -141,9 +141,9 @@ class FirebaseChangeDetector extends EventEmitter {
 
         this.isListening = true;
 
-        // Listen to salesmen collection
-        this.listeners.salesmen = this.db.collection('salesmen').onSnapshot(
-            (snapshot) => this.handleDataChange('salesmen', snapshot),
+        // Listen to salespeople collection
+        this.listeners.salespeople = this.db.collection('salespeople').onSnapshot(
+            (snapshot) => this.handleDataChange('salespeople', snapshot),
         );
 
         // Listen to price_lists collection

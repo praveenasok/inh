@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Data Loading Fix</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .success { background-color: #d4edda; border: 1px solid #c3e6cb; }
+        .error { background-color: #f8d7da; border: 1px solid #f5c6cb; }
+        .info { background-color: #d1ecf1; border: 1px solid #bee5eb; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>Data Loading Fix Test</h1>
+    <div id="test-results"></div>
+
+    <!-- Include required scripts -->
+    <script src="js/local-fallback-manager.js"></script>
+    <script src="js/universal-firebase-data-manager.js"></script>
+
+    <script>
+        const resultsDiv = document.getElementById('test-results');
+
+        function addResult(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.innerHTML = message;
+            resultsDiv.appendChild(div);
+        }
+
+        async function testDataLoading() {
+            try {
+                addResult('Starting data loading test...', 'info');
+
+                // Check if data manager exists
+                if (!window.universalDataManager) {
+                    addResult('❌ Universal data manager not found', 'error');
+                    return;
+                }
+                addResult('✅ Universal data manager found', 'success');
+
+                // Test autoInitialize
+                addResult('Calling autoInitialize()...', 'info');
+                await window.universalDataManager.autoInitialize();
+                addResult('✅ autoInitialize() completed', 'success');
+
+                // Check status
+                const status = window.universalDataManager.getStatus();
+                addResult(`Status: <pre>${JSON.stringify(status, null, 2)}</pre>`, 'info');
+
+                if (status.isInitialized && status.isDataLoaded) {
+                    addResult('✅ Data manager is initialized and data is loaded', 'success');
+                } else {
+                    addResult('❌ Data manager is not fully ready', 'error');
+                    return;
+                }
+
+                // Test getting products
+                const products = await window.universalDataManager.getProducts();
+                addResult(`✅ Products loaded: ${products.length} items`, 'success');
+                if (products.length > 0) {
+                    addResult(`Sample product: <pre>${JSON.stringify(products[0], null, 2)}</pre>`, 'info');
+                }
+
+                // Test getting salespeople
+                const salespeople = await window.universalDataManager.getSalespeople();
+                addResult(`✅ Salespeople loaded: ${salespeople.length} items`, 'success');
+                if (salespeople.length > 0) {
+                    addResult(`Salespeople: <pre>${JSON.stringify(salespeople, null, 2)}</pre>`, 'info');
+                }
+
+                // Test getting categories
+                const categories = await window.universalDataManager.getCategories();
+                addResult(`✅ Categories loaded: ${categories.length} items`, 'success');
+                if (categories.length > 0) {
+                    addResult(`Sample categories: <pre>${JSON.stringify(categories.slice(0, 5), null, 2)}</pre>`, 'info');
+                }
+
+                // Test getting price lists
+                const priceLists = await window.universalDataManager.getPriceLists();
+                addResult(`✅ Price lists loaded: ${priceLists.length} items`, 'success');
+                if (priceLists.length > 0) {
+                    addResult(`Sample price lists: <pre>${JSON.stringify(priceLists.slice(0, 3), null, 2)}</pre>`, 'info');
+                }
+
+                addResult('🎉 All tests passed! Data loading is working correctly.', 'success');
+
+            } catch (error) {
+                addResult(`❌ Error during testing: ${error.message}<br>Stack: <pre>${error.stack}</pre>`, 'error');
+            }
+        }
+
+        // Run test when page loads
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(testDataLoading, 1000); // Give scripts time to load
+        });
+    </script>
+</body>
+</html>

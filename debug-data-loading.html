@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Loading Debug</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .debug-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .warning { background-color: #fff3cd; border-color: #ffeaa7; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+        .step { margin: 10px 0; padding: 10px; background: #f8f9fa; border-left: 4px solid #007bff; }
+        .step-title { font-weight: bold; color: #007bff; }
+        .step-result { margin-top: 5px; }
+        button { padding: 10px 20px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <h1>Data Loading Debug Tool</h1>
+    
+    <div class="debug-section info">
+        <h2>Debug Controls</h2>
+        <button onclick="runFullDebug()">Run Full Debug</button>
+        <button onclick="testAPIDirectly()">Test API Directly</button>
+        <button onclick="testDataManager()">Test Data Manager</button>
+        <button onclick="clearResults()">Clear Results</button>
+    </div>
+
+    <div id="debug-results"></div>
+
+    <!-- Include required scripts -->
+    <script src="js/local-fallback-manager.js"></script>
+    <script src="js/universal-firebase-data-manager.js"></script>
+
+    <script>
+        let debugResults = document.getElementById('debug-results');
+
+        function addDebugSection(title, content, type = 'info') {
+            const section = document.createElement('div');
+            section.className = `debug-section ${type}`;
+            section.innerHTML = `<h3>${title}</h3>${content}`;
+            debugResults.appendChild(section);
+        }
+
+        function addStep(title, result, type = 'info') {
+            const step = document.createElement('div');
+            step.className = 'step';
+            step.innerHTML = `
+                <div class="step-title">${title}</div>
+                <div class="step-result ${type}">${result}</div>
+            `;
+            debugResults.appendChild(step);
+        }
+
+        function clearResults() {
+            debugResults.innerHTML = '';
+        }
+
+        async function testAPIDirectly() {
+            addStep('Testing API Endpoints Directly', 'Starting API tests...', 'info');
+            
+            try {
+                // Test products endpoint
+                const productsResponse = await fetch('/api/get-data?collection=products');
+                const productsData = await productsResponse.json();
+                addStep('Products API Test', 
+                    `Status: ${productsResponse.status}<br>
+                     Data length: ${productsData.length}<br>
+                     Sample: ${JSON.stringify(productsData.slice(0, 2), null, 2)}`, 
+                    productsResponse.ok ? 'success' : 'error');
+
+                // Test salespeople endpoint
+                const salespeopleResponse = await fetch('/api/get-data?collection=salespeople');
+                const salespeopleData = await salespeopleResponse.json();
+                addStep('Salespeople API Test', 
+                    `Status: ${salespeopleResponse.status}<br>
+                     Data length: ${salespeopleData.length}<br>
+                     Sample: ${JSON.stringify(salespeopleData, null, 2)}`, 
+                    salespeopleResponse.ok ? 'success' : 'error');
+
+                // Test categories endpoint
+                const categoriesResponse = await fetch('/api/get-data?collection=categories');
+                const categoriesData = await categoriesResponse.json();
+                addStep('Categories API Test', 
+                    `Status: ${categoriesResponse.status}<br>
+                     Data length: ${categoriesData.length}<br>
+                     Sample: ${JSON.stringify(categoriesData.slice(0, 5), null, 2)}`, 
+                    categoriesResponse.ok ? 'success' : 'error');
+
+            } catch (error) {
+                addStep('API Test Error', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testDataManager() {
+            addStep('Testing Universal Data Manager', 'Starting data manager tests...', 'info');
+            
+            try {
+                // Check if data manager exists
+                if (!window.universalDataManager) {
+                    addStep('Data Manager Check', 'universalDataManager not found on window', 'error');
+                    return;
+                }
+                addStep('Data Manager Check', 'universalDataManager found', 'success');
+
+                // Check initialization status
+                const status = window.universalDataManager.getStatus();
+                addStep('Data Manager Status', JSON.stringify(status, null, 2), 'info');
+
+                // Wait for ready
+                addStep('Waiting for Ready', 'Waiting for data manager to be ready...', 'info');
+                await window.universalDataManager.waitForReady();
+                addStep('Ready Status', 'Data manager is ready', 'success');
+
+                // Test getting products
+                addStep('Getting Products', 'Calling getProducts()...', 'info');
+                const products = await window.universalDataManager.getProducts();
+                addStep('Products Result', 
+                    `Length: ${products.length}<br>
+                     Sample: ${JSON.stringify(products.slice(0, 2), null, 2)}`, 
+                    products.length > 0 ? 'success' : 'warning');
+
+                // Test getting salespeople
+                addStep('Getting Salespeople', 'Calling getSalespeople()...', 'info');
+                const salespeople = await window.universalDataManager.getSalespeople();
+                addStep('Salespeople Result', 
+                    `Length: ${salespeople.length}<br>
+                     Data: ${JSON.stringify(salespeople, null, 2)}`, 
+                    salespeople.length > 0 ? 'success' : 'warning');
+
+                // Test getting categories
+                addStep('Getting Categories', 'Calling getCategories()...', 'info');
+                const categories = await window.universalDataManager.getCategories();
+                addStep('Categories Result', 
+                    `Length: ${categories.length}<br>
+                     Sample: ${JSON.stringify(categories.slice(0, 5), null, 2)}`, 
+                    categories.length > 0 ? 'success' : 'warning');
+
+                // Check internal data state
+                const internalData = window.universalDataManager.data;
+                addStep('Internal Data State', 
+                    `Products: ${internalData.products ? internalData.products.length : 'undefined'}<br>
+                     Salespeople: ${internalData.salespeople ? internalData.salespeople.length : 'undefined'}<br>
+                     Categories: ${internalData.categories ? internalData.categories.length : 'undefined'}<br>
+                     Price Lists: ${internalData.priceLists ? internalData.priceLists.length : 'undefined'}`, 
+                    'info');
+
+            } catch (error) {
+                addStep('Data Manager Test Error', `Error: ${error.message}<br>Stack: ${error.stack}`, 'error');
+            }
+        }
+
+        async function testLocalFallbackManager() {
+            addStep('Testing Local Fallback Manager', 'Starting fallback manager tests...', 'info');
+            
+            try {
+                if (!window.localFallbackManager) {
+                    addStep('Fallback Manager Check', 'localFallbackManager not found on window', 'error');
+                    return;
+                }
+                addStep('Fallback Manager Check', 'localFallbackManager found', 'success');
+
+                // Test getting data from fallback
+                const fallbackProducts = await window.localFallbackManager.getData('products');
+                addStep('Fallback Products', 
+                    `Length: ${fallbackProducts ? fallbackProducts.length : 'null'}<br>
+                     Sample: ${JSON.stringify(fallbackProducts ? fallbackProducts.slice(0, 2) : null, null, 2)}`, 
+                    fallbackProducts && fallbackProducts.length > 0 ? 'success' : 'warning');
+
+            } catch (error) {
+                addStep('Fallback Manager Test Error', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function runFullDebug() {
+            clearResults();
+            addDebugSection('Full Debug Started', 'Running comprehensive data loading debug...', 'info');
+            
+            await testAPIDirectly();
+            await testLocalFallbackManager();
+            await testDataManager();
+            
+            addDebugSection('Debug Complete', 'All tests completed. Check results above.', 'success');
+        }
+
+        // Auto-run basic checks on page load
+        window.addEventListener('DOMContentLoaded', async () => {
+            addStep('Page Loaded', 'Debug page loaded, checking basic availability...', 'info');
+            
+            // Check script availability
+            if (typeof UniversalFirebaseDataManager !== 'undefined') {
+                addStep('Script Check', 'UniversalFirebaseDataManager class available', 'success');
+            } else {
+                addStep('Script Check', 'UniversalFirebaseDataManager class NOT available', 'error');
+            }
+
+            if (window.universalDataManager) {
+                addStep('Instance Check', 'universalDataManager instance available', 'success');
+            } else {
+                addStep('Instance Check', 'universalDataManager instance NOT available', 'error');
+            }
+
+            if (window.localFallbackManager) {
+                addStep('Fallback Check', 'localFallbackManager available', 'success');
+            } else {
+                addStep('Fallback Check', 'localFallbackManager NOT available', 'warning');
+            }
+        });
+    </script>
+</body>
+</html>

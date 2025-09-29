@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Loading Status</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .status { padding: 10px; margin: 5px 0; border-radius: 5px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .warning { background-color: #fff3cd; color: #856404; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 5px; overflow-x: auto; }
+        button { padding: 10px 20px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <h1>Price Calculator Loading Debug</h1>
+    
+    <div id="status-container">
+        <div class="status info">Checking loading status...</div>
+    </div>
+    
+    <button onclick="runDiagnostics()">Run Diagnostics</button>
+    <button onclick="testDataSources()">Test Data Sources</button>
+    <button onclick="clearAndReload()">Clear Cache & Reload</button>
+    
+    <div id="results"></div>
+
+    <!-- Include all the same scripts as price calculator -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="firebase-global-init.js"></script>
+    <script src="firebase-database.js"></script>
+    <script src="firebase-error-handler.js"></script>
+    <script src="js/local-fallback-manager.js"></script>
+    <script src="js/unified-data-access.js"></script>
+    <script src="js/fallback-detector.js"></script>
+    <script src="js/universal-firebase-data-manager.js"></script>
+
+    <script>
+        let diagnosticResults = {};
+
+        async function runDiagnostics() {
+            const container = document.getElementById('status-container');
+            const results = document.getElementById('results');
+            
+            container.innerHTML = '<div class="status info">Running diagnostics...</div>';
+            results.innerHTML = '';
+            
+            try {
+                // Check script loading
+                diagnosticResults.scripts = {
+                    firebase: typeof firebase !== 'undefined',
+                    localFallbackManager: typeof LocalFallbackManager !== 'undefined',
+                    universalDataManager: typeof window.universalDataManager !== 'undefined'
+                };
+
+                // Initialize LocalFallbackManager
+                if (typeof LocalFallbackManager !== 'undefined') {
+                    window.localFallbackManager = new LocalFallbackManager();
+                    await window.localFallbackManager.initialize();
+                    diagnosticResults.localFallbackInit = 'Success';
+                } else {
+                    diagnosticResults.localFallbackInit = 'LocalFallbackManager not available';
+                }
+
+                // Check Universal Data Manager
+                if (window.universalDataManager) {
+                    await window.universalDataManager.waitForReady();
+                    const status = window.universalDataManager.getStatus();
+                    diagnosticResults.universalDataManager = status;
+                } else {
+                    diagnosticResults.universalDataManager = 'Not available';
+                }
+
+                // Test data loading
+                if (window.universalDataManager && window.universalDataManager.isReady()) {
+                    try {
+                        const products = await window.universalDataManager.getProducts();
+                        diagnosticResults.productData = {
+                            available: true,
+                            count: products ? products.length : 0,
+                            sample: products ? products.slice(0, 2) : null
+                        };
+                    } catch (error) {
+                        diagnosticResults.productData = {
+                            available: false,
+                            error: error.message
+                        };
+                    }
+                } else {
+                    diagnosticResults.productData = {
+                        available: false,
+                        error: 'Universal Data Manager not ready'
+                    };
+                }
+
+                displayResults();
+                
+            } catch (error) {
+                container.innerHTML = `<div class="status error">Diagnostic failed: ${error.message}</div>`;
+                console.error('Diagnostic error:', error);
+            }
+        }
+
+        async function testDataSources() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<h3>Testing Data Sources...</h3>';
+            
+            const dataSources = {};
+            
+            // Test LocalFallbackManager
+            if (window.localFallbackManager) {
+                try {
+                    const products = await window.localFallbackManager.getData('products');
+                    dataSources.localFallback = {
+                        available: true,
+                        productCount: products ? products.length : 0
+                    };
+                } catch (error) {
+                    dataSources.localFallback = {
+                        available: false,
+                        error: error.message
+                    };
+                }
+            } else {
+                dataSources.localFallback = { available: false, error: 'Not initialized' };
+            }
+
+            // Test UniversalDataManager
+            if (window.universalDataManager) {
+                try {
+                    const products = await window.universalDataManager.getData('products');
+                    dataSources.universalData = {
+                        available: true,
+                        productCount: products ? products.length : 0
+                    };
+                } catch (error) {
+                    dataSources.universalData = {
+                        available: false,
+                        error: error.message
+                    };
+                }
+            } else {
+                dataSources.universalData = { available: false, error: 'Not available' };
+            }
+
+            results.innerHTML += '<pre>' + JSON.stringify(dataSources, null, 2) + '</pre>';
+        }
+
+        function displayResults() {
+            const container = document.getElementById('status-container');
+            const results = document.getElementById('results');
+            
+            let html = '<h3>Diagnostic Results:</h3>';
+            
+            // Script loading status
+            html += '<h4>Script Loading:</h4>';
+            for (const [script, loaded] of Object.entries(diagnosticResults.scripts)) {
+                const statusClass = loaded ? 'success' : 'error';
+                html += `<div class="status ${statusClass}">${script}: ${loaded ? 'Loaded' : 'Not Loaded'}</div>`;
+            }
+            
+            // LocalFallbackManager status
+            html += '<h4>LocalFallbackManager:</h4>';
+            const fallbackClass = diagnosticResults.localFallbackInit === 'Success' ? 'success' : 'error';
+            html += `<div class="status ${fallbackClass}">Initialization: ${diagnosticResults.localFallbackInit}</div>`;
+            
+            // Universal Data Manager status
+            html += '<h4>Universal Data Manager:</h4>';
+            if (typeof diagnosticResults.universalDataManager === 'object') {
+                html += '<pre>' + JSON.stringify(diagnosticResults.universalDataManager, null, 2) + '</pre>';
+            } else {
+                html += `<div class="status error">${diagnosticResults.universalDataManager}</div>`;
+            }
+            
+            // Product data status
+            html += '<h4>Product Data:</h4>';
+            if (diagnosticResults.productData.available) {
+                html += `<div class="status success">Products loaded: ${diagnosticResults.productData.count} items</div>`;
+                if (diagnosticResults.productData.sample) {
+                    html += '<h5>Sample Data:</h5><pre>' + JSON.stringify(diagnosticResults.productData.sample, null, 2) + '</pre>';
+                }
+            } else {
+                html += `<div class="status error">Product loading failed: ${diagnosticResults.productData.error}</div>`;
+            }
+            
+            container.innerHTML = '<div class="status success">Diagnostics completed</div>';
+            results.innerHTML = html;
+        }
+
+        function clearAndReload() {
+            // Clear localStorage
+            localStorage.clear();
+            
+            // Clear IndexedDB if available
+            if (window.localFallbackManager && typeof window.localFallbackManager.clearCache === 'function') {
+                window.localFallbackManager.clearCache();
+            }
+            
+            // Reload page
+            window.location.reload();
+        }
+
+        // Auto-run diagnostics on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(runDiagnostics, 1000);
+        });
+    </script>
+</body>
+</html>

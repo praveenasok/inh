@@ -864,7 +864,7 @@
                         </div>
                         <div>
                             <select id="color-selector" class="form-select mb-2" disabled>
-                                <option value="">Select Color</option>
+                                <option value="">Select Shade</option>
                             </select>
                             <div class="custom-color-container" style="display: none;">
                                 <div class="flex gap-2 items-start">
@@ -1581,6 +1581,16 @@
             
             // Other selectors
             document.getElementById('density-selector').addEventListener('change', () => {
+                const priceList = document.getElementById('price-list-selector').value;
+                const category = document.getElementById('category-selector').value;
+                const product = document.getElementById('product-selector').value;
+                const density = document.getElementById('density-selector').value;
+                
+                // Populate color types based on selected density
+                if (priceList && category && product && density) {
+                    populateColorTypes(priceList, category, product, density);
+                }
+                
                 isManualPriceEntry = false; // Reset manual entry flag
                 updatePricing();
             });
@@ -2029,11 +2039,12 @@
             const priceList = document.getElementById('price-list-selector').value;
             const category = document.getElementById('category-selector').value;
             const product = document.getElementById('product-selector').value;
+            const density = document.getElementById('density-selector').value;
             
             if (priceList && category && product) {
                 populateDensities(priceList, category, product);
                 populateLengths(priceList, category, product);
-                populateColorTypes(priceList, category, product);
+                populateColorTypes(priceList, category, product, density);
                 
                 enableSelector('density-selector');
                 enableSelector('length-selector');
@@ -2129,15 +2140,26 @@
         }
 
         // Populate color types
-        function populateColorTypes(priceList, category, product) {
+        function populateColorTypes(priceList, category, product, density) {
             const selector = document.getElementById('color-type-selector');
+            
+            // Filter products based on all criteria
+            let filteredProducts = productData.filter(p => {
+                const matchesPriceList = (p['Price List Name'] || p.PriceListName || p.PriceList) === priceList;
+                const matchesCategory = (p.Category || p.category) === category;
+                const matchesProduct = (p.Product || p.product) === product;
+                
+                // If density is provided, filter by it as well
+                let matchesDensity = true;
+                if (density) {
+                    matchesDensity = (p.Density || p.density) === density;
+                }
+                
+                return matchesPriceList && matchesCategory && matchesProduct && matchesDensity;
+            });
+            
             const colors = [...new Set(
-                productData
-                    .filter(p => 
-                        (p['Price List Name'] || p.PriceListName || p.PriceList) === priceList &&
-                        (p.Category || p.category) === category &&
-                        (p.Product || p.product) === product
-                    )
+                filteredProducts
                     .map(p => p.Colors || p.Color || p.color)
                     .filter(Boolean)
                     .flatMap(colorString => colorString.split(',').map(c => c.trim()))
@@ -2175,7 +2197,7 @@
                 return;
             }
             
-            selector.innerHTML = '<option value="">Select Color</option>';
+            selector.innerHTML = '<option value="">Select Shade</option>';
             
             // Add Custom option at the top
             const customOption = document.createElement('option');

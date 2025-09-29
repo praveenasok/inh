@@ -20,7 +20,7 @@ class ComprehensiveSyncSystem {
         };
         
         this.collections = [
-            'products', 'clients', 'salesmen', 'pricelists', 'colors', 'styles'
+            'products', 'clients', 'salesmen', 'pricelists', 'colors', 'styles', 'shades'
         ];
         
         this.eventListeners = new Map();
@@ -252,7 +252,8 @@ class ComprehensiveSyncSystem {
                 'salesmen': 'fetchSalesmanData',
                 'pricelists': 'fetchPriceListsData',
                 'styles': 'fetchStylesData',
-                'colors': 'fetchColorsData'
+                'colors': 'fetchColorsData',
+                'shades': 'fetchShadesData'
             };
             
             for (const collection of this.collections) {

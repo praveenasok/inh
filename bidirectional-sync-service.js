@@ -439,6 +439,12 @@ class BidirectionalSyncService extends EventEmitter {
       }
       
       try {
+        results.shades = await this.firebaseSyncService.syncShadesData();
+      } catch (error) {
+        results.shades = { success: false, error: error.message };
+      }
+      
+      try {
         results.priceLists = await this.firebaseSyncService.syncPriceListsData();
       } catch (error) {
         results.priceLists = { success: false, error: error.message };

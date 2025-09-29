@@ -143,7 +143,7 @@ class CrossComponentDataAccess {
 
     // Get salesmen/salespeople
     getSalesmen() {
-        return this.getCollection('salesmen');
+        return this.getCollection('salespeople');
     }
 
     // Get categories

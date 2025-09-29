@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Categories List from Pricelists</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .status {
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            font-weight: bold;
+            text-align: center;
+        }
+        .loading { background-color: #fff3cd; color: #856404; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .categories-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .category-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 16px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        .category-card:hover {
+            transform: translateY(-2px);
+        }
+        .count-info {
+            background-color: #e3f2fd;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            color: #1976d2;
+        }
+        .raw-data {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 30px;
+            border-left: 4px solid #007bff;
+        }
+        .raw-data h3 {
+            margin-top: 0;
+            color: #007bff;
+        }
+        .raw-data pre {
+            background-color: #ffffff;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📋 Categories Extracted from Pricelists</h1>
+        <div id="status" class="status loading">Loading categories...</div>
+        <div id="count-info" class="count-info" style="display: none;"></div>
+        <div id="categories-container" class="categories-grid"></div>
+        <div id="raw-data" class="raw-data" style="display: none;">
+            <h3>Raw Data Sample</h3>
+            <pre id="raw-content"></pre>
+        </div>
+    </div>
+
+    <!-- Include required scripts -->
+    <script src="firebase-config.js"></script>
+    <script src="js/universal-firebase-data-manager.js"></script>
+    <script src="js/unified-data-access.js"></script>
+
+    <script>
+        async function loadCategories() {
+            const statusEl = document.getElementById('status');
+            const countEl = document.getElementById('count-info');
+            const containerEl = document.getElementById('categories-container');
+            const rawDataEl = document.getElementById('raw-data');
+            const rawContentEl = document.getElementById('raw-content');
+
+            try {
+                statusEl.textContent = 'Initializing data access...';
+                
+                // Wait for unified data access to be ready
+                let attempts = 0;
+                while (!window.unifiedDataAccess && attempts < 50) {
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    attempts++;
+                }
+
+                if (!window.unifiedDataAccess) {
+                    throw new Error('Unified data access not available');
+                }
+
+                statusEl.textContent = 'Fetching pricelists data...';
+                
+                // Get raw pricelists data first
+                const pricelists = await window.unifiedDataAccess.getData('pricelists');
+                console.log('📊 Raw pricelists data:', pricelists);
+                
+                statusEl.textContent = 'Extracting categories...';
+                
+                // Get categories
+                const categories = await window.unifiedDataAccess.getCategories();
+                console.log('📋 Extracted categories:', categories);
+                
+                if (categories && categories.length > 0) {
+                    // Show success status
+                    statusEl.className = 'status success';
+                    statusEl.textContent = '✅ Categories loaded successfully!';
+                    
+                    // Show count
+                    countEl.style.display = 'block';
+                    countEl.textContent = `Found ${categories.length} unique categories`;
+                    
+                    // Display categories
+                    containerEl.innerHTML = categories
+                        .map((category, index) => `
+                            <div class="category-card" style="animation-delay: ${index * 0.1}s">
+                                ${category}
+                            </div>
+                        `).join('');
+                    
+                    // Show raw data sample
+                    if (pricelists && Array.isArray(pricelists) && pricelists.length > 0) {
+                        rawDataEl.style.display = 'block';
+                        const sample = pricelists.slice(0, 3).map(item => ({
+                            Category: item.Category,
+                            category: item.category,
+                            Subcategory: item.Subcategory,
+                            subcategory: item.subcategory,
+                            PriceList: item.PriceList || item['Price List Name'] || item.priceList
+                        }));
+                        rawContentEl.textContent = JSON.stringify(sample, null, 2);
+                    }
+                    
+                    // Output to console for easy copying
+                    console.log('🎯 CATEGORIES LIST:');
+                    categories.forEach((cat, i) => console.log(`${i + 1}. ${cat}`));
+                    console.log('\n📝 Copy-paste format:', categories.join(', '));
+                    
+                } else {
+                    statusEl.className = 'status error';
+                    statusEl.textContent = '❌ No categories found';
+                    containerEl.innerHTML = '<div style="text-align: center; color: #666; padding: 40px;">No categories available</div>';
+                }
+                
+            } catch (error) {
+                console.error('❌ Error loading categories:', error);
+                statusEl.className = 'status error';
+                statusEl.textContent = `❌ Error: ${error.message}`;
+                containerEl.innerHTML = `<div style="text-align: center; color: #d32f2f; padding: 40px;">Error: ${error.message}</div>`;
+            }
+        }
+
+        // Start loading when page loads
+        window.addEventListener('load', () => {
+            setTimeout(loadCategories, 1000);
+        });
+    </script>
+</body>
+</html>

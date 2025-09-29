@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Price List Data Viewer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .data-row {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        .field {
+            margin: 5px 0;
+        }
+        .field-name {
+            font-weight: bold;
+            color: #495057;
+        }
+        .field-value {
+            color: #212529;
+            margin-left: 10px;
+        }
+        .loading {
+            text-align: center;
+            color: #6c757d;
+            font-style: italic;
+        }
+        .error {
+            color: #dc3545;
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .search-info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Price List Data for 16-inch Weaves</h1>
+        
+        <div class="search-info">
+            <strong>Search Criteria:</strong> Looking for weaves products with 16-inch length
+        </div>
+        
+        <div id="loading" class="loading">Loading price list data...</div>
+        <div id="error" class="error" style="display: none;"></div>
+        <div id="results"></div>
+    </div>
+
+    <script src="js/local-fallback-manager.js"></script>
+    <script>
+        async function loadPriceData() {
+            try {
+                const loadingDiv = document.getElementById('loading');
+                const errorDiv = document.getElementById('error');
+                const resultsDiv = document.getElementById('results');
+                
+                // Sample data from the codebase for demonstration
+                const sampleWeavesData = [
+                    {
+                        "Length": 16,
+                        "Price List Name": "INDIA25",
+                        "Currency": "INR",
+                        "Category": "Weaves",
+                        "Density": "Single Drawn",
+                        "Product": "Natural Wave Weaves",
+                        "Colors": "Natural Black, Dark Brown, Medium Brown, Light Brown",
+                        "Standard Weight": 100,
+                        "Rate": 2400,
+                        "Can Be Sold in KG?": "y"
+                    },
+                    {
+                        "Length": 16,
+                        "Price List Name": "INDIA25",
+                        "Currency": "INR", 
+                        "Category": "Weaves DD",
+                        "Density": "Double Drawn",
+                        "Product": "Luxury Weaves Double Drawn",
+                        "Colors": "Natural Black, Dark Brown, Medium Brown",
+                        "Standard Weight": 100,
+                        "Rate": 3100,
+                        "Can Be Sold in KG?": "y"
+                    },
+                    {
+                        "Length": 16,
+                        "Price List Name": "INDIA25", 
+                        "Currency": "INR",
+                        "Category": "Genius Weaves",
+                        "Density": "Super Double Drawn",
+                        "Product": "Genius Weaves Premium",
+                        "Colors": "Natural Black, Dark Brown",
+                        "Standard Weight": 100,
+                        "Rate": 3600,
+                        "Can Be Sold in KG?": "y"
+                    }
+                ];
+                
+                let actualData = null;
+                let dataSource = "Sample Data (from codebase)";
+                
+                // Try to get actual data from local fallback manager
+                try {
+                    if (window.localFallbackManager) {
+                        await window.localFallbackManager.ensureInitialized();
+                        
+                        // Try different collection names
+                        const collections = ['products', 'priceLists', 'priceList'];
+                        for (const collection of collections) {
+                            try {
+                                const data = await window.localFallbackManager.getData(collection);
+                                if (data && Array.isArray(data) && data.length > 0) {
+                                    // Filter for 16-inch weaves
+                                    const weavesData = data.filter(item => {
+                                        const length = item.Length || item.length;
+                                        const category = (item.Category || item.category || '').toLowerCase();
+                                        const product = (item.Product || item.product || '').toLowerCase();
+                                        
+                                        return (
+                                            (length == 16 || length === '16') &&
+                                            (category.includes('weave') || product.includes('weave'))
+                                        );
+                                    });
+                                    
+                                    if (weavesData.length > 0) {
+                                        actualData = weavesData;
+                                        dataSource = `Live Data (from ${collection} collection)`;
+                                        break;
+                                    }
+                                }
+                            } catch (e) {
+                                console.log(`Collection ${collection} not available:`, e.message);
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.log('Could not load live data:', e.message);
+                }
+                
+                const displayData = actualData || sampleWeavesData;
+                
+                loadingDiv.style.display = 'none';
+                
+                // Display the first row as an example
+                const exampleRow = displayData[0];
+                
+                resultsDiv.innerHTML = `
+                    <h2>Example Row: 16-inch Weaves Data</h2>
+                    <p><strong>Data Source:</strong> ${dataSource}</p>
+                    <p><strong>Found ${displayData.length} matching products.</strong> Here's the first one:</p>
+                    
+                    <div class="data-row">
+                        ${Object.entries(exampleRow).map(([key, value]) => `
+                            <div class="field">
+                                <span class="field-name">${key}:</span>
+                                <span class="field-value">${value}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                    
+                    <h3>All 16-inch Weaves (${displayData.length} items):</h3>
+                    ${displayData.map((item, index) => `
+                        <div class="data-row">
+                            <h4>Item ${index + 1}</h4>
+                            ${Object.entries(item).map(([key, value]) => `
+                                <div class="field">
+                                    <span class="field-name">${key}:</span>
+                                    <span class="field-value">${value}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `).join('')}
+                `;
+                
+            } catch (error) {
+                console.error('Error loading price data:', error);
+                document.getElementById('loading').style.display = 'none';
+                const errorDiv = document.getElementById('error');
+                errorDiv.style.display = 'block';
+                errorDiv.textContent = `Error: ${error.message}`;
+            }
+        }
+        
+        // Load data when page loads
+        window.addEventListener('load', loadPriceData);
+    </script>
+</body>
+</html>

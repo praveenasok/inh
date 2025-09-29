@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Categories Debug</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .debug-panel {
+            background: white;
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .output {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            border-left: 4px solid #007bff;
+            margin: 10px 0;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        select {
+            padding: 8px;
+            font-size: 14px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 300px;
+            margin: 10px 0;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .loading { background-color: #fff3cd; border: 1px solid #ffeaa7; }
+        .success { background-color: #d4edda; border: 1px solid #c3e6cb; }
+        .error { background-color: #f8d7da; border: 1px solid #f5c6cb; }
+    </style>
+</head>
+<body>
+    <h1>Live Categories Debug Tool</h1>
+    
+    <div class="debug-panel">
+        <h2>Status</h2>
+        <div id="status" class="status loading">Initializing...</div>
+    </div>
+
+    <div class="debug-panel">
+        <h2>Test Categories Data</h2>
+        <button onclick="testCategoriesData()">Test getCategories()</button>
+        <button onclick="testCategoriesWithPriceList()">Test getCategories('INDIA25')</button>
+        <button onclick="testPricelistsRaw()">Test Raw Pricelists</button>
+        <div id="categoriesOutput" class="output">Click a button to test...</div>
+    </div>
+
+    <div class="debug-panel">
+        <h2>Test Dropdown Population</h2>
+        <select id="testDropdown">
+            <option value="">Select Category</option>
+        </select>
+        <button onclick="populateTestDropdown()">Populate Dropdown</button>
+        <div id="dropdownOutput" class="output">Click button to populate...</div>
+    </div>
+
+    <div class="debug-panel">
+        <h2>Simulate Price Calculator Logic</h2>
+        <button onclick="simulatePriceCalculatorFlow()">Simulate Full Flow</button>
+        <div id="simulationOutput" class="output">Click button to simulate...</div>
+    </div>
+
+    <script src="firebase-config.js"></script>
+    <script src="js/unified-data-access.js"></script>
+    <script>
+        let dataAccess;
+        let debugLog = '';
+
+        function log(message) {
+            console.log(message);
+            debugLog += new Date().toLocaleTimeString() + ': ' + message + '\n';
+        }
+
+        async function initializeDataAccess() {
+            if (!dataAccess) {
+                log('Initializing UnifiedDataAccess...');
+                dataAccess = new UnifiedDataAccess();
+                await dataAccess.ensureInitialized();
+                log('UnifiedDataAccess initialized successfully');
+            }
+            return dataAccess;
+        }
+
+        async function testCategoriesData() {
+            const output = document.getElementById('categoriesOutput');
+            debugLog = '';
+            
+            try {
+                log('=== Testing getCategories() ===');
+                output.textContent = 'Loading...';
+                
+                await initializeDataAccess();
+                log('Calling getCategories()...');
+                const categories = await dataAccess.getCategories();
+                
+                log(`Categories received: ${JSON.stringify(categories)}`);
+                log(`Type: ${typeof categories}`);
+                log(`Is Array: ${Array.isArray(categories)}`);
+                log(`Length: ${categories ? categories.length : 'N/A'}`);
+                
+                if (Array.isArray(categories)) {
+                    categories.forEach((cat, i) => {
+                        log(`[${i}] "${cat}" (type: ${typeof cat})`);
+                        if (typeof cat === 'object') {
+                            log(`    Object details: ${JSON.stringify(cat)}`);
+                        }
+                    });
+                }
+                
+                output.textContent = debugLog;
+                
+            } catch (error) {
+                log(`ERROR: ${error.message}`);
+                output.textContent = debugLog;
+            }
+        }
+
+        async function testCategoriesWithPriceList() {
+            const output = document.getElementById('categoriesOutput');
+            debugLog = '';
+            
+            try {
+                log('=== Testing getCategories("INDIA25") ===');
+                output.textContent = 'Loading...';
+                
+                await initializeDataAccess();
+                log('Calling getCategories("INDIA25")...');
+                const categories = await dataAccess.getCategories('INDIA25');
+                
+                log(`Categories received: ${JSON.stringify(categories)}`);
+                log(`Type: ${typeof categories}`);
+                log(`Is Array: ${Array.isArray(categories)}`);
+                log(`Length: ${categories ? categories.length : 'N/A'}`);
+                
+                if (Array.isArray(categories)) {
+                    categories.forEach((cat, i) => {
+                        log(`[${i}] "${cat}" (type: ${typeof cat})`);
+                        if (typeof cat === 'object') {
+                            log(`    Object details: ${JSON.stringify(cat)}`);
+                        }
+                    });
+                }
+                
+                output.textContent = debugLog;
+                
+            } catch (error) {
+                log(`ERROR: ${error.message}`);
+                output.textContent = debugLog;
+            }
+        }
+
+        async function testPricelistsRaw() {
+            const output = document.getElementById('categoriesOutput');
+            debugLog = '';
+            
+            try {
+                log('=== Testing Raw Pricelists Data ===');
+                output.textContent = 'Loading...';
+                
+                await initializeDataAccess();
+                log('Calling getData("pricelists")...');
+                const pricelists = await dataAccess.getData('pricelists');
+                
+                log(`Pricelists received: ${typeof pricelists}`);
+                log(`Is Array: ${Array.isArray(pricelists)}`);
+                log(`Length: ${pricelists ? pricelists.length : 'N/A'}`);
+                
+                if (Array.isArray(pricelists) && pricelists.length > 0) {
+                    log('Sample items:');
+                    pricelists.slice(0, 3).forEach((item, i) => {
+                        log(`[${i}] Category: "${item.Category || item.category}" (type: ${typeof (item.Category || item.category)})`);
+                        log(`    Full item: ${JSON.stringify(item)}`);
+                    });
+                    
+                    // Extract categories manually
+                    const extractedCategories = [...new Set(
+                        pricelists
+                            .map(item => item.Category || item.category)
+                            .filter(Boolean)
+                    )].sort();
+                    
+                    log(`Manually extracted categories: ${JSON.stringify(extractedCategories)}`);
+                }
+                
+                output.textContent = debugLog;
+                
+            } catch (error) {
+                log(`ERROR: ${error.message}`);
+                output.textContent = debugLog;
+            }
+        }
+
+        async function populateTestDropdown() {
+            const output = document.getElementById('dropdownOutput');
+            const dropdown = document.getElementById('testDropdown');
+            debugLog = '';
+            
+            try {
+                log('=== Testing Dropdown Population ===');
+                output.textContent = 'Populating...';
+                
+                await initializeDataAccess();
+                const categories = await dataAccess.getCategories('INDIA25');
+                
+                log(`Received categories for dropdown: ${JSON.stringify(categories)}`);
+                
+                // Clear dropdown
+                dropdown.innerHTML = '<option value="">Select Category</option>';
+                
+                if (Array.isArray(categories)) {
+                    categories.forEach((category, index) => {
+                        log(`Adding option [${index}]: "${category}" (type: ${typeof category})`);
+                        
+                        const option = document.createElement('option');
+                        option.value = category;
+                        option.textContent = category;
+                        dropdown.appendChild(option);
+                        
+                        log(`  option.value = "${option.value}"`);
+                        log(`  option.textContent = "${option.textContent}"`);
+                        
+                        // Check if this would show as [object Object]
+                        if (option.textContent === '[object Object]') {
+                            log(`  ⚠️ WARNING: This option will display as [object Object]!`);
+                        }
+                    });
+                } else {
+                    log(`ERROR: categories is not an array (type: ${typeof categories})`);
+                }
+                
+                log(`Dropdown now has ${dropdown.options.length} options`);
+                output.textContent = debugLog;
+                
+            } catch (error) {
+                log(`ERROR: ${error.message}`);
+                output.textContent = debugLog;
+            }
+        }
+
+        async function simulatePriceCalculatorFlow() {
+            const output = document.getElementById('simulationOutput');
+            debugLog = '';
+            
+            try {
+                log('=== Simulating Price Calculator Flow ===');
+                output.textContent = 'Simulating...';
+                
+                await initializeDataAccess();
+                
+                // Simulate the exact flow from price calculator
+                log('1. Setting price list to INDIA25...');
+                const priceList = 'INDIA25';
+                
+                log('2. Calling populateCategories logic...');
+                const categories = await dataAccess.getCategories(priceList);
+                
+                log(`3. Categories received: ${JSON.stringify(categories)}`);
+                log(`   Type: ${typeof categories}, Array: ${Array.isArray(categories)}, Length: ${categories?.length}`);
+                
+                log('4. Simulating dropdown population...');
+                if (Array.isArray(categories)) {
+                    categories.forEach((category, i) => {
+                        log(`   [${i}] Processing "${category}" (${typeof category})`);
+                        
+                        // Simulate creating option element
+                        const mockOption = {
+                            value: category,
+                            textContent: category
+                        };
+                        
+                        log(`   Mock option: value="${mockOption.value}", text="${mockOption.textContent}"`);
+                        
+                        if (mockOption.textContent === '[object Object]') {
+                            log(`   🚨 FOUND THE ISSUE: This will show as [object Object]!`);
+                        }
+                    });
+                } else {
+                    log(`   ERROR: Categories is not an array!`);
+                }
+                
+                output.textContent = debugLog;
+                
+            } catch (error) {
+                log(`ERROR: ${error.message}`);
+                output.textContent = debugLog;
+            }
+        }
+
+        // Initialize on page load
+        window.addEventListener('load', async () => {
+            try {
+                await initializeDataAccess();
+                document.getElementById('status').className = 'status success';
+                document.getElementById('status').textContent = 'Ready - Data access initialized successfully';
+            } catch (error) {
+                document.getElementById('status').className = 'status error';
+                document.getElementById('status').textContent = `Error: ${error.message}`;
+            }
+        });
+    </script>
+</body>
+</html>

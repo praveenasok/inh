@@ -391,6 +391,55 @@ class GoogleSheetsService {
     }
   }
 
+  async fetchShadesData(spreadsheetId, range = 'pricelists!A1:Z1000') {
+    if (!this.isInitialized) {
+      await this.initialize();
+    }
+
+    try {
+      const response = await this.sheets.spreadsheets.values.get({
+        spreadsheetId,
+        range,
+      });
+
+      const rows = response.data.values;
+      if (!rows || rows.length === 0) {
+        return [];
+      }
+
+      const headers = rows[0];
+      const shadeColumnIndex = headers.findIndex(header => 
+        header && (header.toLowerCase() === 'shade' || header.toLowerCase() === 'shades')
+      );
+
+      if (shadeColumnIndex === -1) {
+        console.warn('Shade column not found in pricelists sheet');
+        return [];
+      }
+
+      const shadesSet = new Set();
+      const shades = [];
+
+      for (let i = 1; i < rows.length; i++) {
+        const row = rows[i];
+        const shadeValue = row[shadeColumnIndex];
+        
+        if (shadeValue && shadeValue.trim() !== '' && !shadesSet.has(shadeValue.trim())) {
+          const shade = {
+            shadename: shadeValue.trim(),
+            id: shadeValue.trim().toLowerCase().replace(/\s+/g, '_')
+          };
+          shades.push(shade);
+          shadesSet.add(shadeValue.trim());
+        }
+      }
+
+      return shades;
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async fetchPriceListsData(spreadsheetId, range = 'pricelists!A1:Z1000') {
     if (!this.isInitialized) {
       await this.initialize();
