@@ -68,11 +68,21 @@ class FirebaseDatabase {
     }
 
     try {
-      const docRef = await this.db.collection('clients').add({
+      // Ensure consistent timestamp handling
+      const processedClientData = {
         ...clientData,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        createdAt: clientData.createdAt ? clientData.createdAt : firebase.firestore.FieldValue.serverTimestamp(),
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
+      };
+      
+      const docRef = await this.db.collection('clients').add(processedClientData);
+      
+      if (window.googleSheetsIntegration && window.googleSheetsIntegration.isConfigured()) {
+        try {
+          await window.googleSheetsIntegration.appendClientData(processedClientData);
+        } catch (sheetError) {
+        }
+      }
       
       return { id: docRef.id, ...clientData };
       
@@ -274,7 +284,14 @@ class FirebaseDatabase {
     }
 
     try {
-        const docRef = await addDoc(collection(this.db, 'quotes'), quoteData);
+        // Ensure consistent timestamp handling
+        const processedQuoteData = {
+            ...quoteData,
+            createdAt: quoteData.createdAt ? quoteData.createdAt : firebase.firestore.FieldValue.serverTimestamp(),
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        
+        const docRef = await addDoc(collection(this.db, 'quotes'), processedQuoteData);
         return docRef.id;
     } catch (error) {
         throw error;
@@ -288,11 +305,18 @@ class FirebaseDatabase {
     }
 
     try {
-        const docRef = await addDoc(collection(this.db, 'orders'), orderData);
+        // Ensure consistent timestamp handling
+        const processedOrderData = {
+            ...orderData,
+            createdAt: orderData.createdAt ? orderData.createdAt : firebase.firestore.FieldValue.serverTimestamp(),
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        
+        const docRef = await addDoc(collection(this.db, 'orders'), processedOrderData);
         
         if (window.googleSheetsIntegration && window.googleSheetsIntegration.isConfigured()) {
             try {
-                await window.googleSheetsIntegration.appendOrderData(orderData);
+                await window.googleSheetsIntegration.appendOrderData(processedOrderData);
             } catch (sheetError) {
             }
         }

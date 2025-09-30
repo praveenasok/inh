@@ -5,7 +5,7 @@
   },
   "hosting": [
     {
-      "target": "inhpricelistgenerator",
+      "target": "inhsuite",
       "public": ".",
       "ignore": [
         "firebase.json",

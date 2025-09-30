@@ -1,8 +1,8 @@
 const firebaseConfig = {
   apiKey: "AIzaSyCW3FsY_QwFuqZiQaWg4jmmmjlSUR9DxNA",
-  authDomain: "inhpricelistgenerator.firebaseapp.com",
-  projectId: "inhpricelistgenerator",
-  storageBucket: "inhpricelistgenerator.firebasestorage.app",
+  authDomain: "inhsuite.firebaseapp.com",
+  projectId: "inhsuite",
+  storageBucket: "inhsuite.firebasestorage.app",
   messagingSenderId: "263357798472",
   appId: "1:263357798472:web:e03f4a7264a19fe4bfe07d"
 };

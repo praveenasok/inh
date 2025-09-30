@@ -2018,7 +2018,7 @@
             
             selector.innerHTML = '<option value="">Select Product</option>';
             
-            products.sort().forEach(product => {
+            products.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase())).forEach(product => {
                 const option = document.createElement('option');
                 option.value = product;
                 option.textContent = product;
@@ -2158,26 +2158,24 @@
                 return matchesPriceList && matchesCategory && matchesProduct && matchesDensity;
             });
             
-            const colors = [...new Set(
+            const shades = [...new Set(
                 filteredProducts
-                    .map(p => p.Colors || p.Color || p.color)
-                    .filter(Boolean)
-                    .flatMap(colorString => colorString.split(',').map(c => c.trim()))
+                    .map(p => p.Shade || p.shade)
                     .filter(Boolean)
             )];
             
-            selector.innerHTML = '<option value="">Select Color Type</option>';
+            selector.innerHTML = '<option value="">Select Shades</option>';
             
-            colors.sort().forEach(color => {
+            shades.sort().forEach(shade => {
                 const option = document.createElement('option');
-                option.value = color;
-                option.textContent = color;
+                option.value = shade;
+                option.textContent = shade;
                 selector.appendChild(option);
             });
             
             // Auto-select if only one option is available
-            if (colors.length === 1) {
-                selector.value = colors[0];
+            if (shades.length === 1) {
+                selector.value = shades[0];
                 onColorTypeChange();
             }
             
@@ -3261,8 +3259,12 @@
                 return;
             }
             
-            // Sort quotes by creation date (newest first)
-            const sortedQuotes = quotes.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            // Sort quotes by creation date (newest first) - handle Firebase Timestamp objects
+            const sortedQuotes = quotes.sort((a, b) => {
+                const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt);
+                const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt);
+                return dateB - dateA;
+            });
             
             container.innerHTML = sortedQuotes.slice(0, 5).map(quote => {
                 // Calculate total amount with currency symbol

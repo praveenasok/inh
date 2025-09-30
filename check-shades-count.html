@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Check Shades Count</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .result {
+            background: #e8f5e8;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            border-left: 4px solid #4CAF50;
+        }
+        .error {
+            background: #ffe8e8;
+            border-left-color: #f44336;
+        }
+        .shade-list {
+            background: #f0f8ff;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .shade-item {
+            padding: 5px;
+            border-bottom: 1px solid #ddd;
+        }
+        .shade-item:last-child {
+            border-bottom: none;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Shades Count Checker</h1>
+        <p>Checking shades for: <strong>Category: Weaves, Product: Weft, Density: Super Double Drawn</strong></p>
+        
+        <button onclick="checkShades()">Check Shades Count</button>
+        <button onclick="checkAllData()">Show All Product Data</button>
+        
+        <div id="results"></div>
+    </div>
+
+    <!-- Include the same data loading scripts as quotemaker -->
+    <script src="firebase-config.js"></script>
+    <script src="firebase-global-init.js"></script>
+    <script src="js/unified-data-access.js"></script>
+    <script src="cross-component-data-access.js"></script>
+
+    <script>
+        let productData = [];
+
+        function log(message, type = 'info') {
+            console.log(`[${type.toUpperCase()}] ${message}`);
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `result ${type === 'error' ? 'error' : ''}`;
+            div.innerHTML = `<strong>[${type.toUpperCase()}]</strong> ${message}`;
+            results.appendChild(div);
+        }
+
+        async function loadData() {
+            try {
+                log('Loading product data...');
+                
+                // Try multiple data sources
+                if (window.universalDataManager && window.universalDataManager.products) {
+                    productData = window.universalDataManager.products;
+                    log(`Loaded ${productData.length} products from universalDataManager`);
+                } else if (window.productData) {
+                    productData = window.productData;
+                    log(`Loaded ${productData.length} products from window.productData`);
+                } else {
+                    // Try localStorage
+                    const stored = localStorage.getItem('productData');
+                    if (stored) {
+                        productData = JSON.parse(stored);
+                        log(`Loaded ${productData.length} products from localStorage`);
+                    } else {
+                        throw new Error('No product data found in any source');
+                    }
+                }
+
+                return true;
+            } catch (error) {
+                log(`Failed to load data: ${error.message}`, 'error');
+                return false;
+            }
+        }
+
+        async function checkShades() {
+            const results = document.getElementById('results');
+            results.innerHTML = '';
+
+            if (!await loadData()) {
+                return;
+            }
+
+            // Filter for the specific combination
+            const targetCategory = 'Weaves';
+            const targetProduct = 'Weft';
+            const targetDensity = 'Super Double Drawn';
+
+            log(`Filtering for Category: ${targetCategory}, Product: ${targetProduct}, Density: ${targetDensity}`);
+
+            let filteredProducts = productData.filter(item => {
+                const itemCategory = item.Category || item.category;
+                const itemProduct = item.Product || item.ProductName || item.product || item.name;
+                const itemDensity = item.Density || item.density;
+
+                const categoryMatch = itemCategory === targetCategory;
+                const productMatch = itemProduct === targetProduct;
+                const densityMatch = itemDensity === targetDensity;
+
+                if (categoryMatch && productMatch && densityMatch) {
+                    console.log('Matching product:', item);
+                }
+
+                return categoryMatch && productMatch && densityMatch;
+            });
+
+            log(`Found ${filteredProducts.length} matching products`);
+
+            if (filteredProducts.length === 0) {
+                log('No products found for this combination. Let me check what values are available...', 'error');
+                
+                // Check available categories
+                const categories = [...new Set(productData.map(item => item.Category || item.category))].filter(Boolean);
+                log(`Available categories: ${categories.join(', ')}`);
+                
+                // Check available products for Weaves category
+                const weavesProducts = productData.filter(item => (item.Category || item.category) === 'Weaves');
+                const weavesProductNames = [...new Set(weavesProducts.map(item => item.Product || item.ProductName || item.product || item.name))].filter(Boolean);
+                log(`Available products in Weaves category: ${weavesProductNames.join(', ')}`);
+                
+                // Check available densities for Weaves + Weft
+                const weftProducts = weavesProducts.filter(item => (item.Product || item.ProductName || item.product || item.name) === 'Weft');
+                const weftDensities = [...new Set(weftProducts.map(item => item.Density || item.density))].filter(Boolean);
+                log(`Available densities for Weaves + Weft: ${weftDensities.join(', ')}`);
+                
+                return;
+            }
+
+            // Get unique shades
+            const shades = [...new Set(
+                filteredProducts.map(item => item.Shade || item.shade)
+            )].filter(Boolean);
+
+            log(`<strong>RESULT: ${shades.length} shades available for Weaves + Weft + Super Double Drawn</strong>`);
+
+            // Display the shades
+            const shadeDiv = document.createElement('div');
+            shadeDiv.className = 'shade-list';
+            shadeDiv.innerHTML = '<h3>Available Shades:</h3>';
+            
+            shades.forEach((shade, index) => {
+                const shadeItem = document.createElement('div');
+                shadeItem.className = 'shade-item';
+                shadeItem.textContent = `${index + 1}. ${shade}`;
+                shadeDiv.appendChild(shadeItem);
+            });
+
+            document.getElementById('results').appendChild(shadeDiv);
+        }
+
+        async function checkAllData() {
+            const results = document.getElementById('results');
+            results.innerHTML = '';
+
+            if (!await loadData()) {
+                return;
+            }
+
+            log(`Total products in database: ${productData.length}`);
+
+            // Show sample data structure
+            if (productData.length > 0) {
+                const sample = productData[0];
+                log(`Sample product structure: ${JSON.stringify(sample, null, 2)}`);
+            }
+        }
+
+        // Auto-load data when page loads
+        window.addEventListener('load', async () => {
+            // Wait a bit for other scripts to load
+            setTimeout(async () => {
+                log('Page loaded, checking for data...');
+                await loadData();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

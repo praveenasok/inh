@@ -956,7 +956,7 @@
                         </div>
                         <div>
                             <select id="color-selector" class="form-select mb-2" disabled>
-                                <option value="">Select Shade</option>
+                                <option value="">Select Color</option>
                             </select>
                             <div class="custom-color-container" style="display: none;">
                                 <div class="flex gap-2 items-start">
@@ -1800,8 +1800,8 @@
                 const product = document.getElementById('product-selector').value;
                 const density = document.getElementById('density-selector').value;
                 
-                // Populate color types based on selected density
-                if (priceList && category && product && density) {
+                // Populate color types based on selected criteria
+                if (priceList && category && product) {
                     populateColorTypes(priceList, category, product, density);
                 }
                 
@@ -2380,7 +2380,11 @@
             
             selector.innerHTML = '<option value="">Select Length</option>';
             
-            lengths.forEach(length => {
+            lengths.sort((a, b) => {
+                const numA = parseFloat(a);
+                const numB = parseFloat(b);
+                return !isNaN(numA) && !isNaN(numB) ? numA - numB : a.localeCompare(b);
+            }).forEach(length => {
                 const option = document.createElement('option');
                 option.value = length;
                 option.textContent = length;
@@ -2397,50 +2401,77 @@
 
         // Populate shades using product data (shade column from pricelists sheet)
         function populateColorTypes(priceList, category, product, density) {
+            console.log('populateColorTypes called with:', { priceList, category, product, density });
+            
             const selector = document.getElementById('color-type-selector');
             if (!selector) {
                 return;
             }
             
             if (!productData || productData.length === 0) {
+                console.log('No productData available');
                 return;
             }
             
-            // Filter products by criteria and get unique shades
+            console.log('Total productData items:', productData.length);
+            
+            // Check if no filters are applied (initial load)
+            const hasFilters = (priceList && priceList.trim() !== '') || 
+                              (category && category.trim() !== '') || 
+                              (product && product.trim() !== '') || 
+                              (density && density.trim() !== '');
+            
             let filteredProducts = productData;
             
-            if (priceList) {
-                filteredProducts = filteredProducts.filter(item => {
-                    const itemPriceList = item.PriceList || item.priceList || item['Price List Name'] || item.PriceListName;
-                    return itemPriceList === priceList;
-                });
+            // Only apply filters if at least one filter is provided
+            if (hasFilters) {
+                if (priceList && priceList.trim() !== '') {
+                    filteredProducts = filteredProducts.filter(item => {
+                        const itemPriceList = item.PriceList || item.priceList || item['Price List Name'] || item.PriceListName;
+                        return itemPriceList === priceList;
+                    });
+                    console.log('Filtered by priceList:', priceList, 'Remaining products:', filteredProducts.length);
+                }
+                
+                if (category && category.trim() !== '') {
+                    filteredProducts = filteredProducts.filter(item => {
+                        const itemCategory = item.Category || item.category;
+                        return itemCategory === category;
+                    });
+                    console.log('Filtered by category:', category, 'Remaining products:', filteredProducts.length);
+                }
+                
+                if (product && product.trim() !== '') {
+                    filteredProducts = filteredProducts.filter(item => {
+                        const itemProduct = item.Product || item.ProductName || item.product || item.name;
+                        return itemProduct === product;
+                    });
+                    console.log('Filtered by product:', product, 'Remaining products:', filteredProducts.length);
+                }
+                
+                if (density && density.trim() !== '') {
+                    filteredProducts = filteredProducts.filter(item => {
+                        const itemDensity = item.Density || item.density;
+                        return itemDensity === density;
+                    });
+                    console.log('Filtered by density:', density, 'Remaining products:', filteredProducts.length);
+                }
+            } else {
+                console.log('No filters applied - showing all available shades');
             }
             
-            if (category) {
-                filteredProducts = filteredProducts.filter(item => {
-                    const itemCategory = item.Category || item.category;
-                    return itemCategory === category;
-                });
-            }
-            
-            if (product) {
-                filteredProducts = filteredProducts.filter(item => {
-                    const itemProduct = item.Product || item.ProductName || item.product || item.name;
-                    return itemProduct === product;
-                });
-            }
-            
-            if (density) {
-                filteredProducts = filteredProducts.filter(item => {
-                    const itemDensity = item.Density || item.density;
-                    return itemDensity === density;
-                });
-            }
+            console.log('Filtered products count:', filteredProducts.length);
             
             // Get unique shades from filtered product data
             const shades = [...new Set(
                 filteredProducts.map(item => item.Shade || item.shade)
             )].filter(Boolean);
+            
+            // Sort shades alphabetically for consistent display
+            shades.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+            
+            console.log('Available shades:', shades);
+            console.log('Shades count:', shades.length);
             
             selector.innerHTML = '<option value="">Select Shades</option>';
             
@@ -2475,7 +2506,7 @@
             }
             
             // Clear existing options
-            colorSelector.innerHTML = '<option value="">Select Shade</option>';
+            colorSelector.innerHTML = '<option value="">Select Color</option>';
             
             // Filter colors by type if specified
             const filteredColors = colorType ? 
@@ -3450,7 +3481,11 @@
             }
             
             // Sort quotes by creation date (newest first)
-            const sortedQuotes = quotes.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            const sortedQuotes = quotes.sort((a, b) => {
+            const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt);
+            const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt);
+            return dateB - dateA;
+        });
             
             container.innerHTML = sortedQuotes.slice(0, 5).map(quote => {
                 // Calculate total amount with currency symbol

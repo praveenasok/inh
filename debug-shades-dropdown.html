@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Shades Dropdown</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .result {
+            background: #e8f5e8;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            border-left: 4px solid #4CAF50;
+        }
+        .error {
+            background: #ffe8e8;
+            border-left-color: #f44336;
+        }
+        .warning {
+            background: #fff3cd;
+            border-left-color: #ffc107;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        select {
+            width: 200px;
+            padding: 8px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .data-table {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            margin: 10px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+            position: sticky;
+            top: 0;
+        }
+        .shade-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        .shade-item {
+            background: #f0f8ff;
+            padding: 5px 10px;
+            border-radius: 3px;
+            border: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Debug Shades Dropdown Issue</h1>
+        <p><strong>Issue:</strong> Shades dropdown only shows "Dark Colors" instead of both "Light Colors" and "Dark Colors"</p>
+        
+        <div class="section">
+            <h3>Test Controls</h3>
+            <select id="price-list-selector">
+                <option value="">Select Price List</option>
+            </select>
+            <select id="category-selector">
+                <option value="">Select Category</option>
+            </select>
+            <select id="product-selector">
+                <option value="">Select Product</option>
+            </select>
+            <select id="density-selector">
+                <option value="">Select Density</option>
+            </select>
+            <br><br>
+            <button onclick="loadAndAnalyzeData()">Load & Analyze Data</button>
+            <button onclick="testShadesPopulation()">Test Shades Population</button>
+            <button onclick="showAllShades()">Show All Unique Shades</button>
+        </div>
+
+        <div class="section">
+            <h3>Shades Dropdown (Live Test)</h3>
+            <select id="color-type-selector">
+                <option value="">Select Shades</option>
+            </select>
+        </div>
+
+        <div id="results"></div>
+    </div>
+
+    <!-- Include the same data loading scripts as quotemaker -->
+    <script src="firebase-config.js"></script>
+    <script src="firebase-global-init.js"></script>
+    <script src="js/unified-data-access.js"></script>
+    <script src="cross-component-data-access.js"></script>
+
+    <script>
+        let productData = [];
+
+        function log(message, type = 'info') {
+            console.log(`[${type.toUpperCase()}] ${message}`);
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `result ${type === 'error' ? 'error' : type === 'warning' ? 'warning' : ''}`;
+            div.innerHTML = `<strong>[${type.toUpperCase()}]</strong> ${message}`;
+            results.appendChild(div);
+        }
+
+        // Copy the exact populateColorTypes function from quotemaker.html
+        function populateColorTypes(priceList, category, product, density) {
+            console.log('populateColorTypes called with:', { priceList, category, product, density });
+            
+            const selector = document.getElementById('color-type-selector');
+            if (!selector) {
+                log('No color-type-selector found!', 'error');
+                return;
+            }
+            
+            if (!productData || productData.length === 0) {
+                log('No productData available', 'error');
+                return;
+            }
+            
+            log(`Total productData items: ${productData.length}`);
+            
+            // Filter products by criteria and get unique shades
+            let filteredProducts = productData;
+            
+            if (priceList && priceList.trim() !== '') {
+                filteredProducts = filteredProducts.filter(item => {
+                    const itemPriceList = item.PriceList || item.priceList || item['Price List Name'] || item.PriceListName;
+                    return itemPriceList === priceList;
+                });
+                log(`Filtered by priceList "${priceList}": ${filteredProducts.length} products remaining`);
+            }
+            
+            if (category && category.trim() !== '') {
+                filteredProducts = filteredProducts.filter(item => {
+                    const itemCategory = item.Category || item.category;
+                    return itemCategory === category;
+                });
+                log(`Filtered by category "${category}": ${filteredProducts.length} products remaining`);
+            }
+            
+            if (product && product.trim() !== '') {
+                filteredProducts = filteredProducts.filter(item => {
+                    const itemProduct = item.Product || item.ProductName || item.product || item.name;
+                    return itemProduct === product;
+                });
+                log(`Filtered by product "${product}": ${filteredProducts.length} products remaining`);
+            }
+            
+            if (density && density.trim() !== '') {
+                filteredProducts = filteredProducts.filter(item => {
+                    const itemDensity = item.Density || item.density;
+                    return itemDensity === density;
+                });
+                log(`Filtered by density "${density}": ${filteredProducts.length} products remaining`);
+            }
+            
+            // Get unique shades from filtered product data
+            const shades = [...new Set(
+                filteredProducts.map(item => item.Shade || item.shade)
+            )].filter(Boolean);
+            
+            log(`<strong>FOUND ${shades.length} UNIQUE SHADES: ${shades.join(', ')}</strong>`);
+            
+            selector.innerHTML = '<option value="">Select Shades</option>';
+            
+            shades.forEach(shade => {
+                const option = document.createElement('option');
+                option.value = shade;
+                option.textContent = shade;
+                selector.appendChild(option);
+            });
+            
+            // Auto-select if only one option is available
+            if (shades.length === 1) {
+                selector.value = shades[0];
+                log(`Auto-selected single shade: ${shades[0]}`, 'warning');
+            }
+
+            return shades;
+        }
+
+        async function loadAndAnalyzeData() {
+            const results = document.getElementById('results');
+            results.innerHTML = '';
+
+            try {
+                log('Loading product data...');
+                
+                // Try multiple data sources
+                if (window.universalDataManager && window.universalDataManager.products) {
+                    productData = window.universalDataManager.products;
+                    log(`Loaded ${productData.length} products from universalDataManager`);
+                } else if (window.productData) {
+                    productData = window.productData;
+                    log(`Loaded ${productData.length} products from window.productData`);
+                } else {
+                    // Try localStorage
+                    const stored = localStorage.getItem('productData');
+                    if (stored) {
+                        productData = JSON.parse(stored);
+                        log(`Loaded ${productData.length} products from localStorage`);
+                    } else {
+                        throw new Error('No product data found in any source');
+                    }
+                }
+
+                // Analyze the data structure
+                if (productData.length > 0) {
+                    const sample = productData[0];
+                    log(`Sample product structure: ${JSON.stringify(sample, null, 2)}`);
+                    
+                    // Check what shade values exist
+                    const allShades = [...new Set(productData.map(item => item.Shade || item.shade))].filter(Boolean);
+                    log(`All unique shades in database (${allShades.length}): ${allShades.join(', ')}`);
+                    
+                    // Populate dropdowns for testing
+                    populateTestDropdowns();
+                }
+
+                return true;
+            } catch (error) {
+                log(`Failed to load data: ${error.message}`, 'error');
+                return false;
+            }
+        }
+
+        function populateTestDropdowns() {
+            // Populate price lists
+            const priceLists = [...new Set(productData.map(item => 
+                item.PriceList || item.priceList || item['Price List Name'] || item.PriceListName
+            ))].filter(Boolean);
+            
+            const priceListSelector = document.getElementById('price-list-selector');
+            priceListSelector.innerHTML = '<option value="">Select Price List</option>';
+            priceLists.forEach(pl => {
+                const option = document.createElement('option');
+                option.value = pl;
+                option.textContent = pl;
+                priceListSelector.appendChild(option);
+            });
+
+            // Populate categories
+            const categories = [...new Set(productData.map(item => item.Category || item.category))].filter(Boolean);
+            const categorySelector = document.getElementById('category-selector');
+            categorySelector.innerHTML = '<option value="">Select Category</option>';
+            categories.forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat;
+                option.textContent = cat;
+                categorySelector.appendChild(option);
+            });
+
+            // Add event listeners
+            priceListSelector.addEventListener('change', updateDependentDropdowns);
+            categorySelector.addEventListener('change', updateDependentDropdowns);
+            document.getElementById('product-selector').addEventListener('change', updateDependentDropdowns);
+            document.getElementById('density-selector').addEventListener('change', updateDependentDropdowns);
+        }
+
+        function updateDependentDropdowns() {
+            const priceList = document.getElementById('price-list-selector').value;
+            const category = document.getElementById('category-selector').value;
+            const product = document.getElementById('product-selector').value;
+            const density = document.getElementById('density-selector').value;
+
+            // Update products based on price list and category
+            if (priceList && category) {
+                const products = [...new Set(productData
+                    .filter(item => {
+                        const itemPriceList = item.PriceList || item.priceList || item['Price List Name'] || item.PriceListName;
+                        const itemCategory = item.Category || item.category;
+                        return itemPriceList === priceList && itemCategory === category;
+                    })
+                    .map(item => item.Product || item.ProductName || item.product || item.name)
+                )].filter(Boolean);
+
+                const productSelector = document.getElementById('product-selector');
+                productSelector.innerHTML = '<option value="">Select Product</option>';
+                products.forEach(prod => {
+                    const option = document.createElement('option');
+                    option.value = prod;
+                    option.textContent = prod;
+                    productSelector.appendChild(option);
+                });
+            }
+
+            // Update densities based on selections
+            if (priceList && category && product) {
+                const densities = [...new Set(productData
+                    .filter(item => {
+                        const itemPriceList = item.PriceList || item.priceList || item['Price List Name'] || item.PriceListName;
+                        const itemCategory = item.Category || item.category;
+                        const itemProduct = item.Product || item.ProductName || item.product || item.name;
+                        return itemPriceList === priceList && itemCategory === category && itemProduct === product;
+                    })
+                    .map(item => item.Density || item.density)
+                )].filter(Boolean);
+
+                const densitySelector = document.getElementById('density-selector');
+                densitySelector.innerHTML = '<option value="">Select Density</option>';
+                densities.forEach(dens => {
+                    const option = document.createElement('option');
+                    option.value = dens;
+                    option.textContent = dens;
+                    densitySelector.appendChild(option);
+                });
+            }
+
+            // Update shades
+            if (priceList || category || product || density) {
+                populateColorTypes(priceList, category, product, density);
+            }
+        }
+
+        function testShadesPopulation() {
+            const priceList = document.getElementById('price-list-selector').value;
+            const category = document.getElementById('category-selector').value;
+            const product = document.getElementById('product-selector').value;
+            const density = document.getElementById('density-selector').value;
+
+            log(`Testing shades population with: PriceList="${priceList}", Category="${category}", Product="${product}", Density="${density}"`);
+            
+            if (!productData || productData.length === 0) {
+                log('No product data loaded. Please load data first.', 'error');
+                return;
+            }
+
+            const shades = populateColorTypes(priceList, category, product, density);
+            
+            if (shades && shades.length > 0) {
+                log(`✅ SUCCESS: Found ${shades.length} shades`);
+            } else {
+                log('❌ PROBLEM: No shades found with current selection', 'warning');
+            }
+        }
+
+        function showAllShades() {
+            if (!productData || productData.length === 0) {
+                log('No product data loaded. Please load data first.', 'error');
+                return;
+            }
+
+            const allShades = [...new Set(productData.map(item => item.Shade || item.shade))].filter(Boolean);
+            
+            log(`All ${allShades.length} unique shades in database:`);
+            
+            const shadeDiv = document.createElement('div');
+            shadeDiv.innerHTML = '<h4>All Unique Shades:</h4>';
+            const shadeList = document.createElement('div');
+            shadeList.className = 'shade-list';
+            
+            allShades.forEach(shade => {
+                const shadeItem = document.createElement('div');
+                shadeItem.className = 'shade-item';
+                shadeItem.textContent = shade;
+                shadeList.appendChild(shadeItem);
+            });
+            
+            shadeDiv.appendChild(shadeList);
+            document.getElementById('results').appendChild(shadeDiv);
+
+            // Also show some sample products with their shades
+            const sampleProducts = productData.slice(0, 10);
+            const tableDiv = document.createElement('div');
+            tableDiv.innerHTML = '<h4>Sample Products with Shades:</h4>';
+            const table = document.createElement('table');
+            table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th>Price List</th>
+                        <th>Category</th>
+                        <th>Product</th>
+                        <th>Density</th>
+                        <th>Shade</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${sampleProducts.map(item => `
+                        <tr>
+                            <td>${item.PriceList || item.priceList || item['Price List Name'] || item.PriceListName || 'N/A'}</td>
+                            <td>${item.Category || item.category || 'N/A'}</td>
+                            <td>${item.Product || item.ProductName || item.product || item.name || 'N/A'}</td>
+                            <td>${item.Density || item.density || 'N/A'}</td>
+                            <td><strong>${item.Shade || item.shade || 'N/A'}</strong></td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            `;
+            
+            const tableContainer = document.createElement('div');
+            tableContainer.className = 'data-table';
+            tableContainer.appendChild(table);
+            tableDiv.appendChild(tableContainer);
+            document.getElementById('results').appendChild(tableDiv);
+        }
+
+        // Auto-load data when page loads
+        window.addEventListener('load', async () => {
+            setTimeout(async () => {
+                log('Page loaded, auto-loading data...');
+                await loadAndAnalyzeData();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

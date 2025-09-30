@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Query Performance Testing Tool</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #fafafa;
+        }
+        .test-section h3 {
+            color: #2c3e50;
+            margin-top: 0;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        button:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+        .results {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #ecf0f1;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .performance-metric {
+            display: inline-block;
+            margin: 5px 10px;
+            padding: 8px 12px;
+            background-color: #e8f5e8;
+            border-radius: 4px;
+            border-left: 4px solid #27ae60;
+        }
+        .error-metric {
+            background-color: #fdf2f2;
+            border-left-color: #e74c3c;
+        }
+        .warning {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .status.loading {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+        .status.success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        .comparison-table th,
+        .comparison-table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        .comparison-table th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        .improvement {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        .degradation {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Data Query Performance Testing Tool</h1>
+        
+        <div class="warning">
+            <strong>⚠️ Important:</strong> This tool tests query performance before and after index deployment. 
+            Make sure to run tests before deploying new indexes, then again after deployment to measure improvements.
+        </div>
+
+        <div class="test-section">
+            <h3>🔥 Firebase Firestore Query Tests</h3>
+            <p>Tests complex queries that benefit from composite indexes</p>
+            <button onclick="runFirestoreTests()">Run Firestore Performance Tests</button>
+            <button onclick="runSingleFirestoreQuery()">Test Single Query</button>
+            <div id="firestore-results" class="results"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 Google Sheets API Tests</h3>
+            <p>Tests Google Sheets API response times and data fetching efficiency</p>
+            <button onclick="runSheetsTests()">Run Sheets API Performance Tests</button>
+            <button onclick="testSheetsCache()">Test Caching Performance</button>
+            <div id="sheets-results" class="results"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🎯 Product Filtering Performance</h3>
+            <p>Tests the specific product filtering queries used in dropdowns</p>
+            <button onclick="runProductFilteringTests()">Test Product Filtering</button>
+            <button onclick="testShadesCounting()">Test Shades Counting Performance</button>
+            <div id="product-results" class="results"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>📈 Performance Comparison</h3>
+            <p>Compare performance before and after optimizations</p>
+            <button onclick="saveBaseline()">Save Current Performance as Baseline</button>
+            <button onclick="compareWithBaseline()">Compare with Baseline</button>
+            <div id="comparison-results" class="results"></div>
+        </div>
+    </div>
+
+    <!-- Include Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+    
+    <!-- Include existing configuration files -->
+    <script src="firebase-config.js"></script>
+    <script src="js/centralized-data-access.js"></script>
+
+    <script>
+        class PerformanceTestSuite {
+            constructor() {
+                this.results = [];
+                this.baseline = this.loadBaseline();
+            }
+
+            async measureQuery(name, queryFunction) {
+                const startTime = performance.now();
+                let result, error;
+                
+                try {
+                    result = await queryFunction();
+                } catch (e) {
+                    error = e;
+                }
+                
+                const endTime = performance.now();
+                const duration = endTime - startTime;
+                
+                const measurement = {
+                    name,
+                    duration: Math.round(duration * 100) / 100,
+                    timestamp: new Date().toISOString(),
+                    success: !error,
+                    error: error?.message,
+                    resultCount: result?.length || result?.size || 0
+                };
+                
+                this.results.push(measurement);
+                return measurement;
+            }
+
+            async runFirestoreTests() {
+                const resultsDiv = document.getElementById('firestore-results');
+                resultsDiv.innerHTML = '<div class="status loading">🔄 Running Firestore performance tests...</div>';
+                
+                const tests = [
+                    {
+                        name: 'Complex Client Query (salesperson + date range)',
+                        query: async () => {
+                            if (!window.firebase?.firestore) throw new Error('Firebase not available');
+                            const db = window.firebase.firestore();
+                            const startDate = new Date();
+                            startDate.setMonth(startDate.getMonth() - 1);
+                            
+                            return await db.collection('clients')
+                                .where('salesperson', '==', 'test-salesperson')
+                                .where('createdAt', '>=', startDate)
+                                .orderBy('createdAt', 'desc')
+                                .limit(50)
+                                .get();
+                        }
+                    },
+                    {
+                        name: 'Complex Order Query (clientId + status + date)',
+                        query: async () => {
+                            if (!window.firebase?.firestore) throw new Error('Firebase not available');
+                            const db = window.firebase.firestore();
+                            
+                            return await db.collection('orders')
+                                .where('clientId', '==', 'test-client-id')
+                                .where('status', '==', 'pending')
+                                .orderBy('createdAt', 'desc')
+                                .limit(20)
+                                .get();
+                        }
+                    },
+                    {
+                        name: 'Product Category + Density Filter',
+                        query: async () => {
+                            if (!window.firebase?.firestore) throw new Error('Firebase not available');
+                            const db = window.firebase.firestore();
+                            
+                            return await db.collection('products')
+                                .where('Category', '==', 'Weaves')
+                                .where('Product', '==', 'Weft')
+                                .where('Density', '==', 'Super Double Drawn')
+                                .get();
+                        }
+                    },
+                    {
+                        name: 'Large Products Collection Scan',
+                        query: async () => {
+                            if (!window.firebase?.firestore) throw new Error('Firebase not available');
+                            const db = window.firebase.firestore();
+                            
+                            return await db.collection('products')
+                                .limit(1000)
+                                .get();
+                        }
+                    }
+                ];
+
+                let html = '<h4>Firestore Query Performance Results:</h4>';
+                
+                for (const test of tests) {
+                    const result = await this.measureQuery(test.name, test.query);
+                    const statusClass = result.success ? 'performance-metric' : 'performance-metric error-metric';
+                    
+                    html += `
+                        <div class="${statusClass}">
+                            <strong>${result.name}</strong><br>
+                            Duration: ${result.duration}ms<br>
+                            Results: ${result.resultCount}<br>
+                            ${result.error ? `Error: ${result.error}` : 'Success ✅'}
+                        </div>
+                    `;
+                }
+                
+                resultsDiv.innerHTML = html;
+            }
+
+            async runSheetsTests() {
+                const resultsDiv = document.getElementById('sheets-results');
+                resultsDiv.innerHTML = '<div class="status loading">🔄 Running Google Sheets API tests...</div>';
+                
+                const tests = [
+                    {
+                        name: 'Fetch Products Data (A1:Z1000)',
+                        query: async () => {
+                            const apiKey = window.GOOGLE_SHEETS_CONFIG?.apiKey || 'test-key';
+                            const sheetId = window.GOOGLE_SHEETS_CONFIG?.spreadsheetId || 'test-sheet';
+                            
+                            const response = await fetch(
+                                `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/pricelists!A1:Z1000?key=${apiKey}`
+                            );
+                            
+                            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                            return await response.json();
+                        }
+                    },
+                    {
+                        name: 'Fetch Clients Data (A1:M100)',
+                        query: async () => {
+                            const apiKey = window.GOOGLE_SHEETS_CONFIG?.apiKey || 'test-key';
+                            const sheetId = window.GOOGLE_SHEETS_CONFIG?.spreadsheetId || 'test-sheet';
+                            
+                            const response = await fetch(
+                                `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/clients!A1:M100?key=${apiKey}`
+                            );
+                            
+                            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                            return await response.json();
+                        }
+                    },
+                    {
+                        name: 'Batch Fetch Multiple Ranges',
+                        query: async () => {
+                            const apiKey = window.GOOGLE_SHEETS_CONFIG?.apiKey || 'test-key';
+                            const sheetId = window.GOOGLE_SHEETS_CONFIG?.spreadsheetId || 'test-sheet';
+                            
+                            const ranges = ['pricelists!A1:Z100', 'clients!A1:M50', 'colors!A1:E20'];
+                            const rangeQuery = ranges.map(r => `ranges=${encodeURIComponent(r)}`).join('&');
+                            
+                            const response = await fetch(
+                                `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values:batchGet?${rangeQuery}&key=${apiKey}`
+                            );
+                            
+                            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                            return await response.json();
+                        }
+                    }
+                ];
+
+                let html = '<h4>Google Sheets API Performance Results:</h4>';
+                
+                for (const test of tests) {
+                    const result = await this.measureQuery(test.name, test.query);
+                    const statusClass = result.success ? 'performance-metric' : 'performance-metric error-metric';
+                    
+                    html += `
+                        <div class="${statusClass}">
+                            <strong>${result.name}</strong><br>
+                            Duration: ${result.duration}ms<br>
+                            ${result.error ? `Error: ${result.error}` : 'Success ✅'}
+                        </div>
+                    `;
+                }
+                
+                resultsDiv.innerHTML = html;
+            }
+
+            async runProductFilteringTests() {
+                const resultsDiv = document.getElementById('product-results');
+                resultsDiv.innerHTML = '<div class="status loading">🔄 Testing product filtering performance...</div>';
+                
+                const tests = [
+                    {
+                        name: 'Load All Products',
+                        query: async () => {
+                            if (window.centralizedDataAccess) {
+                                return await window.centralizedDataAccess.getProducts();
+                            }
+                            throw new Error('Centralized data access not available');
+                        }
+                    },
+                    {
+                        name: 'Filter Products by Category',
+                        query: async () => {
+                            if (window.centralizedDataAccess) {
+                                const products = await window.centralizedDataAccess.getProducts();
+                                return products.filter(p => p.Category === 'Weaves');
+                            }
+                            throw new Error('Centralized data access not available');
+                        }
+                    },
+                    {
+                        name: 'Complex Product Filter (Category + Product + Density)',
+                        query: async () => {
+                            if (window.centralizedDataAccess) {
+                                const products = await window.centralizedDataAccess.getProducts();
+                                return products.filter(p => 
+                                    p.Category === 'Weaves' && 
+                                    p.Product === 'Weft' && 
+                                    p.Density === 'Super Double Drawn'
+                                );
+                            }
+                            throw new Error('Centralized data access not available');
+                        }
+                    },
+                    {
+                        name: 'Get Unique Shades for Specific Selection',
+                        query: async () => {
+                            if (window.centralizedDataAccess) {
+                                const products = await window.centralizedDataAccess.getProducts();
+                                const filtered = products.filter(p => 
+                                    p.Category === 'Weaves' && 
+                                    p.Product === 'Weft' && 
+                                    p.Density === 'Super Double Drawn'
+                                );
+                                const shades = [...new Set(filtered.map(p => p.Shade).filter(s => s))];
+                                return shades;
+                            }
+                            throw new Error('Centralized data access not available');
+                        }
+                    }
+                ];
+
+                let html = '<h4>Product Filtering Performance Results:</h4>';
+                
+                for (const test of tests) {
+                    const result = await this.measureQuery(test.name, test.query);
+                    const statusClass = result.success ? 'performance-metric' : 'performance-metric error-metric';
+                    
+                    html += `
+                        <div class="${statusClass}">
+                            <strong>${result.name}</strong><br>
+                            Duration: ${result.duration}ms<br>
+                            Results: ${result.resultCount}<br>
+                            ${result.error ? `Error: ${result.error}` : 'Success ✅'}
+                        </div>
+                    `;
+                }
+                
+                resultsDiv.innerHTML = html;
+            }
+
+            saveBaseline() {
+                if (this.results.length === 0) {
+                    alert('No test results to save. Please run some tests first.');
+                    return;
+                }
+                
+                const baseline = {
+                    timestamp: new Date().toISOString(),
+                    results: [...this.results]
+                };
+                
+                localStorage.setItem('performance-baseline', JSON.stringify(baseline));
+                
+                const resultsDiv = document.getElementById('comparison-results');
+                resultsDiv.innerHTML = `
+                    <div class="status success">
+                        ✅ Baseline saved successfully with ${this.results.length} test results.
+                        <br>Timestamp: ${baseline.timestamp}
+                    </div>
+                `;
+            }
+
+            loadBaseline() {
+                const stored = localStorage.getItem('performance-baseline');
+                return stored ? JSON.parse(stored) : null;
+            }
+
+            compareWithBaseline() {
+                if (!this.baseline) {
+                    const resultsDiv = document.getElementById('comparison-results');
+                    resultsDiv.innerHTML = `
+                        <div class="status error">
+                            ❌ No baseline found. Please save a baseline first.
+                        </div>
+                    `;
+                    return;
+                }
+
+                if (this.results.length === 0) {
+                    alert('No current test results to compare. Please run some tests first.');
+                    return;
+                }
+
+                const resultsDiv = document.getElementById('comparison-results');
+                let html = `
+                    <h4>Performance Comparison</h4>
+                    <p><strong>Baseline:</strong> ${this.baseline.timestamp}</p>
+                    <p><strong>Current:</strong> ${new Date().toISOString()}</p>
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>Test Name</th>
+                                <th>Baseline (ms)</th>
+                                <th>Current (ms)</th>
+                                <th>Change</th>
+                                <th>Improvement</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                for (const currentResult of this.results) {
+                    const baselineResult = this.baseline.results.find(r => r.name === currentResult.name);
+                    
+                    if (baselineResult) {
+                        const change = currentResult.duration - baselineResult.duration;
+                        const improvement = ((baselineResult.duration - currentResult.duration) / baselineResult.duration * 100);
+                        const improvementClass = improvement > 0 ? 'improvement' : 'degradation';
+                        const improvementSymbol = improvement > 0 ? '⬇️' : '⬆️';
+                        
+                        html += `
+                            <tr>
+                                <td>${currentResult.name}</td>
+                                <td>${baselineResult.duration}</td>
+                                <td>${currentResult.duration}</td>
+                                <td class="${improvementClass}">${change > 0 ? '+' : ''}${change.toFixed(2)}ms</td>
+                                <td class="${improvementClass}">${improvementSymbol} ${Math.abs(improvement).toFixed(1)}%</td>
+                            </tr>
+                        `;
+                    }
+                }
+
+                html += '</tbody></table>';
+                resultsDiv.innerHTML = html;
+            }
+        }
+
+        // Initialize the test suite
+        const testSuite = new PerformanceTestSuite();
+
+        // Expose functions to global scope for button clicks
+        window.runFirestoreTests = () => testSuite.runFirestoreTests();
+        window.runSheetsTests = () => testSuite.runSheetsTests();
+        window.runProductFilteringTests = () => testSuite.runProductFilteringTests();
+        window.saveBaseline = () => testSuite.saveBaseline();
+        window.compareWithBaseline = () => testSuite.compareWithBaseline();
+
+        window.runSingleFirestoreQuery = async () => {
+            const resultsDiv = document.getElementById('firestore-results');
+            resultsDiv.innerHTML = '<div class="status loading">🔄 Running single query test...</div>';
+            
+            const result = await testSuite.measureQuery('Single Test Query', async () => {
+                if (!window.firebase?.firestore) throw new Error('Firebase not available');
+                const db = window.firebase.firestore();
+                return await db.collection('products').limit(10).get();
+            });
+            
+            resultsDiv.innerHTML = `
+                <div class="performance-metric">
+                    <strong>Single Query Test</strong><br>
+                    Duration: ${result.duration}ms<br>
+                    Results: ${result.resultCount}<br>
+                    ${result.error ? `Error: ${result.error}` : 'Success ✅'}
+                </div>
+            `;
+        };
+
+        window.testSheetsCache = async () => {
+            const resultsDiv = document.getElementById('sheets-results');
+            resultsDiv.innerHTML = '<div class="status loading">🔄 Testing caching performance...</div>';
+            
+            // Test without cache
+            const result1 = await testSuite.measureQuery('First API Call (no cache)', async () => {
+                const apiKey = window.GOOGLE_SHEETS_CONFIG?.apiKey || 'test-key';
+                const sheetId = window.GOOGLE_SHEETS_CONFIG?.spreadsheetId || 'test-sheet';
+                
+                const response = await fetch(
+                    `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/pricelists!A1:Z10?key=${apiKey}&_t=${Date.now()}`
+                );
+                
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return await response.json();
+            });
+            
+            // Test with potential cache
+            const result2 = await testSuite.measureQuery('Second API Call (potential cache)', async () => {
+                const apiKey = window.GOOGLE_SHEETS_CONFIG?.apiKey || 'test-key';
+                const sheetId = window.GOOGLE_SHEETS_CONFIG?.spreadsheetId || 'test-sheet';
+                
+                const response = await fetch(
+                    `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/pricelists!A1:Z10?key=${apiKey}`
+                );
+                
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return await response.json();
+            });
+            
+            const improvement = ((result1.duration - result2.duration) / result1.duration * 100);
+            
+            resultsDiv.innerHTML = `
+                <div class="performance-metric">
+                    <strong>Cache Performance Test</strong><br>
+                    First call: ${result1.duration}ms<br>
+                    Second call: ${result2.duration}ms<br>
+                    Potential cache benefit: ${improvement.toFixed(1)}%
+                </div>
+            `;
+        };
+
+        window.testShadesCounting = async () => {
+            const resultsDiv = document.getElementById('product-results');
+            resultsDiv.innerHTML = '<div class="status loading">🔄 Testing shades counting performance...</div>';
+            
+            const result = await testSuite.measureQuery('Count Shades for Weaves+Weft+Super Double Drawn', async () => {
+                if (window.centralizedDataAccess) {
+                    const products = await window.centralizedDataAccess.getProducts();
+                    const filtered = products.filter(p => 
+                        p.Category === 'Weaves' && 
+                        p.Product === 'Weft' && 
+                        p.Density === 'Super Double Drawn'
+                    );
+                    const shades = [...new Set(filtered.map(p => p.Shade).filter(s => s))];
+                    return { count: shades.length, shades };
+                }
+                throw new Error('Centralized data access not available');
+            });
+            
+            resultsDiv.innerHTML = `
+                <div class="performance-metric">
+                    <strong>Shades Counting Performance</strong><br>
+                    Duration: ${result.duration}ms<br>
+                    Unique shades found: ${result.resultCount}<br>
+                    ${result.error ? `Error: ${result.error}` : 'Success ✅'}
+                </div>
+            `;
+        };
+
+        // Auto-run basic connectivity test on page load
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('Performance Testing Tool loaded');
+            
+            // Test basic connectivity
+            try {
+                if (window.centralizedDataAccess) {
+                    await window.centralizedDataAccess.waitForReady();
+                    console.log('✅ Centralized data access is ready');
+                } else {
+                    console.log('⚠️ Centralized data access not available');
+                }
+            } catch (error) {
+                console.log('❌ Data access initialization failed:', error.message);
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1265,31 +1265,29 @@
         // Populate color types
         function populateColorTypes(priceList, category, product) {
             const selector = document.getElementById('color-type-selector');
-            const colors = [...new Set(
+            const shades = [...new Set(
                 productData
                     .filter(p => 
                         (p['Price List Name'] || p.PriceListName || p.PriceList) === priceList &&
                         (p.Category || p.category) === category &&
                         (p.Product || p.product) === product
                     )
-                    .map(p => p.Colors || p.Color || p.color)
-                    .filter(Boolean)
-                    .flatMap(colorString => colorString.split(',').map(c => c.trim()))
+                    .map(p => p.Shade || p.shade)
                     .filter(Boolean)
             )];
             
-            selector.innerHTML = '<option value="">Select Color Type</option>';
+            selector.innerHTML = '<option value="">Select Shades</option>';
             
-            colors.sort().forEach(color => {
+            shades.sort().forEach(shade => {
                 const option = document.createElement('option');
-                option.value = color;
-                option.textContent = color;
+                option.value = shade;
+                option.textContent = shade;
                 selector.appendChild(option);
             });
             
             // Auto-select if only one option is available
-            if (colors.length === 1) {
-                selector.value = colors[0];
+            if (shades.length === 1) {
+                selector.value = shades[0];
                 onColorTypeChange();
             }
             

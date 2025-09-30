@@ -380,25 +380,25 @@ class CentralizedDataAccess {
     async getCategories() {
         const products = await this.getProducts();
         const categories = [...new Set(products.map(p => p.category).filter(Boolean))];
-        return categories.sort();
+        return categories.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
     }
 
     async getSubcategories() {
         const products = await this.getProducts();
         const subcategories = [...new Set(products.map(p => p.subcategory).filter(Boolean))];
-        return subcategories.sort();
+        return subcategories.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
     }
 
     async getPriceLists() {
         const products = await this.getProducts();
         const priceLists = [...new Set(products.map(p => p.priceList).filter(Boolean))];
-        return priceLists.sort();
+        return priceLists.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
     }
 
     async getBrands() {
         const products = await this.getProducts();
         const brands = [...new Set(products.map(p => p.brand).filter(Boolean))];
-        return brands.sort();
+        return brands.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
     }
 
     async getProductsByCategory(category) {
