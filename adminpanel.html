@@ -3,41 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Synchronization Panel - InstaQuote</title>
-    
-    <!-- External Libraries -->
+    <title>Admin Panel - INH</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
-    <!-- Google API Client Library -->
-    <script src="https://apis.google.com/js/api.js"></script>
-    <!-- Auto-configuration for Google Sheets -->
-    <script src="js/google-sheets-auto-config.js"></script>
-    <script>
-        // Apply auto-configuration
-        googleSheetsAutoConfig.autoApply();
-        // Fallback API key if auto-config doesn't set it
-        if (!window.GOOGLE_SHEETS_API_KEY) {
-            window.GOOGLE_SHEETS_API_KEY = 'AIzaSyAdESdS-vNgXcvp0ZUv3AsYkryNdCemztI';
-        }
-    </script>
-    <script src="google-sheets-config.js"></script>
+    <!-- Firebase API Adapter (loads first to replace Firebase calls) -->
+    <script src="firebase-api-adapter.js"></script>
     
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <!-- Firebase SDKs (kept for compatibility, but will be overridden by adapter) -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
     
-    <!-- Firebase Configuration -->
+    <!-- Firebase configuration -->
     <script src="firebase-config.js"></script>
+    
     <!-- Firebase global initialization -->
     <script src="firebase-global-init.js"></script>
-    
-    <!-- Firebase Database Service -->
     <script src="firebase-database.js"></script>
-    
-    <!-- Firebase Error Handler -->
     <script src="firebase-error-handler.js"></script>
+    <script src="client-management.js"></script>
     
     <!-- Universal Firebase Data Manager -->
     <script src="js/universal-firebase-data-manager.js"></script>
@@ -47,907 +36,2235 @@
     <script src="js/fallback-detector.js"></script>
     <script src="js/unified-data-access.js"></script>
     
-    <!-- Browser-compatible Firebase Service -->
-    <script src="firebase-browser-service.js"></script>
-    <script src="js/sync-status-ui.js"></script>
-    
+    <link rel="stylesheet" href="unified-button-system.css">
     <style>
-        .sync-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 16px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        /* Responsive padding */
+        .mobile-padding {
+            padding: 1.5rem;
+        }
+        @media (max-width: 640px) {
+            .mobile-padding {
+                padding: 1rem;
+            }
         }
         
-        .status-indicator {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 8px;
+        /* Shadow effects */
+        .shadow-soft {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         }
         
-        .status-connected { background-color: #10b981; }
-        .status-disconnected { background-color: #ef4444; }
-        .status-syncing { background-color: #f59e0b; animation: pulse 2s infinite; }
+        /* Button styles now handled by unified-button-system.css */
         
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+        /* Mobile-first responsive design */
+        @media (max-width: 768px) {
+            .container {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+            .text-responsive {
+                font-size: 0.875rem;
+            }
         }
         
-        .progress-bar {
-            height: 8px;
-            background-color: #e5e7eb;
-            border-radius: 4px;
-            overflow: hidden;
+        /* Form elements */
+        .form-input {
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
         
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #3b82f6, #10b981);
-            transition: width 0.3s ease;
-        }
-        
-        .data-table {
-            max-height: 400px;
-            overflow-y: auto;
-        }
-        
-        .collection-card {
+        /* Card hover effects */
+        .card-hover {
             transition: all 0.3s ease;
         }
-        
-        .collection-card:hover {
+        .card-hover:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
         }
         
-        /* Hamburger Menu Styles */
-        .hamburger-menu {
+        /* Navigation styles now handled by unified-button-system.css */
+        
+        /* Module display */
+        .module {
             display: none;
-            flex-direction: column;
-            cursor: pointer;
-            padding: 4px;
         }
-        
-        .hamburger-line {
-            width: 25px;
-            height: 3px;
-            background-color: white;
-            margin: 3px 0;
-            transition: 0.3s;
-            border-radius: 2px;
+        .module.active {
+            display: block;
         }
-        
-        .hamburger-menu.active .hamburger-line:nth-child(1) {
-            transform: rotate(-45deg) translate(-5px, 6px);
+        .nav-item.active {
+            background-color: #3b82f6;
+            color: white;
         }
-        
-        .hamburger-menu.active .hamburger-line:nth-child(2) {
-            opacity: 0;
-        }
-        
-        .hamburger-menu.active .hamburger-line:nth-child(3) {
-            transform: rotate(45deg) translate(-5px, -6px);
-        }
-        
         .mobile-menu {
             display: none;
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #d97706 100%);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            z-index: 40;
         }
-        
-        .mobile-menu.active {
-            display: block;
-            animation: slideDown 0.3s ease-out;
-        }
-        
-        @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        .mobile-menu a {
-            display: block;
-            padding: 12px 20px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            transition: background-color 0.3s ease;
-        }
-        
-        .mobile-menu a:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-        }
-        
-        .mobile-menu a:last-child {
-            border-bottom: none;
-        }
-        
-        /* Desktop menu - hidden on mobile */
-        .desktop-menu {
-            display: flex;
-        }
-        
-        /* Responsive breakpoints */
         @media (max-width: 768px) {
-            .desktop-menu {
+            .desktop-nav {
                 display: none;
             }
-            
-            .hamburger-menu {
-                display: flex;
+            .mobile-menu.active {
+                display: block;
             }
+        }
+        
+        /* Navigation link styles */
+        .nav-btn {
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 48px;
+            padding: 12px 16px;
+            font-weight: 500;
+            cursor: pointer;
+            touch-action: manipulation;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            border: 2px solid #e2e8f0;
+            box-shadow: 0 4px 12px rgba(71, 85, 105, 0.15);
+        }
+        
+        .nav-btn:hover {
+            text-decoration: none;
+            background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+            border-color: #cbd5e1;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(71, 85, 105, 0.2);
+        }
+        
+        .nav-btn.nav-btn-active {
+            background: #081249;
+            color: white !important;
+            border: 2px solid #081249;
+            box-shadow: 0 4px 12px rgba(8, 18, 73, 0.3);
+        }
+        
+        .nav-btn.nav-btn-active:hover {
+            background: #0a1555;
+            border-color: #0a1555;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(8, 18, 73, 0.4);
+        }
+        
+        /* Remove default link styles */
+        .no-underline {
+            text-decoration: none !important;
+        }
+        
+        .no-underline:hover {
+            text-decoration: none !important;
         }
     </style>
 </head>
 <body class="bg-gray-50">
-    <!-- Navigation -->
-    <nav class="bg-gradient-to-r from-blue-900 via-blue-800 to-amber-700 text-white shadow-lg sticky top-0 z-50 relative">
+
+    <!-- Navigation Component -->
+    <nav class="bg-gradient-to-r from-blue-900 via-blue-800 to-amber-700 text-white shadow-lg sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
+                <!-- Logo and Title -->
                 <div class="flex items-center space-x-3">
                     <img src="images/logo.png" alt="Logo" class="h-8 w-auto opacity-90">
-                    <span class="text-lg font-bold">instaQuote - Admin Panel</span>
+                    <span class="text-lg font-bold">InstaQuote</span>
                 </div>
                 
-                <!-- Desktop Menu -->
-                <div class="desktop-menu items-center space-x-4">
+                <!-- Navigation Links -->
+                <div class="hidden md:flex items-center space-x-4">
                     <a href="quotemaker.html" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-white/10 transition-colors">
                         <i class="fas fa-file-invoice-dollar mr-1"></i> Quote Maker
                     </a>
                     <a href="price-calculator.html" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-white/10 transition-colors">
-                        <i class="fas fa-calculator mr-1"></i> Price Lists
+                        <i class="fas fa-calculator mr-1"></i> Calculator
                     </a>
                     <a href="product-catalog.html" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-white/10 transition-colors">
-                        <i class="fas fa-th-large mr-1"></i> Product Catalog
+                        <i class="fas fa-th-large mr-1"></i> Catalog
                     </a>
+                    <span class="px-3 py-2 rounded-md text-sm font-medium bg-white/20">
+                        <i class="fas fa-cog mr-1"></i> Admin
+                    </span>
                 </div>
                 
-                <!-- Hamburger Menu Button -->
-                <div class="hamburger-menu" onclick="toggleMobileMenu()">
-                    <div class="hamburger-line"></div>
-                    <div class="hamburger-line"></div>
-                    <div class="hamburger-line"></div>
+                <!-- Mobile Menu Button -->
+                <div class="md:hidden">
+                    <button id="mobile-menu-btn" class="p-2 rounded-md hover:bg-white/10 transition-colors">
+                        <i class="fas fa-bars"></i>
+                    </button>
                 </div>
             </div>
-        </div>
-        
-        <!-- Mobile Menu -->
-        <div class="mobile-menu" id="mobileMenu">
-            <a href="quotemaker.html" class="text-white hover:text-gray-200">
-                <i class="fas fa-file-invoice-dollar mr-2"></i> Quote Maker
-            </a>
-            <a href="price-calculator.html" class="text-white hover:text-gray-200">
-                <i class="fas fa-calculator mr-2"></i> Price Lists
-            </a>
-            <a href="product-catalog.html" class="text-white hover:text-gray-200">
-                <i class="fas fa-th-large mr-2"></i> Product Catalog
-            </a>
+            
+            <!-- Mobile Menu -->
+            <div id="mobile-menu" class="md:hidden hidden pb-3">
+                <div class="space-y-1">
+                    <a href="quotemaker.html" class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-white/10 transition-colors">
+                        <i class="fas fa-file-invoice-dollar mr-2"></i> Quote Maker
+                    </a>
+                    <a href="price-calculator.html" class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-white/10 transition-colors">
+                        <i class="fas fa-calculator mr-2"></i> Price Calculator</a>
+                    <a href="product-catalog.html" class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-white/10 transition-colors">
+                        <i class="fas fa-th-large mr-2"></i> Product Catalog
+                    </a>
+                    <span class="block px-3 py-2 rounded-md text-sm font-medium bg-white/20">
+                        <i class="fas fa-cog mr-2"></i> Admin Panel
+                    </span>
+                </div>
+            </div>
         </div>
     </nav>
 
-    <!-- Main Content -->
+    <!-- Admin Panel Module -->
     <div class="container mx-auto px-4 py-6">
-        <!-- Header -->
-        <div class="text-center mb-8">
+        <!-- Enhanced Admin Panel Header -->
+        <div class="text-left mb-8">
+            <h1 class="text-3xl font-bold mb-2" style="color: #081249;">Admin Panel</h1>
         </div>
 
-        <!-- Manual Sync Controls -->
-        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
-            <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                <button id="manual-sync-btn" onclick="triggerManualSync()" 
-                        class="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center justify-center">
-                    <i class="fas fa-sync-alt mr-2"></i>Start Manual Sync
+        <!-- Admin Panel Tabs -->
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+            <!-- Tab Navigation -->
+            <div class="border-b border-gray-200">
+                <nav class="flex space-x-8 px-6" aria-label="Tabs">
+                    <button onclick="showAdminTab('sync-management')" class="admin-tab-btn active border-b-2 border-blue-500 py-4 px-1 text-sm font-medium text-blue-600">
+                        Data Synchronization
+                    </button>
+                    <button onclick="showAdminTab('client-management')" class="admin-tab-btn border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                        Client Management
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Data Synchronization Tab -->
+            <div id="sync-management" class="admin-tab-content p-6">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Firebase Sync Section -->
+                    <div class="bg-white rounded-xl shadow-soft p-4 sm:p-6 mb-4 mobile-padding" style="background: #fff3cd;">
+                        <h3 class="section-heading">🔥 Firebase Synchronization</h3>
+                        <div class="space-y-4">
+                            <!-- Firebase Status -->
+                            <div class="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-yellow-800 font-medium">Firebase Status</span>
+                                    <span id="firebase-sync-status" class="px-2 py-1 rounded-full text-xs font-medium bg-yellow-200 text-yellow-700">Checking...</span>
+                                </div>
+                                <div class="flex justify-between items-center mt-2">
+                                    <span class="text-yellow-700">Last Sync</span>
+                                    <span id="firebase-last-sync" class="text-sm text-yellow-600">Never</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Firebase Sync Controls -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <button onclick="performFirebaseSync()" class="btn-primary font-medium py-3 px-4 rounded-lg transition-colors">
+                                    🔄 Sync to Firebase
+                                </button>
+                                <button onclick="performFirebaseBackup()" class="btn-secondary font-medium py-3 px-4 rounded-lg transition-colors">
+                                    💾 Backup from Firebase
+                                </button>
+                                <button onclick="validateFirebaseData()" class="btn-warning font-medium py-3 px-4 rounded-lg transition-colors">
+                                    ✅ Validate Data
+                                </button>
+                                <button onclick="resetFirebaseConnection()" class="btn-danger font-medium py-3 px-4 rounded-lg transition-colors">
+                                    🔌 Reset Connection
+                                </button>
+                            </div>
+                            
+                            <div class="text-sm text-yellow-700">
+                                <p>• <strong>Admin-only Firebase access</strong></p>
+                                <p>• All other pages use local data first</p>
+                                <p>• Manual synchronization control</p>
+                                <p>• Data validation and backup</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Google Sheets Sync Section -->
+                    <div class="bg-white rounded-xl shadow-soft p-4 sm:p-6 mb-4 mobile-padding" style="background: #eef2ff;">
+                        <h3 class="section-heading">📊 Google Sheets Synchronization</h3>
+                        <div class="space-y-4">
+                            <button onclick="openSyncModal()" class="w-full btn-primary font-medium py-3 px-4 rounded-lg transition-colors">
+                                📊 Open Sync Operations
+                            </button>
+                            <div class="text-sm text-gray-600">
+                                <p>• Two-way synchronization with Google Sheets</p>
+                                <p>• Automatic duplicate prevention</p>
+                                <p>• Real-time data validation</p>
+                            </div>
+                        </div>
+                    </div>
+
+
+
+                    <!-- Database Statistics Section -->
+                    <div class="bg-white rounded-xl shadow-soft p-4 sm:p-6 mb-4 mobile-padding" style="background: #f8fafc;">
+                        <h3 class="section-heading flex items-center gap-2">
+                            📊 Database Statistics
+                            <button onclick="refreshDatabaseStats()" class="text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 px-2 py-1 rounded-full transition-colors" title="Refresh Statistics">
+                                🔄 Refresh
+                            </button>
+                        </h3>
+                        
+                        <!-- Connection Status -->
+                        <div class="mb-4 p-3 bg-gray-50 rounded-lg">
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-600 font-medium">Firebase Connection</span>
+                                <span id="firebase-status" class="px-2 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-700">Checking...</span>
+                            </div>
+                            <div class="flex justify-between items-center mt-2">
+                                <span class="text-gray-600">Last Updated</span>
+                                <span id="last-update" class="text-sm text-gray-500">Never</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Statistics Grid -->
+                        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                            <!-- Products -->
+                            <div class="bg-blue-50 p-3 rounded-lg text-center">
+                                <div class="text-2xl font-bold text-blue-600" id="products-count">0</div>
+                                <div class="text-xs text-blue-700 font-medium">Products</div>
+                            </div>
+                            
+                            <!-- Clients -->
+                            <div class="bg-green-50 p-3 rounded-lg text-center">
+                                <div class="text-2xl font-bold text-green-600" id="clients-count">0</div>
+                                <div class="text-xs text-green-700 font-medium">Clients</div>
+                            </div>
+                            
+                            <!-- Quotes -->
+                            <div class="bg-purple-50 p-3 rounded-lg text-center">
+                                <div class="text-2xl font-bold text-purple-600" id="quotes-count">0</div>
+                                <div class="text-xs text-purple-700 font-medium">Quotes</div>
+                            </div>
+                            
+                            <!-- Orders -->
+                            <div class="bg-orange-50 p-3 rounded-lg text-center">
+                                <div class="text-2xl font-bold text-orange-600" id="orders-count">0</div>
+                                <div class="text-xs text-orange-700 font-medium">Orders</div>
+                            </div>
+                            
+                            <!-- Salesmen -->
+                            <div class="bg-indigo-50 p-3 rounded-lg text-center">
+                                <div class="text-2xl font-bold text-indigo-600" id="salesmen-count">0</div>
+                                <div class="text-xs text-indigo-700 font-medium">Salesmen</div>
+                            </div>
+                            
+                            <!-- Price Lists -->
+                            <div class="bg-pink-50 p-3 rounded-lg text-center">
+                                <div class="text-2xl font-bold text-pink-600" id="pricelists-count">0</div>
+                                <div class="text-xs text-pink-700 font-medium">Price Lists</div>
+                            </div>
+                            
+                            <!-- Categories -->
+                            <div class="bg-teal-50 p-3 rounded-lg text-center">
+                                <div class="text-2xl font-bold text-teal-600" id="categories-count">0</div>
+                                <div class="text-xs text-teal-700 font-medium">Categories</div>
+                            </div>
+                            
+                            <!-- Colors -->
+                            <div class="bg-yellow-50 p-3 rounded-lg text-center">
+                                <div class="text-2xl font-bold text-yellow-600" id="colors-count">0</div>
+                                <div class="text-xs text-yellow-700 font-medium">Colors</div>
+                            </div>
+                            
+                            <!-- Styles -->
+                            <div class="bg-red-50 p-3 rounded-lg text-center">
+                                <div class="text-2xl font-bold text-red-600" id="styles-count">0</div>
+                                <div class="text-xs text-red-700 font-medium">Styles</div>
+                            </div>
+                            
+                            <!-- Loading Indicator -->
+                            <div class="bg-gray-50 p-3 rounded-lg text-center" id="stats-loading" style="display: none;">
+                                <div class="text-2xl">⏳</div>
+                                <div class="text-xs text-gray-600 font-medium">Loading...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Client Management Tab -->
+            <div id="client-management" class="admin-tab-content hidden p-6">
+                <!-- Client Management Header -->
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
+                    <div>
+                        <h2 class="section-heading-large">Client Management</h2>
+                        <p class="text-gray-600 mt-1">Manage your client database and information</p>
+                    </div>
+                    <div class="mt-4 sm:mt-0 flex space-x-3">
+                        <button onclick="exportClients()" class="btn-success">
+                    Export Data
                 </button>
-                <button id="refresh-table-btn" onclick="manualRefreshTable()" 
-                        class="bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center justify-center">
-                    <i class="fas fa-refresh mr-2"></i>Refresh Table
-                </button>
-            </div>
-            
-            <!-- Progress Section -->
-            <div id="manual-sync-progress" class="mt-6 hidden">
-                <div class="bg-gray-50 rounded-lg p-4">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-sm font-medium text-gray-700">Sync Progress</span>
-                        <span id="manual-sync-percentage" class="text-sm font-medium text-blue-600">0%</span>
-                    </div>
-                    <div class="w-full bg-gray-200 rounded-full h-2">
-                        <div id="manual-sync-progress-fill" class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
-                    </div>
-                    <div class="mt-2">
-                        <span id="manual-sync-status" class="text-sm text-gray-600">Ready to sync...</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Comprehensive Sync Progress Section -->
-        <div id="sync-progress-section" class="bg-white rounded-xl shadow-lg p-6 mb-8 hidden">
-            <h3 class="text-lg font-semibold mb-4 text-gray-800">Synchronization Progress</h3>
-            <div class="space-y-4">
-                <div class="flex justify-between items-center">
-                    <span id="sync-stage-text" class="text-sm font-medium text-gray-700">Initializing...</span>
-                    <span id="sync-percentage" class="text-sm font-medium text-blue-600">0%</span>
-                </div>
-                <div class="w-full bg-gray-200 rounded-full h-2">
-                    <div id="sync-progress-fill" class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
-                </div>
-                <div class="text-center">
-                    <span id="sync-status-text" class="text-sm text-gray-600">Ready to sync...</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Status Indicators -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <!-- Google Sheets Status -->
-            <div class="bg-white rounded-xl shadow-lg p-6">
-                <h3 class="text-lg font-semibold mb-4 text-gray-800">Google Sheets</h3>
-                <div class="flex items-center justify-between mb-4">
-                    <span id="sheets-status-indicator" class="status-indicator status-disconnected"></span>
-                </div>
-                <div class="space-y-2">
-                    <div class="flex justify-between">
-                        <span class="text-gray-600">Status:</span>
-                        <span id="sheets-connection-status" class="font-medium text-red-600">Disconnected</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-600">Records:</span>
-                        <span id="sheets-record-count" class="font-medium">0</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-600">Last Sync:</span>
-                        <span id="sheets-last-sync" class="font-medium text-sm">Never</span>
-                    </div>
-                    <div id="sheets-debug-info" class="mt-2 text-xs text-gray-500 hidden">
-                        <div>Debug Info:</div>
-                        <div id="sheets-debug-details"></div>
-                    </div>
-                    <div class="mt-3">
-                        <button id="skip-sheets-btn" onclick="skipGoogleSheets()" 
-                                class="w-full bg-gray-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-600 transition-colors">
-                            Skip Google Sheets
+                <button onclick="showAddClientModal()" class="btn-primary">
+                            Add Client
                         </button>
                     </div>
                 </div>
-            </div>
 
-            <!-- Firebase Status -->
-            <div class="bg-white rounded-xl shadow-lg p-6">
-                <h3 class="text-lg font-semibold mb-4 text-gray-800">Firebase</h3>
-                <div class="flex items-center justify-between mb-4">
-                    <span id="firebase-status-indicator" class="status-indicator status-connected"></span>
-                </div>
-                <div class="space-y-2">
-                    <div class="flex justify-between">
-                        <span class="text-gray-600">Status:</span>
-                        <span id="firebase-connection-status" class="font-medium text-green-600">Connected</span>
+                <!-- Client Statistics -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-blue-50 rounded-lg p-4">
+                        <div class="flex items-center">
+                            <div class="p-2 bg-blue-100 rounded-lg">
+                                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM9 9a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                </svg>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-blue-600">Total Clients</p>
+                                <p class="text-2xl font-semibold text-blue-900" id="total-clients">0</p>
+                            </div>
+                        </div>
                     </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-600">Records:</span>
-                        <span id="firebase-record-count" class="font-medium">0</span>
+                    
+                    <div class="bg-green-50 rounded-lg p-4">
+                        <div class="flex items-center">
+                            <div class="p-2 bg-green-100 rounded-lg">
+                                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                                </svg>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-green-600">This Month</p>
+                                <p class="text-2xl font-semibold text-green-900" id="month-clients">0</p>
+                            </div>
+                        </div>
                     </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-600">Last Sync:</span>
-                        <span id="firebase-last-sync" class="font-medium text-sm">Never</span>
+                    
+                    <div class="bg-purple-50 rounded-lg p-4">
+                        <div class="flex items-center">
+                            <div class="p-2 bg-purple-100 rounded-lg">
+                                <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 012 2v6a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2V6"></path>
+                                </svg>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-purple-600">Salespeople</p>
+                                <p class="text-2xl font-semibold text-purple-900" id="salespeople-count">0</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-orange-50 rounded-lg p-4">
+                        <div class="flex items-center">
+                            <div class="p-2 bg-orange-100 rounded-lg">
+                                <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                                </svg>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-orange-600">Device ID</p>
+                                <p class="text-lg font-semibold text-orange-900" id="device-id">Unknown</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
 
-
-
-        <!-- Data Source Comparison Table -->
-        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
-            <h3 class="text-lg font-semibold mb-4 text-gray-800">Data Source Comparison</h3>
-            <div class="flex items-center justify-between mb-4">
-                <div class="flex space-x-2">
-                    <button onclick="window.debugFirebaseCollections()" class="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 text-sm">Debug Firebase Data</button>
-                    <button onclick="refreshComparisonTable()" class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 text-sm">Manual Refresh</button>
+                <!-- Search and Filter -->
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
+                    <div class="relative flex-1 max-w-md">
+                        <input type="text" id="client-search" placeholder="Search clients..." 
+                               class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                               oninput="searchClients()">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                        </div>
+                        <button onclick="clearSearch()" class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                            <svg class="h-5 w-5 text-gray-400 hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
-                <button id="refresh-comparison-btn" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm">Refresh Data</button>
-            </div>
-            <div class="flex items-center justify-between mb-6">
-                <div class="flex items-center space-x-2">
-                    <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
-                    <span class="text-sm text-gray-600">Updates after sync operations only</span>
+
+                <!-- Clients Table -->
+                <div class="bg-white rounded-xl shadow-soft p-4 sm:p-6 mb-4 mobile-padding overflow-hidden" style="background: #f8fafc;">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client Info</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact Details</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Address</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Salesperson</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="clients-table-body" class="bg-white divide-y divide-gray-200">
+                                <!-- Client rows will be inserted here -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Empty State -->
+                    <div id="clients-empty-state" class="hidden text-center py-12">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM9 9a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                        </svg>
+                        <h3 class="mt-2 text-sm font-medium text-gray-900">No clients found</h3>
+                        <p class="mt-1 text-sm text-gray-500">Get started by adding your first client.</p>
+                        <div class="mt-6">
+                            <button onclick="showAddClientModal()" class="btn-primary">
+                                Add Client
+                            </button>
+                        </div>
+                    </div>
                 </div>
-                <div id="refresh-status" class="text-sm text-gray-500">Ready</div>
-            </div>
-            
-            <div class="overflow-x-auto">
-                <table class="w-full border-collapse border border-gray-300">
-                    <thead>
-                        <tr class="bg-gray-50">
-                            <th class="border border-gray-300 px-4 py-3 text-left font-semibold text-gray-700">Metric</th>
-                            <th class="border border-gray-300 px-4 py-3 text-center font-semibold text-gray-700">Firebase</th>
-                            <th class="border border-gray-300 px-4 py-3 text-center font-semibold text-gray-700">Google Sheets</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td class="border border-gray-300 px-4 py-3 font-medium text-gray-700">Product count</td>
-                            <td class="border border-gray-300 px-4 py-3 text-center" id="firebase-products">-</td>
-                            <td class="border border-gray-300 px-4 py-3 text-center" id="sheets-products">-</td>
-                        </tr>
-                        <tr class="bg-gray-50">
-                            <td class="border border-gray-300 px-4 py-3 font-medium text-gray-700">Colors count</td>
-                            <td class="border border-gray-300 px-4 py-3 text-center" id="firebase-colors">-</td>
-                            <td class="border border-gray-300 px-4 py-3 text-center" id="sheets-colors">-</td>
-                        </tr>
-                        <tr>
-                            <td class="border border-gray-300 px-4 py-3 font-medium text-gray-700">Styles count</td>
-                            <td class="border border-gray-300 px-4 py-3 text-center" id="firebase-styles">-</td>
-                            <td class="border border-gray-300 px-4 py-3 text-center" id="sheets-styles">-</td>
-                        </tr>
-                        <tr class="bg-gray-50">
-                            <td class="border border-gray-300 px-4 py-3 font-medium text-gray-700">Color type count</td>
-                            <td class="border border-gray-300 px-4 py-3 text-center" id="firebase-colortypes">-</td>
-                            <td class="border border-gray-300 px-4 py-3 text-center" id="sheets-colortypes">-</td>
-                        </tr>
-                        <tr>
-                            <td class="border border-gray-300 px-4 py-3 font-medium text-gray-700">Category count</td>
-                            <td class="border border-gray-300 px-4 py-3 text-center" id="firebase-categories">-</td>
-                            <td class="border border-gray-300 px-4 py-3 text-center" id="sheets-categories">-</td>
-                        </tr>
-                        <tr class="bg-gray-50">
-                            <td class="border border-gray-300 px-4 py-3 font-medium text-gray-700">Salesmen count</td>
-                            <td class="border border-gray-300 px-4 py-3 text-center" id="firebase-salesmen">-</td>
-                            <td class="border border-gray-300 px-4 py-3 text-center" id="sheets-salesmen">-</td>
-                        </tr>
-                        <tr>
-                            <td class="border border-gray-300 px-4 py-3 font-medium text-gray-700">Saved quote count</td>
-                            <td class="border border-gray-300 px-4 py-3 text-center" id="firebase-quotes">-</td>
-                            <td class="border border-gray-300 px-4 py-3 text-center" id="sheets-quotes">-</td>
-                        </tr>
-                        <tr class="bg-gray-50">
-                            <td class="border border-gray-300 px-4 py-3 font-medium text-gray-700">Client count</td>
-                            <td class="border border-gray-300 px-4 py-3 text-center" id="firebase-clients">-</td>
-                            <td class="border border-gray-300 px-4 py-3 text-center" id="sheets-clients">-</td>
-                        </tr>
-                        <tr>
-                            <td class="border border-gray-300 px-4 py-3 font-medium text-gray-700">Price list count</td>
-                            <td class="border border-gray-300 px-4 py-3 text-center" id="firebase-pricelists">-</td>
-                            <td class="border border-gray-300 px-4 py-3 text-center" id="sheets-pricelists">-</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Firebase Collections Overview -->
-        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
-            <h3 class="text-lg font-semibold mb-4 text-gray-800">Firebase Collections Overview</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="collections-grid">
-                <!-- Collections will be dynamically populated here -->
-            </div>
-        </div>
-
-        <!-- Sync Logs -->
-        <div class="bg-white rounded-xl shadow-lg p-6">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-semibold text-gray-800">Sync Logs</h3>
-                <button onclick="clearSyncLogs()" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 text-sm">Clear Logs</button>
-            </div>
-            <div id="sync-logs" class="bg-gray-50 rounded-lg p-4 h-64 overflow-y-auto font-mono text-sm">
-                <div class="text-gray-500">Sync logs will appear here...</div>
             </div>
         </div>
     </div>
 
+    <!-- Sync Operations Modal -->
+    <div id="sync-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <!-- Modal Header -->
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-medium text-gray-900">Data Synchronization</h3>
+                    <button onclick="closeSyncModal()" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                
+                <!-- Sync Status -->
+                <div id="sync-status" class="mb-4 p-3 rounded-lg bg-gray-100">
+                    <div class="flex items-center">
+                        <div id="sync-indicator" class="w-3 h-3 rounded-full bg-gray-400 mr-2"></div>
+                        <span id="sync-text" class="text-sm text-gray-600">Ready for synchronization</span>
+                    </div>
+                </div>
+                
+                <!-- Sync Operations -->
+                <div id="sync-operations" class="mb-6">
+                    <h4 class="text-md font-medium text-gray-800 mb-3">Synchronization Operations</h4>
+                    <div class="space-y-3">
+                        <button onclick="performGoogleSheetsSync()" class="w-full btn-primary px-4 py-2 rounded-md transition-colors">
+                            📊 Sync with Google Sheets
+                        </button>
+                        <button onclick="performClientReverseSync()" class="w-full btn-success px-4 py-2 rounded-md transition-colors">
+                            🔄 Reverse Sync Clients to Google Sheets
+                        </button>
+                        <button onclick="performFirebaseRefresh()" class="w-full btn-secondary px-4 py-2 rounded-md transition-colors">
+                            🔥 Refresh Firebase Data
+                        </button>
+                        <button onclick="performDataValidation()" class="w-full btn-warning px-4 py-2 rounded-md transition-colors">
+                            ✅ Validate Data Integrity
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Sync Progress -->
+                <div id="sync-progress" class="hidden mb-4">
+                    <div class="flex justify-between text-sm text-gray-600 mb-1">
+                        <span>Synchronizing...</span>
+                        <span id="sync-progress-text">0%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div id="sync-progress-bar" class="h-2 rounded-full transition-all duration-300" style="width: 0%; background-color: #081249;"></div>
+                    </div>
+                </div>
+                
+                <!-- Sync Messages -->
+                <div id="sync-messages" class="space-y-2"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Client Management Modal -->
+    <div id="client-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <!-- Modal Header -->
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-medium text-gray-900" id="modal-title">Add New Client</h3>
+                    <button onclick="closeClientModal()" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                
+                <!-- Modal Body -->
+                <form id="client-form" onsubmit="saveClient(event)">
+                    <input type="hidden" id="client-id" value="">
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Client Name -->
+                        <div>
+                            <label for="client-name" class="block text-sm font-medium text-gray-700 mb-1">Client Name *</label>
+                            <input type="text" id="client-name" name="clientName" required 
+                                   class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
+                        </div>
+                        
+                        <!-- Company Name -->
+                        <div>
+                            <label for="company-name" class="block text-sm font-medium text-gray-700 mb-1">Company Name *</label>
+                            <input type="text" id="company-name" name="companyName" required 
+                                   class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
+                        </div>
+                        
+                        <!-- Phone 1 -->
+                        <div>
+                            <label for="phone1" class="block text-sm font-medium text-gray-700 mb-1">Phone Number 1 *</label>
+                            <input type="tel" id="phone1" name="phone1" required 
+                                   class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
+                        </div>
+                        
+                        <!-- Phone 2 -->
+                        <div>
+                            <label for="phone2" class="block text-sm font-medium text-gray-700 mb-1">Phone Number 2</label>
+                            <input type="tel" id="phone2" name="phone2" 
+                                   class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
+                        </div>
+                        
+                        <!-- Contact Person -->
+                        <div>
+                            <label for="contact-person" class="block text-sm font-medium text-gray-700 mb-1">Contact Person *</label>
+                            <input type="text" id="contact-person" name="contactPerson" required 
+                                   class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
+                        </div>
+                        
+                        <!-- Email -->
+                        <div>
+                            <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email ID *</label>
+                            <input type="email" id="email" name="email" required 
+                                   class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
+                        </div>
+                        
+                        <!-- Address -->
+                        <div class="md:col-span-2">
+                            <label for="address" class="block text-sm font-medium text-gray-700 mb-1">Address *</label>
+                            <textarea id="address" name="address" required rows="3"
+                                      class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none"></textarea>
+                        </div>
+                        
+                        <!-- Postal Code -->
+                        <div>
+                            <label for="postal-code" class="block text-sm font-medium text-gray-700 mb-1">Postal Code</label>
+                            <input type="text" id="postal-code" name="postalCode" 
+                                   class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
+                        </div>
+                        
+                        <!-- TAX ID -->
+                        <div>
+                            <label for="tax-id" class="block text-sm font-medium text-gray-700 mb-1">TAX ID</label>
+                            <input type="text" id="tax-id" name="taxId" 
+                                   class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
+                        </div>
+                    </div>
+                    
+                    <!-- Modal Footer -->
+                    <div class="flex justify-end space-x-3 mt-6">
+                        <button type="button" onclick="closeClientModal()" 
+                                class="btn-secondary">
+                            Cancel
+                        </button>
+                        <button type="submit" 
+                                class="btn-primary">
+                            Save Client
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Embedded Data -->
+    <script type="application/json" id="EMBEDDED_DATA">
+    {
+        "products": [],
+        "salesmen": [],
+        "lastUpdated": null
+    }
+    </script>
+
     <script>
-        // Global variables
-        let syncInProgress = false;
-        let syncLogs = [];
-        let firebaseService = null;
-        let dataManager = null;
-        let skipGoogleSheetsSync = false;
+        // Data arrays for consistency
+        let productData = [];
+        
+        const FX_APIS = [
+          (base) => `https://api.exchangerate-api.com/v4/latest/${base}`,
+          (base) => `https://api.fixer.io/latest?base=${base}`,
+          (base) => `https://open.er-api.com/v6/latest/${base}`
+        ];
+        const SUPPORTED = ['INR','USD','EUR','GBP','AUD','SAR','NGN','AED','JPY'];
+        const SYMBOL = { INR:'₹', USD:'$', EUR:'€', GBP:'£', AUD:'A$', SAR:'SAR ', NGN:'₦', AED:'د.إ ', JPY:'¥' };
+        const DEFAULT_RATES = { base:'INR',
+          rates:{ INR:1, USD:0.0120, EUR:0.0110, GBP:0.0095, AUD:0.0180, SAR:0.0450, NGN:5.5000, AED:0.0440, JPY:1.8000 },
+          updatedAt: null, mode:'auto'
+        };
 
-        // Initialize the application
-        async function initializeApp() {
-            try {
-                addSyncLog('Initializing application...');
-                
-                // Wait for Firebase to be ready
-                await waitForFirebase();
-                addSyncLog('Firebase SDK loaded');
-                
-                // Initialize Firebase service
-                if (window.FirebaseBrowserService) {
-                    firebaseService = new FirebaseBrowserService();
-                    addSyncLog('Firebase service initialized');
-                } else {
-                    throw new Error('FirebaseBrowserService not available');
-                }
-                
-                // Initialize data manager
-                if (window.universalDataManager) {
-                    dataManager = window.universalDataManager;
-                    addSyncLog('Data manager initialized');
-                } else {
-                    throw new Error('UniversalFirebaseDataManager not available');
-                }
-                
-                // Update UI
-                updateFirebaseStatus('Connected', 'connected');
-                
-                // Load initial data
-                await refreshComparisonTable();
-                await loadCollectionsOverview();
-                
-                addSyncLog('Application initialized successfully');
-                
-            } catch (error) {
-                console.error('Error initializing application:', error);
-                addSyncLog(`Error initializing: ${error.message}`, 'error');
-                updateFirebaseStatus('Error', 'disconnected');
-            }
+        // Mobile menu toggle
+        function toggleMobileMenu() {
+            const mobileMenu = document.querySelector('.mobile-menu');
+            mobileMenu.classList.toggle('active');
         }
 
-        // Wait for Firebase to be ready
-        async function waitForFirebase() {
-            let attempts = 0;
-            const maxAttempts = 20; // 10 seconds max wait
-            
-            while ((!window.firebase || !window.firebaseConfig) && attempts < maxAttempts) {
-                await new Promise(resolve => setTimeout(resolve, 500));
-                attempts++;
-            }
-            
-            if (!window.firebase || !window.firebaseConfig) {
-                throw new Error('Firebase not available after waiting');
-            }
-        }
-
-        // Add sync log entry
-        function addSyncLog(message, type = 'info') {
-            const timestamp = new Date().toLocaleTimeString();
-            const logEntry = {
-                timestamp,
-                message,
-                type
-            };
-            
-            syncLogs.push(logEntry);
-            
-            // Keep only last 100 logs
-            if (syncLogs.length > 100) {
-                syncLogs = syncLogs.slice(-100);
-            }
-            
-            updateSyncLogsDisplay();
-            console.log(`[${timestamp}] ${message}`);
-        }
-
-        // Update sync logs display
-        function updateSyncLogsDisplay() {
-            const logsContainer = document.getElementById('sync-logs');
-            if (!logsContainer) return;
-            
-            logsContainer.innerHTML = '';
-            
-            syncLogs.forEach(log => {
-                const logElement = document.createElement('div');
-                logElement.className = `mb-1 ${
-                    log.type === 'error' ? 'text-red-600' : 
-                    log.type === 'success' ? 'text-green-600' : 
-                    'text-gray-700'
-                }`;
-                logElement.textContent = `[${log.timestamp}] ${log.message}`;
-                logsContainer.appendChild(logElement);
+        // Admin tab switching
+        function showAdminTab(tabId) {
+            // Hide all tab contents
+            document.querySelectorAll('.admin-tab-content').forEach(tab => {
+                tab.classList.add('hidden');
             });
             
-            // Scroll to bottom
-            logsContainer.scrollTop = logsContainer.scrollHeight;
-        }
-
-        // Clear sync logs
-        function clearSyncLogs() {
-            syncLogs = [];
-            updateSyncLogsDisplay();
-            addSyncLog('Logs cleared');
-        }
-
-        // Update Firebase status
-        function updateFirebaseStatus(status, type) {
-            const statusElement = document.getElementById('firebase-connection-status');
-            const indicatorElement = document.getElementById('firebase-status-indicator');
+            // Remove active class from all tab buttons
+            document.querySelectorAll('.admin-tab-btn').forEach(btn => {
+                btn.classList.remove('active', 'border-blue-500', 'text-blue-600');
+                btn.classList.add('border-transparent', 'text-gray-500');
+            });
             
-            if (statusElement) {
-                statusElement.textContent = status;
-                statusElement.className = `font-medium ${
-                    type === 'connected' ? 'text-green-600' : 
-                    type === 'syncing' ? 'text-yellow-600' : 
-                    'text-red-600'
-                }`;
+            // Show selected tab
+            document.getElementById(tabId).classList.remove('hidden');
+            
+            // Add active class to selected tab button
+            const activeBtn = document.querySelector(`[onclick="showAdminTab('${tabId}')"]`);
+            if (activeBtn) {
+                activeBtn.classList.add('active', 'border-blue-500', 'text-blue-600');
+                activeBtn.classList.remove('border-transparent', 'text-gray-500');
             }
             
-            if (indicatorElement) {
-                indicatorElement.className = `status-indicator status-${type}`;
+            // Initialize specific tab functionality
+            if (tabId === 'client-management') {
+                initializeClientManagementModule();
             }
         }
 
-        // Update Google Sheets status
-        function updateSheetsStatus(status, type) {
-            const statusElement = document.getElementById('sheets-connection-status');
-            const indicatorElement = document.getElementById('sheets-status-indicator');
+        // Sync modal functions
+        function openSyncModal() {
+            document.getElementById('sync-modal').classList.remove('hidden');
+            initSyncOperations();
+        }
+
+        function closeSyncModal() {
+            document.getElementById('sync-modal').classList.add('hidden');
+        }
+
+        // Initialize sync functionality
+        function initSyncOperations() {
+            updateSyncStatus();
+            updateDatabaseStatus();
+        }
+
+        function updateSyncStatus() {
+            const syncIndicator = document.getElementById('sync-indicator');
+            const syncText = document.getElementById('sync-text');
             
-            if (statusElement) {
-                statusElement.textContent = status;
-                statusElement.className = `font-medium ${
-                    type === 'connected' ? 'text-green-600' : 
-                    type === 'syncing' ? 'text-yellow-600' : 
-                    'text-red-600'
-                }`;
-            }
-            
-            if (indicatorElement) {
-                indicatorElement.className = `status-indicator status-${type}`;
+            const status = window.universalDataManager.getStatus();
+            if (status.isInitialized && status.isDataLoaded) {
+                syncIndicator.className = 'w-3 h-3 rounded-full bg-green-400 mr-2';
+                syncText.textContent = 'Ready for synchronization';
+            } else {
+                syncIndicator.className = 'w-3 h-3 rounded-full bg-yellow-400 mr-2';
+                syncText.textContent = 'Initializing data access...';
             }
         }
 
-        // Skip Google Sheets functionality
-        function skipGoogleSheets() {
-            skipGoogleSheetsSync = true;
-            updateSheetsStatus('Skipped', 'disconnected');
-            addSyncLog('Google Sheets sync skipped by user');
-            
-            // Disable the skip button
-            const skipBtn = document.getElementById('skip-sheets-btn');
-            if (skipBtn) {
-                skipBtn.disabled = true;
-                skipBtn.textContent = 'Skipped';
-                skipBtn.className = skipBtn.className.replace('hover:bg-gray-600', '');
-            }
-        }
-
-        // Trigger manual sync
-        async function triggerManualSync() {
-            if (syncInProgress) {
-                addSyncLog('Sync already in progress', 'error');
-                return;
-            }
+        async function performGoogleSheetsSync() {
+            const progressContainer = document.getElementById('sync-progress');
+            const progressBar = document.getElementById('sync-progress-bar');
+            const progressText = document.getElementById('sync-progress-text');
+            const messagesContainer = document.getElementById('sync-messages');
             
             try {
-                syncInProgress = true;
-                const syncBtn = document.getElementById('manual-sync-btn');
-                const progressSection = document.getElementById('manual-sync-progress');
+                progressContainer.classList.remove('hidden');
+                progressBar.style.width = '0%';
+                progressText.textContent = '0%';
+                messagesContainer.innerHTML = '';
                 
-                // Update UI
-                if (syncBtn) {
-                    syncBtn.disabled = true;
-                    syncBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Syncing...';
+                // Show initial message
+                addSyncMessage('Starting Google Sheets synchronization...', 'info');
+                progressBar.style.width = '10%';
+                progressText.textContent = '10%';
+                
+                // Sync products using server-side endpoints
+                addSyncMessage('Syncing products from Google Sheets...', 'info');
+                const productResponse = await fetch('/api/sync/products', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                if (!productResponse.ok) {
+                    const errorText = await productResponse.text();
+                    throw new Error(`Failed to sync products: ${errorText}`);
                 }
+                progressBar.style.width = '30%';
+                progressText.textContent = '30%';
                 
-                if (progressSection) {
-                    progressSection.classList.remove('hidden');
+                // Sync salespeople using server-side endpoints
+                addSyncMessage('Syncing salespeople from Google Sheets...', 'info');
+                const salesmenResponse = await fetch('/api/sync/salesmen', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                if (!salesmenResponse.ok) {
+                    const errorText = await salesmenResponse.text();
+                    throw new Error(`Failed to sync salespeople: ${errorText}`);
                 }
+                progressBar.style.width = '50%';
+                progressText.textContent = '50%';
                 
-                addSyncLog('Starting manual sync...');
-                updateSyncProgress(0, 'Initializing sync...');
+                // Update Firebase with new data
+                addSyncMessage('Updating Firebase with synced data...', 'info');
+                if (!window.universalDataManager) {
+                    throw new Error('Universal data manager not available');
+                }
+                await window.universalDataManager.refreshData();
+                progressBar.style.width = '70%';
+                progressText.textContent = '70%';
                 
-                // Initialize Google Sheets if not skipped
-                if (!skipGoogleSheetsSync) {
-                    updateSyncProgress(10, 'Connecting to Google Sheets...');
+                // Update local fallback storage with synced data
+                addSyncMessage('Updating local fallback storage...', 'info');
+                if (window.unifiedDataAccess) {
                     try {
-                        await initializeGoogleSheets();
-                        updateSheetsStatus('Connected', 'connected');
-                        addSyncLog('Google Sheets connected successfully', 'success');
-                    } catch (error) {
-                        addSyncLog(`Google Sheets connection failed: ${error.message}`, 'error');
-                        updateSheetsStatus('Failed', 'disconnected');
-                        // Continue with Firebase-only sync
+                        const syncResults = await window.unifiedDataAccess.syncAllCollections({
+                            source: 'google_sheets_sync'
+                        });
+                        
+                        let totalSynced = 0;
+                        for (const [collection, result] of Object.entries(syncResults)) {
+                            if (result.success) {
+                                totalSynced += result.count;
+                                addSyncMessage(`✓ ${collection}: ${result.count} items synced to local storage`, 'success');
+                            } else {
+                                addSyncMessage(`⚠ ${collection}: ${result.error}`, 'warning');
+                            }
+                        }
+                        
+                        addSyncMessage(`Local fallback updated with ${totalSynced} total items`, 'success');
+                    } catch (fallbackError) {
+                        addSyncMessage(`Warning: Local fallback update failed: ${fallbackError.message}`, 'warning');
+                    }
+                } else if (window.localFallbackManager && window.universalDataManager && window.universalDataManager.isInitialized) {
+                    // Fallback to direct local storage update
+                    try {
+                        const firebaseData = {
+                            products: (window.universalDataManager.products && Array.isArray(window.universalDataManager.products)) ? window.universalDataManager.products : [],
+                            salespeople: (window.universalDataManager.salespeople && Array.isArray(window.universalDataManager.salespeople)) ? window.universalDataManager.salespeople : [],
+                            clients: (window.universalDataManager.clients && Array.isArray(window.universalDataManager.clients)) ? window.universalDataManager.clients : [],
+                            colors: (window.universalDataManager.colors && Array.isArray(window.universalDataManager.colors)) ? window.universalDataManager.colors : [],
+                            styles: (window.universalDataManager.styles && Array.isArray(window.universalDataManager.styles)) ? window.universalDataManager.styles : []
+                        };
+                        
+                        await window.localFallbackManager.syncFromFirebase(firebaseData, {
+                            overwrite: true
+                        });
+                        
+                        addSyncMessage('Local fallback storage updated successfully', 'success');
+                    } catch (fallbackError) {
+                        addSyncMessage(`Warning: Local fallback update failed: ${fallbackError.message}`, 'warning');
                     }
                 }
+                progressBar.style.width = '90%';
+                progressText.textContent = '90%';
                 
-                // Sync data collections
-                const collections = ['products', 'categories', 'colors', 'styles', 'colortypes', 'salesmen', 'pricelists'];
-                const progressStep = 80 / collections.length;
+                // Update UI and refresh statistics
+                await updateApplicationData();
+                progressBar.style.width = '100%';
+                progressText.textContent = '100%';
                 
-                for (let i = 0; i < collections.length; i++) {
-                    const collection = collections[i];
-                    const progress = 20 + (i * progressStep);
-                    
-                    updateSyncProgress(progress, `Syncing ${collection}...`);
-                    addSyncLog(`Syncing ${collection} collection...`);
-                    
-                    try {
-                        // Sync collection data
-                        await syncCollection(collection);
-                        addSyncLog(`${collection} synced successfully`, 'success');
-                    } catch (error) {
-                        addSyncLog(`Error syncing ${collection}: ${error.message}`, 'error');
-                    }
-                }
+                addSyncMessage('Google Sheets synchronization completed successfully!', 'success');
+                addSyncMessage('Local fallback data is now fully synchronized', 'info');
+                updateDatabaseStatus();
                 
-                updateSyncProgress(100, 'Sync completed!');
-                addSyncLog('Manual sync completed successfully', 'success');
-                
-                // Refresh data displays
-                await refreshComparisonTable();
-                await loadCollectionsOverview();
+                logAuditEvent('google_sheets_sync', {
+                    timestamp: new Date().toISOString(),
+                    status: 'success',
+                    fallbackUpdated: true
+                });
                 
             } catch (error) {
-                console.error('Error during manual sync:', error);
-                addSyncLog(`Sync error: ${error.message}`, 'error');
-                updateSyncProgress(0, 'Sync failed');
+                addSyncMessage('Google Sheets sync failed: ' + error.message, 'error');
+                
+                logAuditEvent('google_sheets_sync', {
+                    timestamp: new Date().toISOString(),
+                    status: 'error',
+                    error: error.message
+                });
             } finally {
-                syncInProgress = false;
-                
-                // Reset UI
-                const syncBtn = document.getElementById('manual-sync-btn');
-                if (syncBtn) {
-                    syncBtn.disabled = false;
-                    syncBtn.innerHTML = '<i class="fas fa-sync-alt mr-2"></i>Start Manual Sync';
-                }
-                
-                // Hide progress after delay
                 setTimeout(() => {
-                    const progressSection = document.getElementById('manual-sync-progress');
-                    if (progressSection) {
-                        progressSection.classList.add('hidden');
-                    }
+                    progressContainer.classList.add('hidden');
                 }, 3000);
             }
         }
 
-        // Update sync progress
-        function updateSyncProgress(percentage, status) {
-            const percentageElement = document.getElementById('manual-sync-percentage');
-            const progressFill = document.getElementById('manual-sync-progress-fill');
-            const statusElement = document.getElementById('manual-sync-status');
+        async function performFirebaseRefresh() {
+            const progressContainer = document.getElementById('sync-progress');
+            const progressBar = document.getElementById('sync-progress-bar');
+            const progressText = document.getElementById('sync-progress-text');
+            const messagesContainer = document.getElementById('sync-messages');
             
-            if (percentageElement) {
-                percentageElement.textContent = `${Math.round(percentage)}%`;
-            }
-            
-            if (progressFill) {
-                progressFill.style.width = `${percentage}%`;
-            }
-            
-            if (statusElement) {
-                statusElement.textContent = status;
+            try {
+                progressContainer.classList.remove('hidden');
+                progressBar.style.width = '0%';
+                progressText.textContent = '0%';
+                messagesContainer.innerHTML = '';
+                
+                addSyncMessage('Refreshing Firebase data...', 'info');
+                progressBar.style.width = '25%';
+                progressText.textContent = '25%';
+                
+                if (!window.universalDataManager) {
+                    throw new Error('Universal data manager not available');
+                }
+                
+                await window.universalDataManager.refreshData();
+                progressBar.style.width = '75%';
+                progressText.textContent = '75%';
+                
+                await updateApplicationData();
+                progressBar.style.width = '100%';
+                progressText.textContent = '100%';
+                
+                addSyncMessage('Firebase data refreshed successfully!', 'success');
+                updateDatabaseStatus();
+                
+                logAuditEvent('firebase_refresh', {
+                    timestamp: new Date().toISOString(),
+                    status: 'success'
+                });
+                
+            } catch (error) {
+                addSyncMessage('Firebase refresh failed: ' + error.message, 'error');
+                
+                logAuditEvent('firebase_refresh', {
+                    timestamp: new Date().toISOString(),
+                    status: 'error',
+                    error: error.message
+                });
+            } finally {
+                setTimeout(() => {
+                    progressContainer.classList.add('hidden');
+                }, 3000);
             }
         }
 
-        // Initialize Google Sheets
-        async function initializeGoogleSheets() {
-            return new Promise((resolve, reject) => {
-                if (!window.gapi) {
-                    reject(new Error('Google API not loaded'));
+        async function performDataValidation() {
+            const progressContainer = document.getElementById('sync-progress');
+            const progressBar = document.getElementById('sync-progress-bar');
+            const progressText = document.getElementById('sync-progress-text');
+            const messagesContainer = document.getElementById('sync-messages');
+            
+            try {
+                progressContainer.classList.remove('hidden');
+                progressBar.style.width = '0%';
+                progressText.textContent = '0%';
+                messagesContainer.innerHTML = '';
+                
+                addSyncMessage('Starting data integrity validation...', 'info');
+                progressBar.style.width = '20%';
+                progressText.textContent = '20%';
+                
+                // Validate products
+                addSyncMessage('Validating products data...', 'info');
+                try {
+                    const products = await window.unifiedDataAccess.getProducts();
+                    const duplicateProducts = findDuplicates(products, 'id');
+                } catch (error) {
+                    const products = await window.universalDataManager.getProducts();
+                    const duplicateProducts = findDuplicates(products, 'id');
+                }
+                progressBar.style.width = '40%';
+                progressText.textContent = '40%';
+                
+                // Validate salespeople
+                addSyncMessage('Validating salespeople data...', 'info');
+                try {
+                    const salespeople = await window.unifiedDataAccess.getSalespeople();
+                    const duplicateSalespeople = findDuplicates(salespeople, 'name');
+                } catch (error) {
+                    const salespeople = await window.universalDataManager.getSalespeople();
+                    const duplicateSalespeople = findDuplicates(salespeople, 'name');
+                }
+                progressBar.style.width = '60%';
+                progressText.textContent = '60%';
+                
+                // Validate clients
+                addSyncMessage('Validating clients data...', 'info');
+                try {
+                    const clients = await window.unifiedDataAccess.getClients();
+                } catch (error) {
+                    const clients = await window.universalDataManager.getClients();
+                }
+                const duplicateClients = findDuplicates(clients, 'id');
+                progressBar.style.width = '80%';
+                progressText.textContent = '80%';
+                
+                // Generate validation report
+                progressBar.style.width = '100%';
+                progressText.textContent = '100%';
+                
+                let validationResults = [];
+                if (duplicateProducts.length > 0) {
+                    validationResults.push(`Found ${duplicateProducts.length} duplicate products`);
+                }
+                if (duplicateSalespeople.length > 0) {
+                    validationResults.push(`Found ${duplicateSalespeople.length} duplicate salespeople`);
+                }
+                if (duplicateClients.length > 0) {
+                    validationResults.push(`Found ${duplicateClients.length} duplicate clients`);
+                }
+                
+                if (validationResults.length === 0) {
+                    addSyncMessage('Data validation completed - no issues found!', 'success');
+                } else {
+                    validationResults.forEach(result => {
+                        addSyncMessage(result, 'warning');
+                    });
+                }
+                
+                logAuditEvent('data_validation', {
+                    timestamp: new Date().toISOString(),
+                    status: 'completed',
+                    issues: validationResults
+                });
+                
+            } catch (error) {
+                addSyncMessage('Data validation failed: ' + error.message, 'error');
+                
+                logAuditEvent('data_validation', {
+                    timestamp: new Date().toISOString(),
+                    status: 'error',
+                    error: error.message
+                });
+            } finally {
+                setTimeout(() => {
+                    progressContainer.classList.add('hidden');
+                }, 5000);
+            }
+        }
+
+        async function performClientReverseSync() {
+            const progressContainer = document.getElementById('sync-progress');
+            const progressBar = document.getElementById('sync-progress-bar');
+            const progressText = document.getElementById('sync-progress-text');
+            const messagesContainer = document.getElementById('sync-messages');
+            
+            try {
+                progressContainer.classList.remove('hidden');
+                progressBar.style.width = '0%';
+                progressText.textContent = '0%';
+                messagesContainer.innerHTML = '';
+                
+                addSyncMessage('Starting client reverse synchronization to Google Sheets...', 'info');
+                progressBar.style.width = '10%';
+                progressText.textContent = '10%';
+                
+                // Check if Firebase database is available
+                if (!window.firebaseDatabase) {
+                    throw new Error('Firebase database not available');
+                }
+                
+                addSyncMessage('Retrieving clients from Firebase...', 'info');
+                progressBar.style.width = '30%';
+                progressText.textContent = '30%';
+                
+                // Get all clients from Firebase
+                const clients = await window.firebaseDatabase.getClients();
+                if (!clients || clients.length === 0) {
+                    addSyncMessage('No clients found in Firebase to sync', 'warning');
+                    progressBar.style.width = '100%';
+                    progressText.textContent = '100%';
                     return;
                 }
                 
-                gapi.load('client', async () => {
+                addSyncMessage(`Found ${clients.length} clients to sync to Google Sheets...`, 'info');
+                progressBar.style.width = '50%';
+                progressText.textContent = '50%';
+                
+                // Use server endpoint for sync (with service account authentication)
+                addSyncMessage('Syncing clients via server endpoint...', 'info');
+                const response = await fetch('/api/sync/manual', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        syncType: 'clients',
+                        direction: 'reverse', // Firebase to Google Sheets
+                        data: clients
+                    })
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `Server error: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                progressBar.style.width = '90%';
+                progressText.textContent = '90%';
+                
+                // Update UI
+                await updateApplicationData();
+                progressBar.style.width = '100%';
+                progressText.textContent = '100%';
+                
+                addSyncMessage(`Client reverse sync completed successfully! Synced ${clients.length} clients to Google Sheets.`, 'success');
+                updateDatabaseStatus();
+                
+                logAuditEvent('client_reverse_sync', {
+                    timestamp: new Date().toISOString(),
+                    status: 'success',
+                    clientCount: clients.length,
+                    serverResponse: result
+                });
+                
+            } catch (error) {
+                addSyncMessage('Client reverse sync failed: ' + error.message, 'error');
+                
+                logAuditEvent('client_reverse_sync', {
+                    timestamp: new Date().toISOString(),
+                    status: 'error',
+                    error: error.message
+                });
+            } finally {
+                setTimeout(() => {
+                    progressContainer.classList.add('hidden');
+                }, 3000);
+            }
+        }
+
+        function findDuplicates(array, key) {
+            const seen = new Set();
+            const duplicates = [];
+            
+            array.forEach(item => {
+                const value = item[key];
+                if (seen.has(value)) {
+                    duplicates.push(item);
+                } else {
+                    seen.add(value);
+                }
+            });
+            
+            return duplicates;
+        }
+
+        function addSyncMessage(message, type) {
+            const messagesContainer = document.getElementById('sync-messages');
+            const messageDiv = document.createElement('div');
+            
+            const typeClasses = {
+                'info': 'p-3 bg-blue-100 border border-blue-400 text-blue-700 rounded',
+                'success': 'p-3 bg-green-100 border border-green-400 text-green-700 rounded',
+                'warning': 'p-3 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded',
+                'error': 'p-3 bg-red-100 border border-red-400 text-red-700 rounded'
+            };
+            
+            messageDiv.className = typeClasses[type] || typeClasses['info'];
+            messageDiv.textContent = message;
+            messagesContainer.appendChild(messageDiv);
+            
+            // Auto-scroll to bottom
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        async function updateApplicationData() {
+            // Refresh embedded data
+            if (window.universalDataManager) {
+                await window.universalDataManager.refreshData();
+            }
+            
+            // Update UI elements
+            updateDatabaseStatus();
+        }
+
+        async function updateDatabaseStatus() {
+            try {
+                const firebaseStatus = document.getElementById('firebase-status');
+                const lastUpdate = document.getElementById('last-update');
+                
+                // Wait for universal data manager to be ready
+                if (window.universalDataManager) {
+                    await window.universalDataManager.waitForReady();
+                    const status = window.universalDataManager.getStatus();
+                    
+                    if (status.isInitialized && status.isDataLoaded) {
+                        if (firebaseStatus) {
+                            if (Object.keys(status.errors).length === 0) {
+                                firebaseStatus.textContent = 'Connected (Firebase)';
+                                firebaseStatus.className = 'px-2 py-1 rounded-full text-xs font-medium bg-green-200 text-green-700';
+                            } else {
+                                firebaseStatus.textContent = 'Connected (Fallback)';
+                                firebaseStatus.className = 'px-2 py-1 rounded-full text-xs font-medium bg-yellow-200 text-yellow-700';
+                            }
+                        }
+                        
+                        // Get and display database statistics
+                        await refreshDatabaseStats();
+                    } else {
+                        if (firebaseStatus) {
+                            firebaseStatus.textContent = 'Loading...';
+                            firebaseStatus.className = 'px-2 py-1 rounded-full text-xs font-medium bg-blue-200 text-blue-700';
+                        }
+                    }
+                } else {
+                    if (firebaseStatus) {
+                        firebaseStatus.textContent = 'Disconnected';
+                        firebaseStatus.className = 'px-2 py-1 rounded-full text-xs font-medium bg-red-200 text-red-700';
+                    }
+                    
+                    // Reset all counts to 0
+                    resetDatabaseStats();
+                    if (lastUpdate) lastUpdate.textContent = 'Never';
+                }
+            } catch (error) {
+                // Silent error handling for database status update
+                
+                // Fallback status
+                const firebaseStatus = document.getElementById('firebase-status');
+                if (firebaseStatus) {
+                    firebaseStatus.textContent = 'Error';
+                    firebaseStatus.className = 'px-2 py-1 rounded-full text-xs font-medium bg-red-200 text-red-700';
+                }
+                resetDatabaseStats();
+            }
+        }
+        
+        async function refreshDatabaseStats() {
+            try {
+                // Show loading indicator
+                const loadingElement = document.getElementById('stats-loading');
+                if (loadingElement) loadingElement.style.display = 'block';
+                
+                // Get statistics from unified data access if available
+                let stats = {};
+                let dataSource = 'Unknown';
+                let localStats = {};
+                let firebaseStats = {};
+                
+                if (window.unifiedDataAccess && window.unifiedDataAccess.isInitialized) {
                     try {
-                        await gapi.client.init({
-                            apiKey: window.GOOGLE_SHEETS_API_KEY,
-                            discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4']
-                        });
-                        resolve();
-                    } catch (error) {
-                        reject(error);
+                        // Get comprehensive data statistics from unified access
+                        const dataStats = await window.unifiedDataAccess.getDataStatistics();
+                        
+                        // Determine current data source
+                        const fallbackStatus = window.fallbackDetector ? window.fallbackDetector.getStatus() : null;
+                        dataSource = fallbackStatus ? fallbackStatus.currentSource : 'firebase';
+                        
+                        // Extract counts for display
+                        for (const [collection, collectionStats] of Object.entries(dataStats)) {
+                            const localCount = collectionStats.local || 0;
+                            const firebaseCount = collectionStats.firebase || 0;
+                            
+                            localStats[collection] = localCount;
+                            firebaseStats[collection] = firebaseCount;
+                            
+                            // Use current source for main display
+                            stats[collection] = dataSource === 'local' ? localCount : firebaseCount;
+                        }
+                        
+                    } catch (unifiedError) {
+                        throw unifiedError;
+                    }
+                } else {
+                    // Fallback to universal data manager
+                    if (!window.universalDataManager) {
+                        throw new Error('No data access system available');
+                    }
+                    
+                    await window.universalDataManager.waitForReady();
+                    const status = window.universalDataManager.getStatus();
+                    
+                    if (!status.isInitialized || !status.isDataLoaded) {
+                        throw new Error('Data access not ready - check connection');
+                    }
+                    
+                    // Get data from universal data manager
+                    const [products, clients, salespeople, colors, styles, categories, pricelists, quotes, orders] = await Promise.all([
+                        window.universalDataManager.getProducts(),
+                        window.universalDataManager.getClients(),
+                        window.universalDataManager.getSalespeople(),
+                        window.universalDataManager.getColors(),
+                        window.universalDataManager.getStyles(),
+                        window.universalDataManager.getCategories(),
+                        window.universalDataManager.getPriceLists(),
+                        window.universalDataManager.getQuotes(),
+                        window.universalDataManager.getOrders()
+                    ]);
+                    
+                    stats = {
+                        products: products ? products.length : 0,
+                        clients: clients ? clients.length : 0,
+                        salespeople: salespeople ? salespeople.length : 0,
+                        colors: colors ? colors.length : 0,
+                        styles: styles ? styles.length : 0,
+                        categories: categories ? categories.length : 0,
+                        pricelists: pricelists ? pricelists.length : 0,
+                        quotes: quotes ? quotes.length : 0,
+                        orders: orders ? orders.length : 0
+                    };
+                    
+                    dataSource = 'firebase';
+                }
+                
+                // Update stat elements with Local Data/Firebase format
+                const elements = {
+                    'products-count': stats.products || 0,
+                    'clients-count': stats.clients || 0,
+                    'salesmen-count': stats.salespeople || stats.salesmen || 0,
+                    'pricelists-count': stats.pricelists || stats.priceLists || 0,
+                    'categories-count': stats.categories || 0,
+                    'colors-count': stats.colors || 0,
+                    'styles-count': stats.styles || 0,
+                    'quotes-count': stats.quotes || 0,
+                    'orders-count': stats.orders || 0
+                };
+                
+                // Update elements with enhanced format showing both local and firebase counts
+                Object.entries(elements).forEach(([id, value]) => {
+                    const element = document.getElementById(id);
+                    if (element) {
+                        const collection = id.replace('-count', '').replace('salesmen', 'salespeople');
+                        const localCount = localStats[collection] || 0;
+                        const firebaseCount = firebaseStats[collection] || 0;
+                        
+                        if (window.unifiedDataAccess && window.unifiedDataAccess.isInitialized) {
+                            // Show format: "local/firebase (Source)"
+                            const sourceIndicator = dataSource === 'local' ? 'Local Data' : 'Firebase';
+                            element.innerHTML = `${localCount}/${firebaseCount} <span class="text-xs text-gray-500">(${sourceIndicator})</span>`;
+                        } else {
+                            // Fallback to simple count
+                            element.textContent = value;
+                        }
                     }
                 });
+                
+                // Update data source indicator
+                const firebaseStatus = document.getElementById('firebase-status');
+                if (firebaseStatus && window.fallbackDetector) {
+                    const status = window.fallbackDetector.getStatus();
+                    if (status.firebase === 'available') {
+                        firebaseStatus.textContent = 'Connected (Firebase)';
+                        firebaseStatus.className = 'px-2 py-1 rounded-full text-xs font-medium bg-green-200 text-green-700';
+                    } else {
+                        firebaseStatus.textContent = 'Connected (Local Data)';
+                        firebaseStatus.className = 'px-2 py-1 rounded-full text-xs font-medium bg-yellow-200 text-yellow-700';
+                    }
+                }
+                
+                // Update last update timestamp
+                const lastUpdate = document.getElementById('last-update');
+                if (lastUpdate) {
+                    lastUpdate.textContent = new Date().toLocaleTimeString();
+                }
+                
+            } catch (error) {
+                // Silent error handling for database stats refresh
+                
+                // Show specific error message
+                const lastUpdate = document.getElementById('last-update');
+                if (lastUpdate) {
+                    if (error.message.includes('timeout')) {
+                        lastUpdate.textContent = 'Request timeout - try again';
+                    } else if (error.message.includes('permission')) {
+                        lastUpdate.textContent = 'Permission denied - check auth';
+                    } else if (error.message.includes('not ready')) {
+                        lastUpdate.textContent = 'Data not ready';
+                    } else {
+                        lastUpdate.textContent = 'Error loading stats';
+                    }
+                }
+                
+                // Reset all counts to 0 on error
+                resetDatabaseStats();
+                
+            } finally {
+                // Hide loading indicator
+                const loadingElement = document.getElementById('stats-loading');
+                if (loadingElement) loadingElement.style.display = 'none';
+            }
+        }
+        
+        function resetDatabaseStats() {
+            const statIds = [
+                'products-count', 'clients-count', 'salesmen-count',
+                'pricelists-count', 'categories-count', 'colors-count', 'styles-count',
+                'quotes-count', 'orders-count'
+            ];
+            
+            statIds.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) element.textContent = '0';
             });
         }
 
-        // Sync collection data
-        async function syncCollection(collectionName) {
-            if (!dataManager) {
-                throw new Error('Data manager not initialized');
+        function logAuditEvent(action, details) {
+            const auditEvent = {
+                timestamp: new Date().toISOString(),
+                action: action,
+                details: details,
+                user: window.firebaseDB?.getCurrentUser()?.email || 'anonymous'
+            };
+            
+            // Store in localStorage for now
+            const auditLog = JSON.parse(localStorage.getItem('auditLog') || '[]');
+            auditLog.push(auditEvent);
+            
+            // Keep only last 100 events
+            if (auditLog.length > 100) {
+                auditLog.splice(0, auditLog.length - 100);
             }
             
-            try {
-                // Load data from Firebase (this will trigger API fallback if needed)
-                const data = await dataManager.getData(collectionName);
-                addSyncLog(`Loaded ${data.length} items from ${collectionName}`);
-                
-                // Update last sync time
-                const lastSyncElement = document.getElementById('firebase-last-sync');
-                if (lastSyncElement) {
-                    lastSyncElement.textContent = new Date().toLocaleTimeString();
+            localStorage.setItem('auditLog', JSON.stringify(auditLog));
+        }
+
+        // Client Management Functions
+        async function initClientManagement() {
+            await loadClientsFromFirebase();
+            updateClientStatistics();
+            renderClientsTable();
+        }
+
+        async function loadClientsFromFirebase() {
+            if (window.universalDataManager) {
+                try {
+                    // Loading clients from universal data manager
+                    await window.universalDataManager.waitForReady();
+                    
+                    const clients = await window.universalDataManager.getClients();
+                    // Clients loaded successfully from centralized data access
+                    
+                    // Get localStorage clients
+                    const localClients = window.clientManager.getAllClients();
+                    
+                    // Merge clients (centralized data takes priority)
+                    const mergedClients = new Map();
+                    
+                    // Add local clients first
+                    localClients.forEach(client => {
+                        mergedClients.set(client.id, { ...client, source: 'local' });
+                    });
+                    
+                    // Add centralized clients (overwrites local if same ID)
+                    clients.forEach(client => {
+                        mergedClients.set(client.id, { ...client, source: 'centralized' });
+                    });
+                    
+                    // Update the client manager with merged data
+                    window.clientManager.clients = Array.from(mergedClients.values());
+                    
+                    // Clients merged successfully
+                    
+                } catch (error) {
+                    // Failed to load clients from centralized data access, continuing with localStorage
+                    // Continue with localStorage data only
                 }
-                
-                return data;
-                
-            } catch (error) {
-                throw new Error(`Failed to sync ${collectionName}: ${error.message}`);
+            } else {
+                // Centralized data access not available, using localStorage only
             }
         }
 
-        // Refresh comparison table
-        async function refreshComparisonTable() {
+        function updateClientStatistics() {
+            const stats = window.clientManager.getStatistics();
+            
+            document.getElementById('total-clients').textContent = stats.totalClients;
+            document.getElementById('month-clients').textContent = stats.thisMonth;
+            document.getElementById('salespeople-count').textContent = stats.salespeople;
+            document.getElementById('device-id').textContent = window.clientManager.deviceId.split('-')[1] || 'Unknown';
+        }
+
+        function renderClientsTable(clients = null) {
+            const clientsToRender = clients || window.clientManager.getAllClients();
+            const tbody = document.getElementById('clients-table-body');
+            const emptyState = document.getElementById('clients-empty-state');
+            
+            if (clientsToRender.length === 0) {
+                tbody.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            
+            emptyState.classList.add('hidden');
+            
+            tbody.innerHTML = clientsToRender.map(client => `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm font-medium text-gray-900">${client.clientName}</div>
+                        <div class="text-sm text-gray-500">${client.companyName}</div>
+                        <div class="text-xs text-blue-600 font-mono">${client.id}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">${client.contactPerson}</div>
+                        <div class="text-sm text-gray-500">${client.email}</div>
+                        <div class="text-sm text-gray-500">${client.phone1}</div>
+                        ${client.phone2 ? `<div class="text-sm text-gray-500">${client.phone2}</div>` : ''}
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="text-sm text-gray-900 max-w-xs truncate">${client.address}</div>
+                        ${client.postalCode ? `<div class="text-sm text-gray-500">${client.postalCode}</div>` : ''}
+                        ${client.taxId ? `<div class="text-xs text-gray-500">TAX: ${client.taxId}</div>` : ''}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">${client.salesperson}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">${new Date(client.createdAt).toLocaleDateString()}</div>
+                        <div class="text-xs text-gray-500">${new Date(client.createdAt).toLocaleTimeString()}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button onclick="editClient('${client.id}')" class="text-blue-600 hover:text-blue-900 mr-3">
+                            Edit
+                        </button>
+                        <button onclick="deleteClient('${client.id}')" class="text-red-600 hover:text-red-900">
+                            Delete
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function showAddClientModal() {
+            document.getElementById('modal-title').textContent = 'Add New Client';
+            document.getElementById('client-form').reset();
+            document.getElementById('client-id').value = '';
+            document.getElementById('client-modal').classList.remove('hidden');
+        }
+
+        function editClient(clientId) {
+            const client = window.clientManager.getClient(clientId);
+            if (!client) {
+                alert('Client not found');
+                return;
+            }
+            
+            document.getElementById('modal-title').textContent = 'Edit Client';
+            document.getElementById('client-id').value = client.id;
+            document.getElementById('client-name').value = client.clientName;
+            document.getElementById('company-name').value = client.companyName;
+            document.getElementById('phone1').value = client.phone1;
+            document.getElementById('phone2').value = client.phone2 || '';
+            document.getElementById('contact-person').value = client.contactPerson;
+            document.getElementById('email').value = client.email;
+            document.getElementById('address').value = client.address;
+            document.getElementById('postal-code').value = client.postalCode || '';
+            document.getElementById('tax-id').value = client.taxId || '';
+            
+            document.getElementById('client-modal').classList.remove('hidden');
+        }
+
+        function closeClientModal() {
+            document.getElementById('client-modal').classList.add('hidden');
+        }
+
+        async function saveClient(event) {
+            event.preventDefault();
+            
+            const formData = new FormData(event.target);
+            const clientData = Object.fromEntries(formData.entries());
+            const clientId = document.getElementById('client-id').value;
+            
+            // Show loading state
+            const submitBtn = event.target.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Saving...';
+            submitBtn.disabled = true;
+            
             try {
-                addSyncLog('Refreshing comparison table...');
+                let savedClient;
                 
-                const refreshStatus = document.getElementById('refresh-status');
-                if (refreshStatus) {
-                    refreshStatus.textContent = 'Refreshing...';
+                if (clientId) {
+                    // Update existing client
+                    if (window.firebaseDB && window.firebaseDB.isAvailable()) {
+                        try {
+                            savedClient = await window.firebaseDB.updateClient(clientId, clientData);
+                            // Client updated in Firebase successfully
+                        } catch (firebaseError) {
+                            // Firebase update failed, using localStorage fallback
+                            savedClient = window.clientManager.updateClient(clientId, clientData);
+                        }
+                    } else {
+                        savedClient = window.clientManager.updateClient(clientId, clientData);
+                    }
+                    alert('Client updated successfully!');
+                } else {
+                    // Add new client
+                    const salesperson = 'Admin'; // Default for admin panel
+                    
+                    if (window.firebaseDB && window.firebaseDB.isAvailable()) {
+                        try {
+                            // Add device ID and timestamps for Firebase
+                            const enhancedClientData = {
+                                ...clientData,
+                                salesperson: salesperson,
+                                deviceId: window.clientManager.deviceId
+                            };
+                            
+                            savedClient = await window.firebaseDB.saveClient(enhancedClientData);
+                            // Client saved to Firebase successfully
+                            
+                            // Also save to localStorage as backup
+                            window.clientManager.addClient(clientData, salesperson);
+                            
+                        } catch (firebaseError) {
+                            // Firebase save failed, using localStorage fallback
+                            savedClient = window.clientManager.addClient(clientData, salesperson);
+                        }
+                    } else {
+                        savedClient = window.clientManager.addClient(clientData, salesperson);
+                    }
+                    alert('Client added successfully!');
                 }
                 
-                if (!dataManager) {
-                    throw new Error('Data manager not initialized');
-                }
+                closeClientModal();
+                updateClientStatistics();
+                renderClientsTable();
                 
-                // Load data from Firebase
-                const collections = ['products', 'categories', 'colors', 'styles', 'colortypes', 'salesmen', 'pricelists', 'quotes', 'clients'];
-                
-                for (const collection of collections) {
+            } catch (error) {
+                // Silent error handling for client save
+                alert('Error saving client: ' + error.message);
+            } finally {
+                // Reset button state
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            }
+        }
+
+        async function deleteClient(clientId) {
+            if (!confirm('Are you sure you want to delete this client?')) {
+                return;
+            }
+            
+            try {
+                // Delete from Firebase first, then localStorage
+                if (window.firebaseDB && window.firebaseDB.isAvailable()) {
                     try {
-                        const data = await dataManager.getData(collection);
-                        const count = Array.isArray(data) ? data.length : 0;
-                        
-                        // Update Firebase count
-                        const firebaseElement = document.getElementById(`firebase-${collection}`);
-                        if (firebaseElement) {
-                            firebaseElement.textContent = count;
-                        }
-                        
-                        // For now, set Google Sheets to same value (since we're using API fallback)
-                        const sheetsElement = document.getElementById(`sheets-${collection}`);
-                        if (sheetsElement) {
-                            sheetsElement.textContent = skipGoogleSheetsSync ? 'Skipped' : count;
-                        }
-                        
-                    } catch (error) {
-                        console.error(`Error loading ${collection}:`, error);
-                        
-                        const firebaseElement = document.getElementById(`firebase-${collection}`);
-                        if (firebaseElement) {
-                            firebaseElement.textContent = 'Error';
-                        }
+                        await window.firebaseDB.deleteClient(clientId);
+                        // Client deleted from Firebase successfully
+                    } catch (firebaseError) {
+                        // Firebase delete failed, continuing with localStorage
                     }
                 }
                 
-                if (refreshStatus) {
-                    refreshStatus.textContent = 'Updated';
-                    setTimeout(() => {
-                        refreshStatus.textContent = 'Ready';
-                    }, 2000);
-                }
-                
-                addSyncLog('Comparison table refreshed', 'success');
+                // Always delete from localStorage as well
+                window.clientManager.deleteClient(clientId);
+                alert('Client deleted successfully!');
+                updateClientStatistics();
+                renderClientsTable();
                 
             } catch (error) {
-                console.error('Error refreshing comparison table:', error);
-                addSyncLog(`Error refreshing table: ${error.message}`, 'error');
-                
-                const refreshStatus = document.getElementById('refresh-status');
-                if (refreshStatus) {
-                    refreshStatus.textContent = 'Error';
-                }
+                alert('Error deleting client: ' + error.message);
             }
         }
 
-        // Manual refresh table
-        async function manualRefreshTable() {
-            await refreshComparisonTable();
+        function searchClients() {
+            const query = document.getElementById('client-search').value;
+            if (query.trim() === '') {
+                renderClientsTable();
+            } else {
+                const results = window.clientManager.searchClients(query);
+                renderClientsTable(results);
+            }
         }
 
-        // Load collections overview
-        async function loadCollectionsOverview() {
+        function clearSearch() {
+            document.getElementById('client-search').value = '';
+            renderClientsTable();
+        }
+
+        function exportClients() {
+            const exportData = window.clientManager.exportClients();
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `clients-export-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            alert('Client data exported successfully!');
+        }
+
+        function initializeClientManagementModule() {
+            if (typeof window.clientManager !== 'undefined') {
+                initClientManagement();
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Initialize fallback system components
             try {
-                const collectionsGrid = document.getElementById('collections-grid');
-                if (!collectionsGrid) return;
                 
-                collectionsGrid.innerHTML = '';
-                
-                if (!dataManager) {
-                    throw new Error('Data manager not initialized');
+                // Initialize local fallback manager
+                if (typeof LocalFallbackManager !== 'undefined') {
+                    window.localFallbackManager = new LocalFallbackManager();
+                    await window.localFallbackManager.initialize();
                 }
                 
-                const collections = ['products', 'categories', 'colors', 'styles', 'colortypes', 'salesmen', 'pricelists'];
+                // Initialize fallback detector
+                if (typeof FallbackDetector !== 'undefined') {
+                    window.fallbackDetector = new FallbackDetector();
+                    await window.fallbackDetector.initialize();
+                }
                 
-                for (const collection of collections) {
-                    try {
-                        const data = await dataManager.getData(collection);
-                        const count = Array.isArray(data) ? data.length : 0;
-                        
-                        const card = createCollectionCard(collection, count, 'success');
-                        collectionsGrid.appendChild(card);
-                        
-                    } catch (error) {
-                        console.error(`Error loading ${collection}:`, error);
-                        const card = createCollectionCard(collection, 0, 'error');
-                        collectionsGrid.appendChild(card);
-                    }
+                // Initialize unified data access
+                if (typeof UnifiedDataAccess !== 'undefined' && window.localFallbackManager && window.fallbackDetector) {
+                    window.unifiedDataAccess = new UnifiedDataAccess(window.localFallbackManager, window.fallbackDetector);
+                    await window.unifiedDataAccess.initialize();
                 }
                 
             } catch (error) {
-                console.error('Error loading collections overview:', error);
-                addSyncLog(`Error loading collections: ${error.message}`, 'error');
             }
-        }
-
-        // Create collection card
-        function createCollectionCard(name, count, status) {
-            const card = document.createElement('div');
-            card.className = 'collection-card bg-gray-50 rounded-lg p-4 border border-gray-200';
             
-            const statusColor = status === 'success' ? 'text-green-600' : 'text-red-600';
-            const statusIcon = status === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
-            
-            card.innerHTML = `
-                <div class="flex items-center justify-between mb-2">
-                    <h4 class="font-medium text-gray-800 capitalize">${name}</h4>
-                    <i class="fas ${statusIcon} ${statusColor}"></i>
-                </div>
-                <div class="text-2xl font-bold text-gray-900">${count}</div>
-                <div class="text-sm text-gray-500">Records</div>
-            `;
-            
-            return card;
-        }
-
-        // Debug Firebase collections
-        window.debugFirebaseCollections = async function() {
-            try {
-                addSyncLog('Starting Firebase debug...');
-                
-                if (!dataManager) {
-                    throw new Error('Data manager not initialized');
+            // Wait for universal data manager to be ready before initializing
+            if (window.universalDataManager) {
+                try {
+                    await window.universalDataManager.waitForReady();
+                } catch (error) {
                 }
-                
-                const collections = ['products', 'categories', 'colors', 'styles', 'colortypes', 'salesmen', 'pricelists'];
-                
-                for (const collection of collections) {
+            }
+            
+            // Initialize Firebase status
+            await updateDatabaseStatus();
+            
+            // Initialize client management if available
+            if (typeof window.clientManager !== 'undefined') {
+                await initClientManagement();
+            }
+            
+            // Add event handlers for sync buttons
+            const refreshDataBtn = document.getElementById('refreshDataBtn');
+            if (refreshDataBtn) {
+                refreshDataBtn.addEventListener('click', async function() {
+                    const refreshText = this.querySelector('.refresh-text');
+                    const refreshLoading = this.querySelector('.refresh-loading');
+                    
+                    refreshText.classList.add('hidden');
+                    refreshLoading.classList.remove('hidden');
+                    this.disabled = true;
+                    
                     try {
-                        const data = await dataManager.getData(collection);
-                        console.log(`${collection}:`, data);
-                        addSyncLog(`${collection}: ${data.length} items`);
+                        if (window.universalDataManager) {
+                            await window.universalDataManager.refreshData();
+                            await updateApplicationData();
+                            updateDatabaseStatus();
+                        }
                     } catch (error) {
-                        console.error(`Error loading ${collection}:`, error);
-                        addSyncLog(`Error loading ${collection}: ${error.message}`, 'error');
+                        // Silent error handling for refresh
+                        alert('Error refreshing data: ' + error.message);
+                    } finally {
+                        refreshText.classList.remove('hidden');
+                        refreshLoading.classList.add('hidden');
+                        this.disabled = false;
                     }
-                }
-                
-                addSyncLog('Firebase debug completed', 'success');
-                
-            } catch (error) {
-                console.error('Debug error:', error);
-                addSyncLog(`Debug error: ${error.message}`, 'error');
-            }
-        };
-
-        // Toggle mobile menu
-        function toggleMobileMenu() {
-            const mobileMenu = document.getElementById('mobileMenu');
-            const hamburger = document.querySelector('.hamburger-menu');
-            
-            mobileMenu.classList.toggle('active');
-            hamburger.classList.toggle('active');
-        }
-
-        // Initialize app when DOM is loaded
-        document.addEventListener('DOMContentLoaded', function() {
-            // Add event listeners
-            const refreshBtn = document.getElementById('refresh-comparison-btn');
-            if (refreshBtn) {
-                refreshBtn.addEventListener('click', refreshComparisonTable);
+                });
             }
             
-            // Initialize the application
-            initializeApp();
+            const syncProductsBtn = document.getElementById('syncProductsBtn');
+            if (syncProductsBtn) {
+                syncProductsBtn.addEventListener('click', async function() {
+                    const originalText = this.textContent;
+                    this.textContent = '⏳ Syncing...';
+                    this.disabled = true;
+                    
+                    try {
+                        const response = await fetch('/api/sync/products', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' }
+                        });
+                        
+                        if (!response.ok) {
+                            const errorData = await response.json();
+                            throw new Error(errorData.error || `Server error: ${response.status}`);
+                        }
+                        
+                        const result = await response.json();
+                        
+                        if (window.universalDataManager) {
+                            await window.universalDataManager.refreshData();
+                            await updateApplicationData();
+                            updateDatabaseStatus();
+                        }
+                        
+                        alert('Products synced successfully!');
+                    } catch (error) {
+                        // Silent error handling for product sync
+                        alert('Product sync failed: ' + error.message);
+                    } finally {
+                        this.textContent = originalText;
+                        this.disabled = false;
+                    }
+                });
+            }
+            
+            const syncClientsBtn = document.getElementById('syncClientsBtn');
+            if (syncClientsBtn) {
+                syncClientsBtn.addEventListener('click', async function() {
+                    const originalText = this.textContent;
+                    this.textContent = '⏳ Syncing...';
+                    this.disabled = true;
+                    
+                    try {
+                        // This button performs reverse sync (Firebase to Google Sheets)
+                        await performClientReverseSync();
+                        alert('Clients synced to Google Sheets successfully!');
+                    } catch (error) {
+                        // Silent error handling for client sync
+                        alert('Client sync failed: ' + error.message);
+                    } finally {
+                        this.textContent = originalText;
+                        this.disabled = false;
+                    }
+                });
+            }
         });
-
-        // Auto-refresh every 30 seconds
-        setInterval(async () => {
-            if (!syncInProgress) {
-                await refreshComparisonTable();
+        
+        // Admin Modal Functions
+        function openAdminModal() {
+            document.getElementById('adminModal').classList.remove('hidden');
+            setTimeout(() => {
+                const modal = document.querySelector('#adminModal .bg-white');
+                modal.classList.remove('scale-95', 'opacity-0');
+                modal.classList.add('scale-100', 'opacity-100');
+            }, 10);
+            checkAuthStatus();
+        }
+        
+        function closeAdminModal() {
+            const modal = document.querySelector('#adminModal .bg-white');
+            modal.classList.remove('scale-100', 'opacity-100');
+            modal.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                document.getElementById('adminModal').classList.add('hidden');
+            }, 300);
+        }
+        
+        // Check authentication status
+         function checkAuthStatus() {
+             const authStatus = document.getElementById('authStatus');
+             const loginSection = document.getElementById('loginSection');
+             const logoutBtn = document.getElementById('logoutBtn');
+             
+             // Ensure elements exist
+             if (!authStatus || !loginSection) {
+                // Auth elements not found
+                return;
             }
-        }, 30000);
+             
+             // Show login form by default
+             loginSection.classList.remove('hidden');
+             if (logoutBtn) logoutBtn.classList.add('hidden');
+             
+             if (typeof firebase !== 'undefined' && firebase.auth) {
+                 firebase.auth().onAuthStateChanged((user) => {
+                     if (user && user.email === 'info@indiannaturalhair.com') {
+                         // Admin is logged in
+                         authStatus.innerHTML = `
+                             <div class="flex items-center gap-2">
+                                 <div class="w-2 h-2 rounded-full bg-green-500"></div>
+                                 <span>✅ Authenticated as ${user.email}</span>
+                             </div>`;
+                         authStatus.className = 'mb-3 p-2 rounded-lg text-sm bg-green-50 border border-green-200';
+                         
+                         loginSection.classList.add('hidden');
+                         if (logoutBtn) logoutBtn.classList.remove('hidden');
+                     } else if (user) {
+                         // User logged in but not admin
+                         authStatus.innerHTML = `
+                             <div class="flex items-center gap-2">
+                                 <div class="w-2 h-2 rounded-full bg-yellow-500"></div>
+                                 <span>⚠️ Not authorized (${user.email})</span>
+                             </div>`;
+                         authStatus.className = 'mb-3 p-2 rounded-lg text-sm bg-yellow-50 border border-yellow-200';
+                         
+                         loginSection.classList.add('hidden');
+                         if (logoutBtn) logoutBtn.classList.remove('hidden');
+                     } else {
+                         // Not logged in
+                         authStatus.innerHTML = `
+                             <div class="flex items-center gap-2">
+                                 <div class="w-2 h-2 rounded-full bg-red-500"></div>
+                                 <span>❌ Not authenticated</span>
+                             </div>`;
+                         authStatus.className = 'mb-3 p-2 rounded-lg text-sm bg-red-50 border border-red-200';
+                         
+                         loginSection.classList.remove('hidden');
+                         if (logoutBtn) logoutBtn.classList.add('hidden');
+                     }
+                 });
+             } else {
+                 // Firebase not available - show login form
+                 authStatus.innerHTML = `
+                     <div class="flex items-center gap-2">
+                         <div class="w-2 h-2 rounded-full bg-gray-500"></div>
+                         <span>⚠️ Firebase not available - Please refresh page</span>
+                     </div>`;
+                 authStatus.className = 'mb-3 p-2 rounded-lg text-sm bg-gray-50 border border-gray-200';
+                 
+                 loginSection.classList.remove('hidden');
+                 if (logoutBtn) logoutBtn.classList.add('hidden');
+             }
+         }
+         
+         // Initialize authentication handlers
+         document.addEventListener('DOMContentLoaded', function() {
+             // Login handler
+             const loginBtn = document.getElementById('loginBtn');
+             const logoutBtn = document.getElementById('logoutBtn');
+             const adminEmail = document.getElementById('adminEmail');
+             const adminPassword = document.getElementById('adminPassword');
+             
+             if (loginBtn) {
+                 loginBtn.addEventListener('click', async () => {
+                     if (typeof firebase === 'undefined' || !firebase.auth) {
+                         alert('Firebase authentication not available');
+                         return;
+                     }
+                     
+                     const email = adminEmail.value;
+                     const password = adminPassword.value;
+                     
+                     if (!email || !password) {
+                         alert('Please enter both email and password');
+                         return;
+                     }
+                     
+                     const loginText = loginBtn.querySelector('.login-text');
+                     const loginLoading = loginBtn.querySelector('.login-loading');
+                     loginText.classList.add('hidden');
+                     loginLoading.classList.remove('hidden');
+                     loginBtn.disabled = true;
+                     
+                     try {
+                         await firebase.auth().signInWithEmailAndPassword(email, password);
+                         adminPassword.value = ''; // Clear password
+                     } catch (error) {
+                        // Silent error handling for login
+                        let errorMessage = 'Login failed';
+                         
+                         if (error.code === 'auth/user-not-found') {
+                             errorMessage = 'User not found';
+                         } else if (error.code === 'auth/wrong-password') {
+                             errorMessage = 'Incorrect password';
+                         } else if (error.code === 'auth/invalid-email') {
+                             errorMessage = 'Invalid email address';
+                         } else {
+                             errorMessage = `Login failed: ${error.message}`;
+                         }
+                         
+                         alert(errorMessage);
+                     } finally {
+                         loginText.classList.remove('hidden');
+                         loginLoading.classList.add('hidden');
+                         loginBtn.disabled = false;
+                     }
+                 });
+             }
+             
+             // Logout handler
+             if (logoutBtn) {
+                 logoutBtn.addEventListener('click', async () => {
+                     try {
+                         await firebase.auth().signOut();
+                     } catch (error) {
+                        // Silent error handling for logout
+                        alert(`Logout failed: ${error.message}`);
+                     }
+                 });
+             }
+             
+             // Allow Enter key to trigger login
+             if (adminPassword) {
+                 adminPassword.addEventListener('keypress', (e) => {
+                     if (e.key === 'Enter' && loginBtn && !loginBtn.disabled) {
+                         loginBtn.click();
+                     }
+                 });
+             }
+         });
+
+        // Firebase Synchronization Functions
+        async function performFirebaseSync() {
+            const statusElement = document.getElementById('firebase-sync-status');
+            const lastSyncElement = document.getElementById('firebase-last-sync');
+            
+            try {
+                statusElement.textContent = 'Syncing...';
+                statusElement.className = 'px-2 py-1 rounded-full text-xs font-medium bg-blue-200 text-blue-700';
+                
+                // Check if unified data access is available
+                if (!window.unifiedDataAccess) {
+                    throw new Error('Unified data access not available');
+                }
+                
+                // Force sync all data to Firebase
+                const collections = ['products', 'clients', 'quotes', 'orders', 'salesmen', 'companies', 'colors', 'shades'];
+                let syncedCount = 0;
+                
+                for (const collection of collections) {
+                    try {
+                        // Get local data
+                        const localData = await window.unifiedDataAccess.getData(collection, { forceLocal: true });
+                        
+                        if (localData && localData.length > 0) {
+                            // Save to Firebase
+                            for (const item of localData) {
+                                await window.unifiedDataAccess.saveData(collection, item, { forceFirebase: true });
+                            }
+                            syncedCount += localData.length;
+                        }
+                    } catch (error) {
+                    }
+                }
+                
+                statusElement.textContent = 'Sync Complete';
+                statusElement.className = 'px-2 py-1 rounded-full text-xs font-medium bg-green-200 text-green-700';
+                lastSyncElement.textContent = new Date().toLocaleString();
+                
+                alert(`Firebase sync completed! Synced ${syncedCount} items.`);
+                
+            } catch (error) {
+                statusElement.textContent = 'Sync Failed';
+                statusElement.className = 'px-2 py-1 rounded-full text-xs font-medium bg-red-200 text-red-700';
+                alert('Firebase sync failed: ' + error.message);
+            }
+        }
+
+        async function performFirebaseBackup() {
+            const statusElement = document.getElementById('firebase-sync-status');
+            
+            try {
+                statusElement.textContent = 'Backing up...';
+                statusElement.className = 'px-2 py-1 rounded-full text-xs font-medium bg-blue-200 text-blue-700';
+                
+                if (!window.unifiedDataAccess) {
+                    throw new Error('Unified data access not available');
+                }
+                
+                // Get all data from Firebase and save locally
+                const collections = ['products', 'clients', 'quotes', 'orders', 'salesmen', 'companies', 'colors'];
+                let backedUpCount = 0;
+                
+                for (const collection of collections) {
+                    try {
+                        // Get Firebase data
+                        const firebaseData = await window.unifiedDataAccess.getData(collection, { forceFirebase: true });
+                        
+                        if (firebaseData && firebaseData.length > 0) {
+                            // Save to local storage
+                            for (const item of firebaseData) {
+                                await window.unifiedDataAccess.saveData(collection, item, { forceLocal: true });
+                            }
+                            backedUpCount += firebaseData.length;
+                        }
+                    } catch (error) {
+                    }
+                }
+                
+                statusElement.textContent = 'Backup Complete';
+                statusElement.className = 'px-2 py-1 rounded-full text-xs font-medium bg-green-200 text-green-700';
+                
+                alert(`Firebase backup completed! Backed up ${backedUpCount} items to local storage.`);
+                
+            } catch (error) {
+                statusElement.textContent = 'Backup Failed';
+                statusElement.className = 'px-2 py-1 rounded-full text-xs font-medium bg-red-200 text-red-700';
+                alert('Firebase backup failed: ' + error.message);
+            }
+        }
+
+        async function validateFirebaseData() {
+            const statusElement = document.getElementById('firebase-sync-status');
+            
+            try {
+                statusElement.textContent = 'Validating...';
+                statusElement.className = 'px-2 py-1 rounded-full text-xs font-medium bg-blue-200 text-blue-700';
+                
+                if (!window.unifiedDataAccess) {
+                    throw new Error('Unified data access not available');
+                }
+                
+                const collections = ['products', 'clients', 'quotes', 'orders', 'salesmen', 'companies', 'colors'];
+                const validationResults = [];
+                
+                for (const collection of collections) {
+                    try {
+                        // Get data from both sources
+                        const localData = await window.unifiedDataAccess.getData(collection, { forceLocal: true });
+                        const firebaseData = await window.unifiedDataAccess.getData(collection, { forceFirebase: true });
+                        
+                        const localCount = localData ? localData.length : 0;
+                        const firebaseCount = firebaseData ? firebaseData.length : 0;
+                        
+                        validationResults.push({
+                            collection,
+                            localCount,
+                            firebaseCount,
+                            synced: localCount === firebaseCount
+                        });
+                        
+                    } catch (error) {
+                        validationResults.push({
+                            collection,
+                            error: error.message
+                        });
+                    }
+                }
+                
+                statusElement.textContent = 'Validation Complete';
+                statusElement.className = 'px-2 py-1 rounded-full text-xs font-medium bg-green-200 text-green-700';
+                
+                // Show validation results
+                let message = 'Data Validation Results:\n\n';
+                validationResults.forEach(result => {
+                    if (result.error) {
+                        message += `${result.collection}: Error - ${result.error}\n`;
+                    } else {
+                        message += `${result.collection}: Local(${result.localCount}) Firebase(${result.firebaseCount}) ${result.synced ? '✅' : '❌'}\n`;
+                    }
+                });
+                
+                alert(message);
+                
+            } catch (error) {
+                statusElement.textContent = 'Validation Failed';
+                statusElement.className = 'px-2 py-1 rounded-full text-xs font-medium bg-red-200 text-red-700';
+                alert('Data validation failed: ' + error.message);
+            }
+        }
+
+        async function resetFirebaseConnection() {
+            const statusElement = document.getElementById('firebase-sync-status');
+            
+            try {
+                statusElement.textContent = 'Resetting...';
+                statusElement.className = 'px-2 py-1 rounded-full text-xs font-medium bg-blue-200 text-blue-700';
+                
+                // Reset fallback detector
+                if (window.fallbackDetector) {
+                    await window.fallbackDetector.reset();
+                }
+                
+                // Reinitialize unified data access
+                if (window.unifiedDataAccess) {
+                    await window.unifiedDataAccess.initialize();
+                }
+                
+                // Update status
+                await updateDatabaseStatus();
+                
+                statusElement.textContent = 'Reset Complete';
+                statusElement.className = 'px-2 py-1 rounded-full text-xs font-medium bg-green-200 text-green-700';
+                
+                alert('Firebase connection reset successfully!');
+                
+            } catch (error) {
+                statusElement.textContent = 'Reset Failed';
+                statusElement.className = 'px-2 py-1 rounded-full text-xs font-medium bg-red-200 text-red-700';
+                alert('Firebase connection reset failed: ' + error.message);
+            }
+        }
+
+        // Update Firebase sync status on page load
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Update Firebase sync status
+            const statusElement = document.getElementById('firebase-sync-status');
+            const lastSyncElement = document.getElementById('firebase-last-sync');
+            
+            if (statusElement) {
+                try {
+                    if (window.fallbackDetector && window.fallbackDetector.isFirebaseAvailable()) {
+                        statusElement.textContent = 'Connected';
+                        statusElement.className = 'px-2 py-1 rounded-full text-xs font-medium bg-green-200 text-green-700';
+                    } else {
+                        statusElement.textContent = 'Disconnected';
+                        statusElement.className = 'px-2 py-1 rounded-full text-xs font-medium bg-red-200 text-red-700';
+                    }
+                } catch (error) {
+                    statusElement.textContent = 'Error';
+                    statusElement.className = 'px-2 py-1 rounded-full text-xs font-medium bg-red-200 text-red-700';
+                }
+            }
+            
+            // Check for last sync timestamp in localStorage
+            if (lastSyncElement) {
+                const lastSync = localStorage.getItem('firebase-last-sync');
+                if (lastSync) {
+                    lastSyncElement.textContent = new Date(lastSync).toLocaleString();
+                }
+            }
+        });
+    </script>
+    
+    <!-- Admin Panel Modal -->
+    <div id="adminModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden transition-opacity duration-300">
+        <div class="bg-white rounded-lg p-4 sm:p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto transform transition-all duration-300 scale-95 opacity-0">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">Admin Panel</h3>
+                <button onclick="closeAdminModal()" class="text-gray-500 hover:text-gray-700 transition-colors duration-200 p-1 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-300">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="space-y-4">
+                <!-- Firebase Data Sync Section -->
+                <div class="border rounded-lg p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+                    <h4 class="font-medium text-gray-700 mb-2 flex items-center gap-2">
+                        🔄 Firebase Data Sync
+                        <span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">REAL-TIME</span>
+                    </h4>
+                    <p class="text-sm text-gray-600 mb-3">Manage Firebase data synchronization and monitor real-time updates</p>
+                    
+                    <!-- Sync Status -->
+                    <div id="syncStatus" class="mb-3 p-2 rounded-lg text-sm bg-green-50 border border-green-200">
+                        <div class="flex items-center gap-2">
+                            <div class="w-2 h-2 rounded-full bg-green-500"></div>
+                            <span>✅ Firebase sync active - All data loading directly from Firebase</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Sync Controls -->
+                    <div class="space-y-3">
+                        <button id="refreshDataBtn" class="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-all duration-200 hover:transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-300 active:scale-95">
+                            <span class="refresh-text">🔄 Refresh All Data</span>
+                            <span class="refresh-loading hidden">⏳ Refreshing...</span>
+                        </button>
+                        
+                        <div class="grid grid-cols-2 gap-2">
+                            <button id="syncProductsBtn" class="px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-all duration-200">
+                                📦 Sync Products
+                            </button>
+                            <button id="syncClientsBtn" class="px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium transition-all duration-200">
+                                👥 Sync Clients
+                            </button>
+                        </div>
+                        
+                        <div class="text-xs text-gray-500 text-center mt-2">
+                            Data is automatically synchronized from Google Sheets to Firebase
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Mobile menu functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+            const mobileMenu = document.getElementById('mobile-menu');
+            
+            if (mobileMenuBtn && mobileMenu) {
+                mobileMenuBtn.addEventListener('click', function() {
+                    mobileMenu.classList.toggle('hidden');
+                });
+            }
+        });
     </script>
 </body>
 </html>

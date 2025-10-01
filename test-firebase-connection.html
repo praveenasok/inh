@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Connection Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-result {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 4px solid;
+        }
+        .success {
+            background: #e8f5e8;
+            border-color: #4CAF50;
+            color: #2e7d32;
+        }
+        .error {
+            background: #ffe8e8;
+            border-color: #f44336;
+            color: #d32f2f;
+        }
+        .warning {
+            background: #fff3e0;
+            border-color: #ff9800;
+            color: #f57c00;
+        }
+        .info {
+            background: #e3f2fd;
+            border-color: #2196F3;
+            color: #1976d2;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .code-block {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            margin: 10px 0;
+            border-left: 4px solid #2196F3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔥 Firebase Connection Test</h1>
+        <p>This tool will test the Firebase connection and diagnose permission issues.</p>
+        
+        <button onclick="runTests()">Run Connection Tests</button>
+        <button onclick="testAnonymousAuth()">Test Anonymous Auth</button>
+        
+        <div id="results"></div>
+        
+        <div id="instructions" style="display: none;">
+            <h2>🛠️ How to Fix Firebase Authentication</h2>
+            <p>If you're getting authentication errors, run these commands in your terminal:</p>
+            <div class="code-block">
+                firebase login --reauth<br>
+                firebase deploy --only firestore:rules
+            </div>
+            <p>Or for CI environments:</p>
+            <div class="code-block">
+                firebase login:ci
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="firebase-config.js"></script>
+
+    <script>
+        let db;
+        let auth;
+        
+        function addResult(message, type = 'info') {
+            const resultsDiv = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.innerHTML = message;
+            resultsDiv.appendChild(div);
+            console.log(`[${type.toUpperCase()}] ${message}`);
+        }
+
+        async function initFirebase() {
+            try {
+                if (!firebase.apps.length) {
+                    firebase.initializeApp(firebaseConfig);
+                }
+                db = firebase.firestore();
+                auth = firebase.auth();
+                
+                addResult('✅ Firebase SDK initialized successfully', 'success');
+                return true;
+            } catch (error) {
+                addResult(`❌ Firebase initialization failed: ${error.message}`, 'error');
+                return false;
+            }
+        }
+
+        async function testFirestoreConnection() {
+            try {
+                addResult('🔍 Testing Firestore connection...', 'info');
+                
+                // Test a simple read operation
+                const testRef = db.collection('test').limit(1);
+                await testRef.get();
+                
+                addResult('✅ Firestore connection successful', 'success');
+                return true;
+            } catch (error) {
+                addResult(`❌ Firestore connection failed: ${error.message}`, 'error');
+                return false;
+            }
+        }
+
+        async function testPriceListsAccess() {
+            try {
+                addResult('🔍 Testing priceLists collection access...', 'info');
+                
+                const priceListsRef = db.collection('priceLists').limit(1);
+                const snapshot = await priceListsRef.get();
+                
+                addResult(`✅ priceLists access successful - Found ${snapshot.size} documents`, 'success');
+                return true;
+            } catch (error) {
+                addResult(`❌ priceLists access failed: ${error.message}`, 'error');
+                
+                if (error.code === 'permission-denied') {
+                    addResult('🚨 Permission denied - Firestore rules need to be updated', 'warning');
+                    document.getElementById('instructions').style.display = 'block';
+                }
+                
+                return false;
+            }
+        }
+
+        async function testAnonymousAuth() {
+            try {
+                addResult('🔍 Testing anonymous authentication...', 'info');
+                
+                const userCredential = await auth.signInAnonymously();
+                addResult(`✅ Anonymous auth successful - UID: ${userCredential.user.uid}`, 'success');
+                
+                // Now test priceLists access with auth
+                await testPriceListsAccess();
+                
+            } catch (error) {
+                addResult(`❌ Anonymous auth failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function runTests() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '';
+            
+            addResult('🚀 Starting Firebase connection tests...', 'info');
+            
+            // Test 1: Initialize Firebase
+            const initSuccess = await initFirebase();
+            if (!initSuccess) return;
+            
+            // Test 2: Test Firestore connection
+            const connectionSuccess = await testFirestoreConnection();
+            if (!connectionSuccess) return;
+            
+            // Test 3: Test priceLists access
+            await testPriceListsAccess();
+            
+            addResult('🏁 Tests completed', 'info');
+        }
+
+        // Auto-run tests on page load
+        window.addEventListener('load', () => {
+            setTimeout(runTests, 1000);
+        });
+    </script>
+</body>
+</html>

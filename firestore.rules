@@ -81,6 +81,12 @@ service cloud.firestore {
       allow write: if true; // Allow service account access for sync
     }
     
+    // PriceLists collection - allow public read for shades and pricing data
+    match /priceLists/{priceListId} {
+      allow read: if true; // Allow public read for shades counting and pricing
+      allow write: if true; // Allow service account access for sync
+    }
+    
     // Sync logs - allow service account access
     match /sync_logs/{logId} {
       allow read, write: if true; // Allow service account access

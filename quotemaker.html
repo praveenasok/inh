@@ -4391,13 +4391,7 @@
 
 
         
-        // Add a simple visual indicator that JavaScript is running
-        setTimeout(() => {
-            const indicator = document.createElement('div');
-            indicator.style.cssText = 'position: fixed; top: 10px; left: 10px; background: green; color: white; padding: 5px; z-index: 10000; border-radius: 3px;';
-            indicator.textContent = 'JS Running ✓';
-            document.body.appendChild(indicator);
-        }, 500);
+        // Removed temporary JS running indicator
         
         // Mobile menu functionality
         function toggleMobileMenu() {
