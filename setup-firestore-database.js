@@ -94,7 +94,7 @@ class FirestoreSetup {
             },
             styles: {
                 id: 'sample_style',
-                name: 'Sample Style',
+                stylename: 'Sample Style',
                 description: 'Sample Style Description',
                 category: 'Basic',
                 created_at: admin.firestore.FieldValue.serverTimestamp()

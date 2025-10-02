@@ -201,28 +201,28 @@
 
         const stylesData = [
             // Straight Styles
-            { name: 'Straight', category: 'Straight', description: 'Classic straight hair', texture: 'Smooth and sleek' },
-            { name: 'Silky Straight', category: 'Straight', description: 'Ultra-smooth silky straight', texture: 'Very fine and smooth' },
-            { name: 'Yaki Straight', category: 'Straight', description: 'Textured straight mimicking relaxed hair', texture: 'Slightly textured' },
+            { stylename: 'Straight', category: 'Straight', description: 'Classic straight hair', texture: 'Smooth and sleek' },
+            { stylename: 'Silky Straight', category: 'Straight', description: 'Ultra-smooth silky straight', texture: 'Very fine and smooth' },
+            { stylename: 'Yaki Straight', category: 'Straight', description: 'Textured straight mimicking relaxed hair', texture: 'Slightly textured' },
             
             // Wavy Styles
-            { name: 'Body Wave', category: 'Wavy', description: 'Loose, natural-looking waves', texture: 'Soft waves' },
-            { name: 'Loose Wave', category: 'Wavy', description: 'Gentle, flowing waves', texture: 'Relaxed wave pattern' },
-            { name: 'Beach Wave', category: 'Wavy', description: 'Casual, tousled beach waves', texture: 'Natural wave texture' },
-            { name: 'Water Wave', category: 'Wavy', description: 'Defined water-like wave pattern', texture: 'Consistent wave pattern' },
-            { name: 'Ocean Wave', category: 'Wavy', description: 'Deep, flowing ocean-inspired waves', texture: 'Deep wave pattern' },
+            { stylename: 'Body Wave', category: 'Wavy', description: 'Loose, natural-looking waves', texture: 'Soft waves' },
+            { stylename: 'Loose Wave', category: 'Wavy', description: 'Gentle, flowing waves', texture: 'Relaxed wave pattern' },
+            { stylename: 'Beach Wave', category: 'Wavy', description: 'Casual, tousled beach waves', texture: 'Natural wave texture' },
+            { stylename: 'Water Wave', category: 'Wavy', description: 'Defined water-like wave pattern', texture: 'Consistent wave pattern' },
+            { stylename: 'Ocean Wave', category: 'Wavy', description: 'Deep, flowing ocean-inspired waves', texture: 'Deep wave pattern' },
             
             // Curly Styles
-            { name: 'Deep Wave', category: 'Curly', description: 'Deep, defined wave pattern', texture: 'Pronounced waves' },
-            { name: 'Curly', category: 'Curly', description: 'Natural curly texture', texture: 'Spiral curls' },
-            { name: 'Deep Curly', category: 'Curly', description: 'Tight, defined curls', texture: 'Tight curl pattern' },
-            { name: 'Jerry Curl', category: 'Curly', description: 'Retro-style tight curls', texture: 'Processed curls' },
-            { name: 'Spiral Curl', category: 'Curly', description: 'Defined spiral curl pattern', texture: 'Uniform spirals' },
+            { stylename: 'Deep Wave', category: 'Curly', description: 'Deep, defined wave pattern', texture: 'Pronounced waves' },
+            { stylename: 'Curly', category: 'Curly', description: 'Natural curly texture', texture: 'Spiral curls' },
+            { stylename: 'Deep Curly', category: 'Curly', description: 'Tight, defined curls', texture: 'Tight curl pattern' },
+            { stylename: 'Jerry Curl', category: 'Curly', description: 'Retro-style tight curls', texture: 'Processed curls' },
+            { stylename: 'Spiral Curl', category: 'Curly', description: 'Defined spiral curl pattern', texture: 'Uniform spirals' },
             
             // Kinky/Coily Styles
-            { name: 'Kinky Straight', category: 'Kinky', description: 'Straightened kinky texture', texture: 'Coarse straight' },
-            { name: 'Kinky Curly', category: 'Kinky', description: 'Natural kinky curly texture', texture: 'Tight coils' },
-            { name: 'Afro Kinky', category: 'Kinky', description: 'Natural afro texture', texture: 'Very tight coils' }
+            { stylename: 'Kinky Straight', category: 'Kinky', description: 'Straightened kinky texture', texture: 'Coarse straight' },
+            { stylename: 'Kinky Curly', category: 'Kinky', description: 'Natural kinky curly texture', texture: 'Tight coils' },
+            { stylename: 'Afro Kinky', category: 'Kinky', description: 'Natural afro texture', texture: 'Very tight coils' }
         ];
 
         // Utility functions
@@ -572,7 +572,7 @@
 
                 if (stylesSnapshot.size > 0) {
                     const firstStyle = stylesSnapshot.docs[0].data();
-                    log(`   Sample style: ${firstStyle.name} (${firstStyle.category})`);
+                    log(`   Sample style: ${firstStyle.stylename} (${firstStyle.category})`);
                 }
                 
                 updateStatus(`Verification complete - Colors: ${colorsSnapshot.size}, Styles: ${stylesSnapshot.size}`, 'success');

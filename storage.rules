@@ -33,14 +33,16 @@ service firebase.storage {
       allow write: if isAdmin() && isValidImageFile();
     }
     
-    // User-specific client documents
+    // User-specific client documents (allow anonymous users)
     match /clients/{clientId}/{fileName} {
-      allow read, write: if isAuthenticated();
+      allow read: if true;
+      allow write: if isAuthenticated();
     }
     
-    // User-specific quote exports
+    // User-specific quote exports (allow anonymous users)
     match /quotes/{quoteId}/{fileName} {
-      allow read, write: if isAuthenticated();
+      allow read: if true;
+      allow write: if isAuthenticated();
     }
     
     // Admin-only data sync and backup files

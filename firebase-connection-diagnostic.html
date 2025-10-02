@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔧 Firebase Connection Diagnostic</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            background: #f9f9f9;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #555;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        .status.loading {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .details {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Firebase Connection Diagnostic Tool</h1>
+        <p style="text-align: center; color: #666;">
+            This tool diagnoses Firebase connection issues and identifies specific problems.
+        </p>
+        
+        <div style="text-align: center; margin: 20px 0;">
+            <button onclick="runFullDiagnostic()">🔍 Run Full Diagnostic</button>
+            <button onclick="testBasicConnection()">🌐 Test Basic Connection</button>
+            <button onclick="testRealtimeListeners()">📡 Test Real-time Listeners</button>
+            <button onclick="clearResults()">🗑️ Clear Results</button>
+        </div>
+
+        <div id="results" class="test-grid"></div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    
+    <!-- Firebase Config -->
+    <script src="firebase-config.js"></script>
+
+    <script>
+        let diagnosticResults = {};
+        
+        function addTestSection(title, id) {
+            const results = document.getElementById('results');
+            const section = document.createElement('div');
+            section.className = 'test-section';
+            section.innerHTML = `
+                <h3>${title}</h3>
+                <div id="${id}" class="status loading">🔄 Running test...</div>
+                <div id="${id}-details" class="details" style="display: none;"></div>
+            `;
+            results.appendChild(section);
+            return section;
+        }
+
+        function updateStatus(id, status, message, details = null) {
+            const statusEl = document.getElementById(id);
+            const detailsEl = document.getElementById(id + '-details');
+            
+            statusEl.className = `status ${status}`;
+            statusEl.innerHTML = message;
+            
+            if (details) {
+                detailsEl.style.display = 'block';
+                detailsEl.textContent = details;
+            }
+            
+            diagnosticResults[id] = { status, message, details };
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+            diagnosticResults = {};
+        }
+
+        async function testFirebaseSDK() {
+            const testId = 'firebase-sdk';
+            addTestSection('🔧 Firebase SDK Loading', testId);
+            
+            try {
+                if (typeof firebase === 'undefined') {
+                    throw new Error('Firebase SDK not loaded');
+                }
+                
+                const version = firebase.SDK_VERSION || 'Unknown';
+                updateStatus(testId, 'success', '✅ Firebase SDK loaded successfully', 
+                    `Firebase SDK Version: ${version}\nAvailable services: ${Object.keys(firebase).join(', ')}`);
+                return true;
+            } catch (error) {
+                updateStatus(testId, 'error', '❌ Firebase SDK loading failed', error.message);
+                return false;
+            }
+        }
+
+        async function testFirebaseConfig() {
+            const testId = 'firebase-config';
+            addTestSection('⚙️ Firebase Configuration', testId);
+            
+            try {
+                if (typeof firebaseConfig === 'undefined') {
+                    throw new Error('Firebase config not found');
+                }
+                
+                const requiredFields = ['apiKey', 'authDomain', 'projectId'];
+                const missingFields = requiredFields.filter(field => !firebaseConfig[field]);
+                
+                if (missingFields.length > 0) {
+                    throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
+                }
+                
+                updateStatus(testId, 'success', '✅ Firebase configuration valid', 
+                    `Project ID: ${firebaseConfig.projectId}\nAuth Domain: ${firebaseConfig.authDomain}\nAPI Key: ${firebaseConfig.apiKey.substring(0, 10)}...`);
+                return true;
+            } catch (error) {
+                updateStatus(testId, 'error', '❌ Firebase configuration invalid', error.message);
+                return false;
+            }
+        }
+
+        async function testFirebaseInitialization() {
+            const testId = 'firebase-init';
+            addTestSection('🚀 Firebase Initialization', testId);
+            
+            try {
+                let app;
+                if (firebase.apps.length === 0) {
+                    app = firebase.initializeApp(firebaseConfig);
+                } else {
+                    app = firebase.apps[0];
+                }
+                
+                updateStatus(testId, 'success', '✅ Firebase app initialized', 
+                    `App Name: ${app.name}\nOptions: ${JSON.stringify(app.options, null, 2)}`);
+                return app;
+            } catch (error) {
+                updateStatus(testId, 'error', '❌ Firebase initialization failed', error.message);
+                return null;
+            }
+        }
+
+        async function testFirestoreConnection() {
+            const testId = 'firestore-connection';
+            addTestSection('🗄️ Firestore Connection', testId);
+            
+            try {
+                const db = firebase.firestore();
+                
+                // Configure Firestore settings
+                db.settings({
+                    experimentalForceLongPolling: false,
+                    merge: true,
+                    ignoreUndefinedProperties: true
+                });
+                
+                // Test basic connection with a simple query
+                const testQuery = await db.collection('products').limit(1).get();
+                
+                updateStatus(testId, 'success', '✅ Firestore connection successful', 
+                    `Connection established\nTest query returned ${testQuery.size} documents\nFirestore settings applied successfully`);
+                return db;
+            } catch (error) {
+                updateStatus(testId, 'error', '❌ Firestore connection failed', 
+                    `Error: ${error.message}\nCode: ${error.code}\nStack: ${error.stack}`);
+                return null;
+            }
+        }
+
+        async function testAuthentication() {
+            const testId = 'auth-test';
+            addTestSection('🔐 Authentication Status', testId);
+            
+            try {
+                const auth = firebase.auth();
+                
+                return new Promise((resolve) => {
+                    const unsubscribe = auth.onAuthStateChanged((user) => {
+                        unsubscribe();
+                        
+                        if (user) {
+                            updateStatus(testId, 'success', '✅ User authenticated', 
+                                `User ID: ${user.uid}\nEmail: ${user.email || 'Anonymous'}\nProvider: ${user.providerData.map(p => p.providerId).join(', ') || 'Anonymous'}`);
+                        } else {
+                            updateStatus(testId, 'warning', '⚠️ No authenticated user', 
+                                'User is not authenticated. This may limit access to some Firestore collections.');
+                        }
+                        resolve(user);
+                    });
+                });
+            } catch (error) {
+                updateStatus(testId, 'error', '❌ Authentication check failed', error.message);
+                return null;
+            }
+        }
+
+        async function testRealtimeListeners() {
+            const testId = 'realtime-listeners';
+            addTestSection('📡 Real-time Listeners', testId);
+            
+            try {
+                const db = firebase.firestore();
+                let listenerCount = 0;
+                let errorCount = 0;
+                const errors = [];
+                
+                // Test listener on products collection
+                const unsubscribe = db.collection('products').limit(1).onSnapshot(
+                    (snapshot) => {
+                        listenerCount++;
+                        updateStatus(testId, 'success', '✅ Real-time listener working', 
+                            `Listener triggered ${listenerCount} times\nSnapshot size: ${snapshot.size}\nErrors: ${errorCount}`);
+                    },
+                    (error) => {
+                        errorCount++;
+                        errors.push(error.message);
+                        updateStatus(testId, 'error', '❌ Real-time listener failed', 
+                            `Error: ${error.message}\nCode: ${error.code}\nAll errors: ${errors.join(', ')}`);
+                    }
+                );
+                
+                // Clean up after 5 seconds
+                setTimeout(() => {
+                    unsubscribe();
+                }, 5000);
+                
+                return true;
+            } catch (error) {
+                updateStatus(testId, 'error', '❌ Real-time listener setup failed', error.message);
+                return false;
+            }
+        }
+
+        async function testNetworkConnectivity() {
+            const testId = 'network-test';
+            addTestSection('🌐 Network Connectivity', testId);
+            
+            try {
+                // Test basic internet connectivity
+                const response = await fetch('https://www.google.com/favicon.ico', { 
+                    mode: 'no-cors',
+                    cache: 'no-cache'
+                });
+                
+                // Test Firebase endpoints
+                const firebaseTest = await fetch('https://firestore.googleapis.com/', {
+                    mode: 'no-cors',
+                    cache: 'no-cache'
+                });
+                
+                updateStatus(testId, 'success', '✅ Network connectivity good', 
+                    'Internet connection: OK\nFirebase endpoints: Accessible\nNo network-level blocking detected');
+                return true;
+            } catch (error) {
+                updateStatus(testId, 'error', '❌ Network connectivity issues', 
+                    `Network error: ${error.message}\nThis may indicate firewall or proxy issues`);
+                return false;
+            }
+        }
+
+        async function testBasicConnection() {
+            clearResults();
+            
+            const sdkOk = await testFirebaseSDK();
+            if (!sdkOk) return;
+            
+            const configOk = await testFirebaseConfig();
+            if (!configOk) return;
+            
+            const app = await testFirebaseInitialization();
+            if (!app) return;
+            
+            await testNetworkConnectivity();
+            await testFirestoreConnection();
+            await testAuthentication();
+        }
+
+        async function runFullDiagnostic() {
+            clearResults();
+            
+            // Run all tests
+            await testBasicConnection();
+            await testRealtimeListeners();
+            
+            // Generate summary
+            setTimeout(() => {
+                generateSummary();
+            }, 6000);
+        }
+
+        function generateSummary() {
+            const results = document.getElementById('results');
+            const summary = document.createElement('div');
+            summary.className = 'test-section';
+            summary.style.background = '#e8f4fd';
+            summary.style.border = '2px solid #007bff';
+            
+            const passed = Object.values(diagnosticResults).filter(r => r.status === 'success').length;
+            const failed = Object.values(diagnosticResults).filter(r => r.status === 'error').length;
+            const warnings = Object.values(diagnosticResults).filter(r => r.status === 'warning').length;
+            
+            summary.innerHTML = `
+                <h3>📊 Diagnostic Summary</h3>
+                <div class="status ${failed > 0 ? 'error' : warnings > 0 ? 'warning' : 'success'}">
+                    ${failed > 0 ? '❌' : warnings > 0 ? '⚠️' : '✅'} 
+                    Tests Passed: ${passed} | Failed: ${failed} | Warnings: ${warnings}
+                </div>
+                <div class="details" style="display: block;">
+${failed > 0 ? 'CRITICAL ISSUES FOUND:\n' + Object.entries(diagnosticResults)
+    .filter(([k, v]) => v.status === 'error')
+    .map(([k, v]) => `- ${v.message}: ${v.details}`)
+    .join('\n') + '\n\n' : ''}${warnings > 0 ? 'WARNINGS:\n' + Object.entries(diagnosticResults)
+    .filter(([k, v]) => v.status === 'warning')
+    .map(([k, v]) => `- ${v.message}: ${v.details}`)
+    .join('\n') : ''}
+                </div>
+            `;
+            
+            results.appendChild(summary);
+        }
+
+        // Auto-run basic diagnostic on page load
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                testBasicConnection();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

@@ -2260,7 +2260,6 @@
 
         // Update pricing based on current selections
         function updatePricing() {
-            
             const priceList = document.getElementById('price-list-selector').value;
             const category = document.getElementById('category-selector').value;
             const product = document.getElementById('product-selector').value;
@@ -2269,94 +2268,49 @@
             const colorType = document.getElementById('color-type-selector').value;
             const quantity = parseFloat(document.getElementById('quantity-input').value) || 1;
             const overridePrice = parseFloat(document.getElementById('unit-price-input').value);
-            
-                priceList, category, product, density, length, colorType, quantity, overridePrice
-            });
-            
-                loaded: !!productData,
-                length: productData ? productData.length : 0,
-                sample: productData && productData.length > 0 ? productData[0] : null,
-                sampleKeys: productData && productData.length > 0 ? Object.keys(productData[0]) : null
-            });
-            
-            // Log first few products for debugging
-            if (productData && productData.length > 0) {
-            }
-            
+
             let unitPrice = 0;
-            
+
             // Always try to calculate price from product data first
             if (priceList && category && product && density && length) {
-                    priceList, category, product, density, length, colorType
-                });
-                
                 // Find matching product for pricing
                 const matchingProduct = productData.find(p => {
                     const productColors = p.Colors || p.Color || p.color || '';
-                    const colorMatches = !colorType || 
-                        productColors === colorType || 
-                        productColors.split(',').map(c => c.trim()).includes(colorType);
-                    
+                    const productShades = p.Shade || p.shade || p.Shades || p.shades || '';
+                    const colorMatches = !colorType ||
+                        productColors === colorType ||
+                        productColors.split(',').map(c => c.trim()).includes(colorType) ||
+                        productShades === colorType ||
+                        productShades.split(',').map(s => s.trim()).includes(colorType);
+
                     const priceListMatch = (p['Price List Name'] || p.PriceListName || p.PriceList) === priceList;
                     const categoryMatch = (p.Category || p.category) === category;
                     const productMatch = (p.Product || p.product) === product;
                     const densityMatch = (p.Density || p.density) === density;
                     const lengthMatch = (p.Length || p.length) === length;
-                    
-                        productData: {
-                            priceList: p['Price List Name'] || p.PriceListName || p.PriceList,
-                            category: p.Category || p.category,
-                            product: p.Product || p.product,
-                            density: p.Density || p.density,
-                            length: p.Length || p.length,
-                            colors: productColors
-                        },
-                        matches: {
-                            priceListMatch,
-                            categoryMatch,
-                            productMatch,
-                            densityMatch,
-                            lengthMatch,
-                            colorMatches
-                        }
-                    });
-                    
+
                     return priceListMatch && categoryMatch && productMatch && densityMatch && lengthMatch && colorMatches;
                 });
-                
+
                 if (matchingProduct) {
                     const calculatedPrice = parseFloat(matchingProduct.Rate || matchingProduct.Price || matchingProduct.price || 0);
                     const productCurrency = matchingProduct.Currency || 'INR';
                     const selectedCurrency = document.getElementById('currency-selector').value;
-                    
-                        product: matchingProduct,
-                        calculatedPrice: calculatedPrice,
-                        productCurrency: productCurrency,
-                        selectedCurrency: selectedCurrency
-                    });
-                    
+
                     // Apply currency conversion to the calculated price
                     const convertedPrice = convertCurrency(calculatedPrice, productCurrency, selectedCurrency);
-                    
+
                     // Use override price if manually entered, otherwise use converted calculated price
-                     if (isManualPriceEntry && overridePrice && overridePrice > 0) {
-                         unitPrice = overridePrice;
-                     } else {
-                         unitPrice = convertedPrice;
-                             original: calculatedPrice,
-                             converted: convertedPrice,
-                             from: productCurrency,
-                             to: selectedCurrency
-                         });
-                         // Update the input field with converted price only if not manually entered
-                         if (!isManualPriceEntry) {
-                             document.getElementById('unit-price-input').value = unitPrice > 0 ? unitPrice.toFixed(2) : '';
-                         }
-                     }
+                    if (isManualPriceEntry && overridePrice && overridePrice > 0) {
+                        unitPrice = overridePrice;
+                    } else {
+                        unitPrice = convertedPrice;
+                        // Update the input field with converted price only if not manually entered
+                        if (!isManualPriceEntry) {
+                            document.getElementById('unit-price-input').value = unitPrice > 0 ? unitPrice.toFixed(2) : '';
+                        }
+                    }
                 } else {
-                        priceList, category, product, density, length, colorType
-                    });
-                    
                     // Use override price if available, otherwise no price
                     if (overridePrice && overridePrice > 0) {
                         unitPrice = overridePrice;
@@ -2374,34 +2328,24 @@
                     document.getElementById('unit-price-input').value = '';
                 }
             }
-            
+
             // Update price display
             const priceDisplay = document.getElementById('price-display');
             const calculatedPrice = document.getElementById('calculated-price');
-            
+
             // Check if price display elements exist
             if (!priceDisplay || !calculatedPrice) {
                 return;
             }
-            
-                unitPrice,
-                priceList,
-                category,
-                product,
-                density,
-                length,
-                allFieldsFilled: !!(priceList && category && product && density && length),
-                shouldEnable: unitPrice > 0 && priceList && category && product && density && length
-            });
-            
+
             if (unitPrice > 0) {
                 const totalPrice = unitPrice * quantity;
                 const currency = document.getElementById('currency-selector').value;
                 const symbol = currencySymbols[currency] || currency + ' ';
-                
+
                 calculatedPrice.textContent = `${symbol}${totalPrice.toFixed(2)}`;
                 priceDisplay.classList.remove('hidden');
-                
+
                 // Enable add button if all required fields are filled
                 const addBtn = document.getElementById('add-item-btn');
                 if (addBtn) {

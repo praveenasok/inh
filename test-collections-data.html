@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Collections Data</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; color: #155724; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; color: #721c24; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; color: #0c5460; }
+        button { padding: 10px 20px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        #results { margin-top: 20px; }
+        .result-item { margin: 5px 0; padding: 10px; border-radius: 3px; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Firebase Collections Data Test</h1>
+    
+    <div class="test-section info">
+        <h3>📋 Test Purpose</h3>
+        <p>This tool will test if the Firebase collections (colors, styles, pricelists) exist and have data.</p>
+    </div>
+
+    <div class="test-section">
+        <h3>🧪 Run Tests</h3>
+        <button onclick="testAllCollections()">Test All Collections</button>
+        <button onclick="testColorsCollection()">Test Colors Collection</button>
+        <button onclick="testStylesCollection()">Test Styles Collection</button>
+        <button onclick="testPricelistsCollection()">Test Pricelists Collection</button>
+        <button onclick="clearResults()">Clear Results</button>
+    </div>
+
+    <div id="results"></div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    
+    <!-- Firebase Config -->
+    <script src="firebase-config.js"></script>
+
+    <script>
+        let db, auth;
+
+        // Initialize Firebase
+        async function initializeFirebase() {
+            try {
+                if (!firebase.apps.length) {
+                    firebase.initializeApp(firebaseConfig);
+                }
+                db = firebase.firestore();
+                auth = firebase.auth();
+                
+                // Sign in anonymously
+                await auth.signInAnonymously();
+                addResult('✅ Firebase initialized and authenticated successfully', 'success');
+                return true;
+            } catch (error) {
+                addResult(`❌ Firebase initialization failed: ${error.message}`, 'error');
+                return false;
+            }
+        }
+
+        function addResult(message, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `result-item ${type}`;
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong> - ${message}`;
+            results.appendChild(div);
+            console.log(message);
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        async function testCollection(collectionName) {
+            try {
+                addResult(`🔍 Testing ${collectionName} collection...`, 'info');
+                
+                const snapshot = await db.collection(collectionName).limit(5).get();
+                
+                if (snapshot.empty) {
+                    addResult(`⚠️ ${collectionName} collection exists but is empty`, 'error');
+                    return false;
+                } else {
+                    addResult(`✅ ${collectionName} collection has ${snapshot.size} documents (showing first 5)`, 'success');
+                    
+                    // Show sample data
+                    const sampleData = [];
+                    snapshot.forEach(doc => {
+                        sampleData.push({ id: doc.id, ...doc.data() });
+                    });
+                    
+                    addResult(`📄 Sample data from ${collectionName}:<pre>${JSON.stringify(sampleData, null, 2)}</pre>`, 'info');
+                    return true;
+                }
+            } catch (error) {
+                addResult(`❌ Error testing ${collectionName} collection: ${error.message}`, 'error');
+                return false;
+            }
+        }
+
+        async function testColorsCollection() {
+            if (!await initializeFirebase()) return;
+            await testCollection('colors');
+        }
+
+        async function testStylesCollection() {
+            if (!await initializeFirebase()) return;
+            await testCollection('styles');
+        }
+
+        async function testPricelistsCollection() {
+            if (!await initializeFirebase()) return;
+            await testCollection('pricelists');
+        }
+
+        async function testAllCollections() {
+            if (!await initializeFirebase()) return;
+            
+            addResult('🚀 Testing all collections...', 'info');
+            
+            const collections = ['colors', 'styles', 'pricelists'];
+            const results = {};
+            
+            for (const collection of collections) {
+                results[collection] = await testCollection(collection);
+            }
+            
+            // Summary
+            const successCount = Object.values(results).filter(Boolean).length;
+            const totalCount = collections.length;
+            
+            if (successCount === totalCount) {
+                addResult(`🎉 All ${totalCount} collections have data!`, 'success');
+            } else {
+                addResult(`⚠️ Only ${successCount}/${totalCount} collections have data`, 'error');
+            }
+        }
+
+        // Auto-run test on page load
+        window.addEventListener('load', () => {
+            setTimeout(testAllCollections, 1000);
+        });
+    </script>
+</body>
+</html>
