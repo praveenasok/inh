@@ -7,6 +7,7 @@ const FirebaseSyncService = require('./firebase-sync-service');
 const GoogleSheetsService = require('./google-sheets-service');
 const BidirectionalSyncService = require('./bidirectional-sync-service');
 const { googleSheetsAutoConfig } = require('./js/google-sheets-auto-config');
+const admin = require('firebase-admin');
 
 const PORT = 3000;
 const HTML_FILE_PATH = path.join(__dirname, 'index.html');
@@ -235,6 +236,171 @@ const server = http.createServer(async (req, res) => {
         res.end(JSON.stringify({ error: 'Failed to save data: ' + error.message }));
       }
     });
+    return;
+  }
+
+  // Sync Pricelists tab from Google Sheets into Firestore collection `inh_pricelists`
+  if (pathname === '/api/sync/inh_pricelists' && req.method === 'POST') {
+    try {
+      if (!syncService || !syncService.db) {
+        res.writeHead(503, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: false, error: 'Firebase service not available' }));
+        return;
+      }
+
+      // Parse query params
+      const dryRun = parsedUrl.searchParams.get('dryRun') === 'true';
+      const spreadsheetId = googleSheetsAutoConfig.getSheetId();
+
+      // Helper to safely get field from a row with various header variants
+      const getField = (row, keys) => {
+        for (const k of keys) {
+          if (row[k] !== undefined && row[k] !== null && String(row[k]).trim() !== '') {
+            return String(row[k]).trim();
+          }
+        }
+        return '';
+      };
+
+      const makeName = (category, product, shade, length) => {
+        // Exact requested format with spaces around underscores
+        return `${category} _ ${product} _ ${shade} _ ${length}`;
+      };
+
+      const slugify = (s) => {
+        return String(s)
+          .toLowerCase()
+          .trim()
+          .replace(/\s+/g, '-')
+          .replace(/[^a-z0-9\-_.]/g, '');
+      };
+
+      const sanitizeProductFilename = (p) => {
+        return String(p)
+          .replace(/\s+/g, '')
+          .replace(/[^A-Za-z0-9_\-]/g, '');
+      };
+
+      const resolveImagePath = (row, product) => {
+        // Prefer explicit image fields from the sheet
+        const explicit = getField(row, ['image', 'Image', 'imagePath', 'image_path', 'imageUrl', 'image_url']);
+        if (explicit) return explicit;
+        // Fallback to local product image path convention
+        const filename = sanitizeProductFilename(product);
+        return `/images/Products/${filename}.png`;
+      };
+
+      // Fetch rows from Pricelists tab
+      let rows = [];
+      try {
+        rows = await googleSheetsService.fetchProductData(spreadsheetId);
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: false, error: 'Failed to fetch Pricelists data from Sheets: ' + err.message }));
+        return;
+      }
+
+      if (!rows || rows.length === 0) {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, message: 'No rows found in Pricelists tab', created: 0, updated: 0, skipped: 0 }));
+        return;
+      }
+
+      // Group by price list name
+      const groups = new Map();
+      for (const row of rows) {
+        const priceListName = getField(row, ['Price List Name', 'PriceListName', 'PriceList', 'pricelist', 'Price List']);
+        if (!priceListName) continue;
+        if (!groups.has(priceListName)) groups.set(priceListName, []);
+        groups.get(priceListName).push(row);
+      }
+
+      const results = { created: 0, updated: 0, skipped: 0, errors: 0, lists: [] };
+
+      for (const [plName, plRows] of groups.entries()) {
+        const parentId = slugify(plName);
+        const parentRef = syncService.db.collection('inh_pricelists').doc(parentId);
+        const parentDoc = { name: plName, updatedAt: admin.firestore.FieldValue.serverTimestamp() };
+
+        if (!dryRun) {
+          // Ensure parent document exists
+          const existingParent = await parentRef.get();
+          if (!existingParent.exists) {
+            await parentRef.set({ ...parentDoc, createdAt: admin.firestore.FieldValue.serverTimestamp() });
+          } else {
+            await parentRef.set(parentDoc, { merge: true });
+          }
+        }
+
+        const listSummary = { priceList: plName, parentId, created: 0, updated: 0, skipped: 0 };
+
+        for (const row of plRows) {
+          const category = getField(row, ['Category', 'category']);
+          const product = getField(row, ['Product', 'product', 'Item']);
+          const shade = getField(row, ['Shade', 'shade', 'Shades']);
+          const length = getField(row, ['Length', 'length', 'Size']);
+
+          // Skip if any essential field missing
+          if (!category || !product || !shade || !length) {
+            results.skipped++;
+            listSummary.skipped++;
+            continue;
+          }
+
+          const name = makeName(category, product, shade, length);
+          const image = resolveImagePath(row, product);
+
+          const docId = slugify(`${category}-${product}-${shade}-${length}`);
+          const docRef = parentRef.collection('products').doc(docId);
+
+          const payload = {
+            name,
+            category,
+            product,
+            shade,
+            length,
+            image,
+            source: 'google_sheets',
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+          };
+
+          if (dryRun) {
+            // Simulate create/update by checking existence
+            try {
+              const existing = await docRef.get();
+              if (existing.exists) {
+                results.updated++;
+                listSummary.updated++;
+              } else {
+                results.created++;
+                listSummary.created++;
+              }
+            } catch (e) {
+              results.errors++;
+            }
+          } else {
+            const existing = await docRef.get();
+            if (existing.exists) {
+              await docRef.set(payload, { merge: true });
+              results.updated++;
+              listSummary.updated++;
+            } else {
+              await docRef.set({ ...payload, createdAt: admin.firestore.FieldValue.serverTimestamp() });
+              results.created++;
+              listSummary.created++;
+            }
+          }
+        }
+
+        results.lists.push(listSummary);
+      }
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, dryRun, ...results }));
+    } catch (error) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: false, error: 'Sync failed: ' + error.message }));
+    }
     return;
   }
 
@@ -1136,11 +1302,18 @@ const server = http.createServer(async (req, res) => {
   if (pathname === '/api/sync/bidirectional/status' && req.method === 'GET') {
     try {
       const status = bidirectionalSyncService ? bidirectionalSyncService.getSyncStatus() : { isRunning: false };
-      res.writeHead(200, { 'Content-Type': 'application/json' });
+      if (!res.headersSent) {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+      }
       res.end(JSON.stringify(status));
     } catch (error) {
-      res.writeHead(500, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: error.message }));
+      if (!res.headersSent) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: error.message }));
+      } else {
+        // If headers already sent, just end safely
+        try { res.end(); } catch (_) {}
+      }
     }
     return;
   }
@@ -1345,6 +1518,136 @@ const server = http.createServer(async (req, res) => {
       res.end(JSON.stringify({ success: false, error: error.message }));
     }
     return;
+  }
+
+  // Migrate image URLs for inh_pricelists products from Google Sheets
+  if (pathname === '/api/migrate/pricelist-images' && (req.method === 'POST' || req.method === 'GET')) {
+    try {
+      if (!syncService || !syncService.db) {
+        res.writeHead(503, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: false, error: 'Firebase service not available' }));
+        return;
+      }
+      if (!googleSheetsService) {
+        googleSheetsService = new GoogleSheetsService();
+        await googleSheetsService.initialize();
+      }
+
+      const urlParams = new URL(req.url, 'http://localhost').searchParams;
+      const dryRun = (urlParams.get('dryRun') || 'false').toLowerCase() === 'true';
+      const targetCollection = urlParams.get('collection') || 'inh_pricelists';
+      const sheetId = urlParams.get('sheetId') || googleSheetsAutoConfig.getSheetId();
+
+      // Build a product key -> imageUrl map from the pricelists tab
+      const rows = await googleSheetsService.fetchProductData(sheetId);
+      const toKey = (pl, cat, prod, dens) => [pl, cat, prod, dens]
+        .map(v => (v || '').toString().trim().toLowerCase())
+        .join('|');
+
+      const extractField = (obj, keys) => {
+        for (const k of keys) {
+          const v = obj[k];
+          if (typeof v === 'string' && v.trim()) return v.trim();
+        }
+        return null;
+      };
+
+      const getImageFromRow = (row) => {
+        const candidates = [
+          'image', 'Image', 'imageUrl', 'imageURL', 'ImageURL',
+          'ProductImage', 'productImage', 'ProductImageURL', 'productImageURL',
+          'Image Link', 'ImageLink', 'image_link', 'image_path', 'storagePath'
+        ];
+        // Nested Images array support
+        if (Array.isArray(row.Images) && row.Images.length > 0) {
+          const first = row.Images[0];
+          if (typeof first === 'string' && first.trim()) return first.trim();
+          if (typeof first === 'object') {
+            const u = first.url || first.link || first.path;
+            if (typeof u === 'string' && u.trim()) return u.trim();
+          }
+        }
+        return extractField(row, candidates);
+      };
+
+      const keyMap = new Map();
+      for (const row of rows) {
+        const priceList = extractField(row, ['Price List Name', 'PriceListName', 'PriceList', 'pricelist']);
+        const category = extractField(row, ['Category', 'category']);
+        const product = extractField(row, ['Product', 'product', 'Name', 'name']);
+        const density = extractField(row, ['Density', 'density']);
+        const imageUrl = getImageFromRow(row);
+        if (priceList && category && product && imageUrl) {
+          const key = toKey(priceList, category, product, density || '');
+          keyMap.set(key, imageUrl);
+        }
+      }
+
+      // Iterate Firestore inh_pricelists/{priceList}/products subcollections
+      const plSnap = await syncService.db.collection(targetCollection).get();
+      const deleteFields = [
+        'Image', 'image', 'imageURL', 'ImageURL', 'ProductImage', 'productImage',
+        'ProductImageURL', 'productImageURL', 'ImageLink', 'image_link', 'image_path', 'storagePath'
+      ];
+
+      let examined = 0, updated = 0, missing = 0, errors = 0;
+      const mismatches = [];
+
+      for (const plDoc of plSnap.docs) {
+        const priceListName = plDoc.get('PriceListName') || plDoc.id;
+        let subQuery = plDoc.ref.collection('products');
+        const subSnap = await subQuery.get();
+        const batch = syncService.db.batch();
+
+        for (const prodDoc of subSnap.docs) {
+          examined++;
+          const data = prodDoc.data();
+          const category = data.Category || data.category || '';
+          const product = data.Product || data.product || data.Name || data.name || '';
+          const density = data.Density || data.density || '';
+          const key = toKey(priceListName, category, product, density);
+          const sheetUrl = keyMap.get(key);
+          if (!sheetUrl) {
+            missing++;
+            mismatches.push({ priceList: priceListName, category, product, density, id: prodDoc.id });
+            continue;
+          }
+
+          const updatePayload = { imageUrl: sheetUrl };
+          deleteFields.forEach(f => { updatePayload[f] = admin.firestore.FieldValue.delete ? admin.firestore.FieldValue.delete() : undefined; });
+
+          try {
+            if (!dryRun) {
+              batch.update(prodDoc.ref, updatePayload);
+            }
+            updated++;
+          } catch (e) {
+            errors++;
+          }
+        }
+
+        if (!dryRun) {
+          try { await batch.commit(); } catch (e) { errors++; }
+        }
+      }
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        success: true,
+        dryRun,
+        targetCollection,
+        examined,
+        updated,
+        missing,
+        errors,
+        mismatches: dryRun ? mismatches.slice(0, 100) : []
+      }));
+      return;
+    } catch (error) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: false, error: error.message }));
+      return;
+    }
   }
 
   // Get error handling statistics

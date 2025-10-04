@@ -86,6 +86,63 @@ service cloud.firestore {
       allow read: if true; // Allow public read for shades counting and pricing
       allow write: if true; // Allow service account access for sync
     }
+
+    // Support lowercase pricelists collection used by some pages
+    match /pricelists/{priceListId} {
+      allow read: if true; // Allow public read for pricing dropdowns
+      allow write: if true; // Allow service account/admin syncs
+    }
+
+    // Products collection access for diagnostics and legacy listeners
+    match /products/{productId} {
+      allow read: if true; // Enable real-time listener tests and legacy reads
+      allow write: if true; // Allow service account/admin syncs
+    }
+
+    // INH Pricelists (legacy/canonical) - needed by list-categories.html and nested product data
+    match /inh_pricelists/{docId} {
+      allow read: if true;
+      allow write: if true;
+
+      // Nested subcollections commonly used by loaders and listeners
+      match /categories/{catId} {
+        allow read: if true;
+        allow write: if true;
+      }
+
+      match /products/{prodId} {
+        allow read: if true;
+        allow write: if true;
+      }
+
+      match /densities/{densId} {
+        allow read: if true;
+        allow write: if true;
+      }
+
+      match /lengths/{lenId} {
+        allow read: if true;
+        allow write: if true;
+      }
+    }
+    
+    // INH Colors collection (new canonical)
+    match /inh_colors/{colorId} {
+      allow read: if true; // Allow public read for dropdowns and stats
+      allow write: if true; // Allow service account/admin syncs
+    }
+    
+    // INH Styles collection (new canonical)
+    match /inh_styles/{styleId} {
+      allow read: if true; // Allow public read for dropdowns and stats
+      allow write: if true; // Allow service account/admin syncs
+    }
+    
+    // INH Salesmen collection (new canonical)
+    match /inh_salesmen/{salesmanId} {
+      allow read: if true; // Allow public read for dropdowns
+      allow write: if true; // Allow service account/admin syncs
+    }
     
     // Sync logs - allow service account access
     match /sync_logs/{logId} {

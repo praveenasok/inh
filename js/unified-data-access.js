@@ -993,8 +993,8 @@ class UnifiedDataAccess {
     
     async getCategories(priceList = null, options = {}) {
         try {
-            // Get pricelists data first
-            const pricelists = await this.getData('pricelists', options);
+            // Get price lists data first (correct collection name)
+            const pricelists = await this.getData('priceLists', options);
             
             if (!pricelists || !Array.isArray(pricelists)) {
                 console.warn('No pricelists data available for categories');
@@ -1030,8 +1030,8 @@ class UnifiedDataAccess {
     
     async getSubcategories(category = null, priceList = null, options = {}) {
         try {
-            // Get pricelists data first
-            const pricelists = await this.getData('pricelists', options);
+            // Get price lists data first (correct collection name)
+            const pricelists = await this.getData('priceLists', options);
             
             if (!pricelists || !Array.isArray(pricelists)) {
                 console.warn('No pricelists data available for subcategories');
@@ -1072,7 +1072,68 @@ class UnifiedDataAccess {
     }
 
     async getPriceLists(options = {}) {
-        return await this.getData('priceLists', options);
+        try {
+            let names = [];
+
+            // Prefer Firestore inh_pricelists parent docs
+            try {
+                if (typeof firebase !== 'undefined' && typeof firebase.firestore === 'function') {
+                    const db = firebase.firestore();
+                    const snap = await db.collection('inh_pricelists').get();
+                    if (!snap.empty) {
+                        names = [...new Set(snap.docs.map(doc => {
+                            const d = doc.data() || {};
+                            return d.name || d['Price List Name'] || d.PriceListName || d.PriceList || d.Name || doc.id;
+                        }).filter(Boolean))];
+                    }
+                }
+            } catch (_) {}
+
+            // Fallback to legacy Firestore collections
+            if (!names || names.length === 0) {
+                try {
+                    if (typeof firebase !== 'undefined' && typeof firebase.firestore === 'function') {
+                        const db = firebase.firestore();
+                        let legacySnap = null;
+                        try { legacySnap = await db.collection('priceLists').get(); } catch (_) {}
+                        if (!legacySnap || legacySnap.empty) {
+                            try { legacySnap = await db.collection('pricelists').get(); } catch (_) {}
+                        }
+                        if (legacySnap && !legacySnap.empty) {
+                            names = [...new Set(legacySnap.docs.map(doc => {
+                                const d = doc.data() || {};
+                                return d.name || d['Price List Name'] || d.PriceListName || d.PriceList || d.Name || doc.id;
+                            }).filter(Boolean))];
+                        }
+                    }
+                } catch (_) {}
+            }
+
+            // Derive from products via unified access
+            if (!names || names.length === 0) {
+                try {
+                    const products = await this.getProducts(options);
+                    if (products && Array.isArray(products) && products.length > 0) {
+                        names = [...new Set(products.map(p => p.PriceList || p.PriceListName || p['Price List Name']).filter(Boolean))];
+                    }
+                } catch (_) {}
+            }
+
+            // Final fallback to generic loader
+            if (!names || names.length === 0) {
+                try {
+                    const data = await this.getData('priceLists', options);
+                    if (Array.isArray(data) && data.length > 0) {
+                        names = [...new Set(data.map(d => d.name || d['Price List Name'] || d.PriceListName || d.PriceList || d.Name).filter(Boolean))];
+                    }
+                } catch (_) {}
+            }
+
+            // Ensure sorted output
+            return (names || []).sort((a, b) => String(a).toLowerCase().localeCompare(String(b).toLowerCase()));
+        } catch (error) {
+            return [];
+        }
     }
     
     // Save methods

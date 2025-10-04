@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>INH Bidirectional Sync</title>
+  <style>
+    :root { color-scheme: light dark; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; padding: 24px; }
+    .card { max-width: 640px; margin: 0 auto; background: #fff; color: #111; border: 1px solid #e5e7eb; border-radius: 12px; padding: 18px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+    @media (prefers-color-scheme: dark) { .card { background: #111827; color: #e5e7eb; border-color: #374151; } }
+    h1 { font-size: 18px; margin: 0 0 10px; }
+    .desc { font-size: 13px; color: #6b7280; margin-bottom: 14px; }
+    .row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+    button { appearance: none; border: 1px solid #0ea5e9; background: #0ea5e9; color: #fff; padding: 8px 12px; border-radius: 8px; font-size: 13px; cursor: pointer; }
+    button.secondary { background: transparent; color: #0ea5e9; }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
+    .status { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #9ca3af; }
+    .dot.running { background: #22c55e; }
+    .dot.error { background: #f59e0b; }
+    .log { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace; font-size: 12px; background: rgba(0,0,0,0.04); border-radius: 8px; padding: 10px; min-height: 80px; white-space: pre-wrap; }
+    @media (prefers-color-scheme: dark) { .log { background: rgba(255,255,255,0.06); } }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>INH Sheets ↔ Firebase Sync</h1>
+    <div class="desc">Trigger one-time bidirectional sync for collections prefixed with <code>inh_</code>.</div>
+
+    <div class="row">
+      <button id="sync-both-btn">Sync Both Ways (inh_*)</button>
+      <button id="sync-sheets-to-firebase-btn" class="secondary">Sheets → Firebase (inh_*)</button>
+      <button id="sync-firebase-to-sheets-btn" class="secondary">Firebase → Sheets (inh_*)</button>
+      <button id="refresh-status-btn" class="secondary">Refresh Status</button>
+    </div>
+
+    <div class="status">
+      <div id="status-dot" class="dot"></div>
+      <div id="status-text">Status: unknown</div>
+    </div>
+
+    <div id="log" class="log" aria-live="polite"></div>
+  </div>
+
+  <script>
+    const statusDot = document.getElementById('status-dot');
+    const statusText = document.getElementById('status-text');
+    const logEl = document.getElementById('log');
+
+    const syncBothBtn = document.getElementById('sync-both-btn');
+    const sheetsToFirebaseBtn = document.getElementById('sync-sheets-to-firebase-btn');
+    const firebaseToSheetsBtn = document.getElementById('sync-firebase-to-sheets-btn');
+    const refreshStatusBtn = document.getElementById('refresh-status-btn');
+
+    // If served from a static server (e.g., port 8000), point API to Node (3000)
+    const API_BASE = (window.location.port === '3000') ? '' : 'http://localhost:3000';
+
+    function setStatus(state, extra) {
+      statusDot.className = 'dot ' + (state || '');
+      statusText.textContent = `Status: ${state || 'unknown'}${extra ? ' — ' + extra : ''}`;
+    }
+
+    function appendLog(line) {
+      const ts = new Date().toLocaleTimeString();
+      logEl.textContent = `[${ts}] ${line}\n` + logEl.textContent;
+    }
+
+    async function fetchJSON(url, options) {
+      const fullUrl = url.startsWith('/api') ? `${API_BASE}${url}` : url;
+      const res = await fetch(fullUrl, options);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || `${res.status} ${res.statusText}`);
+      return data;
+    }
+
+    async function refreshStatus() {
+      try {
+        const data = await fetchJSON('/api/sync/bidirectional/status');
+        const state = data.isRunning ? 'running' : 'stopped';
+        setStatus(state);
+        appendLog('Status refreshed: ' + state);
+      } catch (err) {
+        setStatus('error', err.message);
+        appendLog('Status error: ' + err.message);
+      }
+    }
+
+    async function sheetsToFirebase() {
+      sheetsToFirebaseBtn.disabled = true;
+      try {
+        // Use manual sync with a hint to target inh_ collections
+        const payload = { syncTypes: ['colors','styles','companies','salesmen','products','pricelists'], forceSync: true, targetPrefix: 'inh_' };
+        const data = await fetchJSON('/api/sync/manual', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        appendLog('Sheets → Firebase sync completed (inh_*).');
+      } catch (err) {
+        setStatus('error', err.message);
+        appendLog('Sheets → Firebase error: ' + err.message);
+      } finally {
+        sheetsToFirebaseBtn.disabled = false;
+      }
+    }
+
+    async function firebaseToSheets() {
+      firebaseToSheetsBtn.disabled = true;
+      try {
+        // Trigger bidirectional sync briefly to propagate Firebase → Sheets
+        await fetchJSON('/api/sync/bidirectional/start', { method: 'POST' });
+        appendLog('Bidirectional sync started (temporary)');
+        // Let it run briefly, then stop
+        await new Promise(r => setTimeout(r, 5000));
+        await fetchJSON('/api/sync/bidirectional/stop', { method: 'POST' });
+        appendLog('Bidirectional sync stopped (Firebase → Sheets done)');
+      } catch (err) {
+        setStatus('error', err.message);
+        appendLog('Firebase → Sheets error: ' + err.message);
+      } finally {
+        firebaseToSheetsBtn.disabled = false;
+      }
+    }
+
+    async function syncBoth() {
+      syncBothBtn.disabled = true;
+      try {
+        await sheetsToFirebase();
+        await firebaseToSheets();
+        setStatus('running');
+        appendLog('Bidirectional sync (inh_*) completed.');
+      } catch (err) {
+        setStatus('error', err.message);
+        appendLog('Sync both error: ' + err.message);
+      } finally {
+        syncBothBtn.disabled = false;
+      }
+    }
+
+    refreshStatusBtn.addEventListener('click', refreshStatus);
+    sheetsToFirebaseBtn.addEventListener('click', sheetsToFirebase);
+    firebaseToSheetsBtn.addEventListener('click', firebaseToSheets);
+    syncBothBtn.addEventListener('click', syncBoth);
+
+    refreshStatus();
+  </script>
+</body>
+</html>

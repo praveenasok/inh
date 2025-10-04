@@ -159,6 +159,57 @@ class GoogleSheetsService {
     }
   }
 
+  /**
+   * List all tabs (sheets) in the configured spreadsheet
+   */
+  async listSheetTabs(spreadsheetId = this.spreadsheetId) {
+    if (!this.isInitialized) {
+      await this.initialize();
+    }
+
+    const response = await this.sheets.spreadsheets.get({ spreadsheetId });
+    const sheets = response?.data?.sheets || [];
+    return sheets.map(s => ({
+      title: s.properties?.title,
+      gridProperties: s.properties?.gridProperties || {}
+    })).filter(t => !!t.title);
+  }
+
+  /**
+   * Fetch data from a specific tab generically, mapping header row to objects
+   */
+  async fetchTabData(spreadsheetId, tabTitle) {
+    if (!this.isInitialized) {
+      await this.initialize();
+    }
+
+    const range = `${tabTitle}!A1:ZZZ`; // large range to cover most cases
+    const response = await this.sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range
+    });
+
+    const rows = response.data.values || [];
+    if (rows.length === 0) return [];
+
+    const headers = rows[0].map(h => (h || '').toString().trim());
+    const data = [];
+    for (let i = 1; i < rows.length; i++) {
+      const row = rows[i] || [];
+      const obj = {};
+      headers.forEach((header, idx) => {
+        if (!header) return;
+        obj[header] = row[idx] !== undefined ? row[idx] : '';
+      });
+      // Skip completely empty rows
+      const hasValue = Object.values(obj).some(v => v !== '' && v !== null && v !== undefined);
+      if (hasValue) {
+        data.push(obj);
+      }
+    }
+    return data;
+  }
+
   async fetchProductData(spreadsheetId, range = 'pricelists!A1:Z1000') {
     if (!this.isInitialized) {
       await this.initialize();

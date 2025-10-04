@@ -176,7 +176,8 @@ class SyncScheduler {
 
     const {
       syncTypes = ['products', 'salesmen', 'companies', 'colors', 'styles'],
-      forceSync = false
+      forceSync = false,
+      targetPrefix = ''
     } = options;
 
     const syncResults = {
@@ -193,12 +194,14 @@ class SyncScheduler {
         { name: 'salesmen', method: 'syncSalesmanData' },
         { name: 'companies', method: 'syncCompaniesData' },
         { name: 'colors', method: 'syncColorsData' },
-        { name: 'styles', method: 'syncStylesData' }
+        { name: 'styles', method: 'syncStylesData' },
+        { name: 'pricelists', method: 'syncPriceListsData' }
       ].filter(op => syncTypes.includes(op.name));
 
       for (const operation of syncOperations) {
         try {
-          const result = await this.syncService[operation.method](forceSync);
+          // Pass targetPrefix to enable inh_ collections when requested
+          const result = await this.syncService[operation.method](undefined, { targetPrefix, forceSync });
           syncResults.results[operation.name] = {
             success: true,
             recordsProcessed: result.recordsProcessed || 0,

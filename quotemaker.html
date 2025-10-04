@@ -35,10 +35,7 @@
     <!-- Universal Firebase Data Manager -->
     <script src="js/universal-firebase-data-manager.js"></script>
     
-    <!-- Fallback System Components -->
-    <script src="js/local-fallback-manager.js"></script>
-    <script src="js/fallback-detector.js"></script>
-    <script src="js/unified-data-access.js"></script>
+    <!-- Fallback System Components removed: using Firebase-only data path -->
     
     <!-- Local Storage Dropdown Manager - REMOVED: Now using Firebase-only data -->
     
@@ -1507,7 +1504,7 @@
         // Initialize universal Firebase data manager
         async function initializeFirebase() {
             try {
-                // First, ensure Firebase SDK is loaded and initialized
+                // Ensure Firebase SDK is loaded
                 if (typeof firebase === 'undefined') {
                     throw new Error('Firebase SDK not loaded');
                 }
@@ -1522,40 +1519,31 @@
                     }
                 }
                 
-                // Wait for authentication to complete
+                // Attempt authentication, but do not block initialization if it fails
                 if (firebase.auth) {
                     try {
                         console.log('Waiting for Firebase authentication...');
-                        
-                        // Check if user is already authenticated
                         let user = firebase.auth().currentUser;
-                        
-                        // If not authenticated, wait for auth state change or sign in anonymously
                         if (!user) {
-                            await new Promise((resolve, reject) => {
+                            await new Promise((resolve) => {
                                 const timeout = setTimeout(() => {
-                                    reject(new Error('Authentication timeout'));
-                                }, 10000); // 10 second timeout
-                                
+                                    console.warn('Authentication timeout, continuing without auth');
+                                    resolve(null);
+                                }, 10000);
                                 const unsubscribe = firebase.auth().onAuthStateChanged(async (authUser) => {
+                                    clearTimeout(timeout);
+                                    unsubscribe();
                                     if (authUser) {
-                                        clearTimeout(timeout);
-                                        unsubscribe();
                                         console.log('User authenticated:', authUser.uid, authUser.isAnonymous ? '(anonymous)' : '(authenticated)');
                                         resolve(authUser);
                                     } else {
-                                        // Try to sign in anonymously
                                         try {
                                             const userCredential = await firebase.auth().signInAnonymously();
-                                            clearTimeout(timeout);
-                                            unsubscribe();
                                             console.log('Anonymous authentication successful:', userCredential.user.uid);
                                             resolve(userCredential.user);
                                         } catch (authError) {
-                                            console.warn('Anonymous authentication failed:', authError);
-                                            clearTimeout(timeout);
-                                            unsubscribe();
-                                            resolve(null); // Continue without auth
+                                            console.warn('Anonymous authentication failed, continuing:', authError);
+                                            resolve(null);
                                         }
                                     }
                                 });
@@ -1564,8 +1552,7 @@
                             console.log('User already authenticated:', user.uid, user.isAnonymous ? '(anonymous)' : '(authenticated)');
                         }
                     } catch (authError) {
-                        console.warn('Authentication setup failed:', authError);
-                        // Continue without authentication - some operations may still work
+                        console.warn('Authentication setup failed, continuing without auth:', authError);
                     }
                 }
                 
@@ -1575,28 +1562,32 @@
                     console.log('Firebase Firestore instance created');
                 }
                 
-                // Wait for universal data manager to be available
+                // Try to use universal data manager if available, but do not fail hard
                 let attempts = 0;
-                const maxAttempts = 20; // 10 seconds max wait
-                
+                const maxAttempts = 20; // ~10 seconds
                 while (!window.universalDataManager && attempts < maxAttempts) {
                     await new Promise(resolve => setTimeout(resolve, 500));
                     attempts++;
                 }
                 
-                if (!window.universalDataManager) {
-                    throw new Error('Universal data manager not available after waiting');
-                }
-                
-                // Wait for universal data manager to be ready
-                await window.universalDataManager.waitForReady();
-                
-                const status = window.universalDataManager.getStatus();
-                if (status.isInitialized && status.isDataLoaded) {
-                    updateConnectionStatus(true);
+                if (window.universalDataManager) {
+                    try {
+                        await window.universalDataManager.waitForReady();
+                        const status = window.universalDataManager.getStatus();
+                        if (status.isInitialized && status.isDataLoaded) {
+                            updateConnectionStatus(true);
+                        } else {
+                            console.warn('Universal data manager not ready, proceeding with direct Firestore reads');
+                            updateConnectionStatus(false);
+                        }
+                    } catch (udmError) {
+                        console.warn('Universal data manager readiness failed, proceeding:', udmError);
+                        updateConnectionStatus(false);
+                    }
                 } else {
-                    updateConnectionStatus(false);
-                    throw new Error('Universal Firebase data manager not ready. Please check your connection.');
+                    console.warn('Universal data manager not available, proceeding with direct Firestore reads');
+                    // Mark as connected to Firestore at least
+                    updateConnectionStatus(true);
                 }
                 
             } catch (error) {
@@ -1605,26 +1596,102 @@
             }
         }
 
+        // Helper: Fetch documents from a Firestore collection (used for inh_* sources)
+        async function fetchCollectionDocs(collectionName) {
+            if (!window.db) {
+                throw new Error('Firestore not initialized');
+            }
+            const snapshot = await window.db.collection(collectionName).get();
+            const items = [];
+            snapshot.forEach(doc => {
+                items.push({ id: doc.id, ...doc.data() });
+            });
+            return items;
+        }
+
+        // Helper: Try multiple collections in order and return first successful dataset
+        async function fetchCollectionDocsSequential(collectionNames) {
+            for (const name of collectionNames) {
+                try {
+                    const docs = await fetchCollectionDocs(name);
+                    if (Array.isArray(docs) && docs.length > 0) {
+                        console.log(`Loaded ${docs.length} docs from ${name}`);
+                        return docs;
+                    }
+                } catch (e) {
+                    console.warn(`Failed to load collection ${name}:`, e);
+                }
+            }
+            return [];
+        }
+
+        // Helper: Fetch single document by path (e.g., config/salesmen)
+        async function fetchDocumentByPath(docPath) {
+            if (!window.db) {
+                throw new Error('Firestore not initialized');
+            }
+            const [collectionName, docId] = docPath.split('/');
+            const docRef = window.db.collection(collectionName).doc(docId);
+            const docSnap = await docRef.get();
+            if (docSnap.exists) {
+                return { id: docSnap.id, ...docSnap.data() };
+            }
+            return null;
+        }
+
         // Load all required data from Firebase
         async function loadAllData() {
             try {
-                // Load data from Firebase only
-                const [products, clients, salesmen, styles, colors] = await Promise.all([
-                    loadProducts(),
+                // Load data from Firebase only, but tolerate partial failures
+                const results = await Promise.allSettled([
+                    // Avoid heavy initial product load; defer until needed
                     loadClients(),
                     loadSalesmen(),
                     loadStyles(),
                     loadColors()
                 ]);
                 
+                // Assign successful results; keep existing globals on failure
+                const [clientRes, salesRes, stylesRes, colorsRes] = results;
+                if (clientRes.status === 'fulfilled') {
+                    clientData = clientRes.value || clientData || [];
+                } else {
+                    console.warn('Clients load failed:', clientRes.reason);
+                    clientData = clientData || [];
+                }
+                if (salesRes.status === 'fulfilled') {
+                    salesmenData = salesRes.value || salesmenData || [];
+                } else {
+                    console.warn('Salesmen load failed:', salesRes.reason);
+                    salesmenData = salesmenData || [];
+                }
+                if (stylesRes.status === 'fulfilled') {
+                    stylesData = stylesRes.value || stylesData || [];
+                } else {
+                    console.warn('Styles load failed:', stylesRes.reason);
+                    stylesData = stylesData || [];
+                }
+                if (colorsRes.status === 'fulfilled') {
+                    colorsData = colorsRes.value || colorsData || [];
+                } else {
+                    console.warn('Colors load failed:', colorsRes.reason);
+                    colorsData = colorsData || [];
+                }
+                
                 // Ensure all dropdowns are populated after data loading
                 populateAllDropdowns();
+                // Populate price lists quickly from inh_pricelists without loading products
+                try {
+                    await loadPriceListsFromFirestore();
+                } catch (e) {
+                    console.warn('Failed to load price lists from Firestore; relying on listener/fallbacks.', e);
+                }
                 
                 // Initialize Firebase real-time listeners for enhanced dropdowns
                 await initializeFirebaseListeners();
                 
             } catch (error) {
-                throw error;
+                console.warn('loadAllData encountered an error but will continue:', error);
             }
         }
 
@@ -1632,42 +1699,151 @@
         function populateAllDropdowns() {
             try {
                 // Populate main dropdowns (non-Firebase real-time)
-                populatePriceListDropdown();
                 populateClientDropdown();
                 populateSalespersonDropdown();
-                
-                // Note: Shades, Colors, and Styles dropdowns are now handled by Firebase real-time listeners
-                // in initializeFirebaseListeners() function
+                // Populate independent dropdowns immediately after data load
+                // Colors and Styles are sourced from inh_colors and inh_styles respectively
+                if (Array.isArray(colorsData) && colorsData.length > 0) {
+                    populateColors();
+                }
+                if (Array.isArray(stylesData) && stylesData.length > 0) {
+                    populateStylesFromCollection();
+                }
                 
             } catch (error) {
                 // Error populating dropdowns
             }
         }
 
-        // Load product data from Firebase
+        // Lightweight TTL cache for this page (non-invasive)
+        if (!window.pageCache) {
+            window.pageCache = {
+                _store: new Map(),
+                set(key, value, ttlMs = 5 * 60 * 1000) {
+                    this._store.set(key, { value, expires: Date.now() + ttlMs });
+                },
+                get(key) {
+                    const item = this._store.get(key);
+                    if (!item) return null;
+                    if (Date.now() > item.expires) {
+                        this._store.delete(key);
+                        return null;
+                    }
+                    return item.value;
+                }
+            };
+        }
+
+        // One-shot loader for price lists from inh_pricelists, with caching
+        async function loadPriceListsFromFirestore() {
+            const selector = document.getElementById('price-list-selector');
+            if (!selector) return;
+            try {
+                // Use cached names if available
+                const cached = window.pageCache.get('quotemaker:priceLists');
+                if (Array.isArray(cached) && cached.length > 0) {
+                    const previous = selector.value;
+                    selector.innerHTML = '<option value="">Select Price List</option>';
+                    cached.forEach(n => {
+                        const option = document.createElement('option');
+                        option.value = n;
+                        option.textContent = n;
+                        selector.appendChild(option);
+                    });
+                    if (previous && cached.includes(previous)) selector.value = previous;
+                    return cached;
+                }
+
+                if (!window.db && typeof firebase !== 'undefined' && firebase.firestore) {
+                    window.db = firebase.firestore();
+                }
+                if (!window.db) throw new Error('Firestore not initialized');
+
+                const snapshot = await window.db.collection('inh_pricelists').get();
+                const namesSet = new Set();
+                snapshot.forEach(doc => {
+                    const data = doc.data() || {};
+                    const name = data['Price List Name'] || data.PriceListName || data.PriceList || data.price_list_name || data.priceListName || data.priceList;
+                    if (typeof name === 'string') {
+                        const trimmed = name.trim();
+                        if (trimmed) namesSet.add(trimmed);
+                    }
+                });
+                const names = Array.from(namesSet).sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+                // Cache for quick subsequent loads
+                window.pageCache.set('quotemaker:priceLists', names, 5 * 60 * 1000);
+
+                const previous = selector.value;
+                selector.innerHTML = '<option value="">Select Price List</option>';
+                names.forEach(n => {
+                    const option = document.createElement('option');
+                    option.value = n;
+                    option.textContent = n;
+                    selector.appendChild(option);
+                });
+                if (previous && names.includes(previous)) selector.value = previous;
+                return names;
+            } catch (error) {
+                console.warn('Error loading price lists from Firestore:', error);
+                // Fallback to existing productData-derived dropdown if available
+                try { populatePriceListDropdown(); } catch (_) {}
+                return [];
+            }
+        }
+
+        // Load product data from Firebase (now using inh_pricelists)
         async function loadProducts() {
             try {
                 console.log('loadProducts called');
-                // Load data from Firebase using universal data manager
-                if (window.universalDataManager) {
-                    console.log('Universal data manager available');
-                    const status = window.universalDataManager.getStatus();
-                    console.log('Data manager status:', status);
-                    if (status.isInitialized && status.isDataLoaded) {
-                        productData = await window.universalDataManager.getProducts();
-                        console.log('Products loaded:', productData ? productData.length : 0);
-                        // Populate color types after product data is loaded
+                // Try multiple Firestore collections in priority order
+                if (window.db) {
+                    const docs = await fetchCollectionDocsSequential([
+                        'inh_pricelists',
+                        'priceLists',
+                        'pricelists',
+                        'products'
+                    ]);
+                    if (docs && docs.length > 0) {
+                        productData = docs;
+                        console.log('Products loaded from Firestore collections:', productData.length);
                         populateColorTypes();
                         return productData;
-                    } else {
-                        console.log('Data manager not ready:', status);
-                        throw new Error('Firebase universal data manager not ready');
                     }
-                } else {
-                    console.log('Universal data manager not available');
-                    throw new Error('Firebase universal data manager not available');
                 }
-                
+
+                // Fallback: use universal data manager products if available
+                if (window.universalDataManager) {
+                    const status = window.universalDataManager.getStatus ? window.universalDataManager.getStatus() : { isInitialized: false, isDataLoaded: false };
+                    if (status.isInitialized && status.isDataLoaded) {
+                        productData = await window.universalDataManager.getProducts();
+                        console.log('Products loaded via universal data manager:', productData ? productData.length : 0);
+                        populateColorTypes();
+                        return productData;
+                    }
+                }
+
+                // Final fallback: try local data.json
+                try {
+                    const resp = await fetch('data.json');
+                    if (resp.ok) {
+                        const json = await resp.json();
+                        if (Array.isArray(json)) {
+                            productData = json;
+                            console.log('Products loaded from local data.json:', productData.length);
+                            populateColorTypes();
+                            return productData;
+                        } else if (Array.isArray(json.products)) {
+                            productData = json.products;
+                            console.log('Products loaded from local data.json.products:', productData.length);
+                            populateColorTypes();
+                            return productData;
+                        }
+                    }
+                } catch (e) {
+                    console.warn('Local data.json fallback failed:', e);
+                }
+
+                throw new Error('No product data sources available');
             } catch (error) {
                 console.error('loadProducts error:', error);
                 productData = [];
@@ -1697,83 +1873,69 @@
             }
         }
 
-        // Load salespeople from Firebase (prefer firebaseDB config path)
+        // Load salespeople from Firebase (now using inh_salesmen)
         async function loadSalesmen() {
             try {
-                // Prefer direct Firebase DB access when available
-                if (window.firebaseDB && typeof window.firebaseDB.isAvailable === 'function' && window.firebaseDB.isAvailable()) {
-                    salesmenData = await window.firebaseDB.getSalesmen();
-                    return salesmenData;
-                }
-
-                // Fallback to universal data manager
-                if (window.universalDataManager) {
-                    const status = window.universalDataManager.getStatus();
-                    if (status.isInitialized && status.isDataLoaded) {
-                        salesmenData = await window.universalDataManager.getSalespeople();
+                if (window.db) {
+                    // Try inh_salesmen, then salespeople, then config/salesmen doc
+                    const docs = await fetchCollectionDocsSequential(['inh_salesmen', 'salespeople']);
+                    if (docs && docs.length > 0) {
+                        salesmenData = docs;
+                        console.log('Salesmen loaded from Firestore:', salesmenData.length);
                         return salesmenData;
-                    } else {
-                        throw new Error('Firebase universal data manager not ready');
                     }
-                } else {
-                    throw new Error('Firebase universal data manager not available');
+                    // Try config document
+                    try {
+                        const configSalesmen = await fetchDocumentByPath('config/salesmen');
+                        if (configSalesmen && Array.isArray(configSalesmen.list)) {
+                            salesmenData = configSalesmen.list.map(name => ({ name }));
+                            console.log('Salesmen loaded from config/salesmen:', salesmenData.length);
+                            return salesmenData;
+                        }
+                    } catch (e) {
+                        console.warn('Failed to load salesmen from config/salesmen:', e);
+                    }
                 }
+                salesmenData = [];
+                return salesmenData;
             } catch (error) {
                 salesmenData = [];
                 throw error;
             }
         }
 
-        // Load styles from Firebase (prefer direct firebaseDB access)
+        // Load styles from Firebase (now using inh_styles)
         async function loadStyles() {
             try {
-                if (window.firebaseDB && typeof window.firebaseDB.isAvailable === 'function' && window.firebaseDB.isAvailable()) {
-                    stylesData = await window.firebaseDB.getStyles();
+                if (window.db) {
+                    const docs = await fetchCollectionDocsSequential(['inh_styles', 'styles']);
+                    stylesData = docs || [];
+                    console.log('Styles loaded from Firestore:', stylesData.length);
                     populateStylesFromCollection(stylesData);
                     return stylesData;
                 }
-
-                // Fallback to universal data manager
-                if (window.universalDataManager) {
-                    const status = window.universalDataManager.getStatus();
-                    if (status.isInitialized && status.isDataLoaded) {
-                        stylesData = await window.universalDataManager.getStyles();
-                        populateStylesFromCollection(stylesData);
-                        return stylesData;
-                    } else {
-                        throw new Error('Firebase universal data manager not ready');
-                    }
-                } else {
-                    throw new Error('Firebase universal data manager not available');
-                }
+                stylesData = [];
+                populateStylesFromCollection(stylesData);
+                return stylesData;
             } catch (error) {
                 stylesData = [];
                 throw error;
             }
         }
 
-        // Load colors from Firebase (prefer direct firebaseDB access)
+        // Load colors from Firebase (now using inh_colors)
         async function loadColors() {
             try {
-                if (window.firebaseDB && typeof window.firebaseDB.isAvailable === 'function' && window.firebaseDB.isAvailable()) {
-                    colorsData = await window.firebaseDB.getColors();
-                    populateColors(colorsData);
+                if (window.db) {
+                    const docs = await fetchCollectionDocsSequential(['inh_colors', 'colors']);
+                    colorsData = docs || [];
+                    console.log('Colors loaded from Firestore:', colorsData.length);
+                    populateColors();
                     return colorsData;
                 }
-
-                // Fallback to universal data manager
-                if (window.universalDataManager) {
-                    const status = window.universalDataManager.getStatus();
-                    if (status.isInitialized && status.isDataLoaded) {
-                        colorsData = await window.universalDataManager.getColors();
-                        populateColors(colorsData);
-                        return colorsData;
-                    } else {
-                        throw new Error('Firebase universal data manager not ready');
-                    }
-                } else {
-                    throw new Error('Firebase universal data manager not available');
-                }
+                colorsData = [];
+                populateColors();
+                return colorsData;
             } catch (error) {
                 colorsData = [];
                 throw error;
@@ -2254,46 +2416,112 @@
             });
         }
 
+        let selectionListenersInitialized = false;
+
         // Price list change handler
         function onPriceListChange() {
-            const priceList = document.getElementById('price-list-selector').value;
+            const rawPriceList = document.getElementById('price-list-selector').value;
+            const priceList = (typeof rawPriceList === 'string') ? rawPriceList.trim() : rawPriceList;
             currentQuote.priceList = priceList;
             
             if (priceList) {
-                populateCategories(priceList);
-                enableSelector('category-selector');
+                // Show loading state for dependent dropdowns
+                showDropdownLoading('category-selector', 'Loading categories...');
+                showDropdownLoading('product-selector', 'Select a category first');
+                showDropdownLoading('density-selector', 'Select a product first');
+                showDropdownLoading('length-selector', 'Select a product first');
+                // Populate shades scoped by selected price list (even before product/density)
+                showDropdownLoading('color-type-selector', 'Loading shades...');
+                try { populateCategories(priceList); } catch (_) {}
+                // Also refresh shades using only price list filter for early feedback
+                try {
+                    populateColorTypes(priceList);
+                    enableDropdownAfterLoad('color-type-selector');
+                } catch (e) {
+                    // Non-blocking: if shades population fails here, it will be retried on product/density changes
+                }
+                // Lazily initialize heavier real-time listeners only after user picks a price list
+                if (!selectionListenersInitialized) {
+                    try {
+                        setupProductsCategoriesListenerWithRetry();
+                        setupProductsProductsListenerWithRetry();
+                        setupProductsDensitiesListenerWithRetry();
+                        setupProductsLengthsListenerWithRetry();
+                        setupProductsShadesListenerWithRetry();
+                        selectionListenersInitialized = true;
+                    } catch (e) {
+                        console.warn('Deferred listener initialization failed:', e);
+                    }
+                }
+                // Enable after data load occurs in populateCategories
             } else {
                 clearCascadeSelectors(['category-selector', 'product-selector', 'density-selector', 'length-selector', 'color-type-selector', 'color-selector']);
             }
         }
 
-        // Populate categories based on price list using Firebase data
-        function populateCategories(priceList) {
+        // Populate categories based on price list using Firebase-first approach
+        async function populateCategories(priceList) {
             const selector = document.getElementById('category-selector');
             if (!selector) {
-                return;
-            }
-            
-            if (!productData || productData.length === 0) {
                 return;
             }
             
             // Clear existing options
             selector.innerHTML = '<option value="">Select Category</option>';
             
-            // Get unique categories for the selected price list
-            // Handle different field name variations
-            const filteredProducts = productData.filter(product => {
-                const priceListField = product.PriceList || product['Price List Name'] || product.PriceListName;
-                return priceListField === priceList;
-            });
-            
-            const categories = [...new Set(
-                filteredProducts.map(product => {
-                    return product.Category || product.category;
-                })
-            )].filter(Boolean);
-            
+            // Firestore-first: load categories from 'inh_pricelists' filtered by selected price list
+            let categories = [];
+            try {
+                if (!window.db && typeof firebase !== 'undefined' && firebase.firestore) {
+                    window.db = firebase.firestore();
+                }
+                if (window.db) {
+                    const fieldCandidates = ['Price List Name','PriceListName','PriceList','price_list_name','priceListName','priceList'];
+                    let docs = [];
+                    for (const field of fieldCandidates) {
+                        try {
+                            const snap = await window.db.collection('inh_pricelists').where(field, '==', priceList).get();
+                            if (!snap.empty) {
+                                snap.forEach(d => docs.push(d.data()));
+                                break;
+                            }
+                        } catch (_) {
+                            // Try next field variant silently
+                        }
+                    }
+                    if (docs.length > 0) {
+                        categories = Array.from(new Set(
+                            docs.map(d => {
+                                const c = d.Category || d.category || d['Category'] || '';
+                                return (typeof c === 'string') ? c.trim() : String(c || '').trim();
+                            }).filter(Boolean)
+                        )).sort((a,b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+                    }
+                }
+            } catch (err) {
+                console.warn('Firestore category load failed, will fallback:', err);
+            }
+
+            // Fallback to local productData if Firestore path yielded nothing
+            if (categories.length === 0 && Array.isArray(productData) && productData.length > 0) {
+                const normalizedSelected = String(priceList || '').toLowerCase().trim();
+                const filteredProducts = productData.filter(product => {
+                    const priceListFieldRaw = product.PriceList || product['Price List Name'] || product.PriceListName || product.price_list_name || product.priceListName || product.priceList;
+                    const priceListField = (typeof priceListFieldRaw === 'string') ? priceListFieldRaw.toLowerCase().trim() : String(priceListFieldRaw || '').toLowerCase().trim();
+                    return priceListField && priceListField === normalizedSelected;
+                });
+                const categoriesRaw = filteredProducts
+                    .map(product => product.Category)
+                    .filter(cat => typeof cat === 'string' && cat.trim().length > 0)
+                    .map(cat => cat.trim());
+                categories = [...new Set(categoriesRaw)].filter(Boolean).sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+            }
+
+            if (categories.length === 0) {
+                showDropdownError('category-selector', 'No categories for selected price list');
+                return;
+            }
+
             categories.forEach(category => {
                 const option = document.createElement('option');
                 option.value = category;
@@ -2301,7 +2529,11 @@
                 selector.appendChild(option);
             });
             
+            // Bind selector to price list for traceability
+            selector.setAttribute('data-bound-price-list', priceList);
 
+            // Enable after load
+            enableDropdownAfterLoad('category-selector');
             
             // Auto-select if only one option is available
             const options = selector.querySelectorAll('option:not([value=""])');
@@ -2318,8 +2550,10 @@
             const category = document.getElementById('category-selector').value;
             
             if (priceList && category) {
+                // Show loading for dependent dropdowns
+                showDropdownLoading('product-selector', 'Loading products...');
                 populateProducts(priceList, category);
-                enableSelector('product-selector');
+                // Enable happens after data load in populateProducts
             } else {
                 clearCascadeSelectors(['product-selector', 'density-selector', 'length-selector', 'color-type-selector', 'color-selector']);
             }
@@ -2333,6 +2567,7 @@
             }
             
             if (!productData || productData.length === 0) {
+                showDropdownError('product-selector', 'No products available');
                 return;
             }
             
@@ -2350,6 +2585,11 @@
             
             selector.innerHTML = '<option value="">Select Product</option>';
             
+            if (products.length === 0) {
+                showDropdownError('product-selector', 'No products for selected category');
+                return;
+            }
+
             products.forEach(product => {
                 const option = document.createElement('option');
                 option.value = product;
@@ -2357,6 +2597,8 @@
                 selector.appendChild(option);
             });
             
+            enableDropdownAfterLoad('product-selector');
+
             // Auto-select if only one option is available
             if (products.length === 1) {
                 selector.value = products[0];
@@ -2373,13 +2615,15 @@
             const density = document.getElementById('density-selector').value;
             
             if (priceList && category && product) {
+                // Show loading for dependent dropdowns
+                showDropdownLoading('density-selector', 'Loading densities...');
+                showDropdownLoading('length-selector', 'Loading lengths...');
+                showDropdownLoading('color-type-selector', 'Loading shades...');
                 populateDensities(priceList, category, product);
                 populateLengths(priceList, category, product);
                 populateColorTypes(priceList, category, product, density);
                 
-                enableSelector('density-selector');
-                enableSelector('length-selector');
-                enableSelector('color-type-selector');
+                // Enabled after respective populate functions complete
                 enableSelector('color-selector');
                 enableSelector('style-selector');
                 
@@ -2459,6 +2703,7 @@
             }
             
             if (!productData || productData.length === 0) {
+                showDropdownError('density-selector', 'No densities available');
                 return;
             }
             
@@ -2476,6 +2721,11 @@
             
             selector.innerHTML = '<option value="">Select Density</option>';
             
+            if (densities.length === 0) {
+                showDropdownError('density-selector', 'No densities for selected product');
+                return;
+            }
+
             densities.forEach(density => {
                 const option = document.createElement('option');
                 option.value = density;
@@ -2483,6 +2733,8 @@
                 selector.appendChild(option);
             });
             
+            enableDropdownAfterLoad('density-selector');
+
             // Auto-select if only one option is available
             const options = selector.querySelectorAll('option:not([value=""])');
             if (options.length === 1) {
@@ -2499,6 +2751,7 @@
             }
             
             if (!productData || productData.length === 0) {
+                showDropdownError('length-selector', 'No lengths available');
                 return;
             }
             
@@ -2527,6 +2780,13 @@
                 selector.appendChild(option);
             });
             
+            if (lengths.length === 0) {
+                showDropdownError('length-selector', 'No lengths for selected product');
+                return;
+            }
+
+            enableDropdownAfterLoad('length-selector');
+
             // Auto-select if only one option is available
             const options = selector.querySelectorAll('option:not([value=""])');
             if (options.length === 1) {
@@ -2546,6 +2806,7 @@
             
             if (!productData || productData.length === 0) {
                 console.log('No productData available');
+                showDropdownError('color-type-selector', 'No shades available');
                 return;
             }
             
@@ -2557,6 +2818,21 @@
                               (product && product.trim() !== '') || 
                               (density && density.trim() !== '');
             
+            // Helpers for robust, case-insensitive comparisons
+            const normalize = (str) => (str || '').toString().trim().toLowerCase();
+            const stripNumbersAndWeight = (str) => (str || '').toString().toLowerCase()
+                .replace(/\b\d+\s*(g)?\b/gi, '') // remove weights like 100g
+                .replace(/\s+/g, ' ') // collapse spaces
+                .trim();
+            const looseMatch = (a, b) => {
+                const na = normalize(a);
+                const nb = normalize(b);
+                if (!na || !nb) return na === nb;
+                const sa = stripNumbersAndWeight(na);
+                const sb = stripNumbersAndWeight(nb);
+                return sa === sb || sa.includes(sb) || sb.includes(sa);
+            };
+
             let filteredProducts = productData;
             
             // Only apply filters if at least one filter is provided
@@ -2564,7 +2840,7 @@
                 if (priceList && priceList.trim() !== '') {
                     filteredProducts = filteredProducts.filter(item => {
                         const itemPriceList = item.PriceList || item.priceList || item['Price List Name'] || item.PriceListName;
-                        return itemPriceList === priceList;
+                        return normalize(itemPriceList) === normalize(priceList);
                     });
                     console.log('Filtered by priceList:', priceList, 'Remaining products:', filteredProducts.length);
                 }
@@ -2572,7 +2848,7 @@
                 if (category && category.trim() !== '') {
                     filteredProducts = filteredProducts.filter(item => {
                         const itemCategory = item.Category || item.category;
-                        return itemCategory === category;
+                        return normalize(itemCategory) === normalize(category);
                     });
                     console.log('Filtered by category:', category, 'Remaining products:', filteredProducts.length);
                 }
@@ -2580,7 +2856,7 @@
                 if (product && product.trim() !== '') {
                     filteredProducts = filteredProducts.filter(item => {
                         const itemProduct = item.Product || item.ProductName || item.product || item.name;
-                        return itemProduct === product;
+                        return normalize(itemProduct) === normalize(product);
                     });
                     console.log('Filtered by product:', product, 'Remaining products:', filteredProducts.length);
                 }
@@ -2588,7 +2864,8 @@
                 if (density && density.trim() !== '') {
                     filteredProducts = filteredProducts.filter(item => {
                         const itemDensity = item.Density || item.density;
-                        return itemDensity === density;
+                        // Allow flexible matches (e.g., "Super Double Drawn" vs "Super Double Drawn 100g")
+                        return looseMatch(itemDensity, density);
                     });
                     console.log('Filtered by density:', density, 'Remaining products:', filteredProducts.length);
                 }
@@ -2602,8 +2879,14 @@
             const shadeSet = new Set();
             filteredProducts.forEach(item => {
                 const rawShade = item.Shade || item.shade || item.Shades || item.shades || item.ColorType || item.color_type || '';
-                if (typeof rawShade === 'string' && rawShade.trim() !== '') {
-                    rawShade.split(',').forEach(s => {
+                if (Array.isArray(rawShade)) {
+                    rawShade.forEach(s => {
+                        const trimmed = (s || '').toString().trim();
+                        if (trimmed) shadeSet.add(trimmed);
+                    });
+                } else if (typeof rawShade === 'string' && rawShade.trim() !== '') {
+                    // Split on common delimiters: comma, slash, pipe, semicolon
+                    rawShade.split(/[\,\|\/;]+/).forEach(s => {
                         const trimmed = s.trim();
                         if (trimmed) shadeSet.add(trimmed);
                     });
@@ -2661,37 +2944,42 @@
                 option.textContent = shade;
                 selector.appendChild(option);
             });
-        }
 
-        // Populate colors from Firebase data
-        function populateColors() {
-            populateColorsByType(''); // Show all colors initially
-        }
-
-        // Populate colors filtered by color type
-        function populateColorsByType(colorType) {
-            const colorSelector = document.getElementById('color-selector');
-            if (!colorSelector) {
+            if (shades.length === 0) {
+                showDropdownError('color-type-selector', 'No shades for selected density');
                 return;
             }
+
+            enableDropdownAfterLoad('color-type-selector');
+        }
+
+        // Populate colors from colors collection (prioritize 'colorname')
+        function populateColors() {
+            const colorSelector = document.getElementById('color-selector');
+            if (!colorSelector) return;
             
             if (!colorsData || colorsData.length === 0) {
+                showDropdownError('color-selector', 'No colors available');
                 return;
             }
             
-            // Clear existing options
             colorSelector.innerHTML = '<option value="">Select Color</option>';
             
-            // Filter colors by type if specified
-            const filteredColors = colorType ? 
-                colorsData.filter(color => color.category === colorType) : 
-                colorsData;
+            // Extract, dedupe, and sort color names
+            const names = [...new Set((colorsData || [])
+                .map(c => c.colorname || c.Color || c.color || c.name)
+                .filter(Boolean)
+            )].sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
             
-            // Add colors from Firebase data
-            filteredColors.forEach(color => {
+            if (names.length === 0) {
+                showDropdownError('color-selector', 'No colors found');
+                return;
+            }
+            
+            names.forEach(n => {
                 const option = document.createElement('option');
-                option.value = color.name || color.colorName;
-                option.textContent = color.name || color.colorName;
+                option.value = n;
+                option.textContent = n;
                 colorSelector.appendChild(option);
             });
             
@@ -2700,37 +2988,45 @@
             customOption.value = 'Custom';
             customOption.textContent = 'Custom Color';
             colorSelector.appendChild(customOption);
+            
+            enableDropdownAfterLoad('color-selector');
         }
 
-        // Populate styles from Firebase data
+        // Populate styles from styles collection (prioritize 'stylename')
         function populateStylesFromCollection() {
             const styleSelector = document.getElementById('style-selector');
-            if (!styleSelector) {
-                return;
-            }
+            if (!styleSelector) return;
             
             if (!stylesData || stylesData.length === 0) {
+                showDropdownError('style-selector', 'No styles available');
                 return;
             }
             
-            // Clear existing options
             styleSelector.innerHTML = '<option value="">Select Style</option>';
             
-            // Add styles from Firebase data
-            stylesData.forEach(style => {
+            const names = [...new Set((stylesData || [])
+                .map(s => s.stylename || s.Style || s.style || s.name)
+                .filter(Boolean)
+            )].sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+            
+            if (names.length === 0) {
+                showDropdownError('style-selector', 'No styles found');
+                return;
+            }
+            
+            names.forEach(n => {
                 const option = document.createElement('option');
-                option.value = style.name || style.styleName;
-                option.textContent = style.name || style.styleName;
+                option.value = n;
+                option.textContent = n;
                 styleSelector.appendChild(option);
             });
             
-            // Add custom option
             const customOption = document.createElement('option');
             customOption.value = 'Custom';
             customOption.textContent = 'Custom Style';
             styleSelector.appendChild(customOption);
             
-
+            enableDropdownAfterLoad('style-selector');
         }
 
         // Firebase Real-time Listeners and Enhanced Dropdown Management
@@ -2961,18 +3257,8 @@
         // Setup listeners with retry logic
         async function setupListenersWithRetry() {
             const setupPromises = [
-                // Shades are now derived from products data
-                setupProductsShadesListenerWithRetry(),
-                // Price lists dropdown derived from products data
+                // Initial load should be light: price lists, colors, styles, salesmen
                 setupProductsPriceListsListenerWithRetry(),
-                // Categories dropdown derived from products data
-                setupProductsCategoriesListenerWithRetry(),
-                // Products dropdown derived from products data
-                setupProductsProductsListenerWithRetry(),
-                // Densities dropdown derived from products data
-                setupProductsDensitiesListenerWithRetry(),
-                // Lengths dropdown derived from products data
-                setupProductsLengthsListenerWithRetry(),
                 setupColorsListenerWithRetry(),
                 setupStylesListenerWithRetry(),
                 // Salesmen dropdown (config/salesmen, fallback to salespeople collection)
@@ -2982,7 +3268,7 @@
             await Promise.allSettled(setupPromises);
         }
 
-        // Set up real-time listener for pricelists collection (for shades dropdown)
+        // Set up real-time listener for inh_pricelists collection (for shades dropdown)
         function setupPricelistsListener() {
             try {
                 showDropdownLoading('color-type-selector', 'Loading shades...');
@@ -2993,7 +3279,7 @@
                 }
 
                 // Set up new listener with enhanced error handling
-                firebaseListeners.pricelists = window.db.collection('pricelists').onSnapshot(
+                firebaseListeners.pricelists = window.db.collection('inh_pricelists').onSnapshot(
                     (snapshot) => {
                         console.log('Pricelists data updated, refreshing shades dropdown...');
                         const pricelistsData = [];
@@ -3005,12 +3291,18 @@
                             }
                         });
 
-                        // Update shades dropdown with new data
-                        populateShadesFromPricelists(pricelistsData);
+                        // Update shades dropdown with new data only when no filters are selected
+                        const priceListSel = document.getElementById('price-list-selector')?.value || '';
+                        const categorySel = document.getElementById('category-selector')?.value || '';
+                        const productSel = document.getElementById('product-selector')?.value || '';
+                        const densitySel = document.getElementById('density-selector')?.value || '';
+                        if (!priceListSel && !categorySel && !productSel && !densitySel) {
+                            populateShadesFromPricelists(pricelistsData);
+                        }
                         enableDropdownAfterLoad('color-type-selector');
                     },
                     (error) => {
-                        console.error('Error in pricelists listener:', error);
+                        console.error('Error in inh_pricelists listener:', error);
                         showDropdownError('color-type-selector', 'Error loading shades');
                         
                         // Retry after delay if connection error
@@ -3061,6 +3353,18 @@
                 // Listen to products collection
                 firebaseListeners.products = window.db.collection('products').onSnapshot(
                     (snapshot) => {
+                        // If user has already selected any filters, do not override the shade dropdown here
+                        const priceList = document.getElementById('price-list-selector')?.value || '';
+                        const category = document.getElementById('category-selector')?.value || '';
+                        const product = document.getElementById('product-selector')?.value || '';
+                        const density = document.getElementById('density-selector')?.value || '';
+
+                        if (priceList || category || product || density) {
+                            // Filter-specific shade population is handled by populateColorTypes; keep dropdown enabled
+                            enableDropdownAfterLoad('color-type-selector');
+                            return;
+                        }
+
                         const shadesSet = new Set();
 
                         snapshot.forEach((doc) => {
@@ -3126,16 +3430,30 @@
             }
         }
 
-        // Set up real-time listener for products collection to populate price lists dropdown
+        // Set up real-time listener for inh_pricelists to populate price lists dropdown
         function setupProductsPriceListsListener() {
             try {
                 showDropdownLoading('price-list-selector', 'Loading price lists...');
+
+                // If Firestore is not available, fall back to locally loaded productData
+                if (!window.db) {
+                    console.warn('Firestore not available; populating price lists from local productData');
+                    try {
+                        populatePriceListDropdown();
+                        enableDropdownAfterLoad('price-list-selector');
+                    } catch (e) {
+                        console.error('Fallback population of price lists failed:', e);
+                        showDropdownError('price-list-selector', 'Error loading price lists');
+                    }
+                    return;
+                }
 
                 if (firebaseListeners.productsPriceLists) {
                     firebaseListeners.productsPriceLists();
                 }
 
-                firebaseListeners.productsPriceLists = window.db.collection('products').onSnapshot(
+                // Prefer inh_pricelists for price lists
+                firebaseListeners.productsPriceLists = window.db.collection('inh_pricelists').onSnapshot(
                     (snapshot) => {
                         const namesSet = new Set();
                         snapshot.forEach((doc) => {
@@ -3165,9 +3483,61 @@
                         }
                     },
                     (error) => {
-                        console.error('Error in products listener for price lists:', error);
+                        console.error('Error in inh_pricelists listener for price lists:', error);
+                        // Show error, then attempt to populate from local productData as a fallback
                         showDropdownError('price-list-selector', 'Error loading price lists');
-                        if (error.code === 'unavailable' || (error.message && error.message.includes('UNAVAILABLE'))) {
+
+                        const isPermissionError = error.code === 'permission-denied' || (error.message && error.message.toLowerCase().includes('permission'));
+                        const isUnavailable = error.code === 'unavailable' || (error.message && error.message.includes('UNAVAILABLE'));
+
+                        if (Array.isArray(productData) && productData.length > 0) {
+                            console.log('Populating price lists from productData fallback due to Firestore error.');
+                            try {
+                                populatePriceListDropdown();
+                                enableDropdownAfterLoad('price-list-selector');
+                            } catch (e) {
+                                console.error('Fallback population of price lists failed:', e);
+                            }
+                        } else {
+                            // Secondary fallback: attempt one-time fetch from alternate collection 'priceLists'
+                            (async () => {
+                                try {
+                                    if (window.db && typeof fetchCollectionDocsSequential === 'function') {
+                                        const altDocs = await fetchCollectionDocsSequential(['priceLists']);
+                                        const namesSet = new Set();
+                                        (altDocs || []).forEach((data) => {
+                                            const name = data['Price List Name'] || data.PriceListName || data.PriceList || data.name || data.price_list_name || data.priceListName || data.priceList;
+                                            if (typeof name === 'string') {
+                                                const trimmed = name.trim();
+                                                if (trimmed) namesSet.add(trimmed);
+                                            }
+                                        });
+                                        const names = Array.from(namesSet).sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+                                        const selector = document.getElementById('price-list-selector');
+                                        if (selector && names.length > 0) {
+                                            const previous = selector.value;
+                                            selector.innerHTML = '<option value="">Select Price List</option>';
+                                            names.forEach(n => {
+                                                const option = document.createElement('option');
+                                                option.value = n;
+                                                option.textContent = n;
+                                                selector.appendChild(option);
+                                            });
+                                            if (previous && namesSet.has(previous)) {
+                                                selector.value = previous;
+                                            }
+                                            enableDropdownAfterLoad('price-list-selector');
+                                            console.log('Populated price lists from alternate collection fallback.');
+                                        }
+                                    }
+                                } catch (altErr) {
+                                    console.warn('Alternate priceLists collection fallback failed:', altErr);
+                                }
+                            })();
+                        }
+
+                        // Retry only on transient unavailability, avoid retry loops on permission errors
+                        if (isUnavailable && !isPermissionError) {
                             setTimeout(() => {
                                 setupProductsPriceListsListener();
                             }, 2000);
@@ -3175,7 +3545,7 @@
                     }
                 );
             } catch (error) {
-                console.error('Error setting up products price lists listener:', error);
+                console.error('Error setting up inh_pricelists price lists listener:', error);
                 showDropdownError('price-list-selector', 'Error loading price lists');
             }
         }
@@ -3198,7 +3568,7 @@
             }
         }
 
-        // Set up real-time listener for products collection to populate category dropdown
+        // Set up real-time listener for inh_pricelists to populate category dropdown
         function setupProductsCategoriesListener() {
             try {
                 showDropdownLoading('category-selector', 'Loading categories...');
@@ -3207,7 +3577,7 @@
                     firebaseListeners.productsCategories();
                 }
 
-                firebaseListeners.productsCategories = window.db.collection('products').onSnapshot(
+                firebaseListeners.productsCategories = window.db.collection('inh_pricelists').onSnapshot(
                     (snapshot) => {
                         const priceList = document.getElementById('price-list-selector')?.value || '';
                         const namesSet = new Set();
@@ -3245,7 +3615,7 @@
                         }
                     },
                     (error) => {
-                        console.error('Error in products listener for categories:', error);
+                        console.error('Error in inh_pricelists listener for categories:', error);
                         showDropdownError('category-selector', 'Error loading categories');
                         if (error.code === 'unavailable' || (error.message && error.message.includes('UNAVAILABLE'))) {
                             setTimeout(() => {
@@ -3255,7 +3625,7 @@
                     }
                 );
             } catch (error) {
-                console.error('Error setting up products categories listener:', error);
+                console.error('Error setting up inh_pricelists categories listener:', error);
                 showDropdownError('category-selector', 'Error loading categories');
             }
         }
@@ -3278,7 +3648,7 @@
             }
         }
 
-        // Set up real-time listener for products collection to populate product dropdown
+        // Set up real-time listener for inh_pricelists to populate product dropdown
         function setupProductsProductsListener() {
             try {
                 showDropdownLoading('product-selector', 'Loading products...');
@@ -3287,7 +3657,7 @@
                     firebaseListeners.productsProducts();
                 }
 
-                firebaseListeners.productsProducts = window.db.collection('products').onSnapshot(
+                firebaseListeners.productsProducts = window.db.collection('inh_pricelists').onSnapshot(
                     (snapshot) => {
                         const priceList = document.getElementById('price-list-selector')?.value || '';
                         const category = document.getElementById('category-selector')?.value || '';
@@ -3328,7 +3698,7 @@
                         }
                     },
                     (error) => {
-                        console.error('Error in products listener for products:', error);
+                        console.error('Error in inh_pricelists listener for products:', error);
                         showDropdownError('product-selector', 'Error loading products');
                         if (error.code === 'unavailable' || (error.message && error.message.includes('UNAVAILABLE'))) {
                             setTimeout(() => {
@@ -3338,7 +3708,7 @@
                     }
                 );
             } catch (error) {
-                console.error('Error setting up products products listener:', error);
+                console.error('Error setting up inh_pricelists products listener:', error);
                 showDropdownError('product-selector', 'Error loading products');
             }
         }
@@ -3361,7 +3731,7 @@
             }
         }
 
-        // Set up real-time listener for products collection to populate density dropdown
+        // Set up real-time listener for inh_pricelists to populate density dropdown
         function setupProductsDensitiesListener() {
             try {
                 showDropdownLoading('density-selector', 'Loading densities...');
@@ -3370,7 +3740,7 @@
                     firebaseListeners.productsDensities();
                 }
 
-                firebaseListeners.productsDensities = window.db.collection('products').onSnapshot(
+                firebaseListeners.productsDensities = window.db.collection('inh_pricelists').onSnapshot(
                     (snapshot) => {
                         const priceList = document.getElementById('price-list-selector')?.value || '';
                         const category = document.getElementById('category-selector')?.value || '';
@@ -3420,7 +3790,7 @@
                         }
                     },
                     (error) => {
-                        console.error('Error in products listener for densities:', error);
+                        console.error('Error in inh_pricelists listener for densities:', error);
                         showDropdownError('density-selector', 'Error loading densities');
                         if (error.code === 'unavailable' || (error.message && error.message.includes('UNAVAILABLE'))) {
                             setTimeout(() => {
@@ -3430,7 +3800,7 @@
                     }
                 );
             } catch (error) {
-                console.error('Error setting up products densities listener:', error);
+                console.error('Error setting up inh_pricelists densities listener:', error);
                 showDropdownError('density-selector', 'Error loading densities');
             }
         }
@@ -3453,7 +3823,7 @@
             }
         }
 
-        // Set up real-time listener for products collection to populate length dropdown
+        // Set up real-time listener for inh_pricelists to populate length dropdown
         function setupProductsLengthsListener() {
             try {
                 showDropdownLoading('length-selector', 'Loading lengths...');
@@ -3462,7 +3832,7 @@
                     firebaseListeners.productsLengths();
                 }
 
-                firebaseListeners.productsLengths = window.db.collection('products').onSnapshot(
+                firebaseListeners.productsLengths = window.db.collection('inh_pricelists').onSnapshot(
                     (snapshot) => {
                         const priceList = document.getElementById('price-list-selector')?.value || '';
                         const category = document.getElementById('category-selector')?.value || '';
@@ -3517,7 +3887,7 @@
                         }
                     },
                     (error) => {
-                        console.error('Error in products listener for lengths:', error);
+                        console.error('Error in inh_pricelists listener for lengths:', error);
                         showDropdownError('length-selector', 'Error loading lengths');
                         if (error.code === 'unavailable' || (error.message && error.message.includes('UNAVAILABLE'))) {
                             setTimeout(() => {
@@ -3527,7 +3897,7 @@
                     }
                 );
             } catch (error) {
-                console.error('Error setting up products lengths listener:', error);
+                console.error('Error setting up inh_pricelists lengths listener:', error);
                 showDropdownError('length-selector', 'Error loading lengths');
             }
         }
@@ -3550,73 +3920,16 @@
             }
         }
 
-        // Set up real-time listener for colors (prefer config/colors, fallback to collection)
+        // Set up real-time listener for colors using inh_colors (fallback to colors)
         function setupColorsListener() {
             try {
                 showDropdownLoading('color-selector', 'Loading colors...');
-                
-                // Clean up existing listener
+
                 if (firebaseListeners.colors) {
                     firebaseListeners.colors();
                 }
-
-                const configDocRef = window.db.collection('config').doc('colors');
-                const docUnsub = configDocRef.onSnapshot(
-                    (doc) => {
-                        if (doc && doc.exists) {
-                            console.log('Config colors doc updated, refreshing colors dropdown...');
-                            const raw = doc.data() || {};
-                            let colorsData = [];
-
-                            if (Array.isArray(raw.colors)) {
-                                colorsData = raw.colors;
-                            } else if (Array.isArray(raw.list)) {
-                                colorsData = raw.list;
-                            } else if (Array.isArray(raw)) {
-                                colorsData = raw;
-                            } else if (typeof raw === 'object') {
-                                colorsData = Object.keys(raw).map(key => {
-                                    const val = raw[key];
-                                    if (val && typeof val === 'object') return { id: key, ...val };
-                                    return { id: key, name: String(val) };
-                                });
-                            }
-
-                            window.colorsData = colorsData;
-                            populateColorsFromCollection(colorsData);
-                            enableDropdownAfterLoad('color-selector');
-                        } else {
-                            console.log('Config colors doc not found; falling back to colors collection');
-                            const colUnsub = window.db.collection('colors').onSnapshot(
-                                (snapshot) => {
-                                    console.log('Colors collection updated, refreshing colors dropdown...');
-                                    const colorsData = [];
-                                    snapshot.forEach((d) => {
-                                        const data = d.data();
-                                        if (data) {
-                                            colorsData.push({ id: d.id, ...data });
-                                        }
-                                    });
-                                    window.colorsData = colorsData;
-                                    populateColorsFromCollection(colorsData);
-                                    enableDropdownAfterLoad('color-selector');
-                                },
-                                (error) => {
-                        console.error('Error in colors collection listener:', error);
-                        // Keep existing options; ensure dropdown is enabled
-                        enableDropdownAfterLoad('color-selector');
-                    }
-                );
-                firebaseListeners.colors = colUnsub;
-                if (typeof docUnsub === 'function') docUnsub();
-                }
-            },
-            (error) => {
-                console.error('Error in config colors listener:', error);
-                // Do not show error UI; keep dropdown usable
-                enableDropdownAfterLoad('color-selector');
-                // Fallback to collection on error
-                const colUnsub = window.db.collection('colors').onSnapshot(
+                // Prefer inh_colors
+                firebaseListeners.colors = window.db.collection('inh_colors').onSnapshot(
                     (snapshot) => {
                         const colorsData = [];
                         snapshot.forEach((d) => {
@@ -3629,21 +3942,37 @@
                         populateColorsFromCollection(colorsData);
                         enableDropdownAfterLoad('color-selector');
                     },
-                    (err) => {
-                        console.error('Error in colors collection listener:', err);
-                        // Keep dropdown enabled even on error
-                        enableDropdownAfterLoad('color-selector');
+                    (error) => {
+                        console.error('Error in inh_colors listener:', error);
+                        // Fallback to colors collection
+                        try {
+                            const fallbackUnsub = window.db.collection('colors').onSnapshot(
+                                (snapshot) => {
+                                    const colorsData = [];
+                                    snapshot.forEach((d) => {
+                                        const data = d.data();
+                                        if (data) {
+                                            colorsData.push({ id: d.id, ...data });
+                                        }
+                                    });
+                                    window.colorsData = colorsData;
+                                    populateColorsFromCollection(colorsData);
+                                    enableDropdownAfterLoad('color-selector');
+                                },
+                                (fallbackError) => {
+                                    console.error('Error in colors fallback listener:', fallbackError);
+                                    enableDropdownAfterLoad('color-selector');
+                                }
+                            );
+                            firebaseListeners.colors = fallbackUnsub;
+                        } catch (fallbackSetupError) {
+                            console.error('Failed to set up colors fallback listener:', fallbackSetupError);
+                            enableDropdownAfterLoad('color-selector');
+                        }
                     }
                 );
-                firebaseListeners.colors = colUnsub;
-            }
-        );
-
-                // Track initial doc listener for cleanup; may be replaced by collection listener
-                firebaseListeners.colors = docUnsub;
             } catch (error) {
                 console.error('Error setting up colors listener:', error);
-                // Do not show error UI; keep dropdown usable
                 enableDropdownAfterLoad('color-selector');
             }
         }
@@ -3668,46 +3997,34 @@
             }
         }
 
-        // Set up real-time listener for styles (prefer config/styles, fallback to collection)
+        // Set up real-time listener for styles using inh_styles (fallback to styles)
         function setupStylesListener() {
             try {
                 showDropdownLoading('style-selector', 'Loading styles...');
-                
-                // Clean up existing listener
+
                 if (firebaseListeners.styles) {
                     firebaseListeners.styles();
                 }
-
-                const configDocRef = window.db.collection('config').doc('styles');
-                const docUnsub = configDocRef.onSnapshot(
-                    (doc) => {
-                        if (doc && doc.exists) {
-                            console.log('Config styles doc updated, refreshing styles dropdown...');
-                            const raw = doc.data() || {};
-                            let stylesData = [];
-
-                            if (Array.isArray(raw.styles)) {
-                                stylesData = raw.styles;
-                            } else if (Array.isArray(raw.list)) {
-                                stylesData = raw.list;
-                            } else if (Array.isArray(raw)) {
-                                stylesData = raw;
-                            } else if (typeof raw === 'object') {
-                                stylesData = Object.keys(raw).map(key => {
-                                    const val = raw[key];
-                                    if (val && typeof val === 'object') return { id: key, ...val };
-                                    return { id: key, stylename: String(val) };
-                                });
+                // Prefer inh_styles
+                firebaseListeners.styles = window.db.collection('inh_styles').onSnapshot(
+                    (snapshot) => {
+                        const stylesData = [];
+                        snapshot.forEach((d) => {
+                            const data = d.data();
+                            if (data) {
+                                stylesData.push({ id: d.id, ...data });
                             }
-
-                            window.stylesData = stylesData;
-                            populateStylesFromCollection(stylesData);
-                            enableDropdownAfterLoad('style-selector');
-                        } else {
-                            console.log('Config styles doc not found; falling back to styles collection');
-                            const colUnsub = window.db.collection('styles').onSnapshot(
+                        });
+                        window.stylesData = stylesData;
+                        populateStylesFromCollection(stylesData);
+                        enableDropdownAfterLoad('style-selector');
+                    },
+                    (error) => {
+                        console.error('Error in inh_styles listener:', error);
+                        // Fallback to styles collection
+                        try {
+                            const fallbackUnsub = window.db.collection('styles').onSnapshot(
                                 (snapshot) => {
-                                    console.log('Styles collection updated, refreshing styles dropdown...');
                                     const stylesData = [];
                                     snapshot.forEach((d) => {
                                         const data = d.data();
@@ -3719,49 +4036,20 @@
                                     populateStylesFromCollection(stylesData);
                                     enableDropdownAfterLoad('style-selector');
                                 },
-                                (error) => {
-                                    console.error('Error in styles collection listener:', error);
-                                    // Keep dropdown enabled even on error
+                                (fallbackError) => {
+                                    console.error('Error in styles fallback listener:', fallbackError);
                                     enableDropdownAfterLoad('style-selector');
                                 }
                             );
-                            firebaseListeners.styles = colUnsub;
-                            if (typeof docUnsub === 'function') docUnsub();
+                            firebaseListeners.styles = fallbackUnsub;
+                        } catch (fallbackSetupError) {
+                            console.error('Failed to set up styles fallback listener:', fallbackSetupError);
+                            enableDropdownAfterLoad('style-selector');
                         }
-                    },
-                    (error) => {
-                        console.error('Error in config styles listener:', error);
-                        // Do not show error UI; keep dropdown usable
-                        enableDropdownAfterLoad('style-selector');
-                        // Fallback to collection on error
-                        const colUnsub = window.db.collection('styles').onSnapshot(
-                            (snapshot) => {
-                                const stylesData = [];
-                                snapshot.forEach((d) => {
-                                    const data = d.data();
-                                    if (data) {
-                                        stylesData.push({ id: d.id, ...data });
-                                    }
-                                });
-                                window.stylesData = stylesData;
-                                populateStylesFromCollection(stylesData);
-                                enableDropdownAfterLoad('style-selector');
-                            },
-                            (err) => {
-                                console.error('Error in styles collection listener:', err);
-                                // Keep dropdown enabled even on error
-                                enableDropdownAfterLoad('style-selector');
-                            }
-                        );
-                        firebaseListeners.styles = colUnsub;
                     }
                 );
-
-                // Track initial doc listener for cleanup; may be replaced by collection listener
-                firebaseListeners.styles = docUnsub;
             } catch (error) {
                 console.error('Error setting up styles listener:', error);
-                // Do not show error UI; keep dropdown usable
                 enableDropdownAfterLoad('style-selector');
             }
         }
@@ -3786,7 +4074,7 @@
             }
         }
 
-        // Set up real-time listener for salesmen (prefer config/salesmen, fallback to salespeople collection)
+        // Set up real-time listener for salesmen using inh_salesmen (fallback to config/salesmen then salespeople)
         function setupSalesmenListener() {
             try {
                 showDropdownLoading('salesperson-selector', 'Loading salespeople...');
@@ -3795,86 +4083,76 @@
                 if (firebaseListeners.salesmen) {
                     firebaseListeners.salesmen();
                 }
-
-                const configDocRef = window.db.collection('config').doc('salesmen');
-                const docUnsub = configDocRef.onSnapshot(
-                    (doc) => {
-                        if (doc && doc.exists) {
-                            const raw = doc.data() || {};
-                            let salesmen = [];
-
-                            if (Array.isArray(raw.list)) {
-                                salesmen = raw.list;
-                            } else if (Array.isArray(raw.salesmen)) {
-                                salesmen = raw.salesmen;
-                            } else if (Array.isArray(raw)) {
-                                salesmen = raw;
-                            } else if (typeof raw === 'object') {
-                                salesmen = Object.keys(raw).map(key => {
-                                    const val = raw[key];
-                                    if (val && typeof val === 'object') return { id: key, ...val };
-                                    return { id: key, name: String(val) };
-                                });
+                // Prefer inh_salesmen real-time collection
+                const inhUnsub = window.db.collection('inh_salesmen').onSnapshot(
+                    (snapshot) => {
+                        const salesmen = [];
+                        snapshot.forEach((d) => {
+                            const data = d.data();
+                            if (data) {
+                                salesmen.push({ id: d.id, ...data });
                             }
-
-                            window.salesmenData = salesmen;
-                            populateSalespersonDropdown();
-                            enableDropdownAfterLoad('salesperson-selector');
-                        } else {
-                            console.log('Config salesmen doc not found; falling back to salespeople collection');
-                            const colUnsub = window.db.collection('salespeople').onSnapshot(
-                                (snapshot) => {
-                                    const salesmen = [];
-                                    snapshot.forEach((d) => {
-                                        const data = d.data();
-                                        if (data) {
-                                            salesmen.push({ id: d.id, ...data });
+                        });
+                        window.salesmenData = salesmen;
+                        populateSalespersonDropdown();
+                        enableDropdownAfterLoad('salesperson-selector');
+                    },
+                    (error) => {
+                        console.error('Error in inh_salesmen listener:', error);
+                        // Fallback: try config doc, then salespeople collection
+                        try {
+                            const configDocRef = window.db.collection('config').doc('salesmen');
+                            const docUnsub = configDocRef.onSnapshot(
+                                (doc) => {
+                                    if (doc && doc.exists) {
+                                        const raw = doc.data() || {};
+                                        let salesmen = [];
+                                        if (Array.isArray(raw.list)) salesmen = raw.list;
+                                        else if (Array.isArray(raw.salesmen)) salesmen = raw.salesmen;
+                                        else if (Array.isArray(raw)) salesmen = raw;
+                                        else if (typeof raw === 'object') {
+                                            salesmen = Object.keys(raw).map(key => {
+                                                const val = raw[key];
+                                                if (val && typeof val === 'object') return { id: key, ...val };
+                                                return { id: key, name: String(val) };
+                                            });
                                         }
-                                    });
-                                    window.salesmenData = salesmen;
-                                    populateSalespersonDropdown();
-                                    enableDropdownAfterLoad('salesperson-selector');
+                                        window.salesmenData = salesmen;
+                                        populateSalespersonDropdown();
+                                        enableDropdownAfterLoad('salesperson-selector');
+                                    } else {
+                                        const colUnsub = window.db.collection('salespeople').onSnapshot(
+                                            (snap) => {
+                                                const salesmen = [];
+                                                snap.forEach((d) => {
+                                                    const data = d.data();
+                                                    if (data) salesmen.push({ id: d.id, ...data });
+                                                });
+                                                window.salesmenData = salesmen;
+                                                populateSalespersonDropdown();
+                                                enableDropdownAfterLoad('salesperson-selector');
+                                            },
+                                            (fallbackErr) => {
+                                                console.error('Error in salespeople collection listener:', fallbackErr);
+                                                enableDropdownAfterLoad('salesperson-selector');
+                                            }
+                                        );
+                                        firebaseListeners.salesmen = colUnsub;
+                                    }
                                 },
-                                (error) => {
-                                    console.error('Error in salespeople collection listener:', error);
-                                    // Keep dropdown enabled even on error
+                                (docErr) => {
+                                    console.error('Error in config salesmen listener:', docErr);
                                     enableDropdownAfterLoad('salesperson-selector');
                                 }
                             );
-                            firebaseListeners.salesmen = colUnsub;
-                            if (typeof docUnsub === 'function') docUnsub();
+                            firebaseListeners.salesmen = docUnsub;
+                        } catch (fallbackSetupError) {
+                            console.error('Failed to set up salesmen fallback listeners:', fallbackSetupError);
+                            enableDropdownAfterLoad('salesperson-selector');
                         }
-                    },
-                    (error) => {
-                        console.error('Error in config salesmen listener:', error);
-                        // Do not show error UI; keep dropdown usable
-                        enableDropdownAfterLoad('salesperson-selector');
-                        // Fallback to collection on error
-                        const colUnsub = window.db.collection('salespeople').onSnapshot(
-                            (snapshot) => {
-                                const salesmen = [];
-                                snapshot.forEach((d) => {
-                                    const data = d.data();
-                                    if (data) {
-                                        salesmen.push({ id: d.id, ...data });
-                                    }
-                                });
-                                window.salesmenData = salesmen;
-                                populateSalespersonDropdown();
-                                enableDropdownAfterLoad('salesperson-selector');
-                            },
-                            (err) => {
-                                console.error('Error in salespeople collection listener:', err);
-                                // Keep dropdown enabled even on error
-                                enableDropdownAfterLoad('salesperson-selector');
-                            }
-                        );
-                        firebaseListeners.salesmen = colUnsub;
                     }
                 );
-
-                // Track initial doc listener for cleanup; may be replaced by collection listener
-                firebaseListeners.salesmen = docUnsub;
+                firebaseListeners.salesmen = inhUnsub;
             } catch (error) {
                 console.error('Error setting up salesmen listener:', error);
                 // Do not show error UI; keep dropdown usable
@@ -3980,8 +4258,8 @@
                 // Deduplicate and add colors from Firebase data
                 const colorSet = new Set();
                 colorsData.forEach(color => {
-                    const colorName = color.name || color.colorName || color.colorname || color.Name || color.ColorName ||
-                                      color.color || color.Color;
+                    // Prefer 'colorname' from colors collection; fallback to common aliases
+                    const colorName = color.colorname || color.colorName || color.name || color.Color || color.color;
                     if (colorName) {
                         colorSet.add(colorName.trim());
                     }

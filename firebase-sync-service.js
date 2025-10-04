@@ -256,11 +256,22 @@ class FirebaseSyncService {
     }
   }
 
-  async syncSalesmanData(spreadsheetId = googleSheetsAutoConfig.getSheetId()) {
+  async syncSalesmanData(spreadsheetIdOrOptions = googleSheetsAutoConfig.getSheetId(), options = {}) {
     try {
       if (!this.db) {
         throw new Error('Firebase not initialized');
       }
+
+      // Support calling with options as first param
+      let spreadsheetId = googleSheetsAutoConfig.getSheetId();
+      if (typeof spreadsheetIdOrOptions === 'string') {
+        spreadsheetId = spreadsheetIdOrOptions;
+      } else if (typeof spreadsheetIdOrOptions === 'object' && spreadsheetIdOrOptions !== null) {
+        options = spreadsheetIdOrOptions;
+      }
+
+      const prefix = options.targetPrefix || options.collectionPrefix || '';
+      const collectionName = prefix ? `${prefix}salesmen` : 'salespeople';
 
       const salesmanData = await this.googleSheetsService.fetchSalesmanData(spreadsheetId);
       
@@ -268,15 +279,15 @@ class FirebaseSyncService {
         return { recordsProcessed: 0, changes: 0 };
       }
 
-      // Get existing salespeople from the salespeople collection
-      const salespeopleCollection = this.db.collection('salespeople');
+      // Get existing sales records from target collection
+      const salespeopleCollection = this.db.collection(collectionName);
       const existingSnapshot = await salespeopleCollection.get();
       const existingData = existingSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       
       let changes = 0;
       
       if (this.compareData(existingData, salesmanData)) {
-        // Clear existing salespeople collection
+        // Clear existing target collection
         const batch = this.db.batch();
         existingSnapshot.docs.forEach(doc => {
           batch.delete(doc.ref);
@@ -292,8 +303,11 @@ class FirebaseSyncService {
         changes = salesmanData.length;
       }
 
-      return { recordsProcessed: salesmanData.length, changes };
+      const result = { recordsProcessed: salesmanData.length, changes, collection: collectionName };
+      await this.logSyncActivity({ type: 'salesmen_sync', success: true, recordsProcessed: result.recordsProcessed, changes: result.changes, targetPrefix: prefix, collection: collectionName });
+      return result;
     } catch (error) {
+      await this.logSyncActivity({ type: 'salesmen_sync', success: false, errors: [error.message] });
       throw new Error(`Failed to sync salesman data: ${error.message}`);
     }
   }
@@ -327,7 +341,7 @@ class FirebaseSyncService {
     }
   }
 
-  async syncColorsData(spreadsheetId = googleSheetsAutoConfig.getSheetId()) {
+  async syncColorsData(spreadsheetIdOrOptions = googleSheetsAutoConfig.getSheetId(), options = {}) {
     if (this.fallbackMode) {
       return { success: false, message: 'Firebase not available' };
     }
@@ -337,14 +351,25 @@ class FirebaseSyncService {
         throw new Error('Firebase not initialized');
       }
 
+      // Support calling with options as first param
+      let spreadsheetId = googleSheetsAutoConfig.getSheetId();
+      if (typeof spreadsheetIdOrOptions === 'string') {
+        spreadsheetId = spreadsheetIdOrOptions;
+      } else if (typeof spreadsheetIdOrOptions === 'object' && spreadsheetIdOrOptions !== null) {
+        options = spreadsheetIdOrOptions;
+      }
+
+      const prefix = options.targetPrefix || options.collectionPrefix || '';
+      const collectionName = prefix ? `${prefix}colors` : 'colors';
+
       const colorsData = await this.googleSheetsService.fetchColorsData(spreadsheetId);
       
       if (!colorsData || colorsData.length === 0) {
         return { recordsProcessed: 0, changes: 0 };
       }
 
-      // Get existing colors from the colors collection
-      const colorsCollection = this.db.collection('colors');
+      // Get existing colors from the target collection
+      const colorsCollection = this.db.collection(collectionName);
       const existingSnapshot = await colorsCollection.get();
       const existingData = existingSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       
@@ -367,13 +392,16 @@ class FirebaseSyncService {
         changes = colorsData.length;
       }
 
-      return { recordsProcessed: colorsData.length, changes };
+      const result = { recordsProcessed: colorsData.length, changes, collection: collectionName };
+      await this.logSyncActivity({ type: 'colors_sync', success: true, recordsProcessed: result.recordsProcessed, changes: result.changes, targetPrefix: prefix, collection: collectionName });
+      return result;
     } catch (error) {
+      await this.logSyncActivity({ type: 'colors_sync', success: false, errors: [error.message] });
       throw new Error(`Failed to sync colors data: ${error.message}`);
     }
   }
 
-  async syncStylesData(spreadsheetId = googleSheetsAutoConfig.getSheetId()) {
+  async syncStylesData(spreadsheetIdOrOptions = googleSheetsAutoConfig.getSheetId(), options = {}) {
     if (this.fallbackMode) {
       return { success: false, message: 'Firebase not available' };
     }
@@ -383,14 +411,25 @@ class FirebaseSyncService {
         throw new Error('Firebase not initialized');
       }
 
+      // Support calling with options as first param
+      let spreadsheetId = googleSheetsAutoConfig.getSheetId();
+      if (typeof spreadsheetIdOrOptions === 'string') {
+        spreadsheetId = spreadsheetIdOrOptions;
+      } else if (typeof spreadsheetIdOrOptions === 'object' && spreadsheetIdOrOptions !== null) {
+        options = spreadsheetIdOrOptions;
+      }
+
+      const prefix = options.targetPrefix || options.collectionPrefix || '';
+      const collectionName = prefix ? `${prefix}styles` : 'styles';
+
       const stylesData = await this.googleSheetsService.fetchStylesData(spreadsheetId);
       
       if (!stylesData || stylesData.length === 0) {
         return { recordsProcessed: stylesData.length, changes: 0 };
       }
 
-      // Get existing styles from the styles collection
-      const stylesCollection = this.db.collection('styles');
+      // Get existing styles from the target collection
+      const stylesCollection = this.db.collection(collectionName);
       const existingSnapshot = await stylesCollection.get();
       const existingData = existingSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       
@@ -413,8 +452,11 @@ class FirebaseSyncService {
         changes = stylesData.length;
       }
 
-      return { recordsProcessed: stylesData.length, changes };
+      const result = { recordsProcessed: stylesData.length, changes, collection: collectionName };
+      await this.logSyncActivity({ type: 'styles_sync', success: true, recordsProcessed: result.recordsProcessed, changes: result.changes, targetPrefix: prefix, collection: collectionName });
+      return result;
     } catch (error) {
+      await this.logSyncActivity({ type: 'styles_sync', success: false, errors: [error.message] });
       throw new Error(`Failed to sync styles data: ${error.message}`);
     }
   }
@@ -520,7 +562,7 @@ class FirebaseSyncService {
     }
   }
 
-  async syncPriceListsData(spreadsheetId = googleSheetsAutoConfig.getSheetId()) {
+  async syncPriceListsData(spreadsheetIdOrOptions = googleSheetsAutoConfig.getSheetId(), options = {}) {
     if (this.fallbackMode) {
       return { success: false, message: 'Firebase not available' };
     }
@@ -529,6 +571,16 @@ class FirebaseSyncService {
       if (!this.db) {
         throw new Error('Firebase not initialized');
       }
+      // Support calling with options as first param
+      let spreadsheetId = googleSheetsAutoConfig.getSheetId();
+      if (typeof spreadsheetIdOrOptions === 'string') {
+        spreadsheetId = spreadsheetIdOrOptions;
+      } else if (typeof spreadsheetIdOrOptions === 'object' && spreadsheetIdOrOptions !== null) {
+        options = spreadsheetIdOrOptions;
+      }
+
+      const prefix = options.targetPrefix || options.collectionPrefix || '';
+      const collectionName = prefix ? `${prefix}pricelists` : 'price_lists';
 
       // Fetch product data to extract price list names
       const productsData = await this.googleSheetsService.fetchProductData(spreadsheetId);
@@ -553,17 +605,18 @@ class FirebaseSyncService {
       const batch = this.db.batch();
       
       // Clear existing price lists
-      const existingSnapshot = await this.db.collection('price_lists').get();
+      const existingSnapshot = await this.db.collection(collectionName).get();
       existingSnapshot.docs.forEach(doc => {
         batch.delete(doc.ref);
       });
 
       // Add new price lists
       priceListsArray.forEach((priceListName, index) => {
-        const docRef = this.db.collection('price_lists').doc(`pricelist_${index}`);
+        const safeId = String(priceListName).toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '') || `pricelist_${index}`;
+        const docRef = this.db.collection(collectionName).doc(safeId);
         batch.set(docRef, {
           name: priceListName,
-          id: `pricelist_${index}`,
+          id: safeId,
           createdAt: admin.firestore.FieldValue.serverTimestamp(),
           updatedAt: admin.firestore.FieldValue.serverTimestamp(),
           source: 'google_sheets'
@@ -572,12 +625,16 @@ class FirebaseSyncService {
 
       await batch.commit();
 
-      return { 
+      const result = { 
         recordsProcessed: priceListsArray.length, 
         changes: priceListsArray.length,
-        priceListNames: priceListsArray
+        priceListNames: priceListsArray,
+        collection: collectionName
       };
+      await this.logSyncActivity({ type: 'pricelists_sync', success: true, recordsProcessed: result.recordsProcessed, changes: result.changes, targetPrefix: prefix, collection: collectionName });
+      return result;
     } catch (error) {
+      await this.logSyncActivity({ type: 'pricelists_sync', success: false, errors: [error.message] });
       throw new Error(`Failed to sync price lists data: ${error.message}`);
     }
   }

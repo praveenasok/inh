@@ -416,6 +416,7 @@
       <section class="bg-white rounded-xl shadow-soft p-4 sm:p-6 mb-4 mobile-padding" style="background: #eef2ff;">
         <div class="flex items-center justify-between mb-4">
           <span class="chip no-print" id="price-chip">Ready</span>
+          <button id="refresh-data-btn" class="btn-secondary btn-sm no-print" title="Refresh cached data">🔄 Refresh Data</button>
         </div>
         
         <!-- Controls -->
@@ -553,6 +554,35 @@
     // Product data will be loaded here
     let productData = [];
     
+    // Lightweight TTL cache for this page (non-invasive)
+    (function(){
+      const VERSION = 'v1';
+      const mem = new Map();
+      const now = () => Date.now();
+      function lsGet(key) {
+        try {
+          const raw = localStorage.getItem(key);
+          if (!raw) return null;
+          const obj = JSON.parse(raw);
+          if (!obj || obj.version !== VERSION) return null;
+          if (obj.expiry && obj.expiry < now()) return null;
+          return obj.value;
+        } catch (_) { return null; }
+      }
+      function lsSet(key, value, ttlMs) {
+        try {
+          const expiry = typeof ttlMs === 'number' ? now() + ttlMs : null;
+          localStorage.setItem(key, JSON.stringify({ version: VERSION, expiry, value }));
+        } catch (_) {}
+      }
+      window.pageCache = {
+        get(key){ if (mem.has(key)) return mem.get(key); const val = lsGet(key); if (val !== null) mem.set(key, val); return val; },
+        set(key, value, ttlMs){ mem.set(key, value); lsSet(key, value, ttlMs); },
+        clear(prefix){ mem.clear(); try { for (let i=0; i<localStorage.length; i++){ const k = localStorage.key(i); if (!prefix || (k && k.startsWith(prefix))) localStorage.removeItem(k); } } catch(_){} }
+      };
+      window.CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+    })();
+    
     // LocalStorageDropdownManager removed - using Firebase-only data
     
     // Product data and salesmen data will be loaded from Firebase
@@ -585,6 +615,40 @@
     // Initialize Firebase
     async function initializeFirebase() {
       try {
+        // Ensure Firebase SDK/app is initialized
+        try {
+          if (typeof window.waitForFirebase === 'function') {
+            await window.waitForFirebase(10000);
+          } else {
+            await waitForFirebase();
+          }
+        } catch (e) {
+          console.warn('Waiting for Firebase SDK failed:', e.message);
+        }
+
+        // Initialize Firebase App using global initializer or local config
+        try {
+          if (typeof window.initializeFirebaseApp === 'function') {
+            await window.initializeFirebaseApp();
+          } else if (typeof firebase !== 'undefined') {
+            const alreadyInitialized = firebase.apps && firebase.apps.length > 0;
+            const cfg = window.firebaseConfig || (window.appConfig && window.appConfig.firebase);
+            if (!alreadyInitialized && cfg) {
+              firebase.initializeApp(cfg);
+            }
+          }
+        } catch (e) {
+          console.warn('Firebase app initialization error:', e.message);
+        }
+
+        // Create a global Firestore reference for direct reads
+        try {
+          if (typeof firebase !== 'undefined' && typeof firebase.firestore === 'function') {
+            window.db = firebase.firestore();
+          }
+        } catch (e) {
+          console.warn('Failed to initialize Firestore (window.db):', e.message);
+        }
         
         // Wait for universal data manager to be available
         let attempts = 0;
@@ -604,6 +668,14 @@
         
         const status = window.universalDataManager.getStatus();
         if (status.isInitialized && status.isDataLoaded) {
+          // Ensure a global Firestore reference is available for direct reads
+          if (typeof firebase !== 'undefined' && typeof firebase.firestore === 'function') {
+            try {
+              window.db = firebase.firestore();
+            } catch (e) {
+              console.warn('Failed to initialize global Firestore (window.db):', e.message);
+            }
+          }
         } else {
           throw new Error('Universal Firebase system not ready. Please check your connection.');
         }
@@ -641,6 +713,7 @@
         await loadExchangeRates();
         await populateSalesRepresentatives();
         setupEventListeners();
+        setupCacheControls();
         
         // Set default price list to INDIA25
         const priceListSelect = document.getElementById('price-list');
@@ -694,6 +767,68 @@
     async function loadProductData() {
       try {
         let products = null;
+        // Use cached products if available
+        try {
+          const cachedProducts = window.pageCache && window.pageCache.get('pricelists:products');
+          if (cachedProducts && Array.isArray(cachedProducts) && cachedProducts.length > 0) {
+            productData = cachedProducts;
+            console.log(`✅ Using cached products (${cachedProducts.length})`);
+            return;
+          }
+        } catch (_) {}
+        
+        // Prefer Firestore inh_pricelists similar to quotemaker.html
+        // If global Firestore is not yet set, attempt to obtain it
+        if (!window.db) {
+          try {
+            window.db = checkFirebaseAvailability();
+          } catch (e) {
+            console.warn('Firestore not ready for product load:', e.message);
+          }
+        }
+
+        if (window.db) {
+          try {
+            console.log('📊 Trying Firestore inh_pricelists for products (subcollections)...');
+            const priceListsSnap = await window.db.collection('inh_pricelists').get();
+            let aggregatedProducts = [];
+            let pricelistCount = 0;
+            if (!priceListsSnap.empty) {
+              pricelistCount = priceListsSnap.size;
+              for (const plDoc of priceListsSnap.docs) {
+                try {
+                  const productsSubSnap = await plDoc.ref.collection('products').get();
+                  if (!productsSubSnap.empty) {
+                    const subProducts = productsSubSnap.docs.map(d => d.data());
+                    aggregatedProducts = aggregatedProducts.concat(subProducts);
+                  }
+                } catch (subErr) {
+                  console.warn(`⚠️ Failed loading products subcollection for pricelist ${plDoc.id}:`, subErr.message);
+                }
+              }
+            }
+            if (aggregatedProducts.length > 0) {
+              products = aggregatedProducts;
+              console.log(`✅ Loaded ${products.length} products from ${pricelistCount} inh_pricelists subcollections`);
+            }
+          } catch (fireErr) {
+            console.warn('⚠️ Firestore inh_pricelists traversal failed:', fireErr.message);
+          }
+          
+          // Fallback to Firestore products collection if inh_pricelists subcollections were empty
+          if (!products || !Array.isArray(products) || products.length === 0) {
+            try {
+              console.log('📊 Trying Firestore products collection...');
+              const prodSnap = await window.db.collection('products').get();
+              if (!prodSnap.empty) {
+                products = prodSnap.docs.map(doc => doc.data());
+                console.log(`✅ Loaded ${products.length} products from products collection`);
+              }
+            } catch (prodErr) {
+              console.warn('⚠️ Firestore products fetch failed:', prodErr.message);
+            }
+          }
+        }
         
         // Try unifiedDataAccess first
         if (window.unifiedDataAccess && typeof window.unifiedDataAccess.getProducts === 'function') {
@@ -751,6 +886,20 @@
         
         productData = Array.isArray(products) ? products : [];
         
+        // Cache to localStorage for resilience
+        try {
+          if (productData && productData.length > 0) {
+            localStorage.setItem('firebaseProductData', JSON.stringify(productData));
+          }
+        } catch (e) {}
+        
+        // Cache to pageCache for fast subsequent loads
+        try {
+          if (window.pageCache && productData && productData.length > 0) {
+            window.pageCache.set('pricelists:products', productData, window.CACHE_TTL_MS);
+          }
+        } catch (_) {}
+        
         if (!productData || productData.length === 0) {
           throw new Error('No product data available from any source');
         }
@@ -763,6 +912,15 @@
     // Load colors data from Firebase
     async function loadColorsData() {
       try {
+        // Use cached colors if available
+        try {
+          const cachedColors = window.pageCache && window.pageCache.get('pricelists:colors');
+          if (cachedColors && Array.isArray(cachedColors) && cachedColors.length > 0) {
+            window.colorsData = cachedColors;
+            console.log(`✅ Using cached colors (${cachedColors.length})`);
+            return;
+          }
+        } catch (_) {}
         
         if (!window.universalDataManager) {
           throw new Error('Universal data manager not available');
@@ -779,6 +937,13 @@
           throw new Error('No colors data available from Firebase');
         }
         
+        // Cache to pageCache for fast subsequent loads
+        try {
+          if (window.pageCache && window.colorsData && Array.isArray(window.colorsData) && window.colorsData.length > 0) {
+            window.pageCache.set('pricelists:colors', window.colorsData, window.CACHE_TTL_MS);
+          }
+        } catch (_) {}
+        
         
       } catch (error) {
         window.colorsData = [];
@@ -789,6 +954,15 @@
     // Load styles data from Firebase
     async function loadStylesData() {
       try {
+        // Use cached styles if available
+        try {
+          const cachedStyles = window.pageCache && window.pageCache.get('pricelists:styles');
+          if (cachedStyles && Array.isArray(cachedStyles) && cachedStyles.length > 0) {
+            window.stylesData = cachedStyles;
+            console.log(`✅ Using cached styles (${cachedStyles.length})`);
+            return;
+          }
+        } catch (_) {}
         
         if (!window.universalDataManager) {
           throw new Error('Universal data manager not available');
@@ -804,6 +978,13 @@
         if (!window.stylesData || !Array.isArray(window.stylesData)) {
           throw new Error('No styles data available from Firebase');
         }
+        
+        // Cache to pageCache for fast subsequent loads
+        try {
+          if (window.pageCache && window.stylesData && Array.isArray(window.stylesData) && window.stylesData.length > 0) {
+            window.pageCache.set('pricelists:styles', window.stylesData, window.CACHE_TTL_MS);
+          }
+        } catch (_) {}
         
         
       } catch (error) {
@@ -828,11 +1009,62 @@
         
         let priceLists = [];
         let dataSource = 'none';
+
+        // Primary source: Firestore 'inh_pricelists' parent docs using 'name'
+        try {
+          if (!window.db) {
+            try {
+              window.db = checkFirebaseAvailability();
+            } catch (e) {
+              console.warn('Firestore not available yet for pricelists:', e.message);
+            }
+          }
+          if (window.db) {
+            console.log('📊 Fetching price lists from Firestore collection: inh_pricelists');
+            const snap = await window.db.collection('inh_pricelists').get();
+            if (!snap.empty) {
+              const names = snap.docs.map(doc => {
+                const d = doc.data();
+                return d.name || d['Price List Name'] || d.PriceListName || d.PriceList || d.Name || doc.id;
+              }).filter(Boolean);
+              priceLists = [...new Set(names)];
+              if (priceLists.length > 0) {
+                dataSource = 'firestore:inh_pricelists';
+                console.log('✅ Price lists loaded from Firestore inh_pricelists:', priceLists.length);
+              }
+            }
+          }
+        } catch (fsError) {
+          console.warn('⚠️ Firestore inh_pricelists fetch failed:', fsError.message);
+        }
+
+        // Fallback: legacy 'pricelists' collection if inh_pricelists has no names
+        if (!priceLists || priceLists.length === 0) {
+          try {
+            if (window.db) {
+              console.log('📊 Fallback: fetching price lists from legacy Firestore collection: pricelists');
+              const snap = await window.db.collection('pricelists').get();
+              if (!snap.empty) {
+                const names = snap.docs.map(doc => {
+                  const d = doc.data();
+                  return d['Price List Name'] || d.PriceListName || d.PriceList || d.name || d.Name;
+                }).filter(Boolean);
+                priceLists = [...new Set(names)];
+                if (priceLists.length > 0) {
+                  dataSource = 'firestore:pricelists';
+                  console.log('✅ Price lists loaded from Firestore pricelists:', priceLists.length);
+                }
+              }
+            }
+          } catch (fsError) {
+            console.warn('⚠️ Firestore legacy pricelists fetch failed:', fsError.message);
+          }
+        }
         
         // Try multiple data sources with fallbacks
         try {
           // First try: unifiedDataAccess
-          if (window.unifiedDataAccess) {
+          if (priceLists.length === 0 && window.unifiedDataAccess) {
             console.log('📊 Trying unifiedDataAccess for price lists...');
             const products = await window.unifiedDataAccess.getProducts();
             if (products && Array.isArray(products) && products.length > 0) {
@@ -1196,6 +1428,11 @@
             // Auto-populate products once categories are loaded
             const currentCategory = document.getElementById('category').value;
             populateProducts(selectedPriceList, currentCategory);
+            // Prefetch image for current selection if possible
+            const currentProduct = document.getElementById('product').value;
+            const currentDensity = document.getElementById('density').value;
+            prefetchProductImage(selectedPriceList, currentCategory, currentProduct, currentDensity)
+              .then(() => { if (state.segments.length > 0) { generatePreview(); } });
           })
           .catch(error => {
             console.error('Error loading categories with retry:', error);
@@ -1216,6 +1453,11 @@
         updateKgOptionVisibility(selectedPriceList, selectedCategory);
         // Then populate products based on selected category
         populateProducts(selectedPriceList, selectedCategory);
+        // Prefetch image for current selection if possible
+        const currentProduct = document.getElementById('product').value;
+        const currentDensity = document.getElementById('density').value;
+        prefetchProductImage(selectedPriceList, selectedCategory, currentProduct, currentDensity)
+          .then(() => { if (state.segments.length > 0) { generatePreview(); } });
         // Update preview in real-time if it exists
         if (state.segments.length > 0) {
           generatePreview();
@@ -1233,6 +1475,9 @@
         // Populate densities and colors based on selected product
         populateDensities(selectedPriceList, selectedCategory, selectedProduct);
         populateColors(selectedPriceList, selectedCategory, selectedProduct, selectedDensity);
+        // Prefetch image for current selection
+        prefetchProductImage(selectedPriceList, selectedCategory, selectedProduct, selectedDensity)
+          .then(() => { if (state.segments.length > 0) { generatePreview(); } });
         // Update preview in real-time if it exists
         if (state.segments.length > 0) {
           generatePreview();
@@ -1247,6 +1492,9 @@
         const selectedProduct = document.getElementById('product').value;
         // Populate colors based on selected density
         populateColors(selectedPriceList, selectedCategory, selectedProduct, selectedDensity);
+        // Prefetch image for current selection
+        prefetchProductImage(selectedPriceList, selectedCategory, selectedProduct, selectedDensity)
+          .then(() => { if (state.segments.length > 0) { generatePreview(); } });
         updatePriceDisplay();
         if (state.segments.length > 0) {
           generatePreview();
@@ -1266,6 +1514,34 @@
         // Update preview in real-time if it exists
         if (state.segments.length > 0) {
           generatePreview();
+        }
+      });
+    }
+    
+    // Setup cache controls (manual refresh)
+    function setupCacheControls() {
+      const btn = document.getElementById('refresh-data-btn');
+      if (!btn) return;
+      btn.addEventListener('click', async function() {
+        const originalHTML = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span>⏳</span> <span>Refreshing...</span>';
+        try {
+          if (window.pageCache) window.pageCache.clear('pricelists:');
+          try { localStorage.removeItem('firebaseProductData'); } catch (_) {}
+          await loadProductData();
+          await loadColorsData();
+          await loadStylesData();
+          await loadPriceListsWithRetry();
+          const priceListSelect = document.getElementById('price-list');
+          if (priceListSelect) {
+            priceListSelect.dispatchEvent(new Event('change'));
+          }
+        } catch (e) {
+          console.warn('Refresh data failed:', e.message);
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = originalHTML;
         }
       });
     }
@@ -1707,11 +1983,7 @@
           colorSelect.appendChild(noDataOption);
         }
         
-        // Add custom color option
-        const customOption = document.createElement('option');
-        customOption.value = 'Custom Color';
-        customOption.textContent = 'Custom Color';
-        colorSelect.appendChild(customOption);
+        // Removed "Custom Color" option as it's not required
         
         
       } catch (error) {
@@ -1831,6 +2103,148 @@
         'Toppers': 'images/generalstamps.png'
       };
       return categoryImageMap[category] || 'images/generalstamps.png';
+    }
+
+    // Cache for product images resolved from data sources
+    window.productImageCache = window.productImageCache || new Map();
+
+    // Resolve various image field formats into a usable URL
+    async function resolveImageUrl(imageField) {
+      try {
+        if (!imageField || typeof imageField !== 'string') return null;
+        const val = imageField.trim();
+        // Direct http(s) URL
+        if (val.startsWith('http://') || val.startsWith('https://')) return val;
+        // Firebase Storage gs:// reference
+        if (val.startsWith('gs://')) {
+          if (typeof firebase !== 'undefined' && firebase.storage) {
+            try {
+              const ref = firebase.storage().refFromURL(val);
+              return await ref.getDownloadURL();
+            } catch (e) { return null; }
+          }
+          return null;
+        }
+        // Storage path (e.g., products/images/...)
+        if (!val.startsWith('/') && !val.startsWith('images/')) {
+          if (typeof firebase !== 'undefined' && firebase.storage) {
+            try {
+              const ref = firebase.storage().ref(val);
+              return await ref.getDownloadURL();
+            } catch (e) { /* fall through */ }
+          }
+        }
+        // Relative path in repo
+        if (val.startsWith('images/')) return val;
+        // Fallback: treat as relative URL
+        return val;
+      } catch (_) {
+        return null;
+      }
+    }
+
+    // Helper to build cache key
+    function buildImageCacheKey(priceList, category, product, density) {
+      return `${(priceList||'').toLowerCase()}|${(category||'').toLowerCase()}|${(product||'').toLowerCase()}|${(density||'').toLowerCase()}`;
+    }
+
+    // Try to extract an image field from a product/pricelist item
+    function extractImageFromItem(item) {
+      if (!item || typeof item !== 'object') return null;
+      const candidates = [
+        'image', 'Image', 'imageUrl', 'imageURL', 'ImageURL',
+        'ProductImage', 'productImage', 'ProductImageURL', 'productImageURL',
+        'Image Link', 'ImageLink', 'image_link', 'image_path', 'storagePath'
+      ];
+      // If nested images array
+      if (Array.isArray(item.Images) && item.Images.length > 0) {
+        const first = item.Images[0];
+        if (typeof first === 'string' && first.trim()) return first.trim();
+        if (typeof first === 'object') {
+          const url = first.url || first.link || first.path;
+          if (typeof url === 'string' && url.trim()) return url.trim();
+        }
+      }
+      for (const key of candidates) {
+        const val = item[key];
+        if (typeof val === 'string' && val.trim()) return val.trim();
+      }
+      return null;
+    }
+
+    // Prefetch product image from multiple sources (productData, inh_pricelists), then fall back to mapping
+    async function prefetchProductImage(priceList, category, product, density) {
+      try {
+        const key = buildImageCacheKey(priceList, category, product, density);
+        if (window.productImageCache.has(key)) return window.productImageCache.get(key);
+
+        // 1) Check productData in-memory
+        if (Array.isArray(productData) && productData.length) {
+          const filtered = productData.filter(item => {
+            const pl = item.PriceListName || item.PriceList || item['Price List Name'];
+            return (
+              (!priceList || pl === priceList) &&
+              (!category || item.Category === category) &&
+              (!product || item.Product === product) &&
+              (!density || item.Density === density)
+            );
+          });
+          for (const item of filtered) {
+            const fieldVal = extractImageFromItem(item);
+            const img = await resolveImageUrl(fieldVal);
+            if (img) { window.productImageCache.set(key, img); return img; }
+          }
+        }
+
+        // 2) Try inh_pricelists/{pl}/products subcollection in Firestore, if available
+        if (window.db) {
+          try {
+            let plQuery = window.db.collection('inh_pricelists');
+            if (priceList) plQuery = plQuery.where('PriceListName', '==', priceList);
+            const plSnap = await plQuery.limit(5).get();
+            if (!plSnap.empty) {
+              for (const plDoc of plSnap.docs) {
+                let subQuery = plDoc.ref.collection('products');
+                if (category) subQuery = subQuery.where('Category', '==', category);
+                if (product) subQuery = subQuery.where('Product', '==', product);
+                if (density) subQuery = subQuery.where('Density', '==', density);
+                const subSnap = await subQuery.limit(5).get();
+                if (!subSnap.empty) {
+                  for (const sub of subSnap.docs) {
+                    const data = sub.data();
+                    const fieldVal = extractImageFromItem(data);
+                    const img = await resolveImageUrl(fieldVal);
+                    if (img) { window.productImageCache.set(key, img); return img; }
+                  }
+                }
+              }
+            }
+          } catch (_) {}
+        }
+
+        // 3) Fallback to static mapping
+        const mapped = getProductImagePath(category, product, density);
+        if (mapped) {
+          window.productImageCache.set(key, mapped);
+          return mapped;
+        }
+
+        return null;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    // Get image from cache or mapping synchronously
+    function getCachedOrMappedProductImage(priceList, category, product, density) {
+      const key = buildImageCacheKey(priceList, category, product, density);
+      const cached = window.productImageCache.get(key);
+      if (cached) return cached;
+      const mapped = getProductImagePath(category, product, density);
+      if (mapped) {
+        window.productImageCache.set(key, mapped);
+      }
+      return mapped;
     }
 
     /* Category to feature images mapping */
@@ -2020,11 +2434,10 @@
       const unit = state.kg ? 'Per Kg' : 'Per Piece';
       const { category, product, density, colors, items } = productGroup;
       
-      // Get product image
-      const productImage = getProductImagePath(category, product, density);
-      
       // Determine company name based on price list
       const priceListName = items[0]?.PriceListName || items[0]?.PriceList || items[0]?.['Price List Name'] || '';
+      // Get product image (prefer cached/unified sources)
+      const productImage = getCachedOrMappedProductImage(priceListName, category, product, density);
       let companyName = 'Indian Natural Hair';
       if (priceListName === 'INDIA25') {
         companyName = 'IND Natural Hair Pvt Ltd';
@@ -2083,8 +2496,9 @@
               <div class="mb-4">
                 ${productImage ? `
                   <div class="text-center">
-                    <img src="${productImage}" alt="${product}" 
+                <img src="${productImage}" alt="${product}" 
                          class="w-full max-h-48 object-contain rounded border shadow-sm" 
+                         crossorigin="anonymous" referrerpolicy="no-referrer" 
                          onerror="this.style.display='none'">
                     <p class="text-base text-gray-800 mt-2 font-semibold">${product}</p>
                   </div>
@@ -2146,8 +2560,9 @@
               <div class="col-span-7 image-section flex items-center justify-center">
                 ${productImage ? `
                   <div class="text-center w-full">
-                    <img src="${productImage}" alt="${product}" 
+                <img src="${productImage}" alt="${product}" 
                          class="w-full max-h-96 object-contain rounded border shadow-sm" 
+                         crossorigin="anonymous" referrerpolicy="no-referrer" 
                          onerror="this.style.display='none'">
                   </div>
                 ` : `
@@ -2204,7 +2619,8 @@
 
     // Create individual product card with image
     function createProductCard(product) {
-      const productImage = getProductImagePath(product.Category, product.Product, product.Density);
+      const priceListName = product.PriceListName || product.PriceList || product['Price List Name'] || '';
+      const productImage = getCachedOrMappedProductImage(priceListName, product.Category, product.Product, product.Density);
       
       return `
         <div class="product-card bg-white border rounded-lg p-4 mb-4 shadow-sm">

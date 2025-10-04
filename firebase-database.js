@@ -11,39 +11,22 @@ class FirebaseDatabase {
         throw new Error('Firebase SDK not loaded');
       }
 
-      this.db = firebase.firestore();
-      
-      try {
-        this.db.settings({
-          cacheSizeBytes: 40000000,
-          ignoreUndefinedProperties: true,
-          experimentalForceLongPolling: false,
-          merge: true
-        });
-      } catch (settingsError) {
-        console.warn('Error configuring Firestore settings:', settingsError);
+      // Ensure global Firebase initialization is complete before using Firestore
+      if (typeof window !== 'undefined' && typeof window.waitForFirebase === 'function') {
+        try {
+          await window.waitForFirebase(15000);
+        } catch (waitError) {
+          // Continue even if wait times out; initialization below may still work
+        }
       }
 
-      try {
-        await this.db.disableNetwork();
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        await this.db.enableNetwork();
-      } catch (networkError) {
-        console.warn('Error with network operations:', networkError);
-      }
-      
-      try {
-        this.storage = firebase.storage();
-      } catch (storageError) {
-        this.storage = null;
-      }
-      
-      try {
-        await this.db.collection('test').limit(1).get();
-      } catch (testError) {
-        console.warn('Error testing database connection:', testError);
-      }
-      
+      // Use Firestore instance with settings configured by global init
+      this.db = firebase.firestore();
+
+      // Initialize Storage if available
+      this.storage = (firebase.storage) ? firebase.storage() : null;
+
+      // Mark initialized
       this.initialized = true;
       
     } catch (error) {
@@ -290,9 +273,10 @@ class FirebaseDatabase {
             createdAt: quoteData.createdAt ? quoteData.createdAt : firebase.firestore.FieldValue.serverTimestamp(),
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         };
-        
-        const docRef = await addDoc(collection(this.db, 'quotes'), processedQuoteData);
-        return docRef.id;
+        // Use Firestore v8-style API consistently (avoid mixed modular calls)
+        const docRef = await this.db.collection('quotes').add(processedQuoteData);
+        // Return an object with id to match callers expecting savedQuote.id
+        return { id: docRef.id };
     } catch (error) {
         throw error;
     }
@@ -761,18 +745,41 @@ class FirebaseDatabase {
     }
 
     try {
-      const priceListsRef = this.db.collection('priceLists');
-      const snapshot = await priceListsRef.get();
-      
-      const priceLists = [];
-      snapshot.forEach(doc => {
-        priceLists.push({
-          id: doc.id,
-          ...doc.data()
-        });
-      });
+      // Prefer new canonical collection: inh_pricelists (parent docs)
+      const inhRef = this.db.collection('inh_pricelists');
+      const inhSnap = await inhRef.get();
 
-      return priceLists;
+      if (!inhSnap.empty) {
+        const inhLists = [];
+        inhSnap.forEach(doc => {
+          const data = doc.data() || {};
+          const name = data.name || data['Price List Name'] || data.PriceListName || data.PriceList || data.Name || doc.id;
+          inhLists.push({ id: doc.id, name, ...data });
+        });
+        return inhLists;
+      }
+
+      // Fallback to legacy collections: priceLists (camelCase) then pricelists (lowercase)
+      let legacySnap = null;
+      try {
+        legacySnap = await this.db.collection('priceLists').get();
+      } catch (_) {}
+
+      if (!legacySnap || legacySnap.empty) {
+        try {
+          legacySnap = await this.db.collection('pricelists').get();
+        } catch (_) {}
+      }
+
+      if (legacySnap && !legacySnap.empty) {
+        const legacyLists = [];
+        legacySnap.forEach(doc => {
+          legacyLists.push({ id: doc.id, ...doc.data() });
+        });
+        return legacyLists;
+      }
+
+      return [];
     } catch (error) {
       return [];
     }
@@ -1470,14 +1477,31 @@ window.firebaseDB = new FirebaseDatabase();
 
 // Initialize when Firebase is ready
 document.addEventListener('DOMContentLoaded', async () => {
-  // Wait for Firebase to be available
-  if (typeof firebase !== 'undefined') {
-    try {
-      await window.firebaseDB.initialize();
-    } catch (error) {
+  try {
+    // Prefer waiting for global Firebase initialization
+    if (typeof window !== 'undefined' && typeof window.waitForFirebase === 'function') {
+      await window.waitForFirebase(15000);
     }
+    if (typeof firebase !== 'undefined') {
+      await window.firebaseDB.initialize();
+    }
+  } catch (error) {
+    // Swallow initialization errors; other parts of the app may retry
   }
 });
+
+// Also initialize when the global init dispatches its event
+if (typeof window !== 'undefined') {
+  window.addEventListener('firebase-initialized', async () => {
+    try {
+      if (!window.firebaseDB.initialized) {
+        await window.firebaseDB.initialize();
+      }
+    } catch (e) {
+      // No-op
+    }
+  });
+}
 
 // Export for module use
 if (typeof module !== 'undefined' && module.exports) {

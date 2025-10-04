@@ -390,9 +390,48 @@ class CentralizedDataAccess {
     }
 
     async getPriceLists() {
+        // Prefer Firestore 'inh_pricelists' parent docs
+        try {
+            if (window.firebase && typeof window.firebase.firestore === 'function') {
+                const db = window.firebase.firestore();
+                let names = [];
+
+                // Primary: inh_pricelists
+                try {
+                    const snap = await db.collection('inh_pricelists').get();
+                    if (!snap.empty) {
+                        names = [...new Set(snap.docs.map(doc => {
+                            const d = doc.data() || {};
+                            return d.name || d['Price List Name'] || d.PriceListName || d.PriceList || d.Name || doc.id;
+                        }).filter(Boolean))];
+                    }
+                } catch (_) {}
+
+                // Fallback: legacy collections
+                if (!names || names.length === 0) {
+                    let legacySnap = null;
+                    try { legacySnap = await db.collection('priceLists').get(); } catch (_) {}
+                    if (!legacySnap || legacySnap.empty) {
+                        try { legacySnap = await db.collection('pricelists').get(); } catch (_) {}
+                    }
+                    if (legacySnap && !legacySnap.empty) {
+                        names = [...new Set(legacySnap.docs.map(doc => {
+                            const d = doc.data() || {};
+                            return d.name || d['Price List Name'] || d.PriceListName || d.PriceList || d.Name || doc.id;
+                        }).filter(Boolean))];
+                    }
+                }
+
+                if (names && names.length > 0) {
+                    return names.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+                }
+            }
+        } catch (_) {}
+
+        // Fallback: derive from loaded products
         const products = await this.getProducts();
-        const priceLists = [...new Set(products.map(p => p.priceList).filter(Boolean))];
-        return priceLists.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+        const derived = [...new Set(products.map(p => p.priceList || p.PriceList || p.PriceListName || p['Price List Name']).filter(Boolean))];
+        return derived.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
     }
 
     async getBrands() {

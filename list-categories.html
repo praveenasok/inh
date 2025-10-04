@@ -95,10 +95,14 @@
         </div>
     </div>
 
-    <!-- Include required scripts -->
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
+    <!-- Firebase configuration and global init -->
     <script src="firebase-config.js"></script>
-    <script src="js/universal-firebase-data-manager.js"></script>
-    <script src="js/unified-data-access.js"></script>
+    <script src="firebase-global-init.js"></script>
 
     <script>
         async function loadCategories() {
@@ -109,29 +113,46 @@
             const rawContentEl = document.getElementById('raw-content');
 
             try {
-                statusEl.textContent = 'Initializing data access...';
-                
-                // Wait for unified data access to be ready
-                let attempts = 0;
-                while (!window.unifiedDataAccess && attempts < 50) {
-                    await new Promise(resolve => setTimeout(resolve, 100));
-                    attempts++;
+                statusEl.textContent = 'Initializing Firebase...';
+
+                // Ensure Firebase SDK is loaded
+                if (typeof firebase === 'undefined') {
+                    throw new Error('Firebase SDK not loaded');
                 }
 
-                if (!window.unifiedDataAccess) {
-                    throw new Error('Unified data access not available');
+                // Initialize Firebase app and wait until ready
+                if (typeof window.initializeFirebaseApp === 'function') {
+                    await window.initializeFirebaseApp();
+                }
+                if (typeof window.waitForFirebase === 'function') {
+                    await window.waitForFirebase(10000);
                 }
 
-                statusEl.textContent = 'Fetching pricelists data...';
-                
-                // Get raw pricelists data first
-                const pricelists = await window.unifiedDataAccess.getData('pricelists');
+                // Fallback anonymous auth (optional)
+                if (firebase.auth && !firebase.auth().currentUser) {
+                    try { await firebase.auth().signInAnonymously(); } catch (e) {}
+                }
+
+                // Get Firestore instance
+                if (!firebase.firestore) {
+                    throw new Error('Firebase Firestore not available');
+                }
+                const db = firebase.firestore();
+                statusEl.textContent = 'Fetching pricelists data from Firestore...';
+
+                // Read directly from inh_pricelists collection
+                const snapshot = await db.collection('inh_pricelists').get();
+                const pricelists = snapshot.docs.map(doc => doc.data());
                 console.log('📊 Raw pricelists data:', pricelists);
-                
+
                 statusEl.textContent = 'Extracting categories...';
-                
-                // Get categories
-                const categories = await window.unifiedDataAccess.getCategories();
+
+                // Extract unique Category values
+                const categories = Array.from(new Set(
+                    (pricelists || [])
+                        .map(item => typeof item.Category === 'string' ? item.Category.trim() : '')
+                        .filter(Boolean)
+                )).sort();
                 console.log('📋 Extracted categories:', categories);
                 
                 if (categories && categories.length > 0) {
@@ -156,9 +177,7 @@
                         rawDataEl.style.display = 'block';
                         const sample = pricelists.slice(0, 3).map(item => ({
                             Category: item.Category,
-                            category: item.category,
                             Subcategory: item.Subcategory,
-                            subcategory: item.subcategory,
                             PriceList: item.PriceList || item['Price List Name'] || item.priceList
                         }));
                         rawContentEl.textContent = JSON.stringify(sample, null, 2);
