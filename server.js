@@ -406,83 +406,55 @@ const server = http.createServer(async (req, res) => {
 
   if (pathname === '/api/get-data' && req.method === 'GET') {
     try {
-      const collection = parsedUrl.searchParams.get('collection');
+      const requestedCollection = parsedUrl.searchParams.get('collection');
       const docId = parsedUrl.searchParams.get('id');
+      const collection = requestedCollection || 'products';
 
-      // If collection is specified, get data from Firebase
-      if (collection) {
-        if (!syncService || !syncService.db) {
-          res.writeHead(503, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ error: 'Firebase service not available' }));
-          return;
-        }
+      if (!syncService || !syncService.db) {
+        res.writeHead(503, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Firebase service not available' }));
+        return;
+      }
 
-        if (docId) {
-          // Get specific document
-          const docRef = syncService.db.collection(collection).doc(docId);
-          const doc = await docRef.get();
-          
-          if (doc.exists) {
-            res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ id: doc.id, ...doc.data() }));
-          } else {
-            res.writeHead(404, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ error: 'Document not found' }));
-          }
-        } else {
-          // Handle special collections that are stored in collections
-          if (collection === 'salespeople') {
-            try {
-              const snapshot = await syncService.db.collection('salespeople').get();
-              const salespeople = [];
-              snapshot.forEach(doc => {
-                salespeople.push({
-                  id: doc.id,
-                  ...doc.data()
-                });
-              });
-              res.writeHead(200, { 'Content-Type': 'application/json' });
-              res.end(JSON.stringify(salespeople));
-            } catch (error) {
-              res.writeHead(200, { 'Content-Type': 'application/json' });
-              res.end(JSON.stringify([]));
-            }
-            return;
-          }
-          
-          // Get entire collection (default behavior)
-          const snapshot = await syncService.db.collection(collection).get();
-          const data = [];
-          
-          snapshot.forEach(doc => {
-            data.push({ id: doc.id, ...doc.data() });
-          });
-          
+      if (docId) {
+        // Get specific document from Firestore
+        const docRef = syncService.db.collection(collection).doc(docId);
+        const doc = await docRef.get();
+        if (doc.exists) {
           res.writeHead(200, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify(data));
+          res.end(JSON.stringify({ id: doc.id, ...doc.data() }));
+        } else {
+          res.writeHead(404, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Document not found' }));
         }
         return;
       }
 
-      // Default behavior for backward compatibility (no collection specified)
-      if (currentProductData) {
-        // Add salesmen data from data source
-        const dataWithSalesmen = {
-          ...currentProductData,
-          salesmen: getSalesmenFromData()
-        };
-        const response = {
-          success: true,
-          data: Array.isArray(currentProductData) ? currentProductData : currentProductData.products || [],
-          salesmen: dataWithSalesmen.salesmen
-        };
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify(response));
-      } else {
-        // No fallback - Firebase data is required
-        res.writeHead(503, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Firebase data not available - service unavailable' }));
+      // Special handling for salespeople collection
+      if (collection === 'salespeople') {
+        try {
+          const snapshot = await syncService.db.collection('salespeople').get();
+          const salespeople = [];
+          snapshot.forEach(doc => {
+            salespeople.push({ id: doc.id, ...doc.data() });
+          });
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify(salespeople));
+        } catch (error) {
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify([]));
+        }
+        return;
       }
+
+      // Default: return entire Firestore collection
+      const snapshot = await syncService.db.collection(collection).get();
+      const data = [];
+      snapshot.forEach(doc => {
+        data.push({ id: doc.id, ...doc.data() });
+      });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(data));
     } catch (error) {
       res.writeHead(500, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ success: false, error: 'Failed to get data: ' + error.message }));

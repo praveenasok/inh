@@ -22,6 +22,22 @@ class UnifiedDataAccess {
                 this.eventListeners = new Map();
             }
             
+            // Prefer EnhancedCacheManager if available
+            try {
+                if (typeof window !== 'undefined' && window.EnhancedCacheManager) {
+                    this.cacheManager = new window.EnhancedCacheManager({
+                        defaultTTL: this.cacheTimeout,
+                        maxSize: 200
+                    });
+                    if (!window.enhancedCacheManager) {
+                        window.enhancedCacheManager = this.cacheManager;
+                    }
+                } else {
+                    this.cacheManager = null;
+                }
+            } catch (_) {
+                this.cacheManager = null;
+            }
         } catch (error) {
             this.eventListeners = new Map(); // Fallback
         }
@@ -245,6 +261,45 @@ class UnifiedDataAccess {
                 } catch (error) {
                 }
             }
+
+            // Firestore realtime listener for inh_pricelists to keep price lists cache fresh
+            try {
+                if (typeof firebase !== 'undefined' && typeof firebase.firestore === 'function') {
+                    const db = firebase.firestore();
+                    this._pricelistsUnsubscribe = db.collection('inh_pricelists').onSnapshot(
+                        (snap) => {
+                            try {
+                                const names = [...new Set(snap.docs.map(doc => {
+                                    const d = doc.data() || {};
+                                    return d.name || d['Price List Name'] || d.PriceListName || d.PriceList || d.Name || doc.id;
+                                }).filter(Boolean))].sort((a, b) => String(a).toLowerCase().localeCompare(String(b).toLowerCase()));
+
+                                // Store normalized list in cache using default options key ({}), so regular getData("priceLists") can hit it
+                                const cachedPayload = {
+                                    data: names,
+                                    source: 'firebase',
+                                    timestamp: new Date().toISOString(),
+                                    cached: false
+                                };
+                                this.setCachedData('priceLists', cachedPayload, {});
+                                if (this && typeof this.emit === 'function') {
+                                    this.emit('priceListsUpdated', { names, source: 'realtime' });
+                                }
+                            } catch (listenerErr) {
+                            }
+                        },
+                        (err) => {
+                            try {
+                                if (this && typeof this.emit === 'function') {
+                                    this.emit('error', { error: err, collection: 'priceLists', context: 'realtimeListener' });
+                                }
+                            } catch (_) {
+                            }
+                        }
+                    );
+                }
+            } catch (error) {
+            }
         } catch (error) {
             // Ensure eventListeners is properly initialized even if setup fails
             if (!this.eventListeners || !(this.eventListeners instanceof Map)) {
@@ -326,7 +381,7 @@ class UnifiedDataAccess {
                     
                     // Check cache first (skip on retries unless explicitly requested)
                     if (!options.skipCache && attempt === 0) {
-                        const cachedData = this.getCachedData(collection);
+                        const cachedData = this.getCachedData(collection, options);
                         if (cachedData) {
                             this.stats.cacheHits++;
                             this._updateResponseTime(startTime);
@@ -362,7 +417,7 @@ class UnifiedDataAccess {
                     
                     // Cache the result
                     if (result && !options.skipCache) {
-                        this.setCachedData(collection, result);
+                        this.setCachedData(collection, result, options);
                     }
                     
                     this.stats.lastUpdate = new Date().toISOString();
@@ -724,10 +779,33 @@ class UnifiedDataAccess {
     // ==================== CACHING SYSTEM ====================
     
     initializeCache() {
+        try {
+            if (!this.cacheManager && typeof window !== 'undefined' && window.EnhancedCacheManager) {
+                this.cacheManager = new window.EnhancedCacheManager({
+                    defaultTTL: this.cacheTimeout,
+                    maxSize: 200
+                });
+                if (!window.enhancedCacheManager) {
+                    window.enhancedCacheManager = this.cacheManager;
+                }
+            }
+        } catch (_) {}
         this.cache.clear();
     }
     
-    getCachedData(collection) {
+    getCachedData(collection, options = {}) {
+        // Prefer EnhancedCacheManager if available
+        try {
+            const key = `${collection}-${JSON.stringify(options || {})}`;
+            if (this.cacheManager) {
+                const item = this.cacheManager.get(key);
+                if (item) {
+                    return item;
+                }
+            }
+        } catch (_) {}
+
+        // Fallback to simple Map-based cache
         const cached = this.cache.get(collection);
         if (!cached) {
             return null;
@@ -745,7 +823,17 @@ class UnifiedDataAccess {
         };
     }
     
-    setCachedData(collection, data) {
+    setCachedData(collection, data, options = {}) {
+        // Prefer EnhancedCacheManager if available
+        try {
+            const key = `${collection}-${JSON.stringify(options || {})}`;
+            if (this.cacheManager) {
+                this.cacheManager.set(key, data, { source: data && data.source ? data.source : 'unknown' });
+                return;
+            }
+        } catch (_) {}
+        
+        // Fallback to simple Map-based cache
         this.cache.set(collection, {
             data: data,
             timestamp: Date.now()
@@ -753,6 +841,25 @@ class UnifiedDataAccess {
     }
     
     invalidateCache(collection) {
+        // Prefer EnhancedCacheManager if available
+        try {
+            if (this.cacheManager) {
+                if (collection) {
+                    // Delete all keys with collection prefix
+                    try {
+                        const keys = Array.from(this.cacheManager.cache.keys());
+                        keys.forEach(k => {
+                            if (typeof k === 'string' && k.startsWith(`${collection}-`)) {
+                                this.cacheManager.delete(k);
+                            }
+                        });
+                    } catch (_) {}
+                } else {
+                    this.cacheManager.clear();
+                }
+            }
+        } catch (_) {}
+        
         if (collection) {
             this.cache.delete(collection);
         } else {
@@ -761,6 +868,11 @@ class UnifiedDataAccess {
     }
     
     clearCache() {
+        try {
+            if (this.cacheManager) {
+                this.cacheManager.clear();
+            }
+        } catch (_) {}
         this.cache.clear();
         this.emit('cacheCleared');
     }
@@ -993,80 +1105,131 @@ class UnifiedDataAccess {
     
     async getCategories(priceList = null, options = {}) {
         try {
-            // Get price lists data first (correct collection name)
-            const pricelists = await this.getData('priceLists', options);
-            
-            if (!pricelists || !Array.isArray(pricelists)) {
-                console.warn('No pricelists data available for categories');
-                return [];
+            // Try cache via EnhancedCacheManager using option-keyed cache
+            const cached = this.getCachedData('categories', { priceList });
+            if (cached && Array.isArray(cached.data)) {
+                return cached.data;
             }
-            
-            // Filter by price list if specified
-            let filteredPricelists = pricelists;
-            if (priceList) {
-                filteredPricelists = pricelists.filter(item => 
-                    item.PriceList === priceList || 
-                    item['Price List Name'] === priceList ||
-                    item.priceList === priceList
-                );
+
+            let categories = [];
+
+            // Prefer Firestore collectionGroup('products') for reliable category extraction
+            try {
+                if (typeof firebase !== 'undefined' && typeof firebase.firestore === 'function') {
+                    const db = firebase.firestore();
+                    let query = db.collectionGroup('products');
+                    if (priceList) {
+                        try { query = query.where('PriceList', '==', priceList); } catch (_) {}
+                    }
+                    const snap = await query.get();
+                    const set = new Set();
+                    snap.forEach(doc => {
+                        const d = doc.data() || {};
+                        const cat = d.Category || d.category;
+                        if (cat) set.add(cat);
+                    });
+                    categories = Array.from(set).sort((a, b) => String(a).toLowerCase().localeCompare(String(b).toLowerCase()));
+                }
+            } catch (_) {}
+
+            // Fallback derivation from products if Firestore path fails or empty
+            if (!categories || categories.length === 0) {
+                try {
+                    const productsRes = await this.getProducts(options);
+                    const productsArr = Array.isArray(productsRes) ? productsRes : (productsRes && productsRes.data) || [];
+                    const set = new Set();
+                    productsArr.forEach(p => {
+                        if (priceList && !((p.PriceList === priceList) || (p['Price List Name'] === priceList) || (p.PriceListName === priceList))) {
+                            return;
+                        }
+                        const cat = p.Category || p.category;
+                        if (cat) set.add(cat);
+                    });
+                    categories = Array.from(set).sort((a, b) => String(a).toLowerCase().localeCompare(String(b).toLowerCase()));
+                } catch (_) {}
             }
-            
-            // Extract unique categories
-            const categories = [...new Set(
-                filteredPricelists
-                    .map(item => item.Category || item.category)
-                    .filter(Boolean)
-            )].sort();
-            
-            console.log(`✅ Extracted ${categories.length} categories from pricelists${priceList ? ` for price list: ${priceList}` : ''}:`, categories);
-            
+
+            // Final fallback to static defaults if still empty
+            if (!categories || categories.length === 0) {
+                categories = ['Bulk', 'Weaves', 'Weaves DD', 'Tapes', 'Closures', 'Frontals', 'I Tips', 'ClipOn', 'Genius Weaves', 'Toppers'];
+            }
+
+            // Cache result under option-keyed categories
+            const payload = {
+                data: categories,
+                source: 'firebase',
+                timestamp: new Date().toISOString(),
+                cached: false
+            };
+            this.setCachedData('categories', payload, { priceList });
             return categories;
         } catch (error) {
-            console.error('Error getting categories from pricelists:', error);
-            // Return default categories as fallback
             return ['Bulk', 'Weaves', 'Weaves DD', 'Tapes', 'Closures', 'Frontals', 'I Tips', 'ClipOn', 'Genius Weaves', 'Toppers'];
         }
     }
     
     async getSubcategories(category = null, priceList = null, options = {}) {
         try {
-            // Get price lists data first (correct collection name)
-            const pricelists = await this.getData('priceLists', options);
-            
-            if (!pricelists || !Array.isArray(pricelists)) {
-                console.warn('No pricelists data available for subcategories');
-                return [];
+            // Try cache via EnhancedCacheManager using option-keyed cache
+            const cached = this.getCachedData('subcategories', { category, priceList });
+            if (cached && Array.isArray(cached.data)) {
+                return cached.data;
             }
-            
-            // Filter by price list if specified
-            let filteredPricelists = pricelists;
-            if (priceList) {
-                filteredPricelists = pricelists.filter(item => 
-                    item.PriceList === priceList || 
-                    item['Price List Name'] === priceList ||
-                    item.priceList === priceList
-                );
+
+            let subcategories = [];
+
+            // Prefer Firestore collectionGroup('products') for reliable subcategory extraction
+            try {
+                if (typeof firebase !== 'undefined' && typeof firebase.firestore === 'function') {
+                    const db = firebase.firestore();
+                    let query = db.collectionGroup('products');
+                    if (priceList) {
+                        try { query = query.where('PriceList', '==', priceList); } catch (_) {}
+                    }
+                    if (category) {
+                        try { query = query.where('Category', '==', category); } catch (_) {}
+                    }
+                    const snap = await query.get();
+                    const set = new Set();
+                    snap.forEach(doc => {
+                        const d = doc.data() || {};
+                        const sub = d.Subcategory || d.subcategory || d.SubCategory;
+                        if (sub) set.add(sub);
+                    });
+                    subcategories = Array.from(set).sort((a, b) => String(a).toLowerCase().localeCompare(String(b).toLowerCase()));
+                }
+            } catch (_) {}
+
+            // Fallback derivation from products if Firestore path fails or empty
+            if (!subcategories || subcategories.length === 0) {
+                try {
+                    const productsRes = await this.getProducts(options);
+                    const productsArr = Array.isArray(productsRes) ? productsRes : (productsRes && productsRes.data) || [];
+                    const set = new Set();
+                    productsArr.forEach(p => {
+                        if (priceList && !((p.PriceList === priceList) || (p['Price List Name'] === priceList) || (p.PriceListName === priceList))) {
+                            return;
+                        }
+                        if (category && !((p.Category === category) || (p.category === category))) {
+                            return;
+                        }
+                        const sub = p.Subcategory || p.subcategory || p.SubCategory;
+                        if (sub) set.add(sub);
+                    });
+                    subcategories = Array.from(set).sort((a, b) => String(a).toLowerCase().localeCompare(String(b).toLowerCase()));
+                } catch (_) {}
             }
-            
-            // Filter by category if specified
-            if (category) {
-                filteredPricelists = filteredPricelists.filter(item => 
-                    item.Category === category || item.category === category
-                );
-            }
-            
-            // Extract unique subcategories
-            const subcategories = [...new Set(
-                filteredPricelists
-                    .map(item => item.Subcategory || item.subcategory || item.SubCategory)
-                    .filter(Boolean)
-            )].sort();
-            
-            console.log(`✅ Extracted ${subcategories.length} subcategories from pricelists${category ? ` for category: ${category}` : ''}${priceList ? ` and price list: ${priceList}` : ''}:`, subcategories);
-            
+
+            // Cache result under option-keyed subcategories
+            const payload = {
+                data: subcategories,
+                source: 'firebase',
+                timestamp: new Date().toISOString(),
+                cached: false
+            };
+            this.setCachedData('subcategories', payload, { category, priceList });
             return subcategories;
         } catch (error) {
-            console.error('Error getting subcategories from pricelists:', error);
             return [];
         }
     }

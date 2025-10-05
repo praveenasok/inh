@@ -34,6 +34,58 @@
     
     <!-- Universal Firebase Data Manager -->
     <script src="js/universal-firebase-data-manager.js"></script>
+
+    <!-- Unified Data Access Layer -->
+    <script src="js/unified-data-access.js"></script>
+    <script>
+        // Initialize unifiedDataAccess as a global instance if not already present
+        (function initUnifiedDataAccessGlobal(){
+            try {
+                if (!window.unifiedDataAccess && typeof UnifiedDataAccess === 'function') {
+                    window.unifiedDataAccess = new UnifiedDataAccess();
+                    // Optionally listen for initialization and updates
+                    try {
+                        window.unifiedDataAccess.on && window.unifiedDataAccess.on('initialized', (info) => {
+                            console.log('UnifiedDataAccess initialized:', info);
+                        });
+                        // Refresh price lists when realtime updates arrive
+                        if (window.unifiedDataAccess && typeof window.unifiedDataAccess.on === 'function') {
+                            try {
+                                window.unifiedDataAccess.on('priceListsUpdated', () => {
+                                    try { populatePriceListDropdown(); } catch (_) {}
+                                });
+                                // When data source changes (firebase/local), refresh dependent dropdowns
+                                window.unifiedDataAccess.on('sourceChanged', () => {
+                                    try {
+                                        const priceListSel = document.getElementById('price-list-selector');
+                                        const selectedPriceList = priceListSel && priceListSel.value;
+                                        if (selectedPriceList) {
+                                            try { populateCategories(selectedPriceList); } catch (_) {}
+                                        }
+                                    } catch (_) {}
+                                });
+                                // If products/pricelists collections change, refresh categories scoped to current price list
+                                window.unifiedDataAccess.on('dataUpdated', (payload) => {
+                                    try {
+                                        const col = payload && (payload.collection || payload.col || payload.name);
+                                        if (col && (String(col).toLowerCase().includes('product') || String(col).toLowerCase().includes('pricelist'))) {
+                                            const priceListSel = document.getElementById('price-list-selector');
+                                            const selectedPriceList = priceListSel && priceListSel.value;
+                                            if (selectedPriceList) {
+                                                try { populateCategories(selectedPriceList); } catch (_) {}
+                                            }
+                                        }
+                                    } catch (_) {}
+                                });
+                            } catch (_) {}
+                        }
+                    } catch (_) {}
+                }
+            } catch (e) {
+                console.warn('Failed to initialize UnifiedDataAccess:', e);
+            }
+        })();
+    </script>
     
     <!-- Fallback System Components removed: using Firebase-only data path -->
     
@@ -1942,38 +1994,79 @@
             }
         }
 
-        // Populate price list dropdown using Firebase data
-        function populatePriceListDropdown() {
+        // Populate price list dropdown using unifiedDataAccess first, fallback to local Firebase data
+        async function populatePriceListDropdown() {
             console.log('populatePriceListDropdown called');
             const priceListSelector = document.getElementById('price-list-selector');
             if (!priceListSelector) {
                 console.log('Price list selector not found');
                 return;
             }
-            
-            console.log('Product data available:', productData);
-            if (!productData || productData.length === 0) {
-                console.log('No product data available for dropdown population');
-                return;
-            }
-            
+
             // Clear existing options
             priceListSelector.innerHTML = '<option value="">Select Price List</option>';
-            
-            // Get unique price lists from Firebase product data (prioritize 'Price List Name')
-            const priceLists = [...new Set(
-                productData
-                    .map(product => product['Price List Name'] || product.PriceListName || product.PriceList)
-            )].filter(Boolean);
-            console.log('Price lists extracted:', priceLists);
-            
+
+            // Try unifiedDataAccess to get price lists
+            let priceLists = [];
+            try {
+                if (window.unifiedDataAccess && typeof window.unifiedDataAccess.getPriceLists === 'function') {
+                    priceLists = await window.unifiedDataAccess.getPriceLists();
+                }
+            } catch (e) {
+                console.warn('UnifiedDataAccess getPriceLists failed, will fallback:', e);
+            }
+
+            // Fallback to productData-derived price lists if unified fails or returns empty
+            if (!priceLists || priceLists.length === 0) {
+                console.log('Falling back to productData for price lists');
+                if (Array.isArray(productData) && productData.length > 0) {
+                    try {
+                        priceLists = [...new Set(
+                            productData
+                                .map(product => product['Price List Name'] || product.PriceListName || product.PriceList)
+                        )].filter(Boolean);
+                    } catch (_) {
+                        priceLists = [];
+                    }
+                }
+            }
+
+            // Final fallback: try alternate collection via existing sequential fetch helper
+            if ((!priceLists || priceLists.length === 0) && window.db && typeof fetchCollectionDocsSequential === 'function') {
+                try {
+                    const altDocs = await fetchCollectionDocsSequential(['priceLists']);
+                    const namesSet = new Set();
+                    (altDocs || []).forEach((data) => {
+                        const name = data['Price List Name'] || data.PriceListName || data.PriceList || data.name || data.price_list_name || data.priceListName || data.priceList;
+                        if (typeof name === 'string') {
+                            const trimmed = name.trim();
+                            if (trimmed) namesSet.add(trimmed);
+                        }
+                    });
+                    priceLists = Array.from(namesSet);
+                } catch (altErr) {
+                    console.warn('Alternate priceLists collection fallback failed:', altErr);
+                }
+            }
+
+            // Sort and populate
+            priceLists = (priceLists || []).sort((a, b) => String(a).toLowerCase().localeCompare(String(b).toLowerCase()));
+            if (priceLists.length === 0) {
+                console.warn('No price lists available to populate');
+                return;
+            }
+
+            const previous = priceListSelector.value;
             priceLists.forEach(priceList => {
                 const option = document.createElement('option');
                 option.value = priceList;
                 option.textContent = priceList;
                 priceListSelector.appendChild(option);
             });
-            
+            if (previous && priceLists.includes(previous)) {
+                priceListSelector.value = previous;
+            }
+
             console.log('Price list dropdown populated with', priceLists.length, 'options');
         }
 
@@ -2469,37 +2562,51 @@
             // Clear existing options
             selector.innerHTML = '<option value="">Select Category</option>';
             
-            // Firestore-first: load categories from 'inh_pricelists' filtered by selected price list
+            // UnifiedDataAccess-first: prefer unified data layer with caching and multi-source support
             let categories = [];
             try {
-                if (!window.db && typeof firebase !== 'undefined' && firebase.firestore) {
-                    window.db = firebase.firestore();
-                }
-                if (window.db) {
-                    const fieldCandidates = ['Price List Name','PriceListName','PriceList','price_list_name','priceListName','priceList'];
-                    let docs = [];
-                    for (const field of fieldCandidates) {
-                        try {
-                            const snap = await window.db.collection('inh_pricelists').where(field, '==', priceList).get();
-                            if (!snap.empty) {
-                                snap.forEach(d => docs.push(d.data()));
-                                break;
-                            }
-                        } catch (_) {
-                            // Try next field variant silently
-                        }
-                    }
-                    if (docs.length > 0) {
-                        categories = Array.from(new Set(
-                            docs.map(d => {
-                                const c = d.Category || d.category || d['Category'] || '';
-                                return (typeof c === 'string') ? c.trim() : String(c || '').trim();
-                            }).filter(Boolean)
-                        )).sort((a,b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+                if (window.unifiedDataAccess && typeof window.unifiedDataAccess.getCategories === 'function') {
+                    const res = await window.unifiedDataAccess.getCategories(priceList);
+                    if (Array.isArray(res) && res.length > 0) {
+                        categories = res;
                     }
                 }
             } catch (err) {
-                console.warn('Firestore category load failed, will fallback:', err);
+                console.warn('UnifiedDataAccess category load failed, will fallback:', err);
+            }
+
+            // Firestore fallback: load categories from 'inh_pricelists' filtered by selected price list
+            if (categories.length === 0) {
+                try {
+                    if (!window.db && typeof firebase !== 'undefined' && firebase.firestore) {
+                        window.db = firebase.firestore();
+                    }
+                    if (window.db) {
+                        const fieldCandidates = ['Price List Name','PriceListName','PriceList','price_list_name','priceListName','priceList'];
+                        let docs = [];
+                        for (const field of fieldCandidates) {
+                            try {
+                                const snap = await window.db.collection('inh_pricelists').where(field, '==', priceList).get();
+                                if (!snap.empty) {
+                                    snap.forEach(d => docs.push(d.data()));
+                                    break;
+                                }
+                            } catch (_) {
+                                // Try next field variant silently
+                            }
+                        }
+                        if (docs.length > 0) {
+                            categories = Array.from(new Set(
+                                docs.map(d => {
+                                    const c = d.Category || d.category || d['Category'] || '';
+                                    return (typeof c === 'string') ? c.trim() : String(c || '').trim();
+                                }).filter(Boolean)
+                            )).sort((a,b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+                        }
+                    }
+                } catch (err) {
+                    console.warn('Firestore category load failed, will fallback:', err);
+                }
             }
 
             // Fallback to local productData if Firestore path yielded nothing
