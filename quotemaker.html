@@ -24,6 +24,10 @@
     <script src="firebase-config.js"></script>
     <!-- Firebase global initialization -->
     <script src="firebase-global-init.js"></script>
+    <!-- INHDATA: Local-first data layer with bidirectional Firestore sync -->
+    <script src="js/inhdata.js"></script>
+    <!-- Sync Status UI (binds to INHDATA metrics) -->
+    <script src="js/sync-status-ui.js"></script>
     
     <!-- Firebase Database Service -->
     <script src="firebase-database.js"></script>
@@ -32,59 +36,96 @@
     <!-- Firebase Error Handler -->
     <script src="firebase-error-handler.js"></script>
     
-    <!-- Universal Firebase Data Manager -->
-    <script src="js/universal-firebase-data-manager.js"></script>
+    <!-- Universal Firebase Data Manager (legacy) -->
+    <!-- <script src="js/universal-firebase-data-manager.js"></script> -->
 
-    <!-- Unified Data Access Layer -->
-    <script src="js/unified-data-access.js"></script>
+    <!-- Unified Data Access Layer (legacy) -->
+    <!-- <script src="js/unified-data-access.js"></script> -->
     <script>
-        // Initialize unifiedDataAccess as a global instance if not already present
-        (function initUnifiedDataAccessGlobal(){
+      // INHDATA integration: initialize and wire subscriptions for dropdowns and pricing
+      document.addEventListener('DOMContentLoaded', async function() {
+        try {
+          // Ensure Firebase is initialized first (for remote sync), then INHDATA
+          try { if (typeof initializeFirebase === 'function') { await initializeFirebase(); } } catch (_) {}
+          window.forceINHDATA = true;
+          await INHDATA.initialize();
+
+          function setOptions(el, values, placeholder) {
+            if (!el) return;
+            el.innerHTML = `<option value="">${placeholder || 'Select'}</option>`;
+            (values || []).forEach(v => { const o = document.createElement('option'); o.value = v; o.textContent = v; el.appendChild(o); });
+          }
+
+          // Products subscription → keep local productData and downstream dropdowns in sync
+          INHDATA.subscribe('products', (products) => {
+            try { window.productData = Array.isArray(products) ? products : []; } catch (_) {}
             try {
-                if (!window.unifiedDataAccess && typeof UnifiedDataAccess === 'function') {
-                    window.unifiedDataAccess = new UnifiedDataAccess();
-                    // Optionally listen for initialization and updates
-                    try {
-                        window.unifiedDataAccess.on && window.unifiedDataAccess.on('initialized', (info) => {
-                            console.log('UnifiedDataAccess initialized:', info);
-                        });
-                        // Refresh price lists when realtime updates arrive
-                        if (window.unifiedDataAccess && typeof window.unifiedDataAccess.on === 'function') {
-                            try {
-                                window.unifiedDataAccess.on('priceListsUpdated', () => {
-                                    try { populatePriceListDropdown(); } catch (_) {}
-                                });
-                                // When data source changes (firebase/local), refresh dependent dropdowns
-                                window.unifiedDataAccess.on('sourceChanged', () => {
-                                    try {
-                                        const priceListSel = document.getElementById('price-list-selector');
-                                        const selectedPriceList = priceListSel && priceListSel.value;
-                                        if (selectedPriceList) {
-                                            try { populateCategories(selectedPriceList); } catch (_) {}
-                                        }
-                                    } catch (_) {}
-                                });
-                                // If products/pricelists collections change, refresh categories scoped to current price list
-                                window.unifiedDataAccess.on('dataUpdated', (payload) => {
-                                    try {
-                                        const col = payload && (payload.collection || payload.col || payload.name);
-                                        if (col && (String(col).toLowerCase().includes('product') || String(col).toLowerCase().includes('pricelist'))) {
-                                            const priceListSel = document.getElementById('price-list-selector');
-                                            const selectedPriceList = priceListSel && priceListSel.value;
-                                            if (selectedPriceList) {
-                                                try { populateCategories(selectedPriceList); } catch (_) {}
-                                            }
-                                        }
-                                    } catch (_) {}
-                                });
-                            } catch (_) {}
-                        }
-                    } catch (_) {}
-                }
-            } catch (e) {
-                console.warn('Failed to initialize UnifiedDataAccess:', e);
-            }
-        })();
+              const priceListSel = document.getElementById('price-list-selector');
+              const selected = priceListSel && priceListSel.value;
+              if (selected) { try { populateCategories(selected); } catch (_) {} }
+            } catch (_) {}
+          });
+
+          // Price lists subscription → populate price list selector
+          INHDATA.subscribe('priceLists', (list) => {
+            try {
+              const names = (list || []).map(x => x && (x.name || x.id)).filter(Boolean).sort((a,b)=>a.localeCompare(b));
+              const plSel = document.getElementById('price-list-selector') || document.getElementById('price-list');
+              setOptions(plSel, names, 'Select Price List');
+              if (plSel && plSel.querySelector('option[value="INDIA25"]')) {
+                plSel.value = 'INDIA25';
+                plSel.dispatchEvent(new Event('change'));
+              }
+            } catch (e) { console.warn('INHDATA priceLists subscription failed:', e.message); }
+          });
+
+          // Salesmen subscription → populate sales rep selector if present
+          INHDATA.subscribe('salesmen', (list) => {
+            try {
+              const names = Array.from(new Set((list || []).map(d => (d && (d.name || d.Name || d.salesmanName) || '').trim()).filter(Boolean))).sort((a,b)=>a.localeCompare(b));
+              const el = document.getElementById('salesman') || document.getElementById('salesperson');
+              setOptions(el, names, 'Select Salesmen');
+            } catch (e) { console.warn('INHDATA salesmen subscription failed:', e.message); }
+          });
+
+          // Prime local caches so existing code paths work
+          try { window.productData = await INHDATA.getAll('products'); } catch (_) {}
+
+          // Initialize Sync Status UI bound to INHDATA metrics
+          try {
+            const syncUI = new SyncStatusUI({ containerId: 'sync-status-container', logLevel: 'warn', updateInterval: 4000 });
+            const syncCoordinator = {
+              async getStatus() {
+                const metrics = (INHDATA && INHDATA.metrics) || {};
+                const lastSyncErr = metrics.lastSyncError ? [{ timestamp: Date.now(), message: metrics.lastSyncError }] : [];
+                return {
+                  isInitialized: !!INHDATA,
+                  isSyncing: !!(INHDATA && INHDATA.syncing),
+                  isSuspended: !!(INHDATA && INHDATA.syncSuspended),
+                  lastSync: (INHDATA && INHDATA.lastSync) || null,
+                  errors: lastSyncErr,
+                  stats: {
+                    totalRecords: (metrics.localReads || 0) + (metrics.remoteReads || 0),
+                    pendingChanges: metrics.pendingChanges || 0,
+                    successfulSyncs: metrics.successfulSyncs || 0,
+                    failedSyncs: metrics.failedSyncs || 0,
+                  },
+                  recentActivity: (INHDATA && INHDATA.recentActivity) || []
+                };
+              },
+              async performIncrementalSync() { if (INHDATA && INHDATA.syncNow) { await INHDATA.syncNow({ full: false }); } },
+              async performFullSync() { if (INHDATA && INHDATA.syncNow) { await INHDATA.syncNow({ full: true }); } },
+              async suspendSync() { if (INHDATA && INHDATA.suspend) { await INHDATA.suspend(true); } },
+              async resumeSync() { if (INHDATA && INHDATA.suspend) { await INHDATA.suspend(false); } }
+            };
+            await syncUI.initialize(syncCoordinator);
+          } catch (e) {
+            console.warn('SyncStatusUI init failed:', e.message);
+          }
+        } catch (e) {
+          console.warn('INHDATA initialization in quotemaker failed:', e.message);
+        }
+      });
     </script>
     
     <!-- Fallback System Components removed: using Firebase-only data path -->
@@ -1738,6 +1779,19 @@
                 } catch (e) {
                     console.warn('Failed to load price lists from Firestore; relying on listener/fallbacks.', e);
                 }
+
+                // If price lists are still empty, eagerly load products as a fallback
+                try {
+                    const pls = document.getElementById('price-list-selector');
+                    const hasOnlyDefault = pls && pls.querySelectorAll('option').length <= 1;
+                    if (hasOnlyDefault) {
+                        console.warn('No price lists after Firestore attempt; loading products for fallback');
+                        await loadProducts();
+                        await populatePriceListDropdown();
+                    }
+                } catch (fallbackErr) {
+                    console.warn('Fallback product load for price lists failed:', fallbackErr);
+                }
                 
                 // Initialize Firebase real-time listeners for enhanced dropdowns
                 await initializeFirebaseListeners();
@@ -1753,6 +1807,8 @@
                 // Populate main dropdowns (non-Firebase real-time)
                 populateClientDropdown();
                 populateSalespersonDropdown();
+                // Always attempt price list population from available sources
+                try { populatePriceListDropdown(); } catch (_) {}
                 // Populate independent dropdowns immediately after data load
                 // Colors and Styles are sourced from inh_colors and inh_styles respectively
                 if (Array.isArray(colorsData) && colorsData.length > 0) {
@@ -2016,6 +2072,18 @@
                 console.warn('UnifiedDataAccess getPriceLists failed, will fallback:', e);
             }
 
+            // Fallback to universalDataManager if available
+            if ((!priceLists || priceLists.length === 0) && window.universalDataManager && typeof window.universalDataManager.getPriceLists === 'function') {
+                try {
+                    const status = window.universalDataManager.getStatus ? window.universalDataManager.getStatus() : { isInitialized: false, isDataLoaded: false };
+                    if (status.isInitialized && status.isDataLoaded) {
+                        priceLists = await window.universalDataManager.getPriceLists();
+                    }
+                } catch (udmErr) {
+                    console.warn('universalDataManager getPriceLists fallback failed:', udmErr);
+                }
+            }
+
             // Fallback to productData-derived price lists if unified fails or returns empty
             if (!priceLists || priceLists.length === 0) {
                 console.log('Falling back to productData for price lists');
@@ -2128,18 +2196,27 @@
 
         // Setup event listeners
         function setupEventListeners() {
-            
+            // Helper to safely bind events
+            const bind = (id, evt, handler) => {
+                const el = document.getElementById(id);
+                if (!el) {
+                    console.warn(`Element #${id} not found when binding ${evt}`);
+                    return;
+                }
+                el.addEventListener(evt, handler);
+            };
+
             // Price list change
-            document.getElementById('price-list-selector').addEventListener('change', onPriceListChange);
-            
+            bind('price-list-selector', 'change', onPriceListChange);
+
             // Category change
-            document.getElementById('category-selector').addEventListener('change', onCategoryChange);
-            
+            bind('category-selector', 'change', onCategoryChange);
+
             // Product change
-            document.getElementById('product-selector').addEventListener('change', onProductChange);
-            
+            bind('product-selector', 'change', onProductChange);
+
             // Other selectors
-            document.getElementById('density-selector').addEventListener('change', () => {
+            bind('density-selector', 'change', () => {
                 const priceList = document.getElementById('price-list-selector').value;
                 const category = document.getElementById('category-selector').value;
                 const product = document.getElementById('product-selector').value;
@@ -2153,17 +2230,17 @@
                 isManualPriceEntry = false; // Reset manual entry flag
                 updatePricing();
             });
-            document.getElementById('length-selector').addEventListener('change', () => {
+            bind('length-selector', 'change', () => {
                 isManualPriceEntry = false; // Reset manual entry flag
                 updatePricing();
             });
             // Color type change
-            document.getElementById('color-type-selector').addEventListener('change', () => {
+            bind('color-type-selector', 'change', () => {
                 isManualPriceEntry = false; // Reset manual entry flag
                 updatePricing();
             });
-            document.getElementById('color-type-selector').addEventListener('change', onColorTypeChange);
-            document.getElementById('color-selector').addEventListener('change', (e) => {
+            bind('color-type-selector', 'change', onColorTypeChange);
+            bind('color-selector', 'change', (e) => {
                 const customColorContainer = document.querySelector('.custom-color-container');
                 const colorImageBtn = document.getElementById('color-image-btn');
                 const customColorInput = document.getElementById('custom-color-input');
@@ -2500,11 +2577,11 @@
             });
             
             // OK button event listeners
-            document.getElementById('custom-color-ok-btn').addEventListener('click', () => {
+            bind('custom-color-ok-btn', 'click', () => {
                 handleCustomAreaCollapse('color');
             });
             
-            document.getElementById('custom-style-ok-btn').addEventListener('click', () => {
+            bind('custom-style-ok-btn', 'click', () => {
                 handleCustomAreaCollapse('style');
             });
         }

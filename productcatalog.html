@@ -23,11 +23,13 @@
     <!-- Firebase Configuration and Initialization -->
     <script src="firebase-config.js"></script>
     <script src="firebase-global-init.js"></script>
+    <!-- INHDATA: Local-first data layer with bidirectional Firestore sync -->
+    <script src="js/inhdata.js"></script>
     <script src="firebase-database.js"></script>
     <script src="firebase-error-handler.js"></script>
     
-    <!-- Universal Firebase Data Manager -->
-    <script src="js/universal-firebase-data-manager.js"></script>
+    <!-- Universal Firebase Data Manager (legacy) -->
+    <!-- <script src="js/universal-firebase-data-manager.js"></script> -->
     
     <!-- Fallback System Components removed: using Firebase-only data path -->
     
@@ -35,8 +37,8 @@
     <!-- <script src="js/local-storage-dropdown-manager.js"></script> -->
     <!-- <script src="js/sample-data-initializer.js"></script> -->
     
-    <!-- New API Client (Server-based data access) -->
-    <script src="js/api-client.js"></script>
+    <!-- New API Client (legacy) -->
+    <!-- <script src="js/api-client.js"></script> -->
     
     <!-- Unified Button System -->
     <link rel="stylesheet" href="unified-button-system.css">
@@ -1727,5 +1729,87 @@
     }
 
     </script>
+<script>
+  // Initialize Sync Status UI bound to INHDATA metrics once DOM is ready
+  document.addEventListener('DOMContentLoaded', async function() {
+    try {
+      const syncUI = new SyncStatusUI({ containerId: 'sync-status-container', logLevel: 'warn', updateInterval: 4000 });
+      const syncCoordinator = {
+        async getStatus() {
+          const metrics = (INHDATA && INHDATA.metrics) || {};
+          const lastSyncErr = metrics.lastSyncError ? [{ timestamp: Date.now(), message: metrics.lastSyncError }] : [];
+          return {
+            isInitialized: !!INHDATA,
+            isSyncing: !!(INHDATA && INHDATA.syncing),
+            isSuspended: !!(INHDATA && INHDATA.syncSuspended),
+            lastSync: (INHDATA && INHDATA.lastSync) || null,
+            errors: lastSyncErr,
+            stats: {
+              totalRecords: (metrics.localReads || 0) + (metrics.remoteReads || 0),
+              pendingChanges: metrics.pendingChanges || 0,
+              successfulSyncs: metrics.successfulSyncs || 0,
+              failedSyncs: metrics.failedSyncs || 0,
+            },
+            recentActivity: (INHDATA && INHDATA.recentActivity) || []
+          };
+        },
+        async performIncrementalSync() { if (INHDATA && INHDATA.syncNow) { await INHDATA.syncNow({ full: false }); } },
+        async performFullSync() { if (INHDATA && INHDATA.syncNow) { await INHDATA.syncNow({ full: true }); } },
+        async suspendSync() { if (INHDATA && INHDATA.suspend) { await INHDATA.suspend(true); } },
+        async resumeSync() { if (INHDATA && INHDATA.suspend) { await INHDATA.suspend(false); } }
+      };
+      await syncUI.initialize(syncCoordinator);
+    } catch (e) {
+      console.warn('SyncStatusUI init failed:', e.message);
+    }
+  });
+</script>
 </body>
 </html>
+    <script>
+      // INHDATA integration: initialize and wire subscriptions for catalog rendering
+      document.addEventListener('DOMContentLoaded', async function() {
+        try {
+          try { if (typeof initializeFirebase === 'function') { await initializeFirebase(); } } catch (_) {}
+          window.forceINHDATA = true;
+          await INHDATA.initialize();
+
+          function setOptions(el, values, placeholder) {
+            if (!el) return;
+            el.innerHTML = `<option value="">${placeholder || 'Select'}</option>`;
+            (values || []).forEach(v => { const o = document.createElement('option'); o.value = v; o.textContent = v; el.appendChild(o); });
+          }
+
+          // Products → drive catalog list/grid
+          INHDATA.subscribe('products', (products) => {
+            try { window.catalogProducts = Array.isArray(products) ? products : []; } catch (_) {}
+            try { if (typeof renderCatalog === 'function') { renderCatalog(window.catalogProducts); } } catch (_) {}
+          });
+
+          // Price lists → optional filters
+          INHDATA.subscribe('priceLists', (list) => {
+            try {
+              const names = (list || []).map(x => x && (x.name || x.id)).filter(Boolean).sort((a,b)=>a.localeCompare(b));
+              setOptions(document.getElementById('catalog-price-list'), names, 'All Price Lists');
+            } catch (_) {}
+          });
+
+          // Categories derived from products
+          const initial = await INHDATA.getAll('products');
+          window.catalogProducts = Array.isArray(initial) ? initial : [];
+          try {
+            const categories = Array.from(new Set((window.catalogProducts || []).map(p => p.Category).filter(Boolean))).sort((a,b)=>a.localeCompare(b));
+            setOptions(document.getElementById('catalog-category'), categories, 'All Categories');
+          } catch (_) {}
+
+          // Colors/styles if present
+          try {
+            const colors = await INHDATA.getAll('colors');
+            const shades = Array.from(new Set((colors || []).map(c => c.Color || c.color || c.Shade).filter(Boolean))).sort((a,b)=>a.localeCompare(b));
+            setOptions(document.getElementById('catalog-color'), shades, 'All Shades');
+          } catch (_) {}
+        } catch (e) {
+          console.warn('INHDATA initialization in productcatalog failed:', e.message);
+        }
+      });
+    </script>
