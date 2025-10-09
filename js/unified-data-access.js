@@ -262,44 +262,8 @@ class UnifiedDataAccess {
                 }
             }
 
-            // Firestore realtime listener for inh_pricelists to keep price lists cache fresh
-            try {
-                if (typeof firebase !== 'undefined' && typeof firebase.firestore === 'function') {
-                    const db = firebase.firestore();
-                    this._pricelistsUnsubscribe = db.collection('inh_pricelists').onSnapshot(
-                        (snap) => {
-                            try {
-                                const names = [...new Set(snap.docs.map(doc => {
-                                    const d = doc.data() || {};
-                                    return d.name || d['Price List Name'] || d.PriceListName || d.PriceList || d.Name || doc.id;
-                                }).filter(Boolean))].sort((a, b) => String(a).toLowerCase().localeCompare(String(b).toLowerCase()));
-
-                                // Store normalized list in cache using default options key ({}), so regular getData("priceLists") can hit it
-                                const cachedPayload = {
-                                    data: names,
-                                    source: 'firebase',
-                                    timestamp: new Date().toISOString(),
-                                    cached: false
-                                };
-                                this.setCachedData('priceLists', cachedPayload, {});
-                                if (this && typeof this.emit === 'function') {
-                                    this.emit('priceListsUpdated', { names, source: 'realtime' });
-                                }
-                            } catch (listenerErr) {
-                            }
-                        },
-                        (err) => {
-                            try {
-                                if (this && typeof this.emit === 'function') {
-                                    this.emit('error', { error: err, collection: 'priceLists', context: 'realtimeListener' });
-                                }
-                            } catch (_) {
-                            }
-                        }
-                    );
-                }
-            } catch (error) {
-            }
+            // Removed: realtime listener for 'inh_pricelists'
+            // Price lists are now sourced from legacy collections and products-derived data.
         } catch (error) {
             // Ensure eventListeners is properly initialized even if setup fails
             if (!this.eventListeners || !(this.eventListeners instanceof Map)) {
@@ -1237,22 +1201,7 @@ class UnifiedDataAccess {
     async getPriceLists(options = {}) {
         try {
             let names = [];
-
-            // Prefer Firestore inh_pricelists parent docs
-            try {
-                if (typeof firebase !== 'undefined' && typeof firebase.firestore === 'function') {
-                    const db = firebase.firestore();
-                    const snap = await db.collection('inh_pricelists').get();
-                    if (!snap.empty) {
-                        names = [...new Set(snap.docs.map(doc => {
-                            const d = doc.data() || {};
-                            return d.name || d['Price List Name'] || d.PriceListName || d.PriceList || d.Name || doc.id;
-                        }).filter(Boolean))];
-                    }
-                }
-            } catch (_) {}
-
-            // Fallback to legacy Firestore collections
+            // Use legacy Firestore collections
             if (!names || names.length === 0) {
                 try {
                     if (typeof firebase !== 'undefined' && typeof firebase.firestore === 'function') {

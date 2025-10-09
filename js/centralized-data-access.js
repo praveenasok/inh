@@ -390,35 +390,27 @@ class CentralizedDataAccess {
     }
 
     async getPriceLists() {
-        // Prefer Firestore 'inh_pricelists' parent docs
+        // Source price lists from legacy collections only
         try {
             if (window.firebase && typeof window.firebase.firestore === 'function') {
                 const db = window.firebase.firestore();
                 let names = [];
 
-                // Primary: inh_pricelists
-                try {
-                    const snap = await db.collection('inh_pricelists').get();
-                    if (!snap.empty) {
-                        names = [...new Set(snap.docs.map(doc => {
-                            const d = doc.data() || {};
-                            return d.name || d['Price List Name'] || d.PriceListName || d.PriceList || d.Name || doc.id;
-                        }).filter(Boolean))];
-                    }
-                } catch (_) {}
+                // Primary: legacy collections
+                let legacySnap = null;
+                try { legacySnap = await db.collection('priceLists').get(); } catch (_) {}
+                if (legacySnap && !legacySnap.empty) {
+                    names = [...new Set(legacySnap.docs.map(doc => {
+                        const d = doc.data() || {};
+                        return d.name || d['Price List Name'] || d.PriceListName || d.PriceList || d.Name || doc.id;
+                    }).filter(Boolean))];
+                }
 
-                // Fallback: legacy collections
+                // Derive from products if legacy empties
                 if (!names || names.length === 0) {
-                    let legacySnap = null;
-                    try { legacySnap = await db.collection('priceLists').get(); } catch (_) {}
-                    if (!legacySnap || legacySnap.empty) {
-                        try { legacySnap = await db.collection('pricelists').get(); } catch (_) {}
-                    }
-                    if (legacySnap && !legacySnap.empty) {
-                        names = [...new Set(legacySnap.docs.map(doc => {
-                            const d = doc.data() || {};
-                            return d.name || d['Price List Name'] || d.PriceListName || d.PriceList || d.Name || doc.id;
-                        }).filter(Boolean))];
+                    const products = await this.getProducts();
+                    if (Array.isArray(products) && products.length > 0) {
+                        names = [...new Set(products.map(p => p['Price List Name'] || p.PriceListName || p.PriceList).filter(Boolean))];
                     }
                 }
 

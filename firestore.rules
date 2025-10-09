@@ -68,6 +68,12 @@ service cloud.firestore {
     match /salespeople/{salespersonId} {
       allow read, write: if true; // Allow public access for admin interface
     }
+
+    // Legacy Salesmen collection - allow public access for dropdowns
+    match /salesmen/{salesmanId} {
+      allow read: if true; // Enable INHDATA prime/subscribe for salesmen
+      allow write: if true; // Allow admin/service account syncs
+    }
     
     // Colors collection - allow public read for admin dashboard stats
     match /colors/{colorId} {
@@ -87,10 +93,10 @@ service cloud.firestore {
       allow write: if true; // Allow service account access for sync
     }
 
-    // Support lowercase pricelists collection used by some pages
+    // Legacy lowercase 'pricelists' collection access (used by some pages)
     match /pricelists/{priceListId} {
-      allow read: if true; // Allow public read for pricing dropdowns
-      allow write: if true; // Allow service account/admin syncs
+      allow read: if true;
+      allow write: if true;
     }
 
     // Products collection access for diagnostics and legacy listeners
@@ -99,32 +105,7 @@ service cloud.firestore {
       allow write: if true; // Allow service account/admin syncs
     }
 
-    // INH Pricelists (legacy/canonical) - needed by list-categories.html and nested product data
-    match /inh_pricelists/{docId} {
-      allow read: if true;
-      allow write: if true;
-
-      // Nested subcollections commonly used by loaders and listeners
-      match /categories/{catId} {
-        allow read: if true;
-        allow write: if true;
-      }
-
-      match /products/{prodId} {
-        allow read: if true;
-        allow write: if true;
-      }
-
-      match /densities/{densId} {
-        allow read: if true;
-        allow write: if true;
-      }
-
-      match /lengths/{lenId} {
-        allow read: if true;
-        allow write: if true;
-      }
-    }
+    // Removed INH Pricelists rules: use legacy 'pricelists' or product-derived data
     
     // INH Colors collection (new canonical)
     match /inh_colors/{colorId} {
@@ -142,6 +123,12 @@ service cloud.firestore {
     match /inh_salesmen/{salesmanId} {
       allow read: if true; // Allow public read for dropdowns
       allow write: if true; // Allow service account/admin syncs
+    }
+    
+    // Company collection for brand/company config used by INHDATA
+    match /company/{companyId} {
+      allow read: if true;
+      allow write: if true;
     }
     
     // Sync logs - allow service account access

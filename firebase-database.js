@@ -282,6 +282,25 @@ class FirebaseDatabase {
     }
   }
 
+  // Fetch quotes with optional filters (e.g., by salesman)
+  async getQuotes(filters = {}) {
+    try {
+      if (!this.db) throw new Error('Firestore not initialized');
+      let q = this.db.collection('quotes');
+      if (filters && filters.salesman) {
+        // Support both 'salesman' (string) and nested 'salesman.id'
+        q = q.where('salesman', '==', filters.salesman);
+      }
+      const snapshot = await q.get();
+      const quotes = [];
+      snapshot.forEach(doc => quotes.push({ id: doc.id, ...doc.data() }));
+      return quotes;
+    } catch (e) {
+      console.error('[firebaseDB] getQuotes failed:', e);
+      return [];
+    }
+  }
+
   // Order Management Operations
   async saveOrder(orderData) {
     if (!this.db) {
@@ -328,6 +347,17 @@ class FirebaseDatabase {
         return orderId;
     } catch (error) {
         throw error;
+    }
+  }
+
+  async deleteQuote(quoteId) {
+    try {
+      if (!this.db) throw new Error('Firestore not initialized');
+      await this.db.collection('quotes').doc(quoteId).delete();
+      return true;
+    } catch (e) {
+      console.error('[firebaseDB] deleteQuote failed:', e);
+      return false;
     }
   }
 
@@ -600,8 +630,11 @@ class FirebaseDatabase {
         query = query.where('clientId', '==', filters.clientId);
       }
       
-      if (filters.salesperson) {
-        query = query.where('salesperson', '==', filters.salesperson);
+      // Support both 'salesperson' and 'salesman' filters
+      const salesmanFilter = filters.salesman || filters.salesperson;
+      if (salesmanFilter) {
+        // Try 'salesman' field first, fallback to 'salesperson'
+        query = query.where('salesman', '==', salesmanFilter);
       }
       
       // Order by creation date
@@ -745,31 +778,11 @@ class FirebaseDatabase {
     }
 
     try {
-      // Prefer new canonical collection: inh_pricelists (parent docs)
-      const inhRef = this.db.collection('inh_pricelists');
-      const inhSnap = await inhRef.get();
-
-      if (!inhSnap.empty) {
-        const inhLists = [];
-        inhSnap.forEach(doc => {
-          const data = doc.data() || {};
-          const name = data.name || data['Price List Name'] || data.PriceListName || data.PriceList || data.Name || doc.id;
-          inhLists.push({ id: doc.id, name, ...data });
-        });
-        return inhLists;
-      }
-
-      // Fallback to legacy collections: priceLists (camelCase) then pricelists (lowercase)
+      // Use legacy collection: priceLists (camelCase) only
       let legacySnap = null;
       try {
         legacySnap = await this.db.collection('priceLists').get();
       } catch (_) {}
-
-      if (!legacySnap || legacySnap.empty) {
-        try {
-          legacySnap = await this.db.collection('pricelists').get();
-        } catch (_) {}
-      }
 
       if (legacySnap && !legacySnap.empty) {
         const legacyLists = [];
