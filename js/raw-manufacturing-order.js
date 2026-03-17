@@ -89,7 +89,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const mo = reversedMOs[selectedIdx];
                 if (!mo) return;
 
-                // Populate Text/Date Fields
+                // Set Ratio and immediately trigger the build of input fields first
+                ratioSelect.value = mo.clientName;
+                ratioSelect.dispatchEvent(new Event('change'));
+
+                // Then populate Text/Date Fields so they are not wiped by any other event resets
                 document.getElementById('orderNumber').value = mo.orderNumber !== 'N/A' ? mo.orderNumber : '';
                 document.getElementById('orderDate').value = mo.orderDate;
                 document.getElementById('orderSupplier').value = mo.orderSupplier !== 'N/A' ? mo.orderSupplier : '';
@@ -98,10 +102,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (mo.orderHairType) {
                     document.getElementById('orderHairType').value = mo.orderHairType;
                 }
-
-                // Set Ratio and immediately trigger the build of input fields
-                ratioSelect.value = mo.clientName;
-                ratioSelect.dispatchEvent(new Event('change'));
 
                 // Now populate the generated dynamic inputs
                 mo.activeOrders.forEach(order => {
