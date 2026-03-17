@@ -383,15 +383,15 @@ document.addEventListener('DOMContentLoaded', async () => {
                     </h3>
                     
                     <div class="overflow-hidden rounded-lg border border-slate-200">
-                        <table class="w-full text-xs text-left">
-                            <thead class="bg-[#f8fafc] text-slate-600 border-b border-slate-200 uppercase font-bold tracking-wider text-[10px]">
+                        <table class="w-full text-xs text-left border-collapse">
+                            <thead class="bg-[#f8fafc] text-slate-600 border-b-2 border-slate-300 uppercase font-bold tracking-wider text-[10px]">
                                 <tr>
-                                    <th scope="col" class="px-3 py-2">Raw Length needed</th>
-                                    <th scope="col" class="px-3 py-2 text-right">Required Weight (KG)</th>
+                                    <th scope="col" class="px-3 py-2 border-r border-slate-300">Raw Length needed</th>
+                                    <th scope="col" class="px-3 py-2 text-right border-r border-slate-300">Required Weight (KG)</th>
                                     <th scope="col" class="px-3 py-2 text-right">Required Weight (Grams)</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-slate-100 bg-white">
+                            <tbody class="divide-y divide-slate-300 bg-white">
         `;
 
         sortedRawKeys.forEach(rawLen => {
@@ -400,9 +400,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             const grams = Math.round(kg * 1000);
             
             resultsHTML += `
-                <tr class="hover:bg-slate-50 border-b border-slate-100 last:border-0">
-                    <td class="px-3 py-1.5 font-bold text-slate-800">${rawLen}" Raw</td>
-                    <td class="px-3 py-1.5 text-right font-medium text-slate-700">${kg.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 3})} kg</td>
+                <tr class="hover:bg-slate-50 border-b border-slate-300 last:border-0">
+                    <td class="px-3 py-1.5 font-bold text-slate-800 border-r border-slate-300">${rawLen}" Raw</td>
+                    <td class="px-3 py-1.5 text-right font-medium text-slate-700 border-r border-slate-300">${kg.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 3})} kg</td>
                     <td class="px-3 py-1.5 text-right font-bold text-[#081249] mono">${grams.toLocaleString()} g</td>
                 </tr>
             `;
@@ -411,10 +411,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Add Total Row
         resultsHTML += `
                             </tbody>
-                            <tfoot class="bg-slate-100 border-t border-slate-200 font-bold">
+                            <tfoot class="bg-slate-100 border-t-2 border-slate-300 font-bold">
                                 <tr>
-                                    <td class="px-3 py-2 text-slate-800 uppercase tracking-wider text-[10px]">Total Raw Material</td>
-                                    <td class="px-3 py-2 text-right text-slate-900 text-sm">${totalRawRequiredKilos.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 3})} kg</td>
+                                    <td class="px-3 py-2 text-slate-800 uppercase tracking-wider text-[10px] border-r border-slate-300">Total Raw Material</td>
+                                    <td class="px-3 py-2 text-right text-slate-900 text-sm border-r border-slate-300">${totalRawRequiredKilos.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 3})} kg</td>
                                     <td class="px-3 py-2 text-right text-[#081249] font-black text-sm mono">${(Math.round(totalRawRequiredKilos * 1000)).toLocaleString()} g</td>
                                 </tr>
                             </tfoot>
@@ -427,29 +427,29 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <h3 class="text-xs font-black text-slate-500 uppercase tracking-widest mb-2 flex items-center gap-2 border-b border-slate-200 pb-1">
                         <i class="fa-solid fa-table opacity-70"></i> Breakdown by Target Product Matrix
                     </h3>
-                    <div class="overflow-x-auto rounded-lg border border-slate-200 shadow-sm">
+                    <div class="overflow-x-auto rounded-lg border border-slate-300 shadow-sm">
                         <table class="w-full text-[11px] text-center border-collapse">
-                            <thead class="bg-[#f8fafc] text-slate-600 border-b-2 border-slate-200 font-bold uppercase tracking-wider">
+                            <thead class="bg-[#f8fafc] text-slate-600 border-b-2 border-slate-300 font-bold uppercase tracking-wider">
                                 <tr>
-                                    <th scope="col" class="px-2 py-2 text-left border-r border-slate-200 sticky left-0 z-10 bg-[#f8fafc]">Raw \\ Target</th>
+                                    <th scope="col" class="px-2 py-2 text-left border-r border-slate-300 sticky left-0 z-10 bg-[#f8fafc]">Raw \\ Target</th>
         `;
 
         // Column Headers
         activeOrders.forEach(order => {
-            resultsHTML += `<th scope="col" class="px-2 py-2 border-r border-slate-200 last:border-0"><span class="block text-[#081249] font-bold">FINISHED ${order.finishedLength}"</span><span class="text-[9px] text-slate-500 font-normal normal-case">Target: ${order.targetKilos} kg</span></th>`;
+            resultsHTML += `<th scope="col" class="px-2 py-2 border-r border-slate-300 last:border-0"><span class="block text-[#081249] font-bold">FINISHED ${order.finishedLength}"</span><span class="text-[9px] text-slate-500 font-normal normal-case">Target: ${order.targetKilos} kg</span></th>`;
         });
 
         resultsHTML += `
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-slate-100 bg-white">
+                            <tbody class="divide-y divide-slate-300 bg-white">
         `;
 
         // Rows for each raw length required
         sortedRawKeys.forEach(rawLenStr => {
             resultsHTML += `
                                 <tr class="hover:bg-slate-50 transition-colors">
-                                    <td class="px-2 py-1.5 font-bold text-slate-800 text-left border-r border-slate-200 bg-[#f8fafc] sticky left-0 z-10">${rawLenStr}" Raw</td>
+                                    <td class="px-2 py-1.5 font-bold text-slate-800 text-left border-r border-slate-300 bg-[#f8fafc] sticky left-0 z-10">${rawLenStr}" Raw</td>
             `;
 
             activeOrders.forEach(order => {
@@ -460,10 +460,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const kilosNeeded = (percent / 100) * order.targetKilos;
                     const grams = Math.round(kilosNeeded * 1000);
                     // Show grams and percentage
-                    resultsHTML += `<td class="px-2 py-1.5 border-r border-slate-100 last:border-0"><span class="font-bold text-slate-800 mono">${grams.toLocaleString()} g</span><br><span class="text-[9px] text-slate-400 font-sans font-medium">${percent}%</span></td>`;
+                    resultsHTML += `<td class="px-2 py-1.5 border-r border-slate-300 last:border-0"><span class="font-bold text-slate-800 mono">${grams.toLocaleString()} g</span><br><span class="text-[9px] text-slate-400 font-sans font-medium">${percent}%</span></td>`;
                 } else {
                     // Empty cell
-                    resultsHTML += `<td class="px-2 py-1.5 text-slate-300 border-r border-slate-100 last:border-0 text-[10px] bg-white">-</td>`;
+                    resultsHTML += `<td class="px-2 py-1.5 text-slate-300 border-r border-slate-300 last:border-0 text-[10px] bg-white">-</td>`;
                 }
             });
 
