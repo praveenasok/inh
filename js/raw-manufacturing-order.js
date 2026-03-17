@@ -195,23 +195,24 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         // Build input fields for each active finished length
-        let inputsHTML = '<div class="space-y-3">';
-        inputsHTML += '<label class="block text-xs font-bold text-slate-500 mb-2 border-b border-slate-100 pb-2">Target Output Kilos per Length</label>';
+        let inputsHTML = '<div class="mt-4 pt-4 border-t border-slate-200">';
+        inputsHTML += '<label class="block text-[10px] font-bold text-slate-500 mb-3 uppercase tracking-wider">Target Output Kilos per Length</label>';
+        inputsHTML += '<div class="flex flex-wrap gap-4">';
         
         currentActiveFinishedLengths.forEach(fl => {
             inputsHTML += `
-                <div class="flex items-center justify-between gap-4">
-                    <label for="input-len-${fl.idx}" class="text-sm font-bold text-slate-700 w-24">Finished ${fl.length}"</label>
-                    <div class="relative flex-1">
-                        <input type="number" id="input-len-${fl.idx}" class="target-qty-input w-full bg-white border border-slate-300 text-slate-900 text-sm font-bold rounded-md focus:ring-indigo-500 focus:border-indigo-500 block p-2 pr-10 outline-none transition-all shadow-sm" placeholder="0.00" min="0" step="0.5" data-idx="${fl.idx}" data-len="${fl.length}">
-                        <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                            <span class="text-slate-400 font-bold text-xs">KG</span>
+                <div class="flex-1 min-w-[120px] max-w-[160px]">
+                    <label for="input-len-${fl.idx}" class="block text-[10px] font-bold text-slate-500 mb-1">Finished ${fl.length}"</label>
+                    <div class="relative">
+                        <input type="number" id="input-len-${fl.idx}" class="target-qty-input w-full bg-white border border-slate-300 text-slate-900 text-sm font-bold rounded focus:ring-[#081249] focus:border-[#081249] block p-1.5 pr-8 outline-none transition-all" placeholder="0" min="0" step="0.5" data-idx="${fl.idx}" data-len="${fl.length}">
+                        <div class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                            <span class="text-slate-400 font-bold text-[10px]">KG</span>
                         </div>
                     </div>
                 </div>
             `;
         });
-        inputsHTML += '</div>';
+        inputsHTML += '</div></div>';
 
         dynamicInputsContainer.innerHTML = inputsHTML;
 
@@ -341,20 +342,20 @@ document.addEventListener('DOMContentLoaded', async () => {
                         </div>
                         <div>
                             <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-0.5">Hair Type</p>
-                            <p id="mo-header-hairtype" class="font-bold text-indigo-700 text-sm">${orderHairType}</p>
+                            <p id="mo-header-hairtype" class="font-bold text-[#081249] text-sm">${orderHairType}</p>
                         </div>
                     </div>
                 </div>
 
                 <!-- Aggregate Raw Materials Required (The Picking Slip) -->
                 <div>
-                    <h3 class="text-xs font-black text-slate-800 uppercase tracking-widest mb-2 flex items-center gap-2 border-b border-slate-100 pb-1">
-                        <i class="fa-solid fa-clipboard-list text-indigo-500"></i> Raw Material Picking Slip
+                    <h3 class="text-xs font-black text-slate-800 uppercase tracking-widest mb-2 flex items-center gap-2 border-b border-slate-200 pb-1">
+                        <i class="fa-solid fa-clipboard-list text-[#081249]"></i> Raw Material Picking Slip
                     </h3>
                     
                     <div class="overflow-hidden rounded-lg border border-slate-200">
                         <table class="w-full text-xs text-left">
-                            <thead class="bg-indigo-50 text-indigo-900 border-b border-slate-200 uppercase font-bold tracking-wider text-[10px]">
+                            <thead class="bg-[#f8fafc] text-slate-600 border-b border-slate-200 uppercase font-bold tracking-wider text-[10px]">
                                 <tr>
                                     <th scope="col" class="px-3 py-2">Raw Length needed</th>
                                     <th scope="col" class="px-3 py-2 text-right">Required Weight (KG)</th>
@@ -370,10 +371,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             const grams = Math.round(kg * 1000);
             
             resultsHTML += `
-                <tr class="hover:bg-slate-50">
+                <tr class="hover:bg-slate-50 border-b border-slate-100 last:border-0">
                     <td class="px-3 py-1.5 font-bold text-slate-800">${rawLen}" Raw</td>
                     <td class="px-3 py-1.5 text-right font-medium text-slate-700">${kg.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 3})} kg</td>
-                    <td class="px-3 py-1.5 text-right font-bold text-indigo-700 mono">${grams.toLocaleString()} g</td>
+                    <td class="px-3 py-1.5 text-right font-bold text-[#081249] mono">${grams.toLocaleString()} g</td>
                 </tr>
             `;
         });
@@ -381,11 +382,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Add Total Row
         resultsHTML += `
                             </tbody>
-                            <tfoot class="bg-slate-50 border-t border-slate-200 font-bold">
+                            <tfoot class="bg-slate-100 border-t border-slate-200 font-bold">
                                 <tr>
                                     <td class="px-3 py-2 text-slate-800 uppercase tracking-wider text-[10px]">Total Raw Material</td>
                                     <td class="px-3 py-2 text-right text-slate-900 text-sm">${totalRawRequiredKilos.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 3})} kg</td>
-                                    <td class="px-3 py-2 text-right text-indigo-700 font-black text-sm mono">${(Math.round(totalRawRequiredKilos * 1000)).toLocaleString()} g</td>
+                                    <td class="px-3 py-2 text-right text-[#081249] font-black text-sm mono">${(Math.round(totalRawRequiredKilos * 1000)).toLocaleString()} g</td>
                                 </tr>
                             </tfoot>
                         </table>
@@ -394,19 +395,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 <!-- Breakdown by Finished Length (Audit Trail) -->
                 <div>
-                    <h3 class="text-xs font-black text-slate-500 uppercase tracking-widest mb-2 flex items-center gap-2 border-b border-slate-100 pb-1">
+                    <h3 class="text-xs font-black text-slate-500 uppercase tracking-widest mb-2 flex items-center gap-2 border-b border-slate-200 pb-1">
                         <i class="fa-solid fa-table opacity-70"></i> Breakdown by Target Product Matrix
                     </h3>
-                    <div class="overflow-x-auto rounded-lg border border-slate-200">
-                        <table class="w-full text-xs text-center border-collapse">
-                            <thead class="bg-slate-50 text-slate-700 border-b border-slate-200 font-bold text-[10px] uppercase tracking-wider">
+                    <div class="overflow-x-auto rounded-lg border border-slate-200 shadow-sm">
+                        <table class="w-full text-[11px] text-center border-collapse">
+                            <thead class="bg-[#f8fafc] text-slate-600 border-b-2 border-slate-200 font-bold uppercase tracking-wider">
                                 <tr>
-                                    <th scope="col" class="px-2 py-1.5 text-left border-r border-slate-200">Raw \\ Target</th>
+                                    <th scope="col" class="px-2 py-2 text-left border-r border-slate-200 sticky left-0 z-10 bg-[#f8fafc]">Raw \\ Target</th>
         `;
 
         // Column Headers
         activeOrders.forEach(order => {
-            resultsHTML += `<th scope="col" class="px-2 py-1.5 border-r border-slate-100 last:border-0"><span class="block text-indigo-700 font-bold">Finished ${order.finishedLength}"</span><span class="text-[9px] text-slate-500 font-normal normal-case">Target: ${order.targetKilos} kg</span></th>`;
+            resultsHTML += `<th scope="col" class="px-2 py-2 border-r border-slate-200 last:border-0"><span class="block text-[#081249] font-bold">FINISHED ${order.finishedLength}"</span><span class="text-[9px] text-slate-500 font-normal normal-case">Target: ${order.targetKilos} kg</span></th>`;
         });
 
         resultsHTML += `
@@ -418,8 +419,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Rows for each raw length required
         sortedRawKeys.forEach(rawLenStr => {
             resultsHTML += `
-                                <tr class="hover:bg-slate-50">
-                                    <td class="px-2 py-1 font-bold text-slate-800 text-left border-r border-slate-200 bg-slate-50">${rawLenStr}" Raw</td>
+                                <tr class="hover:bg-slate-50 transition-colors">
+                                    <td class="px-2 py-1.5 font-bold text-slate-800 text-left border-r border-slate-200 bg-[#f8fafc] sticky left-0 z-10">${rawLenStr}" Raw</td>
             `;
 
             activeOrders.forEach(order => {
@@ -430,10 +431,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const kilosNeeded = (percent / 100) * order.targetKilos;
                     const grams = Math.round(kilosNeeded * 1000);
                     // Show grams and percentage
-                    resultsHTML += `<td class="px-2 py-1 border-r border-slate-100 last:border-0"><span class="font-bold text-slate-700 mono">${grams.toLocaleString()} g</span><br><span class="text-[9px] text-slate-400 font-sans font-medium">${percent}%</span></td>`;
+                    resultsHTML += `<td class="px-2 py-1.5 border-r border-slate-100 last:border-0"><span class="font-bold text-slate-800 mono">${grams.toLocaleString()} g</span><br><span class="text-[9px] text-slate-400 font-sans font-medium">${percent}%</span></td>`;
                 } else {
                     // Empty cell
-                    resultsHTML += `<td class="px-2 py-1 text-slate-300 border-r border-slate-100 last:border-0 text-[10px]">-</td>`;
+                    resultsHTML += `<td class="px-2 py-1.5 text-slate-300 border-r border-slate-100 last:border-0 text-[10px] bg-white">-</td>`;
                 }
             });
 
