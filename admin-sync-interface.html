@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Sync Interface - INH</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="unified-button-system.css">
+
+  <!-- Firebase Adapter and SDKs -->
+  <script src="firebase-api-adapter.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
+  <!-- Optional: load local override for Firebase config -->
+  <script>
+    try {
+      const raw = localStorage.getItem('APP_LOCAL_FIREBASE_CONFIG');
+      if (raw) {
+        window.APP_LOCAL_FIREBASE_CONFIG = JSON.parse(raw);
+        console.info('Using APP_LOCAL_FIREBASE_CONFIG from localStorage');
+      }
+    } catch (e) {
+      // No-op for JSON parse errors
+    }
+  </script>
+  <script src="firebase-config.js"></script>
+  <script src="firebase-global-init.js"></script>
+  <script src="firebase-database.js"></script>
+  <script src="js/universal-firebase-data-manager.js"></script>
+
+  <style>
+    .shadow-soft {
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+
+    .module {
+      display: none;
+    }
+
+    .module.active {
+      display: block;
+    }
+  </style>
+</head>
+
+<body class="bg-gray-50">
+  <!-- Nav -->
+  <!-- Navigation -->
+  <script>window.navConfig = { siteTitle: 'InstaQuote - Admin Sync' };</script>
+  <script src="js/navigation-loader.js"></script>
+
+  <main class="container mx-auto px-4 py-6">
+    <h1 class="text-2xl font-bold mb-4" style="color:#081249">Admin Sync Interface</h1>
+
+    <!-- Auth Gate -->
+    <section id="auth-gate" class="bg-white rounded-xl shadow-soft p-6 mb-6">
+      <div id="auth-status" class="text-sm text-gray-700">Checking authentication…</div>
+      <div id="not-authorized" class="hidden text-red-700 font-medium">Not authorized. Please sign in as admin.</div>
+      <div class="mt-4 p-3 border rounded bg-gray-50 text-xs text-gray-700">
+        <div>Active Firebase apiKey: <span id="active-api-key">(detecting…)</span></div>
+        <div class="mt-2 flex gap-2">
+          <input id="override-api-key" type="text" placeholder="Paste apiKey to override"
+            class="flex-1 border rounded px-2 py-1">
+          <button id="btn-set-apikey" class="btn-secondary">Set apiKey</button>
+        </div>
+        <div id="apikey-status" class="mt-1"></div>
+      </div>
+      <div id="login-container" class="mt-4">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
+          <div>
+            <label for="login-email" class="block text-sm font-medium text-gray-700">Email</label>
+            <input id="login-email" type="email"
+              class="mt-1 block w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
+              placeholder="you@example.com">
+          </div>
+          <div>
+            <label for="login-password" class="block text-sm font-medium text-gray-700">Password</label>
+            <input id="login-password" type="password"
+              class="mt-1 block w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
+              placeholder="••••••••">
+          </div>
+          <div class="flex md:block">
+            <button id="btn-login" class="btn-primary w-full">Sign In</button>
+          </div>
+        </div>
+        <div id="login-status" class="mt-2 text-sm text-gray-600"></div>
+        <div class="mt-3">
+          <button id="btn-signout" class="btn-secondary hidden">Sign Out</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Sync Controls -->
+    <section id="sync-controls" class="module bg-white rounded-xl shadow-soft p-6">
+      <h2 class="text-xl font-semibold mb-3">Data Synchronization</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="p-4 border rounded-lg">
+          <h3 class="font-medium mb-2">Price Lists</h3>
+          <button id="btn-sync-pricelists" class="btn-primary">Sync Pricelists from Sheets</button>
+          <div class="mt-2 w-full bg-gray-200 rounded h-2 overflow-hidden">
+            <div id="pl-progress" class="bg-blue-600 h-2 w-0 transition-all duration-300"></div>
+          </div>
+          <div id="pl-sync-status" class="mt-2 text-sm text-gray-600"></div>
+        </div>
+        <div class="p-4 border rounded-lg">
+          <h3 class="font-medium mb-2">Salesmen</h3>
+          <button id="btn-sync-salesmen" class="btn-primary">Sync Salesmen</button>
+          <div class="mt-2 w-full bg-gray-200 rounded h-2 overflow-hidden">
+            <div id="sm-progress" class="bg-blue-600 h-2 w-0 transition-all duration-300"></div>
+          </div>
+          <div id="sm-sync-status" class="mt-2 text-sm text-gray-600"></div>
+        </div>
+        <div class="p-4 border rounded-lg">
+          <h3 class="font-medium mb-2">Clients</h3>
+          <button id="btn-sync-clients" class="btn-secondary">Sync All Clients to Sheets</button>
+          <div class="mt-2 w-full bg-gray-200 rounded h-2 overflow-hidden">
+            <div id="clients-progress" class="bg-blue-600 h-2 w-0 transition-all duration-300"></div>
+          </div>
+          <div id="clients-sync-status" class="mt-2 text-sm text-gray-600"></div>
+        </div>
+        <div class="p-4 border rounded-lg">
+          <h3 class="font-medium mb-2">Orders</h3>
+          <button id="btn-sync-orders" class="btn-secondary">Sync Orders to Sheets</button>
+          <div class="mt-2 w-full bg-gray-200 rounded h-2 overflow-hidden">
+            <div id="orders-progress" class="bg-blue-600 h-2 w-0 transition-all duration-300"></div>
+          </div>
+          <div id="orders-sync-status" class="mt-2 text-sm text-gray-600"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Counts and Listings -->
+    <section id="data-stats" class="module bg-white rounded-xl shadow-soft p-6 mt-6">
+      <h2 class="text-xl font-semibold mb-3">Firebase Counts</h2>
+      <div id="counts" class="text-sm text-gray-700">Loading…</div>
+      <h3 class="font-medium mt-4">Salespeople</h3>
+      <ul id="salespeople-list" class="list-disc pl-5 text-sm"></ul>
+    </section>
+  </main>
+
+  <script>
+    // Simple button styles via CSS class names in unified-button-system.css
+    const qs = sel => document.querySelector(sel);
+
+    const progressTimers = {};
+    function startProgress(id) {
+      const el = qs('#' + id);
+      if (!el) return;
+      if (progressTimers[id]) clearInterval(progressTimers[id]);
+      el.style.width = '5%';
+      el.classList.remove('bg-green-600', 'bg-red-600');
+      el.classList.add('bg-blue-600');
+      progressTimers[id] = setInterval(() => {
+        const cur = parseFloat(el.style.width || '0');
+        const inc = 5 + Math.random() * 10;
+        const next = Math.min(cur + inc, 90);
+        el.style.width = next + '%';
+      }, 400);
+    }
+    function updateProgress(id, pct) {
+      const el = qs('#' + id);
+      if (!el) return;
+      if (progressTimers[id]) { clearInterval(progressTimers[id]); progressTimers[id] = null; }
+      const clamped = Math.max(0, Math.min(100, pct));
+      el.style.width = clamped + '%';
+    }
+    function finishProgress(id, success) {
+      const el = qs('#' + id);
+      if (!el) return;
+      if (progressTimers[id]) { clearInterval(progressTimers[id]); progressTimers[id] = null; }
+      el.style.width = '100%';
+      el.classList.remove('bg-blue-600');
+      el.classList.add(success ? 'bg-green-600' : 'bg-red-600');
+      setTimeout(() => {
+        el.style.width = '0%';
+        el.classList.remove('bg-green-600', 'bg-red-600');
+      }, 2500);
+    }
+
+    async function gateAdminAccess() {
+      try {
+        // Proactively initialize Firebase
+        if (typeof window.initializeFirebaseApp === 'function') {
+          try { await window.initializeFirebaseApp(); } catch (_) { }
+        }
+        // Wait for Firebase if available, but do not fail on timeout
+        if (typeof window.waitForFirebase === 'function') {
+          try { await window.waitForFirebase(8000); } catch (_) { }
+        }
+
+        // Determine current user via multiple fallbacks
+        let email = null;
+        try {
+          if (typeof firebase !== 'undefined' && firebase.auth) {
+            const cu = firebase.auth().currentUser;
+            email = cu && cu.email ? cu.email : null;
+          }
+        } catch (_) { }
+
+        if (!email && window.firebaseDB && typeof window.firebaseDB.getCurrentUser === 'function') {
+          try {
+            const u = window.firebaseDB.getCurrentUser();
+            email = u && u.email ? u.email : email;
+          } catch (_) { }
+        }
+        if (!email && window.globalFirebase && typeof window.globalFirebase.getCurrentUser === 'function') {
+          try {
+            const u = window.globalFirebase.getCurrentUser();
+            email = u && u.email ? u.email : email;
+          } catch (_) { }
+        }
+
+        // Update UI based on auth state
+        qs('#auth-status').textContent = email ? `Signed in as ${email}` : 'No user signed in';
+        // Toggle signout visibility
+        const signOutBtn = qs('#btn-signout');
+        if (signOutBtn) {
+          if (email) { signOutBtn.classList.remove('hidden'); } else { signOutBtn.classList.add('hidden'); }
+        }
+        // If not signed in, show login container
+        const loginContainer = qs('#login-container');
+        if (loginContainer) {
+          if (!email) { loginContainer.classList.remove('hidden'); } else { loginContainer.classList.add('hidden'); }
+        }
+        const isAdmin = email === 'info@indiannaturalhair.com';
+        if (!isAdmin) {
+          qs('#not-authorized').classList.remove('hidden');
+          return false;
+        }
+        // Show modules
+        document.querySelectorAll('.module').forEach(el => el.classList.add('active'));
+        return true;
+      } catch (e) {
+        // On unexpected error, do not block UI; show friendly status
+        qs('#auth-status').textContent = 'Unable to verify authentication';
+        return false;
+      }
+    }
+
+    async function handleLogin() {
+      const emailEl = qs('#login-email');
+      const passEl = qs('#login-password');
+      const statusEl = qs('#login-status');
+      statusEl.textContent = 'Signing in…';
+      try {
+        if (typeof firebase === 'undefined' || !firebase.auth) throw new Error('Auth not available');
+        const email = (emailEl?.value || '').trim();
+        const password = passEl?.value || '';
+        if (!email || !password) throw new Error('Enter email and password');
+        await firebase.auth().signInWithEmailAndPassword(email, password);
+        statusEl.textContent = 'Signed in successfully';
+        // Re-run gate
+        await gateAdminAccess();
+      } catch (e) {
+        const code = e && e.code ? e.code : 'auth/error';
+        const msg = e && e.message ? e.message : 'Sign-in failed';
+        statusEl.textContent = `${code}: ${msg}`;
+      }
+    }
+
+    async function handleSignOut() {
+      const statusEl = qs('#login-status');
+      statusEl.textContent = 'Signing out…';
+      try {
+        if (typeof firebase !== 'undefined' && firebase.auth) {
+          await firebase.auth().signOut();
+        }
+        statusEl.textContent = 'Signed out';
+        // Clear status and re-run gate
+        await gateAdminAccess();
+      } catch (e) {
+        statusEl.textContent = 'Sign-out failed';
+      }
+    }
+
+    async function fetchCounts() {
+      try {
+        const res = await fetch('/api/firebase-counts');
+        const json = await res.json();
+        if (json && json.counts) {
+          qs('#counts').textContent = JSON.stringify(json.counts);
+        } else {
+          qs('#counts').textContent = 'Counts unavailable';
+        }
+      } catch (_) { qs('#counts').textContent = 'Counts error'; }
+    }
+
+    async function fetchSalespeople() {
+      try {
+        const res = await fetch('/api/salespeople');
+        const list = await res.json();
+        const ul = qs('#salespeople-list');
+        ul.innerHTML = '';
+        (list || []).forEach(sp => {
+          const li = document.createElement('li');
+          li.textContent = sp.name || sp.email || sp.id;
+          ul.appendChild(li);
+        });
+      } catch (_) { qs('#salespeople-list').innerHTML = '<li>Error loading</li>'; }
+    }
+
+    async function syncPricelists() {
+      qs('#pl-sync-status').textContent = 'Syncing…';
+      startProgress('pl-progress');
+      try {
+        const res = await fetch('/api/sync/inh_pricelists?dryRun=false', { method: 'POST' });
+        const json = await res.json();
+        qs('#pl-sync-status').textContent = json && json.success ? `Done: created ${json.created || 0}, updated ${json.updated || 0}` : (json.error || 'Failed');
+        finishProgress('pl-progress', !!(json && json.success));
+      } catch (e) { qs('#pl-sync-status').textContent = 'Error during sync'; finishProgress('pl-progress', false); }
+    }
+
+    async function syncSalesmen() {
+      qs('#sm-sync-status').textContent = 'Syncing…';
+      startProgress('sm-progress');
+      try {
+        const res = await fetch('/api/sync/manual', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ syncTypes: ['salesmen'], forceSync: true })
+        });
+        const json = await res.json();
+        qs('#sm-sync-status').textContent = json && json.success ? 'Salesmen synced' : (json.error || 'Failed');
+        finishProgress('sm-progress', !!(json && json.success));
+      } catch (e) { qs('#sm-sync-status').textContent = 'Error during sync'; finishProgress('sm-progress', false); }
+    }
+
+    async function syncAllClientsToSheets() {
+      qs('#clients-sync-status').textContent = 'Syncing…';
+      startProgress('clients-progress');
+      try {
+        if (!window.firebaseDB) throw new Error('firebaseDB not available');
+        const res = await window.firebaseDB.syncAllClientsToGoogleSheets ? window.firebaseDB.syncAllClientsToGoogleSheets() : null;
+        qs('#clients-sync-status').textContent = 'Clients sync triggered';
+        finishProgress('clients-progress', true);
+      } catch (e) { qs('#clients-sync-status').textContent = 'Error during clients sync'; finishProgress('clients-progress', false); }
+    }
+
+    async function syncOrdersToSheets() {
+      qs('#orders-sync-status').textContent = 'Syncing…';
+      startProgress('orders-progress');
+      try {
+        if (!window.firebaseDB || !window.firebaseDB.getOrders) throw new Error('Orders API unavailable');
+        const orders = await window.firebaseDB.getOrders();
+        let ok = 0, fail = 0;
+        const total = Array.isArray(orders) ? orders.length : 0;
+        for (const order of orders) {
+          try {
+            if (window.firebaseDB.syncOrderToGoogleSheets) {
+              await window.firebaseDB.syncOrderToGoogleSheets(order);
+              ok++;
+            }
+          } catch (_) { fail++; }
+          if (total > 0) {
+            const pct = Math.round(((ok + fail) / total) * 100);
+            updateProgress('orders-progress', pct);
+          }
+        }
+        qs('#orders-sync-status').textContent = `Orders synced: ${ok} success, ${fail} failed`;
+        finishProgress('orders-progress', true);
+      } catch (e) { qs('#orders-sync-status').textContent = 'Error during orders sync'; finishProgress('orders-progress', false); }
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const isAdmin = await gateAdminAccess();
+      // Wire login actions regardless of admin state
+      const loginBtn = qs('#btn-login');
+      const signOutBtn = qs('#btn-signout');
+      if (loginBtn) loginBtn.addEventListener('click', handleLogin);
+      if (signOutBtn) signOutBtn.addEventListener('click', handleSignOut);
+
+      // Show active apiKey and allow override
+      try {
+        const keyEl = qs('#active-api-key');
+        const cfg = (typeof window !== 'undefined' && window.firebaseConfig) ? window.firebaseConfig : null;
+        if (keyEl) keyEl.textContent = (cfg && cfg.apiKey) ? cfg.apiKey : '(none)';
+      } catch (_) { }
+
+      const setBtn = qs('#btn-set-apikey');
+      if (setBtn) {
+        setBtn.addEventListener('click', () => {
+          try {
+            const input = qs('#override-api-key');
+            const val = (input?.value || '').trim();
+            if (!val) { qs('#apikey-status').textContent = 'Enter an apiKey to set'; return; }
+            const base = (typeof window !== 'undefined' && window.firebaseConfig) ? window.firebaseConfig : {};
+            const next = { ...base, apiKey: val };
+            localStorage.setItem('APP_LOCAL_FIREBASE_CONFIG', JSON.stringify(next));
+            qs('#apikey-status').textContent = 'apiKey override saved. Reloading…';
+            setTimeout(() => location.reload(), 200);
+          } catch (e) { qs('#apikey-status').textContent = 'Failed to set override'; }
+        });
+      }
+
+      if (!isAdmin) return;
+
+      await fetchCounts();
+      await fetchSalespeople();
+
+      qs('#btn-sync-pricelists').addEventListener('click', syncPricelists);
+      qs('#btn-sync-salesmen').addEventListener('click', syncSalesmen);
+      qs('#btn-sync-clients').addEventListener('click', syncAllClientsToSheets);
+      qs('#btn-sync-orders').addEventListener('click', syncOrdersToSheets);
+    });
+  </script>
+  <!-- Legacy script removed -->
+</body>
+
+</html>

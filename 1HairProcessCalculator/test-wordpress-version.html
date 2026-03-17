@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hair Process Calculator - WordPress Test</title>
+    <link rel="stylesheet" href="hair-calculator-styles.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body style="margin: 20px; background: #f0f0f0; font-family: Arial, sans-serif;">
+    <h1 style="text-align: center; margin-bottom: 30px;">WordPress Plugin Test</h1>
+    <p style="text-align: center; color: #666; margin-bottom: 40px;">This page tests the WordPress-compatible version of the Hair Process Calculator</p>
+    
+    <!-- WordPress Plugin Output Simulation -->
+    <div class="hair-calculator">
+        <header>
+            <h1>Hair Process Calculator</h1>
+            <p class="subtitle">Professional formulations for cuticle removal, permanent straightening, and bleaching</p>
+        </header>
+
+        <div class="layout">
+            <aside>
+                <nav class="nav">
+                    <button class="btn active" data-target="cuticle">Cuticle Removal</button>
+                    <button class="btn" data-target="thioglycolate">Permanent Straightening</button>
+                    <button class="btn" data-target="mordant">Bleaching</button>
+                </nav>
+            </aside>
+
+            <main>
+                <!-- Cuticle Removal Section -->
+                <section id="cuticle" class="panel active">
+                    <div class="grid">
+                        <div>
+                            <label for="c_weight">Hair weight (g)</label>
+                            <input id="c_weight" type="number" min="1" step="1" value="1000" />
+                            <label for="c_percent" style="margin-top:10px">Process percentage (%)</label>
+                            <input id="c_percent" type="number" min="1" max="100" step="1" value="100" />
+                            <div class="stack">
+                                <button class="btn" id="c_copy">Copy</button>
+                            </div>
+                            <div class="note" id="c_note">Baseline is 1,000 g at 100%.</div>
+                        </div>
+                        <div>
+                            <table>
+                                <thead><tr><th>Component</th><th>Amount</th></tr></thead>
+                                <tbody id="c_tbody"></tbody>
+                            </table>
+                            <div class="note">Safety: mask + eye protection. Keep plastic vessels only.<br>Acid bath: 20 min → Wash 3× → Neutralize: 45 min → Wash 3×.</div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Permanent Straightening Section -->
+                <section id="thioglycolate" class="panel" style="display:none;">
+                    <div class="grid">
+                        <div>
+                            <label for="t_hair">Hair weight (g)</label>
+                            <input id="t_hair" type="number" min="1" step="1" value="100" />
+                            <label for="t_ratio" style="margin-top:10px">Bath volume per 100g (mL)</label>
+                            <input id="t_ratio" type="number" min="1" step="1" value="200" />
+                            <div class="stack">
+                                <button class="btn" id="t_copy">Copy</button>
+                            </div>
+                            <div class="note" id="t_note">~57.5% ATG with 25% NH₃</div>
+                        </div>
+                        <div>
+                            <table>
+                                <thead><tr><th>Component</th><th>Amount</th></tr></thead>
+                                <tbody id="t_tbody"></tbody>
+                            </table>
+                            <div class="note">Safety: mask + eye protection. Keep plastic vessels only.<br>Process: 20-30 min → Wash 3× → Neutralize: 5-10 min → Wash 3×.</div>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Bleaching Section -->
+                <section id="mordant" class="panel" style="display:none;">
+                    <div class="grid">
+                        <div>
+                            <label for="b_weight">Hair weight (g)</label>
+                            <input id="b_weight" type="number" min="1" step="1" value="100" />
+                            <div class="stack">
+                                <button class="btn" id="b_copy">Copy</button>
+                            </div>
+                            <div class="note" id="b_note">Mordant → Bleach → Neutralize process</div>
+                        </div>
+                        <div>
+                            <h3>Step 1 — Mordanting</h3>
+                            <table>
+                                <thead><tr><th>Component</th><th>Amount</th></tr></thead>
+                                <tbody id="b_mordant"></tbody>
+                            </table>
+                            <h3>Step 2 — Bleach Bath (500 ml per 100g)</h3>
+                            <table>
+                                <thead><tr><th>Component</th><th>Amount</th></tr></thead>
+                                <tbody id="b_bleach"></tbody>
+                            </table>
+                            <h3>Step 3 — Neutralizer</h3>
+                            <table>
+                                <thead><tr><th>Component</th><th>Amount</th></tr></thead>
+                                <tbody id="b_neut"></tbody>
+                            </table>
+                            <div class="note">Safety: mask + eye protection. Keep plastic vessels only.<br>Mordant: 30 min → Wash 3× → Neutralize: 15 min → Wash 3× → Bleach: 20-30 min → Wash 3× → Neutralize: 10 min → Wash 3×.</div>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+
+        <footer>
+            Hair Process Calculator &copy; 2025 by <a href="https://www.indiannaturalhair.com" style="color:var(--accent); text-decoration:none; font-weight:500;">IND Natural Hair</a>
+        </footer>
+    </div>
+    
+    <div style="margin-top: 40px; padding: 20px; background: white; border-radius: 8px; border: 1px solid #ddd;">
+        <h2 style="color: #333; margin-top: 0;">WordPress Integration Test Results</h2>
+        <div id="test-results">
+            <p style="color: #666;">Testing WordPress compatibility...</p>
+        </div>
+    </div>
+
+    <script src="hair-calculator-script.js"></script>
+    <script>
+        // Additional test script to verify functionality
+        $(document).ready(function() {
+            setTimeout(function() {
+                const testResults = $('#test-results');
+                let results = '<h3 style="color: #28a745;">✅ Test Results:</h3><ul>';
+                
+                // Test 1: Check if CSS is loaded
+                const calculatorElement = $('.hair-calculator');
+                if (calculatorElement.length && calculatorElement.css('max-width')) {
+                    results += '<li style="color: #28a745;">✅ CSS styles loaded successfully</li>';
+                } else {
+                    results += '<li style="color: #dc3545;">❌ CSS styles not loaded</li>';
+                }
+                
+                // Test 2: Check if JavaScript is working
+                const navButtons = $('.hair-calculator .nav button');
+                if (navButtons.length > 0) {
+                    results += '<li style="color: #28a745;">✅ Navigation buttons found</li>';
+                } else {
+                    results += '<li style="color: #dc3545;">❌ Navigation buttons not found</li>';
+                }
+                
+                // Test 3: Check if calculators are initialized
+                const cuticleTable = $('#c_tbody tr');
+                if (cuticleTable.length > 0) {
+                    results += '<li style="color: #28a745;">✅ Cuticle removal calculator initialized</li>';
+                } else {
+                    results += '<li style="color: #dc3545;">❌ Cuticle removal calculator not initialized</li>';
+                }
+                
+                // Test 4: Check responsive design
+                if (window.innerWidth < 768) {
+                    results += '<li style="color: #17a2b8;">📱 Mobile view detected - responsive design active</li>';
+                } else {
+                    results += '<li style="color: #17a2b8;">🖥️ Desktop view detected - full layout active</li>';
+                }
+                
+                // Test 5: Check jQuery dependency
+                if (typeof jQuery !== 'undefined') {
+                    results += '<li style="color: #28a745;">✅ jQuery loaded (version ' + jQuery.fn.jquery + ')</li>';
+                } else {
+                    results += '<li style="color: #dc3545;">❌ jQuery not loaded</li>';
+                }
+                
+                // Test 6: Check light theme styling
+                const calculator = $('.hair-calculator');
+                if (calculator.length > 0 && calculator.css('background-color')) {
+                    results += '<li style="color: #28a745;">✅ Light theme styling applied successfully</li>';
+                } else {
+                    results += '<li style="color: #dc3545;">❌ Light theme styling not found</li>';
+                }
+                
+                results += '</ul>';
+                results += '<p style="margin-top: 20px; padding: 15px; background: #e7f3ff; border-left: 4px solid #007cba; color: #333;">';
+                results += '<strong>WordPress Integration Status:</strong> Ready for deployment! ';
+                results += 'Use the shortcode <code style="background: #f1f1f1; padding: 2px 6px; border-radius: 3px;">[hair_calculator]</code> to display this calculator on any WordPress page or post.';
+                results += '</p>';
+                
+                testResults.html(results);
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

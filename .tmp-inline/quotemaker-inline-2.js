@@ -1,5 +1,5 @@
 
-        // Initialize dropdown population when DOM is ready
+// Initialize dropdown population when DOM is ready
         document.addEventListener('DOMContentLoaded', function() {
             // Initialize dropdown manager (Firebase data only)
         });
@@ -3878,8 +3878,8 @@
                             }
                         }
                         
-                        // Smart download function
-                        async function smartDownload() {
+                        // Smart download function (export to window for onclick)
+                        window.smartDownload = async function smartDownload() {
                             try {
                                 const measurement = measureContent();
                                 

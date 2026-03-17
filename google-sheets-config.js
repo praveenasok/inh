@@ -367,6 +367,28 @@ class GoogleSheetsIntegration {
       return { success: false, error: error.message };
     }
   }
+
+  async getClientHeaders() {
+    if (!this.isAvailable()) {
+      throw new Error('Google Sheets API not available. Please check your API configuration.');
+    }
+
+    if (this.getApiKey() === 'YOUR_GOOGLE_SHEETS_API_KEY') {
+      throw new Error('Google Sheets API key not configured.');
+    }
+
+    try {
+      const response = await gapi.client.sheets.spreadsheets.values.get({
+        spreadsheetId: this.SHEET_ID,
+        range: 'Clients!A1:Z1'
+      });
+      const values = response?.result?.values || [];
+      const headers = Array.isArray(values) && values.length > 0 ? values[0] : [];
+      return headers.map(h => (h || '').toString().trim()).filter(h => h);
+    } catch (error) {
+      throw new Error(`Failed to fetch Clients headers: ${error.message || error}`);
+    }
+  }
 }
 
 class GoogleSheetsFetchAPI {
@@ -601,6 +623,28 @@ class GoogleSheetsFetchAPI {
       return { success: true, synced: 1 };
     } catch (error) {
       return { success: false, error: error.message };
+    }
+  }
+
+  async getClientHeaders() {
+    const API_KEY = this.getApiKey();
+    const SHEET_ID = this.getSheetId();
+    if (API_KEY === 'YOUR_GOOGLE_SHEETS_API_KEY') {
+      throw new Error('Google Sheets API key not configured.');
+    }
+    try {
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Clients!A1:Z1?key=${API_KEY}`;
+      const resp = await fetch(url);
+      if (!resp.ok) {
+        const text = await resp.text();
+        throw new Error(`Google Sheets API error ${resp.status}: ${text}`);
+      }
+      const json = await resp.json();
+      const values = json?.values || [];
+      const headers = Array.isArray(values) && values.length > 0 ? values[0] : [];
+      return headers.map(h => (h || '').toString().trim()).filter(h => h);
+    } catch (error) {
+      throw new Error(`Failed to fetch Clients headers via Fetch API: ${error.message || error}`);
     }
   }
 }

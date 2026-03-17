@@ -1,0 +1,1685 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>INH Factory | Advanced Operating System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4F46E5;
+            --primary-hover: #4338CA;
+            --bg-main: #f8fafc;
+            --text-main: #0f172a;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            margin: 0;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6,
+        .font-heading {
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .glass-sidebar {
+            background: #0b1120;
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 4px 0 24px rgba(0, 0, 0, 0.2);
+        }
+
+        .glass-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            transition: box-shadow 0.3s ease;
+        }
+
+        .glass-card:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+        }
+
+        .input-field {
+            width: 100%;
+            background-color: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: 0.5rem;
+            padding: 0.625rem 1rem;
+            color: #1e293b;
+            font-size: 0.875rem;
+            transition: all 0.2s ease;
+            outline: none;
+        }
+
+        .input-field:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+            background-color: #ffffff;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);
+            color: white;
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            transition: all 0.2s ease;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 12px -2px rgba(79, 70, 229, 0.3);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-secondary {
+            background: #f1f5f9;
+            color: #334155;
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            transition: all 0.2s ease;
+            border: 1px solid #e2e8f0;
+            cursor: pointer;
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+
+        .sidebar-link {
+            color: #94a3b8;
+            padding: 0.875rem 1.25rem;
+            border-radius: 0.5rem;
+            margin-bottom: 0.25rem;
+            display: flex;
+            align-items: center;
+            transition: all 0.2s ease;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .sidebar-link:hover {
+            color: #f8fafc;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .sidebar-active {
+            background: rgba(79, 70, 229, 0.15);
+            color: #fff;
+            font-weight: 600;
+            box-shadow: inset 3px 0 0 var(--primary);
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            display: inline-block;
+        }
+
+        .badge-green {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+
+        .badge-blue {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .badge-gray {
+            background: #f1f5f9;
+            color: #475569;
+            border: 1px solid #e2e8f0;
+        }
+
+        .badge-yellow {
+            background: #fef9c3;
+            color: #854d0e;
+            border: 1px solid #fde047;
+        }
+
+        .badge-indigo {
+            background: #e0e7ff;
+            color: #3730a3;
+            border: 1px solid #c7d2fe;
+        }
+
+        .table-container {
+            border-radius: 0.75rem;
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+            background: white;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+        }
+
+        .custom-table {
+            width: 100%;
+            text-align: left;
+            border-collapse: collapse;
+        }
+
+        .custom-table th {
+            background: #f8fafc;
+            padding: 1rem 1.25rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .custom-table td {
+            padding: 1rem 1.25rem;
+            font-size: 0.875rem;
+            border-bottom: 1px solid #f1f5f9;
+            color: #334155;
+        }
+
+        .custom-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .custom-table tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-slate-50">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
+
+        // --- Utility Hooks ---
+        function useLocalStorage(key, initialValue) {
+            const [storedValue, setStoredValue] = useState(() => {
+                try {
+                    const item = window.localStorage.getItem(key);
+                    // In case of date strings, they stay strings in JSON.parse, but that's fine for our simple app
+                    return item ? JSON.parse(item) : initialValue;
+                } catch (error) {
+                    return initialValue;
+                }
+            });
+            const setValue = value => {
+                try {
+                    const valueToStore = value instanceof Function ? value(storedValue) : value;
+                    setStoredValue(valueToStore);
+                    window.localStorage.setItem(key, JSON.stringify(valueToStore));
+                } catch (error) {
+                    console.error(error);
+                }
+            };
+            return [storedValue, setValue];
+        }
+
+        const generateId = () => Math.random().toString(36).substr(2, 9);
+        const formatDate = (dateString) => new Date(dateString).toLocaleDateString('en-IN');
+        const LENGTHS = [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40];
+
+        // --- Main App Component ---
+        function App() {
+            const [activeTab, setActiveTab] = useState('dashboard');
+
+            // --- Global State via LocalStorage (Simulating Database) ---
+            const [suppliers, setSuppliers] = useLocalStorage('suppliers', [
+                { id: 's1', name: 'Venkatesh Hair Impex', shortCode: 'VNK' },
+                { id: 's2', name: 'Royal Indian Hair', shortCode: 'RIH' }
+            ]);
+
+            useEffect(() => {
+                fetch('/data/suppliers.json')
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data && data.length > 0) {
+                            const deletedGlobal = JSON.parse(window.localStorage.getItem('deleted_suppliers') || '[]');
+                            const filteredData = data.filter(s => !deletedGlobal.includes(s.id));
+                            setSuppliers(filteredData);
+                        }
+                    })
+                    .catch(err => console.error("Error fetching suppliers:", err));
+            }, []);
+
+            const [rawLots, setRawLots] = useLocalStorage('rawLots', []);
+            const [mos, setMos] = useLocalStorage('mos', []);
+            const [lotInventory, setLotInventory] = useLocalStorage('lotInventory', []);
+
+            const [teams, setTeams] = useLocalStorage('teams', [
+                { id: 't1', name: 'Segregation Team A', address: '', state: '', pinCode: '', contactPerson: '', phone1: '', phone2: '', geoLocation: '' },
+                { id: 't2', name: 'Segregation Team B', address: '', state: '', pinCode: '', contactPerson: '', phone1: '', phone2: '', geoLocation: '' }
+            ]);
+            const [nrRooms, setNrRooms] = useLocalStorage('nrRooms', []);
+            const [mrRooms, setMrRooms] = useLocalStorage('mrRooms', []);
+
+            // Helper to get global state objects
+            const db = { suppliers, rawLots, mos, lotInventory, teams, nrRooms, mrRooms, setSuppliers, setRawLots, setMos, setLotInventory, setTeams, setNrRooms, setMrRooms };
+
+            const renderContent = () => {
+                switch (activeTab) {
+                    case 'dashboard': return <Dashboard db={db} />;
+                    case 'raw-inward': return <RawInward db={db} />;
+                    case 'mo-issue': return <MoIssue db={db} />;
+                    case 'segregation': return <SegregationReturn db={db} />;
+                    case 'finished-inventory': return <FinishedInventory db={db} />;
+                    case 'master-inventory': return <MasterInventory db={db} />;
+                    case 'phase2-issue': return <Phase2MoIssue db={db} />;
+                    case 'phase2-return': return <Phase2Return db={db} />;
+                    case 'phase3-issue': return <Phase3MoIssue db={db} />;
+                    case 'phase3-return': return <Phase3Return db={db} />;
+                    case 'settings': return <Settings db={db} />;
+                    default: return <Dashboard db={db} />;
+                }
+            };
+
+
+            const SidebarBtn = ({ active, onClick, children, icon }) => (
+                <button onClick={onClick} className={`w-full text-left sidebar-link ${active ? 'sidebar-active' : ''}`}>
+                    <span className="mr-3 text-lg opacity-80">{icon}</span>{children}
+                </button>
+            );
+
+            return (
+                <div className="flex h-screen overflow-hidden bg-slate-50">
+                    <div className="w-72 glass-sidebar flex flex-col h-full text-slate-300 z-20">
+                        <div className="p-6 border-b border-white/5 bg-slate-900/50">
+                            <div className="flex items-center space-x-3">
+                                <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center font-bold text-white shadow-lg font-heading text-xl tracking-tighter">INH</div>
+                                <div>
+                                    <h1 className="text-lg font-heading font-bold text-white tracking-tight leading-none">OS.Factory</h1>
+                                    <p className="text-[10px] text-indigo-300 uppercase font-bold tracking-widest mt-1">Enterprise Core</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <nav className="flex-1 px-4 py-6 overflow-y-auto space-y-1">
+                            <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-4 mb-3 mt-4">Overview</div>
+                            <SidebarBtn active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} icon="⌘">Dashboard</SidebarBtn>
+
+                            <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-4 mb-3 mt-8">Primary Processing</div>
+                            <SidebarBtn active={activeTab === 'raw-inward'} onClick={() => setActiveTab('raw-inward')} icon="📥">1. Raw Inward</SidebarBtn>
+                            <SidebarBtn active={activeTab === 'mo-issue'} onClick={() => setActiveTab('mo-issue')} icon="📤">2. Factory Issue</SidebarBtn>
+                            <SidebarBtn active={activeTab === 'segregation'} onClick={() => setActiveTab('segregation')} icon="⚖️">3. Process Return</SidebarBtn>
+
+                            <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-4 mb-3 mt-8">Adv. Manufacturing</div>
+                            <SidebarBtn active={activeTab === 'phase2-issue'} onClick={() => setActiveTab('phase2-issue')} icon="🔄">5. NR/MR Issue</SidebarBtn>
+                            <SidebarBtn active={activeTab === 'phase2-return'} onClick={() => setActiveTab('phase2-return')} icon="✨">6. NR/MR Return</SidebarBtn>
+                            <SidebarBtn active={activeTab === 'phase3-issue'} onClick={() => setActiveTab('phase3-issue')} icon="🧶">7. Bulk Mix Issue</SidebarBtn>
+                            <SidebarBtn active={activeTab === 'phase3-return'} onClick={() => setActiveTab('phase3-return')} icon="✅">8. Bulk Return</SidebarBtn>
+
+                            <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-4 mb-3 mt-8">Management</div>
+                            <SidebarBtn active={activeTab === 'master-inventory'} onClick={() => setActiveTab('master-inventory')} icon="🏛️">Master Ledgers</SidebarBtn>
+                            <SidebarBtn active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} icon="⚙️">System Settings</SidebarBtn>
+                        </nav>
+                    </div>
+
+                    <div className="flex-1 flex flex-col h-full overflow-hidden relative">
+                        <header className="h-20 bg-white/80 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-10 z-10 transition-all">
+                            <h2 className="text-2xl font-heading font-bold text-slate-800 tracking-tight capitalize">{activeTab.replace('-', ' ')}</h2>
+                            <div className="flex items-center space-x-4">
+                                <span className="text-sm font-semibold text-slate-500">Administrator System</span>
+                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center font-bold shadow-md shadow-indigo-500/20">A</div>
+                            </div>
+                        </header>
+                        <main className="flex-1 overflow-y-auto p-10 fade-in relative max-w-[1600px] w-full mx-auto">
+                            {renderContent()}
+                        </main>
+                    </div>
+                </div>
+            );
+        }
+
+
+        // --- 1. Dashboard Component ---
+        function Dashboard({ db }) {
+            const { rawLots, lotInventory, mos } = db;
+
+            const totalRawWt = rawLots.reduce((sum, rl) => sum + (rl.availableWeightKg || 0), 0);
+            const openMosWt = mos.filter(m => m.status === 'OPEN').reduce((sum, m) => sum + m.issuedWeightKg, 0);
+            const totalFinishedWt = lotInventory.filter(l => l.status === 'AVAILABLE').reduce((sum, l) => sum + l.availableWeightKg, 0);
+
+            // Calculate overall Yield based on closed MOs
+            const closedMos = mos.filter(m => m.status === 'RETURNED');
+            let totalIssuedForClosed = 0;
+            let totalSegregatedValid = 0;
+
+            lotInventory.forEach(lot => {
+                // sum up weights for all lots produced
+                totalSegregatedValid += lot.initialWeightKg;
+            });
+
+            totalIssuedForClosed = closedMos.reduce((sum, m) => sum + m.issuedWeightKg, 0);
+            const overallYield = totalIssuedForClosed > 0 ? ((totalSegregatedValid / totalIssuedForClosed) * 100).toFixed(1) : 0;
+
+            return (
+                <div className="space-y-6 max-w-7xl mx-auto">
+                    {/* KPI Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                        <KpiCard title="Available Raw Materials" value={`${totalRawWt.toFixed(2)} kg`} color="blue" icon="📥" />
+                        <KpiCard title="Work-In-Progress (WIP)" value={`${openMosWt.toFixed(2)} kg`} subtitle={`${mos.filter(m => m.status === 'OPEN').length} Open MOs`} color="yellow" icon="⚙️" />
+                        <KpiCard title="Finished Segregated Stock" value={`${totalFinishedWt.toFixed(2)} kg`} subtitle={`${lotInventory.filter(l => l.status === 'AVAILABLE').length} Lots Available`} color="green" icon="📦" />
+                        <KpiCard title="Historical Recovery %" value={`${overallYield}%`} color="indigo" icon="📈" />
+                    </div>
+                </div>
+            );
+        }
+
+        function KpiCard({ title, value, subtitle, color, icon }) {
+            const colorMap = {
+                blue: 'bg-blue-50 text-blue-600', yellow: 'bg-yellow-50 text-yellow-600',
+                green: 'bg-green-50 text-green-600', indigo: 'bg-indigo-50 text-indigo-600'
+            };
+            return (
+                <div className="glass-card p-6 flex items-start space-x-4">
+                    <div className={`p-4 rounded-lg flex-shrink-0 text-2xl ${colorMap[color]}`}>{icon}</div>
+                    <div>
+                        <h4 className="text-slate-500 text-sm font-medium mb-1">{title}</h4>
+                        <p className="text-2xl font-bold text-slate-900">{value}</p>
+                        {subtitle && <p className="text-xs text-gray-400 mt-1">{subtitle}</p>}
+                    </div>
+                </div>
+            );
+        }
+
+        // --- 2. Raw Material Inward Component ---
+        function RawInward({ db }) {
+            const { suppliers, rawLots, setRawLots } = db;
+            const [formData, setFormData] = useState({ supplierId: '', supplyDate: new Date().toISOString().split('T')[0], density: '1x1' });
+            const [entries, setEntries] = useState([{ length: '', weight: '', rate: '' }]);
+
+            const getTotalWeight = () => entries.reduce((sum, e) => sum + Number(e.weight || 0), 0);
+            const getTotalAmount = () => entries.reduce((sum, e) => sum + (Number(e.weight || 0) * Number(e.rate || 0)), 0);
+
+            const handleAddEntry = () => setEntries([...entries, { length: '', weight: '', rate: '' }]);
+            const handleRemoveEntry = (idx) => setEntries(entries.filter((_, i) => i !== idx));
+            const handleChangeEntry = (idx, field, val) => {
+                const newEntries = [...entries];
+                newEntries[idx][field] = val;
+                setEntries(newEntries);
+            };
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                if (!formData.supplierId || entries.length === 0) return alert('Fill required fields');
+
+                const totalWeight = getTotalWeight();
+                if (totalWeight <= 0) return alert('Total weight must be greater than 0');
+
+                const newLot = {
+                    id: `RAW-${Date.now().toString().slice(-6)}`,
+                    ...formData,
+                    grossWeightKg: totalWeight,
+                    availableWeightKg: totalWeight,
+                    totalAmount: getTotalAmount(),
+                    details: entries,
+                    status: 'AVAILABLE'
+                };
+                setRawLots([newLot, ...rawLots]);
+                setEntries([{ length: '', weight: '', rate: '' }]);
+                alert('Raw material added successfully with its lengths breakdown!');
+            };
+
+            return (
+                <div className="space-y-6 max-w-7xl mx-auto">
+                    <div className="glass-card p-8">
+                        <h3 className="text-xl font-heading font-bold mb-6 border-b border-slate-100 pb-4 text-slate-800">New Raw Purchase Entry</h3>
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Supplier</label>
+                                    <select className="input-field" value={formData.supplierId} onChange={e => setFormData({ ...formData, supplierId: e.target.value })} required>
+                                        <option value="">Select Supplier</option>
+                                        {suppliers.map(s => <option key={s.id} value={s.id}>{s.name} ({s.shortCode})</option>)}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Supply Date</label>
+                                    <input type="date" className="input-field" value={formData.supplyDate} onChange={e => setFormData({ ...formData, supplyDate: e.target.value })} required />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Density</label>
+                                    <select className="input-field" value={formData.density} onChange={e => setFormData({ ...formData, density: e.target.value })}>
+                                        <option value="1x1">1x1 Non-Remy</option>
+                                        <option value="2x2">2x2 Non-Remy</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="mt-6">
+                                <h4 className="text-sm font-bold text-gray-700 mb-2 border-b pb-1">Lengths & Rates Breakdown</h4>
+                                <div className="space-y-2">
+                                    <div className="grid grid-cols-12 gap-2 text-xs font-semibold text-slate-500 uppercase tracking-wider px-2">
+                                        <div className="col-span-3">Length (Inches)</div>
+                                        <div className="col-span-3">Weight (kg)</div>
+                                        <div className="col-span-3">Rate/kg (₹)</div>
+                                        <div className="col-span-2 text-right">Amount (₹)</div>
+                                        <div className="col-span-1 border-gray-800"></div>
+                                    </div>
+                                    {entries.map((entry, idx) => {
+                                        const amount = (Number(entry.weight || 0) * Number(entry.rate || 0)).toFixed(2);
+                                        return (
+                                            <div key={idx} className="grid grid-cols-12 gap-2 items-center bg-slate-50 p-2 rounded">
+                                                <div className="col-span-3">
+                                                    <select className="input-field" value={entry.length} onChange={e => handleChangeEntry(idx, 'length', e.target.value)} required>
+                                                        <option value="">-- Length --</option>
+                                                        {LENGTHS.map(l => <option key={l} value={l}>{l}"</option>)}
+                                                        <option value="MIXED">Mixed / Unsorted</option>
+                                                    </select>
+                                                </div>
+                                                <div className="col-span-3">
+                                                    <input type="number" step="0.01" min="0.01" className="input-field" placeholder="0.00" value={entry.weight} onChange={e => handleChangeEntry(idx, 'weight', e.target.value)} required />
+                                                </div>
+                                                <div className="col-span-3">
+                                                    <input type="number" step="0.01" min="0" className="input-field" placeholder="0.00" value={entry.rate} onChange={e => handleChangeEntry(idx, 'rate', e.target.value)} required />
+                                                </div>
+                                                <div className="col-span-2 text-right font-mono font-bold text-gray-700">
+                                                    ₹{amount}
+                                                </div>
+                                                <div className="col-span-1 text-center">
+                                                    {entries.length > 1 && (
+                                                        <button type="button" onClick={() => handleRemoveEntry(idx)} className="text-red-500 hover:bg-red-100 p-1 rounded transition">🗑️</button>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                                <button type="button" onClick={handleAddEntry} className="mt-3 text-sm font-bold text-indigo-600 hover:text-indigo-800 flex items-center transition">
+                                    <span className="mr-1 text-lg leading-none">+</span> Add Another Length
+                                </button>
+
+                                <div className="mt-4 p-4 bg-blue-50 border border-blue-100 rounded-lg flex flex-col sm:flex-row justify-between sm:items-center space-y-2 sm:space-y-0 text-sm">
+                                    <div>
+                                        <span className="font-semibold text-blue-800">Total Weight: </span>
+                                        <span className="text-lg font-bold font-mono text-blue-900 ml-1">{getTotalWeight().toFixed(2)} kg</span>
+                                    </div>
+                                    <div>
+                                        <span className="font-semibold text-blue-800">Invoice Amount: </span>
+                                        <span className="text-lg font-bold font-mono text-blue-900 ml-1">₹{getTotalAmount().toFixed(2)}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button type="submit" className="w-full btn-primary w-full py-4 text-lg transition mt-4 shadow-sm">Save Complete Purchase Receipt</button>
+                        </form>
+                    </div>
+
+                    <div className="table-container overflow-hidden">
+                        <div className="px-6 py-5 border-b border-slate-100 bg-white"><h3 className="font-heading font-bold text-lg text-slate-800">Historical Raw Purchases</h3></div><table className="custom-table">
+                            <thead>
+                                <tr>
+                                    <th className="p-3">Raw Lot ID</th>
+                                    <th className="p-3">Supplier</th>
+                                    <th className="p-3">Date</th>
+                                    <th className="p-3 text-center">Density</th>
+                                    <th className="p-3 text-right">Invoice / Wt</th>
+                                    <th className="p-3">Breakdown</th>
+                                    <th className="p-3 text-right">Available Wt</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                                {rawLots.map(lot => {
+                                    const sup = suppliers.find(s => s.id === lot.supplierId);
+                                    return (
+                                        <tr key={lot.id} className="hover:bg-blue-50 transition">
+                                            <td className="p-3 font-mono font-bold text-blue-700">
+                                                {lot.id}
+                                                <div className={`mt-1 px-2 py-0.5 text-[10px] w-max uppercase font-bold tracking-wider rounded-full ${lot.status === 'AVAILABLE' ? 'badge bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}>{lot.status}</div>
+                                            </td>
+                                            <td className="p-3">{sup ? sup.name : 'Unknown'}</td>
+                                            <td className="p-3 text-slate-500">{formatDate(lot.supplyDate)}</td>
+                                            <td className="p-3 text-center"><span className="px-2 py-1 bg-gray-100 rounded text-xs font-bold">{lot.density}</span></td>
+                                            <td className="p-3 text-right">
+                                                <div className="font-mono font-bold text-gray-700">
+                                                    {lot.totalAmount ? `₹${lot.totalAmount.toFixed(2)}` : '-'}
+                                                </div>
+                                                <div className="text-xs text-slate-500">for {lot.grossWeightKg}kg</div>
+                                            </td>
+                                            <td className="p-3 text-xs">
+                                                {lot.details ? (
+                                                    <details className="cursor-pointer">
+                                                        <summary className="font-semibold text-indigo-600 outline-none">View {lot.details.length} Lengths</summary>
+                                                        <div className="mt-2 text-[10px] space-y-1 bg-white p-2 rounded shadow-sm border border-slate-200 min-w-40 border">
+                                                            {lot.details.map((d, i) => (
+                                                                <div key={i} className="flex justify-between items-center bg-slate-50 px-2 py-1 rounded">
+                                                                    <span className="font-bold">{d.length}" :</span>
+                                                                    <span className="font-mono text-gray-600">{Number(d.weight).toFixed(2)}kg <span className="opacity-50">@ ₹{d.rate}</span></span>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </details>
+                                                ) : <span className="text-gray-400 italic">Legacy Lot (No Detail)</span>}
+                                            </td>
+                                            <td className="p-3 text-right font-mono font-bold text-green-700 text-lg">
+                                                {lot.availableWeightKg.toFixed(2)}
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                                {rawLots.length === 0 && <tr><td colSpan="7" className="p-8 text-center text-gray-400">No raw materials recorded yet.</td></tr>}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            );
+        }
+
+        // --- 3. MO Generation Component ---
+
+        function MoIssue({ db }) {
+            const { rawLots, setRawLots, mos, setMos, suppliers } = db;
+            const availableLots = rawLots.filter(l => l.status === 'AVAILABLE' && l.availableWeightKg > 0);
+            const [selectedLotId, setSelectedLotId] = useState('');
+            const [issueWt, setIssueWt] = useState('');
+            const [team, setTeam] = useState('Segregation Team A');
+
+            const selectedLot = availableLots.find(l => l.id === selectedLotId);
+
+            const handleIssue = (e) => {
+                e.preventDefault();
+                if (!selectedLotId || !issueWt || Number(issueWt) <= 0) return alert('Invalid input');
+                if (Number(issueWt) > selectedLot.availableWeightKg) return alert('Issue weight exceeds available stock');
+
+                const newMoNumber = `MO-${1000 + mos.length + 1}`;
+
+                // Create MO
+                const newMo = {
+                    id: generateId(),
+                    moNumber: newMoNumber,
+                    rawLotId: selectedLotId, // For simplicity in this demo, handling 1 raw lot per MO
+                    supplierId: selectedLot.supplierId,
+                    density: selectedLot.density,
+                    issueDate: new Date().toISOString(),
+                    workroomTeam: team,
+                    issuedWeightKg: Number(issueWt),
+                    status: 'OPEN'
+                };
+
+                // Deduct Raw Stock
+                const updatedRawLots = rawLots.map(lot => {
+                    if (lot.id === selectedLotId) {
+                        const newWt = lot.availableWeightKg - Number(issueWt);
+                        return { ...lot, availableWeightKg: newWt, status: newWt <= 0 ? 'DEPLETED' : 'AVAILABLE' };
+                    }
+                    return lot;
+                });
+
+                setMos([newMo, ...mos]);
+                setRawLots(updatedRawLots);
+                setSelectedLotId('');
+                setIssueWt('');
+                alert(`Manufacturing Order ${newMoNumber} generated successfully!`);
+            };
+
+            return (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-7xl mx-auto">
+                    <div className="glass-card p-8">
+                        <h3 className="text-xl font-heading font-bold mb-6 border-b border-slate-100 pb-4 text-slate-800">Issue Manufacturing Order (MO)</h3>
+                        <form onSubmit={handleIssue} className="space-y-4">
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Select Raw Lot to Issue From</label>
+                                <select className="w-full p-3 border rounded text-lg font-mono bg-slate-50" value={selectedLotId} onChange={e => Object.assign(setSelectedLotId(e.target.value), setIssueWt(''))} required>
+                                    <option value="">-- Choose a lot --</option>
+                                    {availableLots.map(l => (
+                                        <option key={l.id} value={l.id}>
+                                            {l.id} | {l.density} | Available: {l.availableWeightKg.toFixed(2)} kg
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            {selectedLot && (
+                                <div className="bg-blue-50 border border-blue-100 p-4 rounded-lg flex justify-between items-center text-blue-800">
+                                    <span>Supplier: <strong>{suppliers.find(s => s.id === selectedLot.supplierId)?.name}</strong></span>
+                                    <span>Max Available: <strong>{selectedLot.availableWeightKg.toFixed(2)} kg</strong></span>
+                                </div>
+                            )}
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Issue Weight (kg)</label>
+                                <input
+                                    type="number" step="0.01" min="0.01" max={selectedLot?.availableWeightKg || ''}
+                                    className="w-full p-3 border rounded font-mono text-xl text-center"
+                                    value={issueWt} onChange={e => setIssueWt(e.target.value)}
+                                    placeholder="0.00" disabled={!selectedLot} required
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Assign to Team</label>
+                                <select className="w-full p-3 border rounded" value={team} onChange={e => setTeam(e.target.value)}>
+                                    {db.teams.map(t => {
+                                        const val = typeof t === 'object' ? t.name : t;
+                                        return <option key={val} value={val}>{val}</option>;
+                                    })}
+                                </select>
+                            </div>
+                            <button type="submit" disabled={!selectedLot || !issueWt} className="w-full bg-indigo-600 disabled:bg-indigo-300 text-white font-bold py-4 rounded hover:bg-indigo-700 transition shadow-sm">
+                                Generate MO & Lock Stock
+                            </button>
+                        </form>
+                    </div>
+
+                    <div className="table-container overflow-hidden">
+                        <div className="px-6 py-5 border-b border-slate-100 bg-white"><h3 className="font-heading font-bold text-lg text-slate-800">Recent MOs</h3></div>
+                        <div className="overflow-auto max-h-[500px]">
+                            <table className="custom-table">
+                                <thead>
+                                    <tr>
+                                        <th className="p-3">MO Number</th>
+                                        <th className="p-3 text-right">WIP Weight</th>
+                                        <th className="p-3">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {mos.map(mo => (
+                                        <tr key={mo.id} className="border-b hover:bg-slate-50">
+                                            <td className="p-3 font-mono font-bold text-indigo-700">{mo.moNumber}</td>
+                                            <td className="p-3 text-right font-mono">{mo.issuedWeightKg.toFixed(2)} kg</td>
+                                            <td className="p-3">
+                                                <span className={`px-2 py-1 text-xs rounded-full ${mo.status === 'OPEN' ? 'badge bg-yellow-100 text-yellow-800 border border-yellow-200' : 'badge bg-green-100 text-green-800'}`}>
+                                                    {mo.status}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                    {mos.length === 0 && <tr><td colSpan="3" className="p-8 text-center text-gray-400">No MOs generated yet.</td></tr>}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // --- 4. Segregation Return & Recon Component ---
+        function SegregationReturn({ db }) {
+            const { mos, setMos, suppliers, lotInventory, setLotInventory } = db;
+            const openMos = mos.filter(m => m.status === 'OPEN');
+
+            const [selectedMoId, setSelectedMoId] = useState('');
+            const selectedMo = openMos.find(m => m.id === selectedMoId);
+
+            const issuedWeight = selectedMo ? selectedMo.issuedWeightKg : 0;
+            const tolerancePercent = 0.5; // +/- 0.5%
+
+            // Form states
+            const [waste, setWaste] = useState({ unrecoverable: '', short: '', rubber: '', moisture: '' });
+            const [outputs, setOutputs] = useState({});
+
+            // Calculate Totals safely
+            const totalWaste = Object.values(waste).reduce((sum, val) => sum + Number(val || 0), 0);
+            const totalProduced = Object.values(outputs).reduce((sum, val) => sum + Number(val || 0), 0);
+            const totalAccounted = totalWaste + totalProduced;
+
+            const varianceKg = totalAccounted - issuedWeight;
+            const variancePercent = issuedWeight > 0 ? (varianceKg / issuedWeight) * 100 : 0;
+
+            const isReconciled = selectedMo && Math.abs(variancePercent) <= tolerancePercent;
+
+            // Reset form when MO changes
+            useEffect(() => {
+                setWaste({ unrecoverable: '', short: '', rubber: '', moisture: '' });
+                setOutputs({});
+            }, [selectedMoId]);
+
+            const handleKeyDown = (e, index) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const nextInput = document.getElementById(`length-input-${index + 1}`);
+                    if (nextInput) nextInput.focus();
+                }
+            };
+
+            const generateSmartLotId = (mo, len, serialNumber) => {
+                const supplier = suppliers.find(s => s.id === mo.supplierId);
+                const supCode = supplier ? supplier.shortCode : 'UNK';
+                const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, ''); // YYYYMMDD
+                // Format: SUP-MOXXX-YYYYMMDD-L18
+                let lotId = `${supCode}-${mo.moNumber}-${dateStr}-L${len}`;
+                if (serialNumber > 1) lotId += `-${String(serialNumber).padStart(2, '0')}`;
+                return lotId;
+            };
+
+            const handleSave = () => {
+                if (!isReconciled) return;
+
+                const newLots = [];
+
+                // Create individual lot entries for every length inputted that has > 0 weight
+                Object.entries(outputs).forEach(([len, weight]) => {
+                    const numWeight = Number(weight);
+                    if (numWeight > 0) {
+                        // check if a lot for this exact length in this MO already exists to append serial if needed
+                        // (Simplified logic for demo: assuming 1 pass per MO, so serial is 1)
+                        const lotId = generateSmartLotId(selectedMo, len, 1);
+
+                        newLots.push({
+                            id: lotId,
+                            moId: selectedMo.id,
+                            rawLotId: selectedMo.rawLotId,
+                            supplierShortCode: suppliers.find(s => s.id === selectedMo.supplierId)?.shortCode || 'UNK',
+                            density: selectedMo.density,
+                            lengthInches: Number(len),
+                            initialWeightKg: numWeight,
+                            availableWeightKg: numWeight,
+                            status: 'AVAILABLE',
+                            room: 'SEGREGATED',
+                            createdAt: new Date().toISOString()
+                        });
+                    }
+                });
+
+                // Update MO status
+                const updatedMos = mos.map(m => m.id === selectedMo.id ? { ...m, status: 'RETURNED' } : m);
+
+                setLotInventory([...newLots, ...lotInventory]);
+                setMos(updatedMos);
+                setSelectedMoId('');
+                alert(`Saved! Segregation successful. Generated ${newLots.length} new Lot IDs.`);
+            };
+
+            return (
+                <div className="max-w-7xl mx-auto space-y-6">
+                    {/* Header Selection */}
+                    <div className="glass-card p-8">
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Select Open MO to Reconclie</label>
+                        <div className="flex space-x-4">
+                            <select className="flex-1 p-3 border rounded text-lg focus:border-blue-500 font-mono" value={selectedMoId} onChange={e => setSelectedMoId(e.target.value)}>
+                                <option value="">-- Choose an Open MO --</option>
+                                {openMos.map(m => (
+                                    <option key={m.id} value={m.id}>{m.moNumber} | Issued: {m.issuedWeightKg.toFixed(2)} kg</option>
+                                ))}
+                            </select>
+                            {selectedMo && (
+                                <div className="bg-blue-100 text-blue-900 border border-blue-200 px-6 flex items-center rounded text-xl shadow-inner font-mono">
+                                    Target: <strong>{issuedWeight.toFixed(2)} kg</strong>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Entry Grid (Only show if MO selected) */}
+                    <div className={`grid grid-cols-1 lg:grid-cols-3 gap-6 transition-opacity ${selectedMo ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
+
+                        {/* Wastage */}
+                        <div className="glass-card p-8 h-fit">
+                            <h3 className="text-xl font-bold mb-4 text-gray-800 border-b pb-2">Wastage Entry (kg)</h3>
+                            <div className="space-y-4">
+                                {['unrecoverable', 'short', 'rubber', 'moisture'].map(key => (
+                                    <div key={key}>
+                                        <label className="block text-sm font-semibold text-gray-600 capitalize mb-1">{key} Loss</label>
+                                        <input
+                                            type="number" step="0.01" placeholder="0.00"
+                                            className="w-full px-4 py-3 border rounded-lg text-lg focus:ring-2 focus:ring-orange-200"
+                                            value={waste[key]}
+                                            onChange={(e) => setWaste({ ...waste, [key]: e.target.value })}
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Output Lengths */}
+                        <div className="glass-card p-8 h-[600px] flex flex-col">
+                            <h3 className="text-xl font-bold mb-4 text-gray-800 border-b pb-2 flex justify-between">
+                                <span>Lengths Output (kg)</span>
+                                <span className="text-sm font-normal text-slate-500 bg-gray-100 px-2 py-1 rounded">Hit 'Enter' to step down</span>
+                            </h3>
+                            <div className="overflow-y-auto pr-2 flex-1 space-y-2 pb-4">
+                                {LENGTHS.map((len, idx) => (
+                                    <div key={len} className="flex items-center group">
+                                        <label className="w-16 font-bold text-gray-700 text-xl group-hover:text-blue-600 transition-colors">{len}"</label>
+                                        <input
+                                            id={`length-input-${idx}`} type="number" step="0.01" placeholder="0.00"
+                                            className="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500 focus:bg-blue-50 font-mono text-lg"
+                                            value={outputs[len] || ''}
+                                            onChange={(e) => setOutputs({ ...outputs, [len]: e.target.value })}
+                                            onKeyDown={(e) => handleKeyDown(e, idx)}
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Reconciliation Dashboard */}
+                        <div className="glass-card p-8 flex flex-col justify-between h-[600px]">
+                            <div>
+                                <h3 className="text-xl font-bold mb-4 text-gray-800 border-b pb-2">Live Reconciliation</h3>
+
+                                <div className="space-y-4 mb-6 text-lg p-4 bg-slate-50 rounded-lg border">
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-gray-600">Issued Wt:</span>
+                                        <span className="font-mono font-semibold">{issuedWeight.toFixed(2)}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center text-orange-700">
+                                        <span>Total Waste (+):</span>
+                                        <span className="font-mono font-semibold">{totalWaste.toFixed(2)}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center text-green-700 border-b border-slate-200 pb-3">
+                                        <span>Segregated (+):</span>
+                                        <span className="font-mono font-semibold">{totalProduced.toFixed(2)}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center text-2xl pt-2">
+                                        <span className="font-heading font-bold text-slate-800">Accounted:</span>
+                                        <span className="font-mono pl-4 pr-1 py-1 rounded bg-gray-800 text-white shadow-inner font-bold tracking-wider">{totalAccounted.toFixed(2)}</span>
+                                    </div>
+                                </div>
+
+                                <div className={`p-4 rounded-lg border-l-8 shadow-sm transition-colors duration-300 ${isReconciled ? 'bg-green-50 border-green-500 text-green-900' : 'bg-red-50 border-red-500 text-red-900'}`}>
+                                    <h4 className="font-bold flex items-center text-lg mb-2">
+                                        {isReconciled ? <span className="mr-2">✅ Valid for Save</span> : <span className="mr-2">⚠️ Variance Alert</span>}
+                                    </h4>
+                                    <div className="grid grid-cols-2 gap-2 font-mono text-sm">
+                                        <div>Variance Kg: <strong className="block text-xl">{varianceKg > 0 ? '+' : ''}{varianceKg.toFixed(2)}</strong></div>
+                                        <div>Variance %: <strong className="block text-xl">{variancePercent > 0 ? '+' : ''}{variancePercent.toFixed(2)}%</strong></div>
+                                    </div>
+                                    {!isReconciled && <p className="text-xs text-red-600 mt-3 font-semibold bg-white p-2 border border-red-100 rounded">Target Tolerance is ±{tolerancePercent}%. Please adjust floor waste entries.</p>}
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={handleSave}
+                                disabled={!isReconciled}
+                                className={`w-full py-5 text-white font-bold rounded-xl text-xl shadow-lg transition-transform focus:outline-none focus:ring-4 transform ${isReconciled ? 'bg-blue-600 hover:bg-blue-700 hover:scale-[1.02] focus:ring-blue-300 cursor-pointer' : 'bg-gray-300 cursor-not-allowed hidden'}`}
+                            >
+                                Confirm Segregation & Lock Lots
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+            );
+        }
+
+        // --- 5. Finished Inventory Ledger ---
+        function FinishedInventory({ db }) {
+            const { lotInventory } = db;
+            const availableLots = lotInventory.filter(l => l.status === 'AVAILABLE' && (!l.room || l.room === 'SEGREGATED'));
+
+            // Group by length for a summary view
+            const groupedByLength = availableLots.reduce((acc, lot) => {
+                acc[lot.lengthInches] = (acc[lot.lengthInches] || 0) + lot.availableWeightKg;
+                return acc;
+            }, {});
+
+            const sortedLengthsDesc = Object.keys(groupedByLength).sort((a, b) => Number(b) - Number(a));
+
+            return (
+                <div className="space-y-6 max-w-7xl mx-auto">
+                    <div className="table-container p-6 flex items-center justify-between">
+                        <div>
+                            <h2 className="text-2xl font-heading font-bold text-slate-800">Segregated Stock (Available for Processing)</h2>
+                            <p className="text-slate-500">Atomic Lot Tracking System (Total Value: {availableLots.reduce((s, l) => s + l.availableWeightKg, 0).toFixed(2)} kg)</p>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                        {/* Length Summary Sidebar */}
+                        <div className="col-span-1 bg-white p-4 rounded-xl shadow-sm border border-slate-200 max-h-[700px] overflow-y-auto">
+                            <h3 className="font-heading font-bold text-slate-800 border-b pb-2 mb-4 sticky top-0 bg-white">Summary by Length</h3>
+                            <ul className="space-y-2">
+                                {sortedLengthsDesc.map(len => (
+                                    <li key={len} className="flex justify-between items-center text-sm p-2 hover:bg-blue-50 rounded">
+                                        <span className="font-bold text-lg text-gray-700">{len}"</span>
+                                        <span className="font-mono badge bg-blue-100 text-blue-800 px-2 py-1 rounded font-bold">{groupedByLength[len].toFixed(2)} kg</span>
+                                    </li>
+                                ))}
+                                {sortedLengthsDesc.length === 0 && <li className="text-center text-gray-400 py-4">No stock summarized.</li>}
+                            </ul>
+                        </div>
+
+                        {/* Detailed Lot Table */}
+                        <div className="col-span-3 table-container overflow-hidden flex flex-col h-[700px]">
+                            <div className="p-4 bg-slate-50 border-b grid grid-cols-2 items-center">
+                                <h3 className="font-heading font-bold text-slate-800">Atomic Lot Traceability Ledger</h3>
+                                <input type="text" placeholder="Search Lot ID..." className="p-2 border rounded text-sm w-full outline-none focus:ring-2 focus:ring-blue-400" />
+                            </div>
+                            <div className="overflow-auto flex-1">
+                                <table className="custom-table">
+                                    <thead>
+                                        <tr>
+                                            <th className="p-3">Smart Lot ID (Barcode Target)</th>
+                                            <th className="p-3">Origin MO</th>
+                                            <th className="p-3 text-center">Density</th>
+                                            <th className="p-3 text-center">Length</th>
+                                            <th className="p-3 text-right">Avail Wt (kg)</th>
+                                            <th className="p-3 text-center">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {availableLots.sort((a, b) => b.lengthInches - a.lengthInches).map((lot, idx) => (
+                                            <tr key={lot.id} className={`border-b hover:bg-blue-50 cursor-pointer ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50'}`}>
+                                                <td className="p-3 font-mono font-bold text-blue-700 text-base">{lot.id}</td>
+                                                <td className="p-3 font-mono text-gray-600 text-xs">{lot.moId}</td>
+                                                <td className="p-3 text-center font-semibold">{lot.density}</td>
+                                                <td className="p-3 text-center"><span className="bg-gray-800 text-white px-2 py-1 rounded text-xs font-bold">{lot.lengthInches}"</span></td>
+                                                <td className="p-3 text-right font-mono font-bold text-lg text-green-700">{lot.availableWeightKg.toFixed(2)}</td>
+                                                <td className="p-3 text-center">
+                                                    <span className="px-2 py-1 text-[10px] uppercase font-bold tracking-wider rounded-full badge bg-green-100 text-green-800 border border-green-200">{lot.status}</span>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                        {availableLots.length === 0 && <tr><td colSpan="6" className="p-12 text-center text-gray-400 text-lg">Inventory is completely empty.</td></tr>}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // --- 6. Settings Component ---
+        function Settings({ db }) {
+            const { suppliers, setSuppliers, teams, setTeams, nrRooms, setNrRooms, mrRooms, setMrRooms } = db;
+
+            const INDIAN_STATES = [
+                "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal", "Andaman and Nicobar Islands", "Chandigarh", "Dadra and Nagar Haveli and Daman and Diu", "Delhi", "Lakshadweep", "Puducherry"
+            ];
+
+            const initialEntity = { name: '', shortCode: '', address: '', state: '', pinCode: '', contactPerson: '', phone1: '', phone2: '', geoLocation: '' };
+
+            const [newSupplier, setNewSupplier] = useState(initialEntity);
+            const [newTeam, setNewTeam] = useState(initialEntity);
+            const [newNrRoom, setNewNrRoom] = useState(initialEntity);
+            const [newMrRoom, setNewMrRoom] = useState(initialEntity);
+
+            const handleAdd = (e, entity, setEntityState, list, setList, prefix, needsShortCode) => {
+                e.preventDefault();
+                if (!entity.name || (needsShortCode && !entity.shortCode)) return;
+                const addedEntity = {
+                    id: `${prefix}${Date.now()}`,
+                    ...entity,
+                    name: entity.name.trim(),
+                    ...(needsShortCode ? { shortCode: entity.shortCode.toUpperCase().trim() } : {})
+                };
+                setList([...list, addedEntity]);
+                setEntityState(initialEntity);
+            };
+
+            const FormFields = ({ data, setData, titleLabel, needsShortCode }) => (
+                <div className="space-y-4 mb-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className={needsShortCode ? "col-span-1" : "md:col-span-2"}>
+                            <label className="block text-xs font-semibold text-gray-600 mb-1">{titleLabel} Name *</label>
+                            <input type="text" className="input-field" value={data.name} onChange={e => setData({ ...data, name: e.target.value })} placeholder={`e.g. New ${titleLabel}`} required />
+                        </div>
+                        {needsShortCode && (
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-600 mb-1">3-Letter Code *</label>
+                                <input type="text" maxLength="3" className="input-field uppercase font-mono" value={data.shortCode} onChange={e => setData({ ...data, shortCode: e.target.value })} placeholder="VNS" required />
+                            </div>
+                        )}
+                        <div><label className="block text-xs font-semibold text-gray-600 mb-1">Contact Person</label><input type="text" className="input-field" value={data.contactPerson} onChange={e => setData({ ...data, contactPerson: e.target.value })} /></div>
+                        <div><label className="block text-xs font-semibold text-gray-600 mb-1">Phone 1</label><input type="text" className="input-field" value={data.phone1} onChange={e => setData({ ...data, phone1: e.target.value })} /></div>
+                        <div><label className="block text-xs font-semibold text-gray-600 mb-1">Phone 2</label><input type="text" className="input-field" value={data.phone2} onChange={e => setData({ ...data, phone2: e.target.value })} /></div>
+                        <div className="md:col-span-2"><label className="block text-xs font-semibold text-gray-600 mb-1">Complete Address</label><textarea className="input-field" value={data.address} onChange={e => setData({ ...data, address: e.target.value })} rows="2"></textarea></div>
+                        <div><label className="block text-xs font-semibold text-gray-600 mb-1">State</label>
+                            <select className="input-field bg-white text-gray-700" value={data.state} onChange={e => setData({ ...data, state: e.target.value })}>
+                                <option value="">Select State</option>{INDIAN_STATES.map(s => <option key={s} value={s}>{s}</option>)}
+                            </select></div>
+                        <div><label className="block text-xs font-semibold text-gray-600 mb-1">PIN Code</label><input type="text" className="input-field" value={data.pinCode} onChange={e => setData({ ...data, pinCode: e.target.value })} /></div>
+                        <div className="md:col-span-2"><label className="block text-xs font-semibold text-gray-600 mb-1">Geo Location (Maps Link)</label><input type="text" className="input-field" value={data.geoLocation} onChange={e => setData({ ...data, geoLocation: e.target.value })} /></div>
+                    </div>
+                </div>
+            );
+
+            const SettingsBlock = ({ title, item, setItem, list, setList, prefix, needsShortCode, color }) => (
+                <div className="glass-card p-8">
+                    <h3 className="text-xl font-bold mb-4 border-b pb-2 text-gray-800">Add New {title}</h3>
+                    <form onSubmit={(e) => handleAdd(e, item, setItem, list, setList, prefix, needsShortCode)} className="mb-6">
+                        <FormFields data={item} setData={setItem} titleLabel={title} needsShortCode={needsShortCode} />
+                        <button type="submit" className={`w-full text-white font-bold py-3 rounded transition ${color}`}>Add {title}</button>
+                    </form>
+                    <div>
+                        <h4 className="text-sm font-semibold text-slate-500 mb-2">Existing {title}s</h4>
+                        <ul className="space-y-2 max-h-48 overflow-y-auto">
+                            {list.map((t, idx) => {
+                                const tName = typeof t === 'object' ? t.name : t;
+                                const tContact = typeof t === 'object' && t.contactPerson ? `(${t.contactPerson})` : '';
+                                return (
+                                    <li key={idx} className="p-3 bg-slate-50 rounded border flex justify-between items-center">
+                                        <div>
+                                            <span className="font-semibold">{tName} <span className="text-xs text-slate-500 ml-1">{tContact}</span></span>
+                                            {typeof t === 'object' && (t.phone1 || t.address) && <div className="text-xs text-slate-500 mt-1">{[t.phone1, t.address, t.state].filter(Boolean).join(' • ')}</div>}
+                                        </div>
+                                        {needsShortCode && <span className="bg-gray-200 text-gray-800 px-2 py-1 rounded text-xs font-mono font-bold tracking-widest">{t.shortCode}</span>}
+                                    </li>
+                                );
+                            })}
+                        </ul>
+                    </div>
+                </div>
+            );
+
+            return (
+                <div className="max-w-7xl mx-auto space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <SettingsBlock title="Supplier" item={newSupplier} setItem={setNewSupplier} list={suppliers} setList={setSuppliers} prefix="s" needsShortCode={true} color="bg-blue-600 hover:bg-blue-700" />
+                        <SettingsBlock title="Team" item={newTeam} setItem={setNewTeam} list={teams} setList={setTeams} prefix="t" needsShortCode={false} color="bg-indigo-600 hover:bg-indigo-700" />
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <SettingsBlock title="NR (Hackling) Room" item={newNrRoom} setItem={setNewNrRoom} list={nrRooms} setList={setNrRooms} prefix="nr" needsShortCode={false} color="bg-orange-600 hover:bg-orange-700" />
+                        <SettingsBlock title="MR (Machine Remy) Room" item={newMrRoom} setItem={setNewMrRoom} list={mrRooms} setList={setMrRooms} prefix="mr" needsShortCode={false} color="bg-teal-600 hover:bg-teal-700" />
+                    </div>
+                </div>
+            );
+        }
+
+        // --- 7. Phase 2 Issuance (Hackling & MR) ---
+        function Phase2MoIssue({ db }) {
+            const { lotInventory, mos, setMos, nrRooms, mrRooms, setLotInventory } = db;
+            // Only Segregated available stock
+            const availableLots = lotInventory.filter(l => l.status === 'AVAILABLE' && (!l.room || l.room === 'SEGREGATED'));
+
+            const [targetType, setTargetType] = useState('HACKLING'); // 'HACKLING' or 'MACHINE_REMY'
+            const [roomId, setRoomId] = useState('');
+            const [ratioTemplates, setRatioTemplates] = useState([]);
+            
+            // New UI states based on requirements
+            const [selectedRatioName, setSelectedRatioName] = useState('');
+            const [targetFinishedLength, setTargetFinishedLength] = useState('');
+            const [orderWeight, setOrderWeight] = useState('');
+            const [wastagePercent, setWastagePercent] = useState(10); // Default 10% wastage
+
+            useEffect(() => {
+                try {
+                    const dbString = localStorage.getItem('hairRatioDB');
+                    if (dbString) {
+                        const ratioDb = JSON.parse(dbString);
+                        if (ratioDb.clients && Array.isArray(ratioDb.clients)) {
+                            setRatioTemplates(ratioDb.clients);
+                        }
+                    }
+                } catch (e) {
+                    console.error("Error loading ratio templates", e);
+                }
+            }, []);
+
+            const FINISHED_LENGTHS = [8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40];
+            
+            // Current Selected Template
+            const activeTemplate = ratioTemplates.find(t => t.name === selectedRatioName);
+            // Array of valid finished length indices (columns) for this template
+            const validColIndices = activeTemplate && activeTemplate.matrix
+                ? Object.keys(activeTemplate.matrix).filter(idx => Object.keys(activeTemplate.matrix[idx]).length > 0)
+                : [];
+
+            // Reset dependent states if ratio changes
+            useEffect(() => {
+                setTargetFinishedLength('');
+            }, [selectedRatioName]);
+
+            // Calculate Required vs Available Raw Material
+            const requiredMaterials = [];
+            let totalRequiredWeight = 0;
+            let hasShortfall = false;
+
+            if (activeTemplate && targetFinishedLength && orderWeight) {
+                const weight = Number(orderWeight);
+                if (weight > 0) {
+                    const matrixCol = activeTemplate.matrix[targetFinishedLength] || {};
+                    const wastageMultiplier = 1 + (Number(wastagePercent) / 100);
+
+                    Object.keys(matrixCol).forEach(rawLen => {
+                        const pct = Number(matrixCol[rawLen]);
+                        if (pct > 0) {
+                            const reqFinishedWt = weight * (pct / 100);
+                            const reqRawWt = reqFinishedWt * wastageMultiplier;
+                            const availWt = availableLots.filter(l => l.lengthInches === Number(rawLen)).reduce((sum, l) => sum + l.availableWeightKg, 0);
+                            const shortfall = Math.max(0, reqRawWt - availWt);
+                            
+                            totalRequiredWeight += reqRawWt;
+                            if (shortfall > 0) hasShortfall = true;
+
+                            requiredMaterials.push({
+                                rawLength: Number(rawLen),
+                                requiredKg: reqRawWt,
+                                availableKg: availWt,
+                                shortfallKg: shortfall,
+                                percentage: pct
+                            });
+                        }
+                    });
+                }
+            }
+
+            const handleIssue = (e) => {
+                e.preventDefault();
+                if (!selectedRatioName || !targetFinishedLength || !orderWeight || !roomId) {
+                    return alert('Fill all required fields');
+                }
+                if (requiredMaterials.length === 0) {
+                    return alert('Order calculation derived 0 required material. Check the matrix percentage or order weight.');
+                }
+
+                const newMoNumber = `MO-${1000 + mos.length + 1}`;
+                const chosenFinLenVal = FINISHED_LENGTHS[targetFinishedLength] || targetFinishedLength;
+                
+                const newMo = {
+                    id: generateId(),
+                    moNumber: newMoNumber,
+                    type: targetType, 
+                    issuedLotIds: [], 
+                    targetRoomId: roomId,
+                    mixingRatio: `${selectedRatioName} (${chosenFinLenVal}" Finished)`,
+                    issueDate: new Date().toISOString(),
+                    issuedWeightKg: totalRequiredWeight,
+                    requiredMaterials: requiredMaterials, // Store detailed spec
+                    status: 'OPEN'
+                };
+
+                // Allocate sequentially from oldest matching lots (naive auto-allocation)
+                let updatedLots = [...lotInventory];
+                let allocatedLotIds = [];
+
+                requiredMaterials.forEach(rm => {
+                    let needed = rm.requiredKg;
+                    const matchingLots = updatedLots.filter(l => l.lengthInches === rm.rawLength && l.status === 'AVAILABLE' && l.room === 'SEGREGATED');
+                    for (let lot of matchingLots) {
+                        if (needed <= 0) break;
+                        
+                        if (lot.availableWeightKg <= needed) {
+                            needed -= lot.availableWeightKg;
+                            lot.status = `ISSUED_${targetType}`;
+                            allocatedLotIds.push(lot.id);
+                        } else {
+                            // Split lot inline because it has more weight than needed
+                            const newLotId = lot.id + '-R';
+                            const remainder = lot.availableWeightKg - needed;
+                            
+                            // Edit current lot to be issued exactly to requirement
+                            lot.availableWeightKg = needed;
+                            lot.status = `ISSUED_${targetType}`;
+                            allocatedLotIds.push(lot.id);
+
+                            // Push remainder unissued
+                            updatedLots.push({
+                                ...lot,
+                                id: newLotId,
+                                availableWeightKg: remainder,
+                                status: 'AVAILABLE',
+                                room: 'SEGREGATED'
+                            });
+                            
+                            needed = 0;
+                        }
+                    }
+                });
+
+                newMo.issuedLotIds = allocatedLotIds;
+
+                setMos([newMo, ...mos]);
+                setLotInventory(updatedLots);
+                
+                setSelectedRatioName('');
+                setTargetFinishedLength('');
+                setOrderWeight('');
+                setRoomId('');
+                
+                if (hasShortfall) {
+                    alert(`Phase 2 MO ${newMoNumber} raised WITH SHORTFALL. Certain raw lengths are out of stock.`);
+                } else {
+                    alert(`Phase 2 Manufacturing Order ${newMoNumber} generated perfectly!`);
+                }
+            };
+
+            const activeRooms = targetType === 'HACKLING' ? nrRooms : mrRooms;
+
+            return (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-7xl mx-auto">
+                    <div className="glass-card p-8 bg-white border border-slate-200">
+                        <h3 className="text-xl font-heading font-bold mb-6 border-b border-slate-100 pb-4 text-slate-800">Issue to Hackling / MR Room</h3>
+                        <form onSubmit={handleIssue} className="space-y-4">
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">1. Ratio Matrix Selector</label>
+                                <select className="input-field shadow-sm border-indigo-200" value={selectedRatioName} onChange={e => setSelectedRatioName(e.target.value)} required>
+                                    <option value="">-- Choose a Saved Ratio Matrix --</option>
+                                    {ratioTemplates.map(t => <option key={t.name} value={t.name}>{t.name}</option>)}
+                                </select>
+                            </div>
+
+                            {validColIndices.length > 0 && (
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">2. Target Finished Length</label>
+                                <select className="input-field shadow-sm border-indigo-200" value={targetFinishedLength} onChange={e => setTargetFinishedLength(e.target.value)} required>
+                                    <option value="">-- Select Target Size --</option>
+                                    {validColIndices.map(colIdx => (
+                                        <option key={colIdx} value={colIdx}>{FINISHED_LENGTHS[colIdx]}" Finished Size</option>
+                                    ))}
+                                </select>
+                            </div>
+                            )}
+
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">3. Finished Order Weight (kg)</label>
+                                <input type="number" step="0.01" className="input-field" placeholder="e.g. 5.5" value={orderWeight} onChange={e => setOrderWeight(e.target.value)} required />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">4. Assumed Wastage (%)</label>
+                                <input type="number" step="0.1" className="input-field" placeholder="10" value={wastagePercent} onChange={e => setWastagePercent(e.target.value)} required />
+                            </div>
+
+                            <div className="pt-4 border-t border-slate-100">
+                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Target Process & Room</label>
+                                <div className="flex space-x-4 mb-4">
+                                    <label className="flex items-center text-sm font-medium"><input type="radio" name="ttype" checked={targetType === 'HACKLING'} onChange={() => { setTargetType('HACKLING'); setRoomId(''); }} className="mr-2" /> NRDD (Hackling)</label>
+                                    <label className="flex items-center text-sm font-medium"><input type="radio" name="ttype" checked={targetType === 'MACHINE_REMY'} onChange={() => { setTargetType('MACHINE_REMY'); setRoomId(''); }} className="mr-2" /> Machine Remy 1x1</label>
+                                </div>
+                                <select className="input-field" value={roomId} onChange={e => setRoomId(e.target.value)} required>
+                                    <option value="">-- Choose destination room --</option>
+                                    {activeRooms.map(r => {
+                                        const rName = typeof r === 'object' ? r.name : r;
+                                        return <option key={rName} value={rName}>{rName}</option>;
+                                    })}
+                                </select>
+                            </div>
+
+                            <button type="submit" disabled={requiredMaterials.length === 0} className={`w-full font-bold py-4 rounded transition text-white mt-4 ${hasShortfall ? 'bg-amber-600 hover:bg-amber-700' : 'bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-300'}`}>
+                                {hasShortfall ? `Raise MO Despite Shortfall (${totalRequiredWeight.toFixed(2)} kg)` : `Issue ${totalRequiredWeight.toFixed(2)} kg to Factory Floor`}
+                            </button>
+                        </form>
+                    </div>
+
+                    <div className="glass-card flex flex-col h-[650px] bg-white border border-slate-200 overflow-hidden">
+                        <h3 className="p-4 bg-slate-50 border-b border-slate-200 font-heading font-bold text-slate-800 flex justify-between">
+                            <span>Raw Material Requirements</span>
+                            <span className="text-indigo-700">Total: {totalRequiredWeight.toFixed(2)} kg</span>
+                        </h3>
+                        <div className="overflow-auto flex-1 p-4 bg-slate-50/50">
+                            {!selectedRatioName || !targetFinishedLength || !orderWeight ? (
+                                <div className="text-gray-400 text-center mt-20 flex flex-col items-center">
+                                    <div className="text-4xl mb-3">⚖️</div>
+                                    <p>Select a Ratio, Finished Length, and input Order <br/>Weight to calculate raw material needs.</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-3">
+                                    {requiredMaterials.map(rm => (
+                                        <div key={rm.rawLength} className={`border p-4 rounded-xl flex justify-between items-center shadow-sm ${rm.shortfallKg > 0 ? 'bg-red-50 border-red-200' : 'bg-white border-green-200'}`}>
+                                            <div>
+                                                <div className="font-bold text-lg text-slate-800 space-x-2">
+                                                    <span>{rm.rawLength}" Raw</span>
+                                                    {rm.shortfallKg > 0 && <span className="px-2 py-0.5 bg-red-100 text-red-700 rounded text-xs">Shortfall</span>}
+                                                </div>
+                                                <div className="text-xs text-slate-500 mt-1 uppercase tracking-wider font-semibold">Matrix Mix: {rm.percentage}%</div>
+                                            </div>
+                                            <div className="text-right">
+                                                <div className="font-bold text-indigo-900 text-lg">{rm.requiredKg.toFixed(2)} <span className="text-xs text-slate-500 font-normal">kg req</span></div>
+                                                <div className="text-sm font-medium text-slate-600">Avail: {rm.availableKg.toFixed(2)} kg</div>
+                                                {rm.shortfallKg > 0 && (
+                                                    <div className="text-sm font-bold text-red-600 mt-1 pb-1 border-b border-red-200">Miss: {rm.shortfallKg.toFixed(2)} kg</div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {requiredMaterials.length === 0 && (
+                                        <p className="text-center text-slate-500">The selected matrix has no raw material percentages defined.</p>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // --- 8. Phase 2 Return (Hackling & MR) ---
+        function Phase2Return({ db }) {
+            const { mos, setMos, lotInventory, setLotInventory } = db;
+            // Phase 2 MOs are targetType: HACKLING or MACHINE_REMY
+            const openMos = mos.filter(m => m.status === 'OPEN' && (m.type === 'HACKLING' || m.type === 'MACHINE_REMY'));
+
+            const [selectedMoId, setSelectedMoId] = useState('');
+            const selectedMo = openMos.find(m => m.id === selectedMoId);
+
+            const [outputs, setOutputs] = useState({});
+            const [waste, setWaste] = useState({ processLoss: '' }); // Simplified waste for phase 2
+
+            useEffect(() => { setOutputs({}); setWaste({ processLoss: '' }); }, [selectedMoId]);
+
+            const issuedWeight = selectedMo ? selectedMo.issuedWeightKg : 0;
+            const totalProduced = Object.values(outputs).reduce((sum, val) => sum + Number(val || 0), 0);
+            const totalWaste = Number(waste.processLoss || 0);
+            const totalAccounted = totalProduced + totalWaste;
+
+            // For Demo: lenient tolerance for Phase 2, e.g. 5% due to hackling loss
+            const variancePercent = issuedWeight > 0 ? ((totalAccounted - issuedWeight) / issuedWeight) * 100 : 0;
+            const isReconciled = selectedMo && Math.abs(variancePercent) <= 5.0;
+
+            const handleSave = () => {
+                if (!isReconciled) return;
+
+                const newLots = [];
+                Object.entries(outputs).forEach(([len, weight]) => {
+                    const numWt = Number(weight);
+                    if (numWt > 0) {
+                        // Inherit ID trail from the FIRST lot issued in this MO (simplified for demo)
+                        // True traceability would concatenate all IDs, or create a parent-child graph.
+                        const firstLotId = selectedMo.issuedLotIds[0];
+                        const originLot = lotInventory.find(l => l.id === firstLotId);
+                        const rawIdPart = originLot ? originLot.id.split('-')[0] : 'MIX';
+
+                        // Smart ID: ORIGIN-MO-LENGTH
+                        const lotId = `${rawIdPart}-${selectedMo.moNumber}-L${len}`;
+
+                        const isNrdd = selectedMo.type === 'HACKLING';
+
+                        newLots.push({
+                            id: lotId,
+                            moId: selectedMo.id,
+                            lengthInches: Number(len),
+                            initialWeightKg: numWt,
+                            availableWeightKg: numWt,
+                            status: 'AVAILABLE',
+                            // NRDD goes to FINISHED_GOODS, MR 1x1 goes to WIP
+                            room: isNrdd ? 'FINISHED_GOODS' : 'WIP',
+                            subType: isNrdd ? 'NRDD' : 'MR_1X1',
+                            createdAt: new Date().toISOString(),
+                            mixingRatio: selectedMo.mixingRatio // Carry forward documentation
+                        });
+                    }
+                });
+
+                const updatedMos = mos.map(m => m.id === selectedMo.id ? { ...m, status: 'RETURNED' } : m);
+                setLotInventory([...newLots, ...lotInventory]);
+                setMos(updatedMos);
+                setSelectedMoId('');
+                alert(`Saved! Generated ${newLots.length} new advanced lots.`);
+            };
+
+            return (
+                <div className="max-w-7xl mx-auto space-y-6">
+                    <div className="glass-card p-8">
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Select Open Phase 2 MO</label>
+                        <select className="w-full p-3 border rounded text-lg font-mono" value={selectedMoId} onChange={e => setSelectedMoId(e.target.value)}>
+                            <option value="">-- Choose an Open MO --</option>
+                            {openMos.map(m => (
+                                <option key={m.id} value={m.id}>{m.moNumber} ({m.type} for {m.targetRoomId}) | Issued: {m.issuedWeightKg.toFixed(2)} kg</option>
+                            ))}
+                        </select>
+                        {selectedMo && (
+                            <div className="mt-4 p-4 bg-slate-50 rounded border">
+                                <p><strong>Target:</strong> {selectedMo.type === 'HACKLING' ? 'NRDD' : 'Machine Remy 1x1'}</p>
+                                <p><strong>Mixing Ratio:</strong> {selectedMo.mixingRatio}</p>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 ${!selectedMo ? 'opacity-40 pointer-events-none' : ''}`}>
+                        <div className="glass-card p-8">
+                            <h3 className="text-xl font-bold mb-4 border-b pb-2">Lengths Produced</h3>
+                            <div className="space-y-2 h-64 overflow-y-auto pr-2">
+                                {LENGTHS.map(len => (
+                                    <div key={len} className="flex justify-between items-center mb-2">
+                                        <span className="font-bold w-12">{len}"</span>
+                                        <input type="number" step="0.01" className="p-2 border rounded w-full ml-4" placeholder="0.00" value={outputs[len] || ''} onChange={e => setOutputs({ ...outputs, [len]: e.target.value })} />
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="mt-4 pt-4 border-t">
+                                <label className="block text-sm font-semibold text-red-600 mb-1">Process Loss (kg)</label>
+                                <input type="number" step="0.01" className="input-field" value={waste.processLoss} onChange={e => setWaste({ processLoss: e.target.value })} placeholder="0.00" />
+                            </div>
+                        </div>
+
+                        <div className="glass-card p-8 flex flex-col justify-between">
+                            <div>
+                                <h3 className="text-xl font-bold mb-4 border-b pb-2">Reconciliation</h3>
+                                <div className="space-y-2 text-lg font-mono">
+                                    <div className="flex justify-between text-gray-600"><span>Target:</span> <span>{issuedWeight.toFixed(2)}</span></div>
+                                    <div className="flex justify-between text-green-700"><span>Produced:</span> <span>{totalProduced.toFixed(2)}</span></div>
+                                    <div className="flex justify-between text-red-600 border-b pb-2"><span>Loss:</span> <span>{totalWaste.toFixed(2)}</span></div>
+                                    <div className="flex justify-between font-bold pt-2"><span>Accounted:</span> <span>{totalAccounted.toFixed(2)}</span></div>
+                                    <div className="flex justify-between text-sm mt-4 text-slate-500">
+                                        <span>Variance (%):</span> <span>{variancePercent.toFixed(2)}% (Max ±5%)</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <button onClick={handleSave} disabled={!isReconciled} className={`w-full py-4 text-white font-bold rounded-xl mt-6 ${isReconciled ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-300'}`}>
+                                Save {"&"} Transfer to Inventory
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // --- 9. Phase 3 Issuance (MR Bulk) ---
+        function Phase3MoIssue({ db }) {
+            const { lotInventory, mos, setMos, setLotInventory } = db;
+            // Only WIP MR_1x1 stock
+            const availableLots = lotInventory.filter(l => l.status === 'AVAILABLE' && l.room === 'WIP' && l.subType === 'MR_1X1');
+
+            const [selectedLotIds, setSelectedLotIds] = useState([]);
+            const [mixingRatio, setMixingRatio] = useState('');
+            const [ratioTemplates, setRatioTemplates] = useState([]);
+
+            useEffect(() => {
+                try {
+                    const dbString = localStorage.getItem('hairRatioDB');
+                    if (dbString) {
+                        const ratioDb = JSON.parse(dbString);
+                        if (ratioDb.clients && Array.isArray(ratioDb.clients)) {
+                            setRatioTemplates(ratioDb.clients);
+                        }
+                    }
+                } catch (e) {
+                    console.error("Error loading ratio templates", e);
+                }
+            }, []);
+
+            const selectedWeight = availableLots.filter(l => selectedLotIds.includes(l.id)).reduce((sum, l) => sum + l.availableWeightKg, 0);
+
+            const handleToggleLot = (id) => setSelectedLotIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+
+            const handleIssue = (e) => {
+                e.preventDefault();
+                if (selectedLotIds.length === 0 || !mixingRatio) return;
+                const newMoNumber = `MO-${1000 + mos.length + 1}`;
+                const newMo = {
+                    id: generateId(), moNumber: newMoNumber, type: 'MR_BULK', issuedLotIds: selectedLotIds, mixingRatio: mixingRatio, issueDate: new Date().toISOString(), issuedWeightKg: selectedWeight, status: 'OPEN'
+                };
+                const updatedLots = lotInventory.map(l => selectedLotIds.includes(l.id) ? { ...l, status: 'ISSUED_MR_BULK' } : l);
+                setMos([newMo, ...mos]); setLotInventory(updatedLots); setSelectedLotIds([]); setMixingRatio('');
+                alert(`MR Bulk MO ${newMoNumber} generated!`);
+            };
+
+            return (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-7xl mx-auto">
+                    <div className="bg-white p-6 rounded-xl shadow-sm">
+                        <h3 className="text-xl font-heading font-bold mb-6 border-b border-slate-100 pb-4 text-slate-800">Issue Work-In-Progress for MR Bulk</h3>
+                        <form onSubmit={handleIssue} className="space-y-4">
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Mixing Ratio for MR Bulk</label>
+                                <div className="flex space-x-2">
+                                    <select className="input-field w-1/3 text-sm" onChange={e => e.target.value && setMixingRatio(e.target.value)} defaultValue="">
+                                        <option value="" disabled>-- Ratio Preset --</option>
+                                        {ratioTemplates.map(t => <option key={t.name} value={t.name}>{t.name}</option>)}
+                                    </select>
+                                    <input type="text" className="input-field w-2/3" value={mixingRatio} onChange={e => setMixingRatio(e.target.value)} placeholder="e.g. 100% 18inch" required />
+                                </div>
+                            </div>
+                            <button type="submit" disabled={selectedLotIds.length === 0} className="w-full bg-yellow-600 text-white font-bold py-4 rounded hover:bg-yellow-700">Issue {selectedWeight.toFixed(2)} kg to Bulk Rm</button>
+                        </form>
+                    </div>
+                    <div className="bg-white p-6 rounded-xl shadow-sm h-[500px] flex flex-col">
+                        <h3 className="font-bold border-b pb-2">Select WIP MR_1x1 Lots</h3>
+                        <div className="overflow-auto flex-1 pt-2">
+                            {availableLots.map(lot => (
+                                <div key={lot.id} onClick={() => handleToggleLot(lot.id)} className={`cursor-pointer border p-2 mb-2 rounded flex justify-between items-center ${selectedLotIds.includes(lot.id) ? 'bg-yellow-50 border-yellow-400' : ''}`}>
+                                    <div><div className="font-mono font-bold text-sm">{lot.id}</div><div className="text-xs">{lot.lengthInches}" - {lot.subType}</div></div>
+                                    <div className="font-bold">{lot.availableWeightKg.toFixed(2)}</div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // --- 10. Phase 3 Return (MR Bulk) ---
+        function Phase3Return({ db }) {
+            const { mos, setMos, lotInventory, setLotInventory } = db;
+            const openMos = mos.filter(m => m.status === 'OPEN' && m.type === 'MR_BULK');
+            const [selectedMoId, setSelectedMoId] = useState('');
+            const selectedMo = openMos.find(m => m.id === selectedMoId);
+            const [bulkWeight, setBulkWeight] = useState('');
+
+            const handleSave = () => {
+                if (!selectedMo || !bulkWeight) return;
+                const newLot = {
+                    id: `MBULK-${selectedMo.moNumber}`, moId: selectedMo.id, lengthInches: 'MIXED', initialWeightKg: Number(bulkWeight), availableWeightKg: Number(bulkWeight), status: 'AVAILABLE', room: 'SEMI_FINISHED', subType: 'MR_BULK', createdAt: new Date().toISOString(), mixingRatio: selectedMo.mixingRatio
+                };
+                const updatedMos = mos.map(m => m.id === selectedMo.id ? { ...m, status: 'RETURNED' } : m);
+                setLotInventory([newLot, ...lotInventory]); setMos(updatedMos); setSelectedMoId(''); setBulkWeight('');
+                alert('Saved! Transferred to Semi-Finished Inventory Room.');
+            };
+
+            return (
+                <div className="max-w-2xl mx-auto space-y-6">
+                    <div className="glass-card p-8">
+                        <label className="block text-sm font-semibold mb-1">Select MR Bulk MO</label>
+                        <select className="w-full p-2 border mb-4" value={selectedMoId} onChange={e => setSelectedMoId(e.target.value)}>
+                            <option value="">-- Select --</option>
+                            {openMos.map(m => <option key={m.id} value={m.id}>{m.moNumber} | target: {m.issuedWeightKg.toFixed(2)} kg</option>)}
+                        </select>
+                        <label className="block text-sm font-semibold mb-1 pt-4 border-t">Final Output Weight (MR Bulk kg)</label>
+                        <input type="number" step="0.01" className="w-full p-4 text-xl border font-mono rounded" value={bulkWeight} onChange={e => setBulkWeight(e.target.value)} />
+                        <button onClick={handleSave} disabled={!selectedMo || !bulkWeight} className="w-full py-4 bg-orange-600 text-white font-bold rounded-xl mt-4">Generate Semi-Finished Bulk Lot</button>
+                    </div>
+                </div>
+            );
+        }
+
+        // --- 11. Master Inventory Ledgers ---
+        function MasterInventory({ db }) {
+            const { lotInventory } = db;
+            const availableLots = lotInventory.filter(l => l.status === 'AVAILABLE');
+
+            const [roomFilter, setRoomFilter] = useState('ALL');
+
+            const filteredLots = availableLots.filter(l => {
+                if (roomFilter === 'ALL') return true;
+                if (roomFilter === 'SEGREGATED' && (!l.room || l.room === 'SEGREGATED')) return true;
+                return l.room === roomFilter;
+            });
+
+            return (
+                <div className="space-y-6 max-w-7xl mx-auto">
+                    <div className="bg-white rounded-xl shadow-sm border p-4 flex space-x-2">
+                        {['ALL', 'SEGREGATED', 'WIP', 'FINISHED_GOODS', 'SEMI_FINISHED'].map(f => (
+                            <button key={f} onClick={() => setRoomFilter(f)} className={`px-4 py-2 rounded font-bold text-sm ${roomFilter === f ? 'bg-slate-800 text-white' : 'bg-gray-100 text-gray-600'}`}>
+                                {f.replace('_', ' ')} Room
+                            </button>
+                        ))}
+                    </div>
+                    <div className="bg-white rounded-xl shadow-sm overflow-hidden min-h-[500px]">
+                        <table className="custom-table">
+                            <thead>
+                                <tr>
+                                    <th className="p-3">Lot ID</th><th className="p-3">Location (Room)</th><th className="p-3">Type</th><th className="p-3">Length</th><th className="p-3 text-right">Avail Wt(kg)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {filteredLots.map(lot => (
+                                    <tr key={lot.id} className="border-b hover:bg-slate-50">
+                                        <td className="p-3 font-mono font-bold text-blue-700">{lot.id}</td>
+                                        <td className="p-3"><span className="px-2 py-1 rounded-full bg-slate-200 text-slate-800 text-xs font-bold">{lot.room || 'SEGREGATED'}</span></td>
+                                        <td className="p-3">{lot.subType || lot.density}</td>
+                                        <td className="p-3">{lot.lengthInches}{lot.lengthInches === 'MIXED' ? '' : '"'}</td>
+                                        <td className="p-3 text-right font-mono text-green-700 font-bold">{lot.availableWeightKg.toFixed(2)}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            );
+        }
+
+        // --- Extracted Settings Redux to Support Objects ---
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+
+</body>
+
+</html>

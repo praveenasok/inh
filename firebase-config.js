@@ -1,11 +1,36 @@
-const firebaseConfig = {
-  apiKey: "AIzaSyCW3FsY_QwFuqZiQaWg4jmmmjlSUR9DxNA",
-  authDomain: "inhsuite.firebaseapp.com",
+// Allow local override of Firebase config via window.APP_LOCAL_FIREBASE_CONFIG
+const defaultFirebaseConfig = {
   projectId: "inhsuite",
-  storageBucket: "inhsuite.appspot.com",
-  messagingSenderId: "263357798472",
-  appId: "1:263357798472:web:e03f4a7264a19fe4bfe07d"
+  appId: "1:354912080861:web:05d3903253cdfdd78c1c34",
+  storageBucket: "inhsuite.firebasestorage.app",
+  apiKey: "AIzaSyB-38dsS5XPZA3lvtW7bqRzaWURTlSnWIk",
+  authDomain: "inhsuite.firebaseapp.com",
+  messagingSenderId: "354912080861",
+  measurementId: "G-T0MTY8584L"
 };
+
+let __override = null;
+try {
+  if (typeof window !== 'undefined' && window.localStorage) {
+    const raw = window.localStorage.getItem('APP_LOCAL_FIREBASE_CONFIG');
+    if (raw) {
+      const obj = JSON.parse(raw);
+      const key = obj && obj.apiKey;
+      const pid = obj && obj.projectId;
+      if (key && typeof key === 'string' && key.startsWith('AIza') && key.length > 20 && pid) {
+        __override = obj;
+      }
+    }
+  }
+} catch (_) {}
+
+if (typeof window !== 'undefined' && __override && !window.APP_LOCAL_FIREBASE_CONFIG) {
+  window.APP_LOCAL_FIREBASE_CONFIG = __override;
+}
+
+const firebaseConfig = (typeof window !== 'undefined' && window.APP_LOCAL_FIREBASE_CONFIG)
+  ? { ...defaultFirebaseConfig, ...window.APP_LOCAL_FIREBASE_CONFIG }
+  : defaultFirebaseConfig;
 
 const firebaseCollections = {
   PRODUCTS: 'products',

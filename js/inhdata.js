@@ -7,8 +7,8 @@
 
 (function(global){
   const DB_NAME = 'INHDATA';
-  const DB_VERSION = 2;
-  const STORES = ['meta','products','salesmen','colors','styles','company','quotes','syncQueue'];
+  const DB_VERSION = 3;
+  const STORES = ['meta','products','salesmen','colors','styles','company','quotes','clients','syncQueue'];
 
   // Utility: simple event bus per collection
   const listeners = new Map();
@@ -55,7 +55,56 @@
             }
           }
         };
+        req.onsuccess = () => {
+          const db = req.result;
+          try {
+            const missing = STORES.filter(s => !db.objectStoreNames.contains(s));
+            if (missing.length > 0) {
+              const nextVersion = (db.version || DB_VERSION) + 1;
+              db.close();
+              const req2 = global.indexedDB.open(DB_NAME, nextVersion);
+              req2.onupgradeneeded = () => {
+                const db2 = req2.result;
+                for (const store of STORES) {
+                  if (!db2.objectStoreNames.contains(store)) {
+                    db2.createObjectStore(store, { keyPath: 'id' });
+                  }
+                }
+              };
+              req2.onsuccess = () => resolve(req2.result);
+              req2.onerror = () => reject(req2.error);
+              return;
+            }
+          } catch (_) {}
+          resolve(db);
+        };
+        req.onerror = () => reject(req.error);
+      } catch (e) {
+        reject(e);
+      }
+    });
+  }
+
+  // Ensure a given store exists; if not, perform an upgrade to create it
+  function ensureStore(db, store){
+    return new Promise((resolve, reject) => {
+      try {
+        if (db && db.objectStoreNames && db.objectStoreNames.contains(store)) {
+          return resolve(db);
+        }
+        const nextVersion = (db && db.version ? db.version : DB_VERSION) + 1;
+        try { db && db.close && db.close(); } catch (_) {}
+        const req = global.indexedDB.open(DB_NAME, nextVersion);
+        req.onupgradeneeded = () => {
+          const db2 = req.result;
+          for (const s of STORES) {
+            if (!db2.objectStoreNames.contains(s)) {
+              db2.createObjectStore(s, { keyPath: 'id' });
+            }
+          }
+        };
         req.onsuccess = () => resolve(req.result);
+        req.onblocked = () => reject(new Error('IndexedDB upgrade blocked by another open connection'));
         req.onerror = () => reject(req.error);
       } catch (e) {
         reject(e);
@@ -162,9 +211,30 @@
     remoteEnabled: true,
     syncIntervalId: null,
 
-    async initialize(){
+  async initialize(){
       if (this.initialized) return;
       this.db = await openDB();
+      // Disable remote sync entirely when user is not authenticated to avoid permission errors
+      try {
+        const authed = !!(global.firebase && global.firebase.auth && global.firebase.auth().currentUser);
+        if (!authed) {
+          this.fs = null;
+          this.remoteEnabled = false;
+          metrics.permissionDenied = false;
+          metrics.remoteEnabled = false;
+          // Emit existing local caches so UI can render without remote
+          try {
+            emit('products', await idbGetAll(this.db, 'products'));
+            emit('salesmen', await idbGetAll(this.db, 'salesmen'));
+            emit('colors', await idbGetAll(this.db, 'colors'));
+            emit('styles', await idbGetAll(this.db, 'styles'));
+            emit('company', await idbGetAll(this.db, 'company'));
+            emit('quotes', await idbGetAll(this.db, 'quotes'));
+            emit('clients', await idbGetAll(this.db, 'clients'));
+          } catch (_) {}
+          return;
+        }
+      } catch (_) {}
       // Try to initialize Firestore; if it fails or permissions are missing, disable remote
       try {
         this.fs = getFirestore();
@@ -176,7 +246,7 @@
       }
       // Initial remote-to-local sync for key collections
       if (this.fs && this.remoteEnabled) {
-        await this._primeFromRemote(['products','salesmen','colors','styles','company','quotes']);
+        await this._primeFromRemote(['products','salesmen','colors','styles','company','quotes','clients']);
         // Start realtime subscriptions
         await this._subscribeRemote('products');
         await this._subscribeRemote('salesmen');
@@ -184,6 +254,7 @@
         await this._subscribeRemote('styles');
         await this._subscribeRemote('company');
         await this._subscribeRemote('quotes');
+        await this._subscribeRemote('clients');
         // Ensure derived salesmen names are available after initial prime
         try { await this._updateSalesmenNamesMeta(); } catch (_) {}
         // Start outbound sync loop
@@ -197,6 +268,7 @@
           emit('styles', await idbGetAll(this.db, 'styles'));
           emit('company', await idbGetAll(this.db, 'company'));
           emit('quotes', await idbGetAll(this.db, 'quotes'));
+          emit('clients', await idbGetAll(this.db, 'clients'));
         } catch (_) {}
       }
       this.initialized = true;
@@ -299,6 +371,7 @@
     // Removed: price list derivation. Streamlined INHDATA does not manage derived collections.
 
     async getAll(collection){
+      try { this.db = await ensureStore(this.db, collection); } catch (_) {}
       const data = await idbGetAll(this.db, collection);
       return data;
     },
@@ -308,6 +381,7 @@
     },
 
     async upsert(collection, doc){
+      try { this.db = await ensureStore(this.db, collection); } catch (_) {}
       const valid = ensureValidDoc(collection, { ...doc, _origin: 'local' });
       await ensureReferentialIntegrity(this.db, collection, valid);
       await idbPut(this.db, collection, valid);
@@ -317,6 +391,7 @@
     },
 
     async remove(collection, id){
+      try { this.db = await ensureStore(this.db, collection); } catch (_) {}
       await idbDelete(this.db, collection, id);
       emit(collection, await idbGetAll(this.db, collection));
       await this._enqueueSync(collection, { id, _delete: true, updatedAt: Date.now() });
@@ -324,6 +399,7 @@
 
     async _enqueueSync(collection, doc){
       try {
+        try { this.db = await ensureStore(this.db, 'syncQueue'); } catch (_) {}
         const item = { id: `${collection}:${doc.id}`, collection, payload: doc, updatedAt: Date.now() };
         await idbPut(this.db, 'syncQueue', item);
       } catch (e) {
@@ -398,6 +474,8 @@
           emit('colors', await idbGetAll(this.db, 'colors'));
           emit('styles', await idbGetAll(this.db, 'styles'));
           emit('company', await idbGetAll(this.db, 'company'));
+          emit('quotes', await idbGetAll(this.db, 'quotes'));
+          emit('clients', await idbGetAll(this.db, 'clients'));
         } catch (_) {}
       } catch (_) {}
     },
@@ -456,13 +534,13 @@
           };
 
           const id = pick(['id','ID','docId']);
-          const name = pick(['name','Name','SalesmanName','salesmanName']);
+          const name = pick(['name','Name','FullName','fullName','Full Name','SalesmanName','salesmanName']);
           const email = pick(['email','Email']);
           const phone = pick(['phone','Phone','mobile','Mobile','contact','Contact']);
           const region = pick(['region','Region','zone','Zone']);
           const city = pick(['city','City']);
           const country = pick(['country','Country']);
-          const code = pick(['code','Code']);
+          const code = pick(['code','Code','3Code','code3','code_3']);
           const designation = pick(['designation','Designation','title','Title']);
           const team = pick(['team','Team','group','Group']);
           const status = pick(['status','Status','active','Active']);
@@ -470,8 +548,9 @@
           const createdAt = pick(['createdAt','created_at','CreatedAt']);
           const updatedAt = pick(['updatedAt','updated_at','UpdatedAt','lastUpdated','LastUpdated']);
 
+
           // Collect any additional attributes present in record
-          const known = new Set(['id','ID','docId','name','Name','SalesmanName','salesmanName','email','Email','phone','Phone','mobile','Mobile','contact','Contact','region','Region','zone','Zone','city','City','country','Country','code','Code','designation','Designation','title','Title','team','Team','group','Group','status','Status','active','Active','notes','Notes','remark','Remark','createdAt','created_at','CreatedAt','updatedAt','updated_at','UpdatedAt','lastUpdated','LastUpdated']);
+          const known = new Set(['id','ID','docId','name','Name','FullName','fullName','Full Name','SalesmanName','salesmanName','email','Email','phone','Phone','mobile','Mobile','contact','Contact','region','Region','zone','Zone','city','City','country','Country','code','Code','3Code','code3','code_3','designation','Designation','title','Title','team','Team','group','Group','status','Status','active','Active','notes','Notes','remark','Remark','createdAt','created_at','CreatedAt','updatedAt','updated_at','UpdatedAt','lastUpdated','LastUpdated']);
           const extra = {};
           try {
             Object.keys(r || {}).forEach(k => { if (!known.has(k)) extra[k] = r[k]; });

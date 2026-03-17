@@ -9,16 +9,16 @@
     "python-server": "python3 -m http.server 8000",
     "node-server": "node server.js",
     "sheets:import": "node sheets-to-firestore.js",
-    "deploy": "firebase deploy",
+    "deploy": "node build_suppliers.js && node build_clients.js && firebase deploy",
     "validate-data": "echo 'Data validation skipped - deploy.js not found'",
     "sync-sheets": "echo 'Sheets sync skipped - deploy.js not found'",
     "deploy-quick": "npm run deploy",
     "setup-deployment": "echo 'Setup deployment skipped'",
     "setup-firebase": "echo 'Setup firebase skipped'",
     "firebase-login": "firebase login",
-    "firebase-deploy": "firebase deploy",
+    "firebase-deploy": "node build_suppliers.js && node build_clients.js && firebase deploy",
     "firebase-rules": "firebase deploy --only firestore,storage",
-    "firebase-hosting": "firebase deploy --only hosting"
+    "firebase-hosting": "node build_suppliers.js && node build_clients.js && firebase deploy --only hosting"
   },
   "keywords": [
     "price-list",
@@ -34,7 +34,7 @@
   },
   "dependencies": {
     "crypto": "^1.0.1",
-    "firebase-admin": "^13.5.0",
+    "firebase-admin": "^13.6.0",
     "google-spreadsheet": "^5.0.2",
     "googleapis": "^159.0.0",
     "node-cron": "^4.2.1"

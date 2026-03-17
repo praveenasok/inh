@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order List - InstaQuote Suite</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Spreadsheet Styling */
+        .spreadsheet-container {
+            width: 100%;
+            height: calc(100vh - 160px);
+            overflow: auto;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: #fff;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .spreadsheet-table {
+            border-collapse: collapse;
+            white-space: nowrap;
+            width: max-content;
+            min-width: 100%;
+        }
+
+        .spreadsheet-table th,
+        .spreadsheet-table td {
+            border: 1px solid #cbd5e1;
+            padding: 0;
+            margin: 0;
+        }
+
+        .spreadsheet-table th {
+            background-color: #f8fafc;
+            color: #334155;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            padding: 8px 12px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .spreadsheet-table th .resizer {
+            display: inline-block;
+            width: 5px;
+            height: 100%;
+            position: absolute;
+            right: 0;
+            top: 0;
+            cursor: col-resize;
+        }
+        
+        /* Sticky first column */
+        .spreadsheet-table th:first-child,
+        .spreadsheet-table td:first-child {
+            position: sticky;
+            left: 0;
+            z-index: 20;
+            background-color: #f8fafc;
+        }
+        
+        .spreadsheet-table th:first-child {
+            z-index: 30; /* Higher than top header row and left col */
+        }
+
+        .spreadsheet-table input {
+            width: 100%;
+            min-width: 80px;
+            border: none;
+            padding: 8px 10px;
+            font-size: 0.85rem;
+            outline: none;
+            background: transparent;
+        }
+
+        .spreadsheet-table input:focus {
+            background: #eff6ff;
+            box-shadow: inset 0 0 0 2px #3b82f6;
+            z-index: 5;
+            position: relative;
+        }
+
+        .selected-cell {
+            background-color: #e0e7ff !important; /* light indigo */
+            box-shadow: inset 0 0 0 1px #818cf8 !important; 
+        }
+        
+        .spreadsheet-table select {
+            width: 100%;
+            border: none;
+            padding: 8px 10px;
+            font-size: 0.85rem;
+            outline: none;
+            background: transparent;
+            cursor: pointer;
+        }
+        
+        .spreadsheet-table select:focus {
+            background: #eff6ff;
+            box-shadow: inset 0 0 0 2px #3b82f6;
+        }
+
+        .row-number {
+            background-color: #f8fafc;
+            color: #64748b;
+            text-align: center;
+            font-size: 0.75rem;
+            font-weight: 600;
+            width: 40px;
+            padding: 0 !important;
+            user-select: none;
+        }
+
+        .spreadsheet-table tr:hover td {
+            background-color: #f1f5f9;
+        }
+        .spreadsheet-table tr:hover td:first-child {
+            background-color: #e2e8f0;
+        }
+
+        /* Drag & Drop Fill Handle */
+        .cell-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+        }
+        
+        .fill-handle {
+            position: absolute;
+            bottom: -1px;
+            right: -1px;
+            width: 8px;
+            height: 8px;
+            background-color: #3b82f6;
+            border: 1px solid white;
+            cursor: crosshair;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .cell-wrapper:focus-within .fill-handle {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .spreadsheet-table td {
+            position: relative; 
+        }
+
+        /* Utilities */
+        datalist {
+            display: none;
+        }
+        
+        .spreadsheet-instruction {
+            padding: 10px 14px;
+            background: #e0f2fe;
+            border-left: 4px solid #3b82f6;
+            margin-bottom: 12px;
+            font-size: 0.85rem;
+            color: #0369a1;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <!-- Global Navigation -->
+    <script>window.navConfig = { siteTitle: 'InstaQuote Suite' };</script>
+    <script src="js/navigation-loader.js"></script>
+
+    <div class="max-w-[98%] mx-auto py-6">
+        
+        <!-- Header & Top Controls -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
+            <div>
+                <h1 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fas fa-table-list text-blue-600"></i> Order List Database
+                </h1>
+                <p class="text-sm text-slate-500 mt-1">Manage all your orders in a unified spreadsheet interface.</p>
+            </div>
+            <div class="flex flex-wrap gap-2">
+                <button id="addColBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm px-4 py-2 rounded shadow transition-colors flex items-center gap-2">
+                    <i class="fas fa-columns"></i> Add Column
+                </button>
+                <button id="exportCsvBtn" class="bg-green-600 hover:bg-green-700 text-white text-sm px-4 py-2 rounded shadow transition-colors flex items-center gap-2">
+                    <i class="fas fa-file-csv"></i> Export CSV
+                </button>
+            </div>
+        </div>
+
+        <div class="spreadsheet-instruction">
+            <strong>Spreadsheet Tips:</strong>
+            <ul class="list-disc ml-5 mt-1 space-y-1">
+                <li><strong>Copy/Paste (Ctrl+C / Ctrl+V):</strong> You can paste multiple rows or columns copied directly from Excel straight into any cell.</li>
+                <li><strong>Fill Down (Ctrl+D):</strong> Instantly copies the value from the cell directly above it.</li>
+                <li><strong>Drag to Fill:</strong> Click an input, grab the blue square on its bottom-right corner, and drag to paint the value across other cells.</li>
+            </ul>
+        </div>
+
+        <!-- Dynamic Datalists -->
+        <div id="datalist-container"></div>
+        
+        <!-- Price List Datalist (from Ratio Mixer) -->
+        <datalist id="list-PriceList"></datalist>
+
+        <!-- The Spreadsheet -->
+        <div class="spreadsheet-container relative" id="spreadsheet-container">
+            <table class="spreadsheet-table" id="order-table">
+                <thead>
+                    <tr id="table-header-row">
+                        <!-- Headers injected by JS -->
+                    </tr>
+                </thead>
+                <tbody id="table-body">
+                    <!-- Rows injected by JS -->
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="mt-4 flex justify-between items-center text-sm text-slate-500">
+            <div id="status-text">Ready.</div>
+            <div>
+                <button id="addRowBtn" class="bg-slate-200 hover:bg-slate-300 text-slate-700 text-sm px-4 py-2 rounded shadow transition-colors flex items-center gap-2">
+                    <i class="fas fa-plus"></i> Add +10 Rows
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="js/order-list.js"></script>
+
+</body>
+</html>

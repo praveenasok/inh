@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shipping Rate Calculator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="../styles.css">
+    <!-- html2canvas for JPG export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!-- Removed jsPDF -->
+    <style>
+        /* Custom CSS from pricelists.html */
+        .mobile-padding {
+            padding: 1rem;
+        }
+
+        .shadow-soft {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        /* Navigation link styles */
+        .nav-btn {
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 48px;
+            padding: 12px 16px;
+            font-weight: 500;
+            cursor: pointer;
+            touch-action: manipulation;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            border: 2px solid #e2e8f0;
+            box-shadow: 0 4px 12px rgba(71, 85, 105, 0.15);
+        }
+
+        .nav-btn:hover {
+            text-decoration: none;
+            background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+            border-color: #cbd5e1;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(71, 85, 105, 0.2);
+        }
+
+        .nav-btn.nav-btn-active {
+            background: #081249;
+            color: white !important;
+            border: 2px solid #081249;
+            box-shadow: 0 4px 12px rgba(8, 18, 73, 0.3);
+        }
+
+        .nav-btn.nav-btn-active:hover {
+            background: #0a1555;
+            border-color: #0a1555;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(8, 18, 73, 0.4);
+        }
+
+        /* Mobile menu styles handled by Tailwind classes */
+    </style>
+</head>
+
+<body class="min-h-screen bg-gradient-to-br from-amber-50 via-rose-50 to-orange-100 text-slate-800">
+
+    <div class="app-container flex flex-col min-h-screen">
+        <!-- Navigation -->
+        <script>window.navConfig = { siteTitle: 'Shipping Calculator' };</script>
+        <script src="../js/navigation-loader.js"></script>
+        <main class="flex-1 w-full">
+            <section id="shipping-calculator" class="tool-section active pt-4 px-4 pb-0">
+
+
+                <div class="calculator-card mb-2">
+                    <div class="input-group">
+                        <label for="currency-select">Currency</label>
+                        <div class="select-wrapper">
+                            <select id="currency-select">
+                                <option value="INR" selected>INR - Indian Rupee</option>
+                                <option value="USD">USD - US Dollar</option>
+                                <option value="EUR">EUR - Euro</option>
+                                <option value="GBP">GBP - British Pound</option>
+                                <option value="AED">AED - UAE Dirham</option>
+                                <option value="CAD">CAD - Canadian Dollar</option>
+                                <option value="AUD">AUD - Australian Dollar</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label for="provider-select">Shipping Provider</label>
+                        <div class="select-wrapper">
+                            <select id="provider-select">
+                                <!-- Options will be populated by JS -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="country-search">Destination Country</label>
+                        <div class="country-autocomplete-wrapper">
+                            <input type="text" id="country-search" placeholder="Start typing a country…"
+                                autocomplete="off" spellcheck="false">
+                            <!-- Hidden input keeps the zone value; JS reads this as #country-select -->
+                            <input type="hidden" id="country-select">
+                            <ul id="country-suggestions" class="country-suggestions" role="listbox"></ul>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="weight-input">Weight (kg)</label>
+                        <input type="number" id="weight-input" placeholder="0.0" step="0.5" min="0.5" value="0.5">
+                    </div>
+
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label for="fuel-surcharge">Fuel Surcharge (%)</label>
+                            <input type="number" id="fuel-surcharge" value="32.5" step="0.1" min="0">
+                        </div>
+                        <div class="input-group checkbox-group">
+                            <label for="commercial-check">
+                                <input type="checkbox" id="commercial-check">
+                                Commercial Shipment
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="results-section" id="results-section" style="display: none;">
+                        <div class="result-row">
+                            <span class="label">Zone</span>
+                            <span class="value" id="zone-display">-</span>
+                        </div>
+                        <div class="divider"></div>
+                        <div class="result-row">
+                            <span class="label">Base Rate</span>
+                            <span class="value" id="base-rate">-</span>
+                        </div>
+                        <div class="result-row">
+                            <span class="label">Demand Charge</span>
+                            <span class="value" id="demand-charge">-</span>
+                        </div>
+                        <div class="result-row">
+                            <span class="label">Fuel Surcharge</span>
+                            <span class="value" id="fuel-amount">-</span>
+                        </div>
+                        <div class="result-row" id="commercial-row" style="display: none;">
+                            <span class="label">Commercial Charge</span>
+                            <span class="value" id="commercial-charge">-</span>
+                        </div>
+                        <div class="divider"></div>
+                        <div class="result-row subtotal">
+                            <span class="label">Subtotal</span>
+                            <span class="value" id="subtotal">-</span>
+                        </div>
+                        <div class="result-row">
+                            <span class="label">GST (18%)</span>
+                            <span class="value" id="gst-amount">-</span>
+                        </div>
+                        <div class="result-row total highlight">
+                            <span class="label">Total Payable <span
+                                    class="text-xs opacity-75 font-normal block mt-0.5">(Incl. ₹500
+                                    margin)</span></span>
+                            <span class="value" id="total-payable">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="inline-rate-table-container" class="mt-4 mb-12 w-full max-w-[600px] mx-auto">
+                    <div class="bg-white rounded-xl shadow-lg flex flex-col overflow-hidden border border-gray-100">
+                        <div
+                            class="p-5 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-gray-50">
+                            <div class="mb-4 sm:mb-0">
+                                <h2 class="text-xl font-bold text-gray-800">Complete Shipping Rates</h2>
+                                <p class="text-sm text-gray-600 mt-1" id="table-subtitle">Rates for [Country] via
+                                    [Provider]</p>
+                            </div>
+                            <div class="flex items-center gap-2 self-end sm:self-auto relative group">
+                                <button id="print-btn"
+                                    class="text-gray-700 hover:text-gray-900 transition-colors px-3 py-1.5 rounded-md hover:bg-gray-50 bg-white border border-gray-300 shadow-sm flex items-center gap-2"
+                                    title="Print Table">
+                                    <i class="fas fa-print"></i> <span class="text-sm font-medium">Print</span>
+                                </button>
+                                <button id="download-jpg-btn"
+                                    class="text-gray-700 hover:text-gray-900 transition-colors px-3 py-1.5 rounded-md hover:bg-gray-50 bg-white border border-gray-300 shadow-sm flex items-center gap-2"
+                                    title="Download JPG">
+                                    <i class="fas fa-image"></i> <span class="text-sm font-medium">JPG</span>
+                                </button>
+
+                                <!-- Export Popover Dropdown -->
+                                <div id="export-modal"
+                                    class="absolute top-full right-0 mt-2 w-72 bg-white rounded-xl shadow-xl border border-gray-200 z-50 hidden">
+                                    <div class="p-4">
+                                        <div class="flex justify-between items-center mb-3">
+                                            <h3 id="export-modal-title" class="text-sm font-bold text-gray-800">Export
+                                                Range</h3>
+                                            <span
+                                                class="close-export-btn cursor-pointer text-gray-400 hover:text-gray-800 text-lg leading-none">&times;</span>
+                                        </div>
+                                        <div class="mb-3 space-y-3">
+                                            <div>
+                                                <label for="export-from-weight"
+                                                    class="block text-xs font-medium text-gray-600 mb-1">From Weight
+                                                    (kg)</label>
+                                                <select id="export-from-weight"
+                                                    class="w-full border border-gray-200 rounded-md p-1.5 text-xs focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none bg-gray-50">
+                                                    <!-- Populated by JS -->
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label for="export-to-weight"
+                                                    class="block text-xs font-medium text-gray-600 mb-1">To Weight
+                                                    (kg)</label>
+                                                <select id="export-to-weight"
+                                                    class="w-full border border-gray-200 rounded-md p-1.5 text-xs focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none bg-gray-50">
+                                                    <!-- Populated by JS -->
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <button id="confirm-export-btn"
+                                            class="w-full py-2 text-xs font-medium text-white bg-gray-800 rounded-md hover:bg-gray-900 transition-colors flex justify-center items-center gap-2">
+                                            <i id="export-btn-icon" class="fas fa-check"></i> <span
+                                                id="export-btn-text">Confirm</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                        <div class="p-0 flex-grow w-full">
+                            <div class="w-full">
+                                <div id="rate-grid-container"
+                                    class="p-4 bg-gray-50 border-t border-gray-200 overflow-x-auto">
+                                    <!-- Table will be populated by JS -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+
+
+
+
+    <script src="data.js?v=15"></script>
+    <script src="script.js?v=15"></script>
+    <script>
+        function toggleMobileMenu() {
+            const hamburger = document.querySelector('.hamburger-menu');
+            const mobileMenu = document.querySelector('.mobile-menu');
+            if (!hamburger || !mobileMenu) return;
+            hamburger.classList.toggle('active');
+            mobileMenu.classList.toggle('active');
+        }
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', function (event) {
+            const hamburger = document.querySelector('.hamburger-menu');
+            const mobileMenu = document.querySelector('.mobile-menu');
+            if (!hamburger || !mobileMenu) return;
+            if (!hamburger.contains(event.target) && !mobileMenu.contains(event.target)) {
+                hamburger.classList.remove('active');
+                mobileMenu.classList.remove('active');
+            }
+        });
+    </script>
+</body>
+
+</html>

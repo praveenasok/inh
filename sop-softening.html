@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Softening SOP - InstaQuote Suite</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 min-h-screen">
+    <script>window.navConfig = { siteTitle: 'InstaQuote Suite' };</script>
+    <script src="js/navigation-loader.js"></script>
+
+    <div class="container mx-auto px-4 py-8">
+        <div class="bg-white rounded-xl shadow-lg p-8 max-w-4xl mx-auto mt-8">
+            <div class="mb-8 border-b border-gray-100 pb-6">
+                <h1 class="text-3xl font-bold text-gray-800 mb-2">Softening SOP</h1>
+                <p class="text-gray-500 font-medium">For 100 grams of hair</p>
+            </div>
+
+            <div class="mb-10">
+                <h2 class="text-xl font-semibold text-gray-800 mb-5 flex items-center">
+                    <i class="fas fa-list-ol mr-2 text-blue-600"></i> Steps
+                </h2>
+                <div class="space-y-6">
+                    <!-- Phase 1 -->
+                    <div class="bg-gray-50 rounded-xl p-6 border border-gray-200">
+                        <h3
+                            class="text-lg font-bold text-gray-800 mb-3 border-b border-gray-200 pb-2 flex items-center">
+                            <i class="fas fa-shower text-blue-500 w-6"></i> Phase 1: Preparation
+                        </h3>
+                        <ol class="list-decimal pl-6 space-y-2 text-gray-700 marker:font-semibold marker:text-blue-600">
+                            <li><span class="font-medium text-gray-800">Thoroughly wash</span> the hair with shampoo.
+                            </li>
+                            <li><span class="font-medium text-gray-800">Rinse well</span> and completely dry the hair.
+                            </li>
+                        </ol>
+                    </div>
+
+                    <!-- Phase 2 -->
+                    <div class="bg-blue-50/50 rounded-xl p-6 border border-blue-100">
+                        <h3
+                            class="text-lg font-bold text-gray-800 mb-3 border-b border-blue-200 pb-2 flex items-center">
+                            <i class="fas fa-fire-alt text-orange-500 w-6"></i> Phase 2: Boiling Stage
+                        </h3>
+                        <ol class="list-decimal pl-6 space-y-2 text-gray-700 marker:font-semibold marker:text-blue-600">
+                            <li>Take 1 liter of water in a boiling vessel.</li>
+                            <li>Add <span class="font-medium text-gray-800">40 ml of WiseSoft40</span> to the water.
+                            </li>
+                            <li>Start boiling the solution.</li>
+                            <li>Put the prepared hair into the same vessel.</li>
+                            <li>Let it reach a boiling state on a <span
+                                    class="font-medium text-blue-800 bg-blue-100 px-2 py-0.5 rounded text-sm">medium
+                                    flame</span>.</li>
+                            <li>Once the water has boiled, remove the hair.</li>
+                            <li><span class="font-medium text-gray-800">Rinse and dry</span> the hair.</li>
+                            <li>Once dry, press it with a <span class="font-medium text-gray-800">hot iron</span>.</li>
+                            <li>Wash the hair once more with shampoo, then rinse well to remove the shampoo.</li>
+                        </ol>
+                    </div>
+
+                    <!-- Phase 3 -->
+                    <div class="bg-indigo-50/50 rounded-xl p-6 border border-indigo-100">
+                        <h3
+                            class="text-lg font-bold text-gray-800 mb-3 border-b border-indigo-200 pb-2 flex items-center">
+                            <i class="fas fa-paint-brush text-indigo-500 w-6"></i> Phase 3: Coating Stage
+                        </h3>
+                        <ol
+                            class="list-decimal pl-6 space-y-2 text-gray-700 marker:font-semibold marker:text-indigo-600">
+                            <li>Take another 1 liter of water.</li>
+                            <li>Add <span class="font-medium text-gray-800">3 ml of amodimethicone</span>.</li>
+                            <li>Thoroughly <span class="font-medium text-gray-800">brush the hair under the water</span>
+                                so the amodimethicone is applied evenly.</li>
+                            <li>Once coating is complete, let the hair dry.</li>
+                        </ol>
+                    </div>
+
+                    <!-- Phase 4 -->
+                    <div class="bg-emerald-50/50 rounded-xl p-6 border border-emerald-100">
+                        <h3
+                            class="text-lg font-bold text-gray-800 mb-3 border-b border-emerald-200 pb-2 flex items-center">
+                            <i class="fas fa-wind text-emerald-500 w-6"></i> Phase 4: Final Wash & Dry
+                        </h3>
+                        <ol
+                            class="list-decimal pl-6 space-y-2 text-gray-700 marker:font-semibold marker:text-emerald-600">
+                            <li>Wash the hair a final time with shampoo in normal water.</li>
+                            <li>Put the hair out for <span class="font-medium text-gray-800">final drying</span>.</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+
+            <div class="border-t border-gray-100 pt-8 mt-4">
+                <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-calculator mr-2 text-blue-600"></i> Ingredients Calculator
+                </h2>
+
+                <div class="bg-gray-50 border border-gray-200 rounded-xl p-6 mb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        <div>
+                            <label for="hair-weight" class="block text-sm font-medium text-gray-700 mb-1">Hair
+                                Weight</label>
+                            <input type="number" id="hair-weight"
+                                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors shadow-sm"
+                                placeholder="e.g. 100" min="0" step="any">
+                        </div>
+                        <div>
+                            <label for="weight-unit" class="block text-sm font-medium text-gray-700 mb-1">Unit</label>
+                            <select id="weight-unit"
+                                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors bg-white shadow-sm">
+                                <option value="g">Grams (g)</option>
+                                <option value="kg">Kilograms (kg)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap gap-3 mb-8">
+                        <button id="calc-btn"
+                            class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-6 rounded-lg transition-colors shadow-sm flex items-center">
+                            <i class="fas fa-magic mr-2"></i> Calculate
+                        </button>
+                        <button id="standard-btn"
+                            class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2.5 px-6 rounded-lg transition-colors shadow-sm flex items-center">
+                            <i class="fas fa-check-circle mr-2"></i> Use Standard 100 g Batch
+                        </button>
+                        <button id="reset-btn"
+                            class="bg-white hover:bg-gray-50 text-gray-700 font-medium py-2.5 px-6 rounded-lg transition-colors border border-gray-300 shadow-sm flex items-center">
+                            <i class="fas fa-undo mr-2 text-gray-400"></i> Reset
+                        </button>
+                    </div>
+
+                    <div id="results-container" class="hidden animate-[slideDown_0.3s_ease-out]">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b border-gray-200 pb-2">Ingredient
+                            Summary</h3>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div
+                                class="bg-white p-5 rounded-xl border border-blue-100 shadow-md relative overflow-hidden">
+                                <div class="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
+                                <div
+                                    class="text-sm font-semibold text-blue-600 uppercase tracking-wider mb-4 flex items-center">
+                                    <i class="fas fa-fire-alt mr-2"></i> Boiling Stage
+                                </div>
+                                <div class="space-y-3">
+                                    <div class="flex justify-between items-center pb-2 border-b border-gray-50">
+                                        <span class="font-medium text-gray-700">Water</span>
+                                        <span class="font-bold text-gray-900 text-lg"><span id="res-water-boil">1</span>
+                                            <span class="text-sm text-gray-500 font-normal">Liters</span></span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="font-medium text-gray-700">WiseSoft40</span>
+                                        <span class="font-bold text-gray-900 text-lg"><span id="res-wisesoft">40</span>
+                                            <span class="text-sm text-gray-500 font-normal">ml</span></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div
+                                class="bg-white p-5 rounded-xl border border-indigo-100 shadow-md relative overflow-hidden">
+                                <div class="absolute top-0 left-0 w-1 h-full bg-indigo-500"></div>
+                                <div
+                                    class="text-sm font-semibold text-indigo-600 uppercase tracking-wider mb-4 flex items-center">
+                                    <i class="fas fa-paint-brush mr-2"></i> Coating Stage
+                                </div>
+                                <div class="space-y-3">
+                                    <div class="flex justify-between items-center pb-2 border-b border-gray-50">
+                                        <span class="font-medium text-gray-700">Water</span>
+                                        <span class="font-bold text-gray-900 text-lg"><span id="res-water-coat">1</span>
+                                            <span class="text-sm text-gray-500 font-normal">Liters</span></span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="font-medium text-gray-700">Amodimethicone</span>
+                                        <span class="font-bold text-gray-900 text-lg"><span id="res-amodi">3</span>
+                                            <span class="text-sm text-gray-500 font-normal">ml</span></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-blue-50 rounded-lg p-4 mt-6">
+                    <div class="flex flex-col gap-3">
+                        <div class="text-sm text-blue-800 flex items-start">
+                            <i class="fas fa-info-circle mt-0.5 mr-2 text-blue-600"></i>
+                            <span>All ingredients are proportionally adjusted according to hair weight.</span>
+                        </div>
+                        <div class="text-sm text-amber-800 flex items-start">
+                            <i class="fas fa-exclamation-triangle mt-0.5 mr-2 text-amber-600"></i>
+                            <span>Maintain medium flame and avoid overboiling.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const weightInput = document.getElementById('hair-weight');
+            const unitSelect = document.getElementById('weight-unit');
+            const calcBtn = document.getElementById('calc-btn');
+            const standardBtn = document.getElementById('standard-btn');
+            const resetBtn = document.getElementById('reset-btn');
+            const resultsContainer = document.getElementById('results-container');
+
+            // Result spans
+            const resWaterBoil = document.getElementById('res-water-boil');
+            const resWisesoft = document.getElementById('res-wisesoft');
+            const resWaterCoat = document.getElementById('res-water-coat');
+            const resAmodi = document.getElementById('res-amodi');
+
+            // Base formula for 100g
+            const BASE_WEIGHT_G = 100;
+            const BASE_WATER_BOIL_L = 1;
+            const BASE_WISESOFT_ML = 40;
+            const BASE_WATER_COAT_L = 1;
+            const BASE_AMODI_ML = 3;
+
+            function formatNumber(num) {
+                // Round to 2 decimals, but remove trailing zeros (e.g. 1.50 -> 1.5, 1.00 -> 1)
+                return parseFloat(num.toFixed(2)).toString();
+            }
+
+            function calculate() {
+                const inputValue = parseFloat(weightInput.value);
+                if (isNaN(inputValue) || inputValue <= 0) {
+                    weightInput.classList.add('border-red-400', 'ring-red-200');
+                    setTimeout(() => weightInput.classList.remove('border-red-400', 'ring-red-200'), 1500);
+                    return;
+                }
+
+                // Convert to grams if needed
+                let weightInGrams = inputValue;
+                if (unitSelect.value === 'kg') {
+                    weightInGrams = inputValue * 1000;
+                }
+
+                const ratio = weightInGrams / BASE_WEIGHT_G;
+
+                // Calculate values
+                const calcWaterBoil = BASE_WATER_BOIL_L * ratio;
+                const calcWisesoft = BASE_WISESOFT_ML * ratio;
+                const calcWaterCoat = BASE_WATER_COAT_L * ratio;
+                const calcAmodi = BASE_AMODI_ML * ratio;
+
+                // Update UI
+                resWaterBoil.textContent = formatNumber(calcWaterBoil);
+                resWisesoft.textContent = formatNumber(calcWisesoft);
+                resWaterCoat.textContent = formatNumber(calcWaterCoat);
+                resAmodi.textContent = formatNumber(calcAmodi);
+
+                resultsContainer.classList.remove('hidden');
+            }
+
+            // Event Listeners
+            calcBtn.addEventListener('click', calculate);
+
+            weightInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') calculate();
+            });
+
+            // Auto-calculate on unit change if a valid number is present
+            unitSelect.addEventListener('change', () => {
+                if (weightInput.value && !isNaN(parseFloat(weightInput.value))) {
+                    calculate();
+                }
+            });
+
+            standardBtn.addEventListener('click', () => {
+                unitSelect.value = 'g';
+                weightInput.value = '100';
+                calculate();
+            });
+
+            resetBtn.addEventListener('click', () => {
+                weightInput.value = '';
+                unitSelect.value = 'g';
+                resultsContainer.classList.add('hidden');
+                weightInput.focus();
+            });
+        });
+    </script>
+</body>
+
+</html>

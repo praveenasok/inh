@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Orders Viewer - Indian Natural Hair</title>
+  <!-- Styles -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="unified-button-system.css">
+  <link rel="stylesheet" href="styles.css">
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
+
+  <!-- Firebase configuration and helpers -->
+  <script src="firebase-config.js"></script>
+  <script src="firebase-global-init.js"></script>
+  <script src="firebase-database.js"></script>
+
+  <style>
+    .table-fixed-layout {
+      table-layout: fixed;
+    }
+
+    .truncate-2 {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+  </style>
+</head>
+
+<body class="min-h-screen bg-gradient-to-br from-amber-50 via-rose-50 to-orange-100">
+  <!-- Top Navigation -->
+  <!-- Navigation -->
+  <script>window.navConfig = { siteTitle: 'instaQuote - Orders' };</script>
+  <script src="js/navigation-loader.js"></script>
+
+  <!-- Main Content -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <!-- Controls -->
+    <div class="bg-white rounded-xl shadow p-4 mb-4">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+        <div class="flex items-center gap-2">
+          <button id="refreshBtn" class="nav-btn"><i class="fas fa-rotate mr-2"></i>Refresh</button>
+          <span id="ordersCount" class="text-sm text-gray-600">0 orders</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="relative w-full md:w-80">
+            <input id="searchInput" type="text" placeholder="Search by Order #, Quote #, Client"
+              class="w-full form-input pl-10" />
+            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"><i class="fas fa-search"></i></span>
+          </div>
+          <select id="statusFilter" class="form-input w-40">
+            <option value="">All Statuses</option>
+            <option value="pending">Pending</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="bg-white rounded-xl shadow overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="min-w-full table-fixed-layout">
+          <thead class="bg-gray-100 text-left">
+            <tr>
+              <th class="px-4 py-3 w-32">Order #</th>
+              <th class="px-4 py-3 w-32">Quote #</th>
+              <th class="px-4 py-3 w-64">Client</th>
+              <th class="px-4 py-3 w-24">Items</th>
+              <th class="px-4 py-3 w-32">Total</th>
+              <th class="px-4 py-3 w-32">Status</th>
+              <th class="px-4 py-3 w-40">Date</th>
+              <th class="px-4 py-3 w-32">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="ordersTbody" class="divide-y divide-gray-200"></tbody>
+        </table>
+      </div>
+      <div id="emptyState" class="hidden p-6 text-center text-gray-600">No orders found.</div>
+    </div>
+
+    <!-- Details Modal -->
+    <div id="detailsModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+      <div class="bg-white rounded-xl shadow-lg w-full max-w-4xl">
+        <div class="flex items-center justify-between px-4 py-3 border-b">
+          <h3 class="font-semibold">Order Details</h3>
+          <div class="flex items-center gap-2">
+            <button id="printModalBtn" class="nav-btn" title="Print"><i class="fas fa-print mr-2"></i>Print</button>
+            <button id="closeModalBtn" class="nav-btn">Close</button>
+          </div>
+        </div>
+        <div class="p-4 overflow-auto max-h-[70vh]">
+          <div id="detailsStructured" class="space-y-4"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notifications -->
+    <div id="alertBox" class="hidden mt-4 p-3 rounded-lg"></div>
+  </main>
+
+  <script>
+    // Basic helpers
+    const DEFAULT_CURRENCY = 'INR';
+    function showAlert(msg, type = 'info') {
+      const box = document.getElementById('alertBox');
+      const map = { info: 'bg-blue-50 text-blue-700', success: 'bg-green-50 text-green-700', warn: 'bg-yellow-50 text-yellow-800', error: 'bg-red-50 text-red-700' };
+      box.className = 'mt-4 p-3 rounded-lg ' + (map[type] || map.info);
+      box.textContent = msg;
+      box.classList.remove('hidden');
+      setTimeout(() => { box.classList.add('hidden'); }, 4000);
+    }
+
+    function getClientName(order) {
+      return (
+        order?.clientName || order?.customerName || order?.client || order?.customer ||
+        order?.billingName || order?.contactName || ''
+      );
+    }
+    function getItemsCount(order) {
+      const arrays = [order?.items, order?.quoteItems, order?.products, order?.lines];
+      for (const arr of arrays) { if (Array.isArray(arr)) return arr.length; }
+      return 0;
+    }
+    function getTotal(order) {
+      const candidates = [order?.total, order?.grandTotal, order?.amount, order?.netTotal];
+      for (const v of candidates) { if (typeof v === 'number') return v; }
+      // Try computing from items
+      const items = order?.items || order?.quoteItems || order?.lines || [];
+      try {
+        const sum = items.reduce((acc, it) => acc + (Number(it?.total || it?.totalPrice || it?.price) * Number(it?.qty || it?.quantity || 1)), 0);
+        return Number.isFinite(sum) ? sum : undefined;
+      } catch (_) { return undefined; }
+    }
+    function formatCurrency(n, currencyCode) {
+      if (!Number.isFinite(n)) return '-';
+      try {
+        const code = (currencyCode || window.DEFAULT_CURRENCY || localStorage.getItem('preferredCurrency') || DEFAULT_CURRENCY || 'INR');
+        const locale = code === 'INR' ? 'en-IN' : undefined;
+        return new Intl.NumberFormat(locale, { style: 'currency', currency: code }).format(n);
+      } catch (_) { return String(n); }
+    }
+    function getDate(order) {
+      const d = order?.orderDate || order?.createdAt || order?.updatedAt || order?.date;
+      try { const dt = new Date(d); return dt.toLocaleString(); } catch (_) { return d ? String(d) : '-'; }
+    }
+
+    // Data loading
+    async function fetchOrders() {
+      let cloudOrders = [];
+      // Try Firebase first
+      try {
+        if (window.firebaseDB && typeof window.firebaseDB.isAvailable === 'function' && window.firebaseDB.isAvailable()) {
+          const orders = await window.firebaseDB.getOrders();
+          cloudOrders = Array.isArray(orders) ? orders : [];
+        }
+      } catch (e) {
+        console.warn('Cloud orders fetch failed:', e?.message || e);
+      }
+      // Always read localStorage fallback
+      let localOrders = [];
+      try {
+        localOrders = JSON.parse(localStorage.getItem('savedOrders') || '[]');
+        if (!Array.isArray(localOrders)) localOrders = [];
+      } catch (_) { localOrders = []; }
+
+      // Merge cloud + local, de-dupe by a stable key
+      const orderKey = (o) => {
+        const primary = o?.orderId || o?.id || o?.number || o?.quoteId;
+        if (primary) return String(primary);
+        const created = o?.createdAt || o?.updatedAt || o?.date || '';
+        return `${created}-${getClientName(o) || ''}-${o?.total || ''}`;
+      };
+      const combined = [...cloudOrders, ...localOrders];
+      const seen = new Set();
+      const merged = [];
+      for (const o of combined) {
+        const key = orderKey(o);
+        if (!seen.has(key)) { seen.add(key); merged.push(o); }
+      }
+      // Sort by createdAt desc if available
+      const toMillis = (v) => {
+        try {
+          if (v && typeof v === 'object' && typeof v.seconds === 'number') return v.seconds * 1000;
+          const t = new Date(v).getTime();
+          return Number.isFinite(t) ? t : 0;
+        } catch (_) { return 0; }
+      };
+      merged.sort((a, b) => toMillis(b?.createdAt || b?.date) - toMillis(a?.createdAt || a?.date));
+      return merged;
+    }
+
+    // Rendering
+    function renderOrders(orders) {
+      const tbody = document.getElementById('ordersTbody');
+      const empty = document.getElementById('emptyState');
+      const count = document.getElementById('ordersCount');
+      tbody.innerHTML = '';
+      count.textContent = `${orders.length} order${orders.length === 1 ? '' : 's'}`;
+      if (!orders.length) { empty.classList.remove('hidden'); return; } else { empty.classList.add('hidden'); }
+
+      const frag = document.createDocumentFragment();
+      orders.forEach(order => {
+        const tr = document.createElement('tr');
+        const orderId = order?.orderId || order?.id || order?.number || '-';
+        const quoteId = order?.quoteId || order?.quoteID || order?.sourceQuoteId || '-';
+        const client = getClientName(order) || '-';
+        const itemsCount = getItemsCount(order);
+        const total = getTotal(order);
+        const status = order?.status || '-';
+        const dateStr = getDate(order);
+
+        tr.innerHTML = `
+          <td class="px-4 py-3 font-mono text-sm">${orderId}</td>
+          <td class="px-4 py-3 font-mono text-sm">${quoteId}</td>
+          <td class="px-4 py-3"><div class="truncate-2">${client}</div></td>
+          <td class="px-4 py-3">${itemsCount}</td>
+          <td class="px-4 py-3">${formatCurrency(total, order?.currency)}</td>
+          <td class="px-4 py-3"><span class="inline-flex items-center px-2 py-1 rounded bg-gray-100">${status}</span></td>
+          <td class="px-4 py-3">${dateStr}</td>
+          <td class="px-4 py-3">
+            <button class="nav-btn" data-action="view" aria-label="View">View</button>
+          </td>
+        `;
+        tr.querySelector('button[data-action="view"]').addEventListener('click', () => showDetails(order));
+        frag.appendChild(tr);
+      });
+      tbody.appendChild(frag);
+    }
+
+    // Filtering
+    function filterOrders(base) {
+      const q = document.getElementById('searchInput').value.trim().toLowerCase();
+      const status = document.getElementById('statusFilter').value.trim().toLowerCase();
+      return base.filter(o => {
+        const fields = [
+          o?.orderId, o?.id, o?.number, o?.quoteId,
+          getClientName(o), o?.email, o?.clientEmail, o?.contact
+        ].map(v => String(v || '').toLowerCase());
+        const okQ = q ? fields.some(f => f.includes(q)) : true;
+        const okS = status ? String(o?.status || '').toLowerCase() === status : true;
+        return okQ && okS;
+      });
+    }
+
+    // Modal
+    function showDetails(order) {
+      const modal = document.getElementById('detailsModal');
+      const container = document.getElementById('detailsStructured');
+      container.innerHTML = buildOrderDetailsHTML(order);
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function safeNum(n) { const v = Number(n); return Number.isFinite(v) ? v : undefined; }
+    function pickFirstNumber(list) { for (const v of list) { const n = safeNum(v); if (n !== undefined) return n; } return undefined; }
+    function pickFirstString(list) { for (const v of list) { if (typeof v === 'string' && v.trim()) return v.trim(); } return ''; }
+    function getItemsArray(order) { return order?.items || order?.quoteItems || order?.lines || order?.products || []; }
+    function computeTotals(order) {
+      const items = getItemsArray(order);
+      const subtotalCandidates = [order?.subtotal, order?.subTotal, order?.itemsTotal, order?.netSubtotal];
+      const taxCandidates = [order?.tax, order?.vat, order?.gst];
+      const shippingCandidates = [order?.shipping, order?.shippingCost, order?.deliveryCharge];
+      const totalCandidates = [order?.total, order?.grandTotal, order?.amount, order?.netTotal];
+
+      let subtotal = pickFirstNumber(subtotalCandidates);
+      let tax = pickFirstNumber(taxCandidates);
+      let shipping = pickFirstNumber(shippingCandidates);
+      let total = pickFirstNumber(totalCandidates);
+
+      if (subtotal === undefined && Array.isArray(items) && items.length) {
+        try {
+          subtotal = items.reduce((acc, it) => {
+            const qty = safeNum(it?.qty ?? it?.quantity ?? 1) ?? 1;
+            const unit = safeNum(it?.unitPrice ?? it?.price ?? it?.rate) ?? 0;
+            const lineTotal = safeNum(it?.total ?? it?.totalPrice) ?? (qty * unit);
+            return acc + (lineTotal || 0);
+          }, 0);
+        } catch (_) { }
+      }
+      if (total === undefined && subtotal !== undefined) {
+        total = (subtotal || 0) + (tax || 0) + (shipping || 0);
+      }
+      return { subtotal, tax, shipping, total };
+    }
+
+    function buildOrderDetailsHTML(order) {
+      const orderId = pickFirstString([order?.orderId, order?.id, order?.orderNumber, order?.number]);
+      const quoteId = pickFirstString([order?.quoteId, order?.quoteID, order?.sourceQuoteId]);
+      const status = pickFirstString([order?.status]);
+      const dateStr = getDate(order);
+      const currency = pickFirstString([order?.currency, localStorage.getItem('preferredCurrency'), DEFAULT_CURRENCY]) || 'INR';
+      const clientName = getClientName(order) || '-';
+      const email = pickFirstString([order?.email, order?.clientEmail, order?.customerEmail]);
+      const phone = pickFirstString([order?.phone, order?.clientContact, order?.contact, order?.mobile]);
+      const address = pickFirstString([order?.address, order?.billingAddress, order?.shippingAddress]);
+      const salesman = pickFirstString([order?.salesman, order?.salesperson, order?.agent]);
+      const notes = pickFirstString([order?.notes, order?.remarks]);
+      const { subtotal, tax, shipping, total } = computeTotals(order);
+      const items = getItemsArray(order);
+
+      const itemsRows = (items || []).map((it, idx) => {
+        const name = pickFirstString([it?.product, it?.name, it?.item, it?.Product]);
+        const shade = pickFirstString([it?.shade, it?.color, it?.Colour, it?.Color]);
+        const density = pickFirstString([it?.density, it?.Density]);
+        const qty = safeNum(it?.qty ?? it?.quantity ?? 1) ?? 1;
+        const unit = safeNum(it?.unitPrice ?? it?.price ?? it?.rate) ?? 0;
+        const lineTotal = safeNum(it?.total ?? it?.totalPrice) ?? (qty * unit);
+        return `
+          <tr class="border-b">
+            <td class="px-3 py-2">${idx + 1}</td>
+            <td class="px-3 py-2">${name || '-'}</td>
+            <td class="px-3 py-2">${shade || '-'}</td>
+            <td class="px-3 py-2">${density || '-'}</td>
+            <td class="px-3 py-2">${qty}</td>
+            <td class="px-3 py-2">${formatCurrency(unit, currency)}</td>
+            <td class="px-3 py-2">${formatCurrency(lineTotal, currency)}</td>
+          </tr>`;
+      }).join('');
+
+      return `
+        <section>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="p-3 bg-gray-50 rounded-lg">
+              <div class="text-xs text-gray-500">Order #</div>
+              <div class="font-mono">${orderId || '-'}</div>
+            </div>
+            <div class="p-3 bg-gray-50 rounded-lg">
+              <div class="text-xs text-gray-500">Status</div>
+              <div>${status || '-'}</div>
+            </div>
+            <div class="p-3 bg-gray-50 rounded-lg">
+              <div class="text-xs text-gray-500">Date</div>
+              <div>${dateStr || '-'}</div>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <h4 class="font-semibold mb-2">Client</h4>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="p-3 bg-gray-50 rounded-lg"><div class="text-xs text-gray-500">Name</div><div>${clientName}</div></div>
+            <div class="p-3 bg-gray-50 rounded-lg"><div class="text-xs text-gray-500">Phone</div><div>${phone || '-'}</div></div>
+            <div class="p-3 bg-gray-50 rounded-lg"><div class="text-xs text-gray-500">Email</div><div>${email || '-'}</div></div>
+            <div class="p-3 bg-gray-50 rounded-lg col-span-1 md:col-span-2"><div class="text-xs text-gray-500">Address</div><div>${address || '-'}</div></div>
+          </div>
+        </section>
+
+        <section>
+          <h4 class="font-semibold mb-2">Summary</h4>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="p-3 bg-gray-50 rounded-lg"><div class="text-xs text-gray-500">Currency</div><div>${currency}</div></div>
+            <div class="p-3 bg-gray-50 rounded-lg"><div class="text-xs text-gray-500">Subtotal</div><div>${subtotal !== undefined ? formatCurrency(subtotal, currency) : '-'}</div></div>
+            <div class="p-3 bg-gray-50 rounded-lg"><div class="text-xs text-gray-500">Tax</div><div>${tax !== undefined ? formatCurrency(tax, currency) : '-'}</div></div>
+            <div class="p-3 bg-gray-50 rounded-lg"><div class="text-xs text-gray-500">Shipping</div><div>${shipping !== undefined ? formatCurrency(shipping, currency) : '-'}</div></div>
+            <div class="p-3 bg-gray-50 rounded-lg md:col-span-2"><div class="text-xs text-gray-500">Total</div><div class="text-lg font-semibold">${total !== undefined ? formatCurrency(total, currency) : '-'}</div></div>
+          </div>
+        </section>
+
+        <section>
+          <div class="flex items-center justify-between mb-2">
+            <h4 class="font-semibold">Items (${items.length})</h4>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="min-w-full text-sm">
+              <thead class="bg-gray-100">
+                <tr>
+                  <th class="px-3 py-2 text-left">#</th>
+                  <th class="px-3 py-2 text-left">Product</th>
+                  <th class="px-3 py-2 text-left">Shade</th>
+                  <th class="px-3 py-2 text-left">Density</th>
+                  <th class="px-3 py-2 text-left">Qty</th>
+                  <th class="px-3 py-2 text-left">Unit</th>
+                  <th class="px-3 py-2 text-left">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${itemsRows || ''}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="p-3 bg-gray-50 rounded-lg"><div class="text-xs text-gray-500">Quote #</div><div class="font-mono">${quoteId || '-'}</div></div>
+            <div class="p-3 bg-gray-50 rounded-lg"><div class="text-xs text-gray-500">Salesman</div><div>${salesman || '-'}</div></div>
+            <div class="p-3 bg-gray-50 rounded-lg md:col-span-1"><div class="text-xs text-gray-500">Notes</div><div>${notes || '-'}</div></div>
+          </div>
+        </section>
+      `;
+    }
+
+    function closeModal() {
+      const modal = document.getElementById('detailsModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    // Orchestration
+    let baseOrders = [];
+    async function refresh() {
+      try {
+        // Ensure Firebase initialized if available
+        try { if (typeof initializeFirebase === 'function') { await initializeFirebase(); } } catch (_) { }
+        baseOrders = await fetchOrders();
+        renderOrders(filterOrders(baseOrders));
+        showAlert('Orders loaded', 'success');
+      } catch (e) {
+        console.warn('Orders refresh error:', e);
+        showAlert('Failed to load orders', 'error');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('refreshBtn').addEventListener('click', refresh);
+      document.getElementById('searchInput').addEventListener('input', () => renderOrders(filterOrders(baseOrders)));
+      document.getElementById('statusFilter').addEventListener('change', () => renderOrders(filterOrders(baseOrders)));
+      document.getElementById('closeModalBtn').addEventListener('click', closeModal);
+      document.getElementById('printModalBtn').addEventListener('click', () => { try { window.print(); } catch (_) { } });
+      document.getElementById('detailsModal').addEventListener('click', (e) => { if (e.target.id === 'detailsModal') closeModal(); });
+      refresh();
+    });
+  </script>
+
+  <script src="js/admin-menu-visibility.js"></script>
+  <script>
+    function toggleMobileMenu() {
+      const hamburger = document.querySelector('.hamburger-menu');
+      const mobileMenu = document.querySelector('.mobile-menu');
+      if (!hamburger || !mobileMenu) return;
+      hamburger.classList.toggle('active');
+      mobileMenu.classList.toggle('active');
+    }
+    // Close mobile menu when clicking outside
+    document.addEventListener('click', function (event) {
+      const hamburger = document.querySelector('.hamburger-menu');
+      const mobileMenu = document.querySelector('.mobile-menu');
+      if (!hamburger || !mobileMenu) return;
+      if (!hamburger.contains(event.target) && !mobileMenu.contains(event.target)) {
+        hamburger.classList.remove('active');
+        mobileMenu.classList.remove('active');
+      }
+    });
+  </script>
+</body>
+
+</html>

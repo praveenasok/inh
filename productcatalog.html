@@ -1,25 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Product Catalog - InstaQuote</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
-    
+
     <!-- Language Configuration (Load First) -->
     <script src="js/language-config.js"></script>
-    
+
     <!-- Firebase Configuration and Initialization -->
     <script src="firebase-config.js"></script>
     <script src="firebase-global-init.js"></script>
@@ -29,51 +31,53 @@
     <!-- Sync Status UI removed -->
     <!-- INHDATA-only approach: remove legacy/alternate data layers -->
     <!-- Removed: firebase-database.js, firebase-error-handler.js -->
-    
+
     <!-- Universal Firebase Data Manager (legacy) -->
     <!-- <script src="js/universal-firebase-data-manager.js"></script> -->
-    
+
     <!-- Fallback System Components removed: using Firebase-only data path -->
-    
+
     <!-- Local Storage Dropdown Manager - REMOVED: Migrated to Firebase-only data -->
     <!-- <script src="js/local-storage-dropdown-manager.js"></script> -->
     <!-- <script src="js/sample-data-initializer.js"></script> -->
-    
+
     <!-- New API Client (legacy) -->
     <!-- <script src="js/api-client.js"></script> -->
-    
+
     <!-- Unified Button System -->
     <link rel="stylesheet" href="unified-button-system.css">
-    
+
     <style>
         /* Responsive padding */
         .mobile-padding {
             padding: 1.5rem;
         }
+
         @media (max-width: 640px) {
             .mobile-padding {
                 padding: 1rem;
             }
         }
-        
+
         /* Shadow effects */
         .shadow-soft {
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         }
-        
+
         /* Button styles now handled by unified-button-system.css */
-        
+
         /* Mobile-first responsive design */
         @media (max-width: 768px) {
             .container {
                 padding-left: 1rem;
                 padding-right: 1rem;
             }
+
             .text-responsive {
                 font-size: 0.875rem;
             }
         }
-        
+
         /* Form elements */
         .form-input {
             border: 1px solid #d1d5db;
@@ -82,28 +86,30 @@
             transition: all 0.3s ease;
             background: white;
         }
+
         .form-input:focus {
             outline: none;
             border-color: #667eea;
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
-        
+
         /* Card hover effects */
         .card-hover {
             transition: all 0.3s ease;
         }
+
         .card-hover:hover {
             transform: translateY(-2px);
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
         }
-        
+
         /* Navigation styles now handled by unified-button-system.css */
-        
+
         /* Module content display */
         .module-content {
             display: block;
         }
-        
+
         /* Navigation link styles */
         .nav-btn {
             text-decoration: none;
@@ -121,7 +127,7 @@
             border: 2px solid #e2e8f0;
             box-shadow: 0 4px 12px rgba(71, 85, 105, 0.15);
         }
-        
+
         .nav-btn:hover {
             text-decoration: none;
             background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
@@ -129,30 +135,30 @@
             transform: translateY(-1px);
             box-shadow: 0 6px 16px rgba(71, 85, 105, 0.2);
         }
-        
+
         .nav-btn.nav-btn-active {
             background: #081249;
             color: white !important;
             border: 2px solid #081249;
             box-shadow: 0 4px 12px rgba(8, 18, 73, 0.3);
         }
-        
+
         .nav-btn.nav-btn-active:hover {
             background: #0a1555;
             border-color: #0a1555;
             transform: translateY(-2px);
             box-shadow: 0 6px 16px rgba(8, 18, 73, 0.4);
         }
-        
+
         /* Remove default link styles */
         .no-underline {
             text-decoration: none !important;
         }
-        
+
         .no-underline:hover {
             text-decoration: none !important;
         }
-        
+
         /* Loading Overlay */
         .loading {
             width: 40px;
@@ -162,10 +168,15 @@
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
-        
+
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
 
         /* Hamburger Menu Styles */
@@ -247,15 +258,17 @@
         /* Responsive dropdown improvements */
         @media (max-width: 768px) {
             #catalog-category {
-                font-size: 16px; /* Prevents zoom on iOS */
-                min-height: 44px; /* Touch-friendly size */
+                font-size: 16px;
+                /* Prevents zoom on iOS */
+                min-height: 44px;
+                /* Touch-friendly size */
             }
-            
+
             .category-status {
                 font-size: 0.75rem;
                 flex-wrap: wrap;
             }
-            
+
             #catalog-results-count {
                 font-size: 0.75rem;
                 text-align: center;
@@ -334,6 +347,7 @@
                 transform: translateY(-100%);
                 opacity: 0;
             }
+
             to {
                 transform: translateY(0);
                 opacity: 1;
@@ -350,7 +364,7 @@
             .desktop-menu {
                 display: none;
             }
-            
+
             .hamburger-menu {
                 display: flex;
             }
@@ -363,52 +377,13 @@
         }
     </style>
 </head>
-<body class="bg-gray-50">
+
+<body class="min-h-screen bg-gradient-to-br from-amber-50 via-rose-50 to-orange-100">
 
     <!-- Navigation -->
-    <nav class="bg-gradient-to-r from-blue-900 via-blue-800 to-amber-700 text-white shadow-lg sticky top-0 z-50 relative">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16">
-                <div class="flex items-center space-x-3">
-                    <img src="images/logo.png" alt="Logo" class="h-8 w-auto opacity-90">
-                    <span class="text-lg font-bold">instaQuote - Product Catalog</span>
-                </div>
-                
-                <!-- Desktop Menu -->
-                <div class="desktop-menu items-center space-x-4">
-                    <a href="quotemaker.html" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-white/10 transition-colors">
-                        <i class="fas fa-file-invoice-dollar mr-1"></i> Quote Maker
-                    </a>
-                    <a href="pricelists.html" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-white/10 transition-colors">
-                        <i class="fas fa-calculator mr-1"></i> Price Lists
-                    </a>
-                    <a href="adminpanel.html" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-white/10 transition-colors">
-                        <i class="fas fa-cog mr-1"></i> Admin Panel
-                    </a>
-                </div>
-                
-                <!-- Hamburger Menu Button -->
-                <div class="hamburger-menu" onclick="toggleMobileMenu()">
-                    <div class="hamburger-line"></div>
-                    <div class="hamburger-line"></div>
-                    <div class="hamburger-line"></div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Mobile Menu -->
-        <div class="mobile-menu" id="mobileMenu">
-            <a href="quotemaker.html" class="text-white hover:text-gray-200">
-                <i class="fas fa-file-invoice-dollar mr-2"></i> Quote Maker
-            </a>
-            <a href="pricelists.html" class="text-white hover:text-gray-200">
-                <i class="fas fa-calculator mr-2"></i> Price Lists
-            </a>
-            <a href="adminpanel.html" class="text-white hover:text-gray-200">
-                <i class="fas fa-cog mr-2"></i> Admin Panel
-            </a>
-        </div>
-    </nav>
+    <!-- Navigation -->
+    <script>window.navConfig = { siteTitle: 'InstaQuote - Catalog' };</script>
+    <script src="js/navigation-loader.js"></script>
 
     <!-- Main Content -->
     <div class="container mx-auto px-4 py-6">
@@ -418,13 +393,16 @@
 
         <!-- Product Catalog Module -->
         <div id="product-catalog-module" class="module-content">
-            
+
             <!-- Modern Catalog Filters -->
-            <section class="bg-white rounded-xl shadow-soft p-4 sm:p-6 mb-4 mobile-padding" style="background: #eef2ff;">
+            <section class="bg-white rounded-xl shadow-soft p-4 sm:p-6 mb-4 mobile-padding"
+                style="background: #eef2ff;">
                 <div class="flex items-center justify-between mb-6">
                     <h3 class="section-heading flex items-center">
                         <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z">
+                            </path>
                         </svg>
                         Filters
                     </h3>
@@ -432,21 +410,25 @@
                         <span id="catalog-results-count">Loading products...</span>
                     </div>
                 </div>
-                
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     <!-- Category Filter -->
                     <div>
-                        <select id="catalog-category" onchange="onCategoryChange()" class="w-full border-2 border-gray-200 rounded-lg px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 bg-gray-50 hover:bg-white">
+                        <select id="catalog-category" onchange="onCategoryChange()"
+                            class="w-full border-2 border-gray-200 rounded-lg px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 bg-gray-50 hover:bg-white">
                             <option value="">All Categories</option>
                         </select>
                     </div>
-                    
+
                     <!-- Search Filter -->
                     <div>
                         <div class="relative">
-                            <input type="text" id="catalog-search" placeholder="Search products by name..." class="w-full border-2 border-gray-200 rounded-lg px-4 py-3 pl-10 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 bg-gray-50 hover:bg-white" />
-                            <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            <input type="text" id="catalog-search" placeholder="Search products by name..."
+                                class="w-full border-2 border-gray-200 rounded-lg px-4 py-3 pl-10 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 bg-gray-50 hover:bg-white" />
+                            <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400"
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                             </svg>
                         </div>
                     </div>
@@ -456,46 +438,59 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                     <!-- Price List -->
                     <div>
-                        <select id="catalog-price-list" class="w-full border-2 border-gray-200 rounded-lg px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 bg-gray-50 hover:bg-white">
+                        <select id="catalog-price-list"
+                            class="w-full border-2 border-gray-200 rounded-lg px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 bg-gray-50 hover:bg-white">
                             <option value="">All Price Lists</option>
                         </select>
                     </div>
                     <!-- Product -->
                     <div>
-                        <select id="catalog-product" class="w-full border-2 border-gray-200 rounded-lg px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 bg-gray-50 hover:bg-white">
+                        <select id="catalog-product"
+                            class="w-full border-2 border-gray-200 rounded-lg px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 bg-gray-50 hover:bg-white">
                             <option value="">All Products</option>
                         </select>
                     </div>
                     <!-- Density -->
                     <div>
-                        <select id="catalog-density" class="w-full border-2 border-gray-200 rounded-lg px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 bg-gray-50 hover:bg-white">
+                        <select id="catalog-density"
+                            class="w-full border-2 border-gray-200 rounded-lg px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 bg-gray-50 hover:bg-white">
                             <option value="">All Densities</option>
                         </select>
                     </div>
                     <!-- Shade/Color -->
                     <div>
-                        <select id="catalog-shade" class="w-full border-2 border-gray-200 rounded-lg px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 bg-gray-50 hover:bg-white">
+                        <select id="catalog-shade"
+                            class="w-full border-2 border-gray-200 rounded-lg px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 bg-gray-50 hover:bg-white">
                             <option value="">All Shades</option>
                         </select>
                     </div>
                     <!-- Currency Converter -->
                     <div>
-                        <select id="catalog-currency" class="w-full border-2 border-gray-200 rounded-lg px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 bg-gray-50 hover:bg-white">
+                        <select id="catalog-currency"
+                            class="w-full border-2 border-gray-200 rounded-lg px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 bg-gray-50 hover:bg-white">
                             <option value="INR">INR (₹)</option>
                         </select>
                     </div>
                 </div>
-                
+
                 <div class="flex flex-wrap gap-3">
-                    <button id="catalog-filter-btn" class="text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 flex items-center" style="background-color: #081249; border-color: #081249;" onmouseover="this.style.backgroundColor='#0a1a5c'" onmouseout="this.style.backgroundColor='#081249'">
+                    <button id="catalog-filter-btn"
+                        class="text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 flex items-center"
+                        style="background-color: #081249; border-color: #081249;"
+                        onmouseover="this.style.backgroundColor='#0a1a5c'"
+                        onmouseout="this.style.backgroundColor='#081249'">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z">
+                            </path>
                         </svg>
                         Apply Filters
                     </button>
-                    <button id="catalog-clear-btn" class="btn-secondary px-6 py-3 rounded-lg font-medium transition-all duration-200 flex items-center">
+                    <button id="catalog-clear-btn"
+                        class="btn-secondary px-6 py-3 rounded-lg font-medium transition-all duration-200 flex items-center">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
                         Clear All
                     </button>
@@ -503,11 +498,14 @@
             </section>
 
             <!-- Enhanced Product Grid -->
-            <section class="bg-white rounded-xl shadow-soft p-4 sm:p-6 mb-4 mobile-padding" style="background: #f8fafc;">
+            <section class="bg-white rounded-xl shadow-soft p-4 sm:p-6 mb-4 mobile-padding"
+                style="background: #f8fafc;">
                 <div class="flex items-center justify-between mb-6">
                     <h3 class="section-heading-large flex items-center">
                         <svg class="w-6 h-6 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
+                            </path>
                         </svg>
                         Our Products
                     </h3>
@@ -516,20 +514,27 @@
                             <span id="catalog-results-count-display">Loading...</span>
                         </div>
                         <div class="flex items-center space-x-2">
-                            <button id="grid-view-btn" class="p-2 rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors" title="Grid View">
+                            <button id="grid-view-btn"
+                                class="p-2 rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors"
+                                title="Grid View">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z">
+                                    </path>
                                 </svg>
                             </button>
-                            <button id="list-view-btn" class="p-2 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors" title="List View">
+                            <button id="list-view-btn"
+                                class="p-2 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
+                                title="List View">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
                                 </svg>
                             </button>
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Loading State -->
                 <div id="catalog-loading" class="hidden flex items-center justify-center py-12">
                     <div class="text-center">
@@ -537,11 +542,14 @@
                         <p class="text-gray-600">Loading products...</p>
                     </div>
                 </div>
-                
+
                 <!-- Empty State -->
                 <div id="catalog-empty" class="hidden text-center py-12">
-                    <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+                    <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4">
+                        </path>
                     </svg>
                     <h3 class="text-lg font-medium text-gray-900 mb-2">No products found</h3>
                     <p class="text-gray-500 mb-4">Try adjusting your search criteria or browse all categories.</p>
@@ -549,12 +557,13 @@
                         View All Products
                     </button>
                 </div>
-                
+
                 <!-- Product Cards Container -->
-                <div id="catalog-products-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 sm:gap-6">
+                <div id="catalog-products-grid"
+                    class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 sm:gap-6">
                     <!-- Products will be dynamically loaded here -->
                 </div>
-                
+
                 <!-- Pagination -->
                 <div id="catalog-pagination" class="flex justify-center mt-6">
                     <!-- Pagination controls will be added here -->
@@ -566,384 +575,385 @@
     <script src="js/product-image-mapping.js"></script>
     <script>
         // Data arrays for consistency
-    // Function to get product image based on category and product name
-    function getProductImage(category, productName) {
-        const categoryImageMap = {
-            'Bulk': 'images/Products/Bulk.png',
-            'Weaves': 'images/Products/Weaves-SD.png',
-            'Weaves DD': 'images/Products/Weaves-DD.png',
-            'Weaves SDD': 'images/Products/Weaves-SDD.png',
-            'Tapes': 'images/Products/Tapes.png',
-            'ClipOn': 'images/Products/ClipOn.png',
-            'Closures': 'images/Products/Closure.png',
-            'Frontals': 'images/Products/Frontal.png',
-            'Frontline': 'images/Products/Frontline.png',
-            'Tips': 'images/Products/ITIPS.png',
-            'I Tips': 'images/Products/ITIPS.png',
-            'U Tips': 'images/Products/UTIPS.png',
-            'Y Tips': 'images/Products/YTIPS.png',
-            'Flat Tips': 'images/Products/FlatTips.png',
-            'Nano': 'images/Products/Nano.png',
-            'PonyTail': 'images/Products/PonyTail.png',
-            'BUN': 'images/Products/BUN.png',
-            'Curly Bun': 'images/Products/CurlyBun.png',
-            'Clutch Bun': 'images/Products/ClutchBun.png',
-            'Bangs': 'images/Products/Bangs.png',
-            'Halo': 'images/Products/Halo.png',
-            'Highlights': 'images/Products/Highlights.png',
-            'Cover Patch': 'images/Products/CoverPatch.png',
-            'Genius': 'images/Products/Genius.png',
-            'Genius Weaves': 'images/Products/Genius.png',
-            'Wigs': 'images/Products/WIGFRONTAL.png',
-            'Wig Closure': 'images/Products/WIGCLOSURE.png',
-            'Wig Frontal': 'images/Products/WIGFRONTAL.png',
-            'Silk Topper': 'images/Products/SILKTOPPER.png',
-            'Toppers': 'images/Products/SILKTOPPER.png',
-            'Flat Clip Ponytail': 'images/Products/FLATCLIPPONYTAIL.png',
-            'Hair Extensions': 'images/Products/Weaves-SD.png'
-        };
-        
-        // Check for specific product name matches first
-        const productLower = productName.toLowerCase();
-        if (productLower.includes('bulk')) return 'images/Products/Bulk.png';
-        if (productLower.includes('weave') && productLower.includes('double drawn')) return 'images/Products/Weaves-DD.png';
-        if (productLower.includes('weave') && productLower.includes('super double')) return 'images/Products/Weaves-SDD.png';
-        if (productLower.includes('weave')) return 'images/Products/Weaves-SD.png';
-        if (productLower.includes('tape')) return 'images/Products/Tapes.png';
-        if (productLower.includes('closure')) return 'images/Products/Closure.png';
-        if (productLower.includes('frontal')) return 'images/Products/Frontal.png';
-        if (productLower.includes('genius')) return 'images/Products/Genius.png';
-        if (productLower.includes('wig')) return 'images/Products/WIGFRONTAL.png';
-        if (productLower.includes('tip')) return 'images/Products/ITIPS.png';
-        if (productLower.includes('clip')) return 'images/Products/ClipOn.png';
-        if (productLower.includes('ponytail')) return 'images/Products/PonyTail.png';
-        if (productLower.includes('bun')) return 'images/Products/BUN.png';
-        if (productLower.includes('bang')) return 'images/Products/Bangs.png';
-        if (productLower.includes('halo')) return 'images/Products/Halo.png';
-        if (productLower.includes('topper')) return 'images/Products/SILKTOPPER.png';
-        
-        // Fall back to category mapping
-        return categoryImageMap[category] || 'images/template.png';
-    }
+        // Function to get product image based on category and product name
+        function getProductImage(category, productName) {
+            const categoryImageMap = {
+                'Bulk': 'images/Products/Bulk.png',
+                'Weaves': 'images/Products/Weaves-SD.png',
+                'Weaves DD': 'images/Products/Weaves-DD.png',
+                'Weaves SDD': 'images/Products/Weaves-SDD.png',
+                'Tapes': 'images/Products/Tapes.png',
+                'ClipOn': 'images/Products/ClipOn.png',
+                'Closures': 'images/Products/Closure.png',
+                'Frontals': 'images/Products/Frontal.png',
+                'Frontline': 'images/Products/Frontline.png',
+                'Tips': 'images/Products/ITIPS.png',
+                'I Tips': 'images/Products/ITIPS.png',
+                'U Tips': 'images/Products/UTIPS.png',
+                'Y Tips': 'images/Products/YTIPS.png',
+                'Flat Tips': 'images/Products/FlatTips.png',
+                'Nano': 'images/Products/Nano.png',
+                'PonyTail': 'images/Products/PonyTail.png',
+                'BUN': 'images/Products/BUN.png',
+                'Curly Bun': 'images/Products/CurlyBun.png',
+                'Clutch Bun': 'images/Products/ClutchBun.png',
+                'Bangs': 'images/Products/Bangs.png',
+                'Halo': 'images/Products/Halo.png',
+                'Highlights': 'images/Products/Highlights.png',
+                'Cover Patch': 'images/Products/CoverPatch.png',
+                'Genius': 'images/Products/Genius.png',
+                'Genius Weaves': 'images/Products/Genius.png',
+                'Wigs': 'images/Products/WIGFRONTAL.png',
+                'Wig Closure': 'images/Products/WIGCLOSURE.png',
+                'Wig Frontal': 'images/Products/WIGFRONTAL.png',
+                'Silk Topper': 'images/Products/SILKTOPPER.png',
+                'Toppers': 'images/Products/SILKTOPPER.png',
+                'Flat Clip Ponytail': 'images/Products/FLATCLIPPONYTAIL.png',
+                'Hair Extensions': 'images/Products/Weaves-SD.png'
+            };
 
-    let productData = [
-        {
-            Product: "Premium Bulk Hair 18\"",
-            Category: "Bulk",
-            Rate: 2500,
-            Currency: "INR",
-            Colors: "Black, Brown, Blonde",
-            Length: 18,
-            Density: "150%",
-            image: getProductImage("Bulk", "Premium Bulk Hair 18\"")
-        },
-        {
-            Product: "Luxury Weaves Double Drawn 22\"",
-            Category: "Weaves DD",
-            Rate: 3200,
-            Currency: "INR",
-            Colors: "Black, Brown, Auburn",
-            Length: 22,
-            Density: "180%",
-            image: getProductImage("Weaves DD", "Luxury Weaves Double Drawn 22\"")
-        },
-        {
-            Product: "Natural Wave Weaves 20\"",
-            Category: "Weaves",
-            Rate: 2800,
-            Currency: "INR",
-            Colors: "Natural Black, Dark Brown",
-            Length: 20,
-            Density: "160%",
-            image: getProductImage("Weaves", "Natural Wave Weaves 20\"")
-        },
-        {
-            Product: "Tape Extensions 16\"",
-            Category: "Tapes",
-            Rate: 1800,
-            Currency: "INR",
-            Colors: "Black, Brown, Blonde, Auburn",
-            Length: 16,
-            Density: "120%",
-            image: getProductImage("Tapes", "Tape Extensions 16\"")
-        },
-        {
-            Product: "Lace Closure 4x4",
-            Category: "Closures",
-            Rate: 4500,
-            Currency: "INR",
-            Colors: "Natural Black, Dark Brown",
-            Length: 14,
-            Density: "130%",
-            image: getProductImage("Closures", "Lace Closure 4x4")
-        },
-        {
-            Product: "Lace Frontal 13x4",
-            Category: "Frontals",
-            Rate: 6500,
-            Currency: "INR",
-            Colors: "Natural Black, Brown",
-            Length: 16,
-            Density: "150%",
-            image: getProductImage("Frontals", "Lace Frontal 13x4")
-        },
-        {
-            Product: "I-Tips Extensions 18\"",
-            Category: "I Tips",
-            Rate: 2200,
-            Currency: "INR",
-            Colors: "Black, Brown, Blonde",
-            Length: 18,
-            Density: "140%",
-            image: getProductImage("I Tips", "I-Tips Extensions 18\"")
-        },
-        {
-            Product: "Clip-On Extensions 20\"",
-            Category: "ClipOn",
-            Rate: 1950,
-            Currency: "INR",
-            Colors: "Black, Brown, Blonde, Auburn",
-            Length: 20,
-            Density: "130%",
-            image: getProductImage("ClipOn", "Clip-On Extensions 20\"")
-        },
-        {
-            Product: "Genius Weaves 22\"",
-            Category: "Genius Weaves",
-            Rate: 3800,
-            Currency: "INR",
-            Colors: "Natural Black, Brown",
-            Length: 22,
-            Density: "170%",
-            image: getProductImage("Genius Weaves", "Genius Weaves 22\"")
-        },
-        {
-            Product: "Silk Top Topper 14\"",
-            Category: "Toppers",
-            Rate: 5200,
-            Currency: "INR",
-            Colors: "Natural Black, Dark Brown",
-            Length: 14,
-            Density: "150%",
-            image: getProductImage("Toppers", "Silk Top Topper 14\"")
+            // Check for specific product name matches first
+            const productLower = productName.toLowerCase();
+            if (productLower.includes('bulk')) return 'images/Products/Bulk.png';
+            if (productLower.includes('weave') && productLower.includes('double drawn')) return 'images/Products/Weaves-DD.png';
+            if (productLower.includes('weave') && productLower.includes('super double')) return 'images/Products/Weaves-SDD.png';
+            if (productLower.includes('weave')) return 'images/Products/Weaves-SD.png';
+            if (productLower.includes('tape')) return 'images/Products/Tapes.png';
+            if (productLower.includes('closure')) return 'images/Products/Closure.png';
+            if (productLower.includes('frontal')) return 'images/Products/Frontal.png';
+            if (productLower.includes('genius')) return 'images/Products/Genius.png';
+            if (productLower.includes('wig')) return 'images/Products/WIGFRONTAL.png';
+            if (productLower.includes('tip')) return 'images/Products/ITIPS.png';
+            if (productLower.includes('clip')) return 'images/Products/ClipOn.png';
+            if (productLower.includes('ponytail')) return 'images/Products/PonyTail.png';
+            if (productLower.includes('bun')) return 'images/Products/BUN.png';
+            if (productLower.includes('bang')) return 'images/Products/Bangs.png';
+            if (productLower.includes('halo')) return 'images/Products/Halo.png';
+            if (productLower.includes('topper')) return 'images/Products/SILKTOPPER.png';
+
+            // Fall back to category mapping
+            return categoryImageMap[category] || 'images/template.png';
         }
-    ];
-    
-    // LocalStorageDropdownManager removed - using Firebase-only data
-    
-    const FX_APIS = [
-      (base) => `https://api.exchangerate-api.com/v4/latest/${base}`,
-      (base) => `https://api.fixer.io/latest?base=${base}`,
-      (base) => `https://open.er-api.com/v6/latest/${base}`
-    ];
-    const SUPPORTED = ['INR','USD','EUR','GBP','AUD','SAR','NGN','AED','JPY'];
-    const SYMBOL = { INR:'₹', USD:'$', EUR:'€', GBP:'£', AUD:'A$', SAR:'SAR ', NGN:'₦', AED:'د.إ ', JPY:'¥' };
-    const DEFAULT_RATES = { base:'INR',
-      rates:{ INR:1, USD:0.0120, EUR:0.0110, GBP:0.0095, AUD:0.0180, SAR:0.0450, NGN:5.5000, AED:0.0440, JPY:1.8000 },
-      updatedAt: null, mode:'auto'
-    };
 
-    // Global variables for Firebase collections
-    let firebaseColors = [];
-    let firebaseStyles = [];
-
-    // Function to get collections data via API client
-    async function loadFirebaseCollections() {
-        try {
-            // Use API client for data access if available
-            if (window.apiClient && typeof window.apiClient.isAvailable === 'function' && window.apiClient.isAvailable()) {
-                // Load colors collection
-                const colors = await window.apiClient.getColors();
-                if (colors && colors.length > 0) {
-                    firebaseColors = colors;
-                }
-                
-                // Load styles collection
-                const styles = await window.apiClient.getStyles();
-                if (styles && styles.length > 0) {
-                    firebaseStyles = styles;
-                }
-                return;
+        let productData = [
+            {
+                Product: "Premium Bulk Hair 18\"",
+                Category: "Bulk",
+                Rate: 2500,
+                Currency: "INR",
+                Colors: "Black, Brown, Blonde",
+                Length: 18,
+                Density: "150%",
+                image: getProductImage("Bulk", "Premium Bulk Hair 18\"")
+            },
+            {
+                Product: "Luxury Weaves Double Drawn 22\"",
+                Category: "Weaves DD",
+                Rate: 3200,
+                Currency: "INR",
+                Colors: "Black, Brown, Auburn",
+                Length: 22,
+                Density: "180%",
+                image: getProductImage("Weaves DD", "Luxury Weaves Double Drawn 22\"")
+            },
+            {
+                Product: "Natural Wave Weaves 20\"",
+                Category: "Weaves",
+                Rate: 2800,
+                Currency: "INR",
+                Colors: "Natural Black, Dark Brown",
+                Length: 20,
+                Density: "160%",
+                image: getProductImage("Weaves", "Natural Wave Weaves 20\"")
+            },
+            {
+                Product: "Tape Extensions 16\"",
+                Category: "Tapes",
+                Rate: 1800,
+                Currency: "INR",
+                Colors: "Black, Brown, Blonde, Auburn",
+                Length: 16,
+                Density: "120%",
+                image: getProductImage("Tapes", "Tape Extensions 16\"")
+            },
+            {
+                Product: "Lace Closure 4x4",
+                Category: "Closures",
+                Rate: 4500,
+                Currency: "INR",
+                Colors: "Natural Black, Dark Brown",
+                Length: 14,
+                Density: "130%",
+                image: getProductImage("Closures", "Lace Closure 4x4")
+            },
+            {
+                Product: "Lace Frontal 13x4",
+                Category: "Frontals",
+                Rate: 6500,
+                Currency: "INR",
+                Colors: "Natural Black, Brown",
+                Length: 16,
+                Density: "150%",
+                image: getProductImage("Frontals", "Lace Frontal 13x4")
+            },
+            {
+                Product: "I-Tips Extensions 18\"",
+                Category: "I Tips",
+                Rate: 2200,
+                Currency: "INR",
+                Colors: "Black, Brown, Blonde",
+                Length: 18,
+                Density: "140%",
+                image: getProductImage("I Tips", "I-Tips Extensions 18\"")
+            },
+            {
+                Product: "Clip-On Extensions 20\"",
+                Category: "ClipOn",
+                Rate: 1950,
+                Currency: "INR",
+                Colors: "Black, Brown, Blonde, Auburn",
+                Length: 20,
+                Density: "130%",
+                image: getProductImage("ClipOn", "Clip-On Extensions 20\"")
+            },
+            {
+                Product: "Genius Weaves 22\"",
+                Category: "Genius Weaves",
+                Rate: 3800,
+                Currency: "INR",
+                Colors: "Natural Black, Brown",
+                Length: 22,
+                Density: "170%",
+                image: getProductImage("Genius Weaves", "Genius Weaves 22\"")
+            },
+            {
+                Product: "Silk Top Topper 14\"",
+                Category: "Toppers",
+                Rate: 5200,
+                Currency: "INR",
+                Colors: "Natural Black, Dark Brown",
+                Length: 14,
+                Density: "150%",
+                image: getProductImage("Toppers", "Silk Top Topper 14\"")
             }
-            
-            // Fallback: Try unified data access if API client is not available
-            
-            if (window.unifiedDataAccess) {
-                try {
+        ];
+
+        // LocalStorageDropdownManager removed - using Firebase-only data
+
+        const FX_APIS = [
+            (base) => `https://api.exchangerate-api.com/v4/latest/${base}`,
+            (base) => `https://api.fixer.io/latest?base=${base}`,
+            (base) => `https://open.er-api.com/v6/latest/${base}`
+        ];
+        const SUPPORTED = ['INR', 'USD', 'EUR', 'GBP', 'AUD', 'SAR', 'NGN', 'AED', 'JPY'];
+        const SYMBOL = { INR: '₹', USD: '$', EUR: '€', GBP: '£', AUD: 'A$', SAR: 'SAR ', NGN: '₦', AED: 'د.إ ', JPY: '¥' };
+        const DEFAULT_RATES = {
+            base: 'INR',
+            rates: { INR: 1, USD: 0.0120, EUR: 0.0110, GBP: 0.0095, AUD: 0.0180, SAR: 0.0450, NGN: 5.5000, AED: 0.0440, JPY: 1.8000 },
+            updatedAt: null, mode: 'auto'
+        };
+
+        // Global variables for Firebase collections
+        let firebaseColors = [];
+        let firebaseStyles = [];
+
+        // Function to get collections data via API client
+        async function loadFirebaseCollections() {
+            try {
+                // Use API client for data access if available
+                if (window.apiClient && typeof window.apiClient.isAvailable === 'function' && window.apiClient.isAvailable()) {
                     // Load colors collection
-                    const colors = await window.unifiedDataAccess.getColors();
+                    const colors = await window.apiClient.getColors();
                     if (colors && colors.length > 0) {
                         firebaseColors = colors;
                     }
-                    
+
                     // Load styles collection
-                    const styles = await window.unifiedDataAccess.getStyles();
+                    const styles = await window.apiClient.getStyles();
                     if (styles && styles.length > 0) {
                         firebaseStyles = styles;
                     }
-                } catch (unifiedError) {
+                    return;
                 }
+
+                // Fallback: Try unified data access if API client is not available
+
+                if (window.unifiedDataAccess) {
+                    try {
+                        // Load colors collection
+                        const colors = await window.unifiedDataAccess.getColors();
+                        if (colors && colors.length > 0) {
+                            firebaseColors = colors;
+                        }
+
+                        // Load styles collection
+                        const styles = await window.unifiedDataAccess.getStyles();
+                        if (styles && styles.length > 0) {
+                            firebaseStyles = styles;
+                        }
+                    } catch (unifiedError) {
+                    }
+                }
+            } catch (error) {
             }
-        } catch (error) {
         }
-    }
 
-    // Function to get product image based on category
-    function getCategoryImage(category) {
-        const categoryImageMap = {
-            'Bulk': 'images/Products/Bulk.png',
-            'Weaves': 'images/Products/Weaves-SD.png',
-            'Weaves DD': 'images/Products/Weaves-DD.png',
-            'Weaves SDD': 'images/Products/Weaves-SDD.png',
-            'Tapes': 'images/Products/Tapes.png',
-            'ClipOn': 'images/Products/ClipOn.png',
-            'Closures': 'images/Products/Closure.png',
-            'Frontals': 'images/Products/Frontal.png',
-            'Frontline': 'images/Products/Frontline.png',
-            'Tips': 'images/Products/ITIPS.png',
-            'I Tips': 'images/Products/ITIPS.png',
-            'U Tips': 'images/Products/UTIPS.png',
-            'Y Tips': 'images/Products/YTIPS.png',
-            'Flat Tips': 'images/Products/FlatTips.png',
-            'Nano': 'images/Products/Nano.png',
-            'PonyTail': 'images/Products/PonyTail.png',
-            'BUN': 'images/Products/BUN.png',
-            'Curly Bun': 'images/Products/CurlyBun.png',
-            'Clutch Bun': 'images/Products/ClutchBun.png',
-            'Bangs': 'images/Products/Bangs.png',
-            'Halo': 'images/Products/Halo.png',
-            'Highlights': 'images/Products/Highlights.png',
-            'Cover Patch': 'images/Products/CoverPatch.png',
-            'Genius': 'images/Products/Genius.png',
-            'Genius Weaves': 'images/Products/Genius.png',
-            'Wigs': 'images/Products/WIGFRONTAL.png',
-            'Wig Closure': 'images/Products/WIGCLOSURE.png',
-            'Wig Frontal': 'images/Products/WIGFRONTAL.png',
-            'Silk Topper': 'images/Products/SILKTOPPER.png',
-            'Toppers': 'images/Products/SILKTOPPER.png',
-            'Flat Clip Ponytail': 'images/Products/FLATCLIPPONYTAIL.png',
-            'Hair Extensions': 'images/Products/Weaves-SD.png'
-        };
-        
-        return categoryImageMap[category] || 'images/template.png';
-    }
-
-    function normalizeImagePath(path) {
-        const v = (path || '').toString().trim();
-        if (!v) return '';
-        if (/^https?:\/\//i.test(v)) return v;
-        const noLeading = v.replace(/^\/+/, '');
-        if (noLeading.toLowerCase().startsWith('images/')) return noLeading;
-        return `images/Products/${noLeading.replace(/^images\/products\//i, '')}`;
-    }
-
-    function resolveProductImage(product) {
-        const candidates = [product.image, product.Image, product.imageUrl, product.ImageURL];
-        const first = candidates.find(x => x && String(x).trim().length);
-        if (first) {
-            const normalized = normalizeImagePath(first);
-            if (normalized) return normalized;
-        }
-        const mapped = (window.productImageMapping && window.productImageMapping.getProductImagePath(
-            product.Category || '',
-            product.Product || '',
-            product.Density || ''
-        )) || '';
-        return mapped || getCategoryImage(product.Category || '');
-    }
-
-    // Function to calculate ranges for a category
-    function calculateCategoryRanges(category) {
-        const categoryProducts = productData.filter(p => p.Category === category);
-        
-        if (categoryProducts.length === 0) {
-            return {
-                priceRange: 'N/A',
-                lengthRange: 'N/A',
-                colorRange: 'N/A',
-                styleRange: 'N/A'
+        // Function to get product image based on category
+        function getCategoryImage(category) {
+            const categoryImageMap = {
+                'Bulk': 'images/Products/Bulk.png',
+                'Weaves': 'images/Products/Weaves-SD.png',
+                'Weaves DD': 'images/Products/Weaves-DD.png',
+                'Weaves SDD': 'images/Products/Weaves-SDD.png',
+                'Tapes': 'images/Products/Tapes.png',
+                'ClipOn': 'images/Products/ClipOn.png',
+                'Closures': 'images/Products/Closure.png',
+                'Frontals': 'images/Products/Frontal.png',
+                'Frontline': 'images/Products/Frontline.png',
+                'Tips': 'images/Products/ITIPS.png',
+                'I Tips': 'images/Products/ITIPS.png',
+                'U Tips': 'images/Products/UTIPS.png',
+                'Y Tips': 'images/Products/YTIPS.png',
+                'Flat Tips': 'images/Products/FlatTips.png',
+                'Nano': 'images/Products/Nano.png',
+                'PonyTail': 'images/Products/PonyTail.png',
+                'BUN': 'images/Products/BUN.png',
+                'Curly Bun': 'images/Products/CurlyBun.png',
+                'Clutch Bun': 'images/Products/ClutchBun.png',
+                'Bangs': 'images/Products/Bangs.png',
+                'Halo': 'images/Products/Halo.png',
+                'Highlights': 'images/Products/Highlights.png',
+                'Cover Patch': 'images/Products/CoverPatch.png',
+                'Genius': 'images/Products/Genius.png',
+                'Genius Weaves': 'images/Products/Genius.png',
+                'Wigs': 'images/Products/WIGFRONTAL.png',
+                'Wig Closure': 'images/Products/WIGCLOSURE.png',
+                'Wig Frontal': 'images/Products/WIGFRONTAL.png',
+                'Silk Topper': 'images/Products/SILKTOPPER.png',
+                'Toppers': 'images/Products/SILKTOPPER.png',
+                'Flat Clip Ponytail': 'images/Products/FLATCLIPPONYTAIL.png',
+                'Hair Extensions': 'images/Products/Weaves-SD.png'
             };
+
+            return categoryImageMap[category] || 'images/template.png';
         }
 
-        // Currency conversion helpers
-        const getCatalogCurrency = () => (document.getElementById('catalog-currency')?.value) || (DEFAULT_RATES?.base || 'INR');
-        const getRates = () => {
-            const r = (window.catalogExchangeRates && (window.catalogExchangeRates.rates || window.catalogExchangeRates)) || DEFAULT_RATES.rates;
-            return r || DEFAULT_RATES.rates;
-        };
-        const convertAmount = (amt, from, to) => {
-            const rates = getRates();
-            const fromRate = rates[from] || 1;
-            const toRate = rates[to] || 1;
-            const inr = amt / fromRate;
-            return inr * toRate;
-        };
-
-        // Calculate price range (converted to selected currency)
-        const targetCurrency = getCatalogCurrency();
-        const pricesConverted = categoryProducts
-            .map(p => {
-                const base = Number(p.Rate);
-                const fromCur = p.Currency || 'INR';
-                if (!Number.isFinite(base)) return null;
-                return convertAmount(base, fromCur, targetCurrency);
-            })
-            .filter(v => v !== null && v !== undefined && Number.isFinite(v));
-        const priceRange = pricesConverted.length > 1 ? 
-            `${SYMBOL[targetCurrency] || ''}${Math.min(...pricesConverted).toFixed(2)} - ${SYMBOL[targetCurrency] || ''}${Math.max(...pricesConverted).toFixed(2)}` :
-            `${SYMBOL[targetCurrency] || ''}${(pricesConverted[0] ?? 'N/A') && Number.isFinite(pricesConverted[0]) ? pricesConverted[0].toFixed(2) : 'N/A'}`;
-        
-        // Calculate length range
-        const lengths = categoryProducts.map(p => p.Length).filter(Boolean);
-        const lengthRange = lengths.length > 1 ? 
-            `${Math.min(...lengths)}" - ${Math.max(...lengths)}"` :
-            `${lengths[0] || 'N/A'}"`;
-        
-        // Use Firebase collections for color and style counts
-        const colorRange = firebaseColors.length > 0 ? 
-            `${firebaseColors.length} colors available` :
-            'Colors available';
-        
-        const styleRange = firebaseStyles.length > 0 ? 
-            `${firebaseStyles.length} styles available` :
-            'Styles available';
-        
-        return { priceRange, lengthRange, colorRange, styleRange };
-    }
-
-    // Product rendering function
-    async function renderProducts(products = productData) {
-        const grid = document.getElementById('catalog-products-grid');
-        
-        // Load Firebase collections if not already loaded
-        if (firebaseColors.length === 0 || firebaseStyles.length === 0) {
-            await loadFirebaseCollections();
+        function normalizeImagePath(path) {
+            const v = (path || '').toString().trim();
+            if (!v) return '';
+            if (/^https?:\/\//i.test(v)) return v;
+            const noLeading = v.replace(/^\/+/, '');
+            if (noLeading.toLowerCase().startsWith('images/')) return noLeading;
+            return `images/Products/${noLeading.replace(/^images\/products\//i, '')}`;
         }
-        
-        if (!products || products.length === 0) {
-            document.getElementById('catalog-empty').classList.remove('hidden');
-            grid.innerHTML = '';
-            return;
-        }
-        
-        document.getElementById('catalog-empty').classList.add('hidden');
-        
-        // Group products by category to show ranges
-        const productsByCategory = {};
-        products.forEach(product => {
-            if (!productsByCategory[product.Category]) {
-                productsByCategory[product.Category] = [];
+
+        function resolveProductImage(product) {
+            const candidates = [product.image, product.Image, product.imageUrl, product.ImageURL];
+            const first = candidates.find(x => x && String(x).trim().length);
+            if (first) {
+                const normalized = normalizeImagePath(first);
+                if (normalized) return normalized;
             }
-            productsByCategory[product.Category].push(product);
-        });
-        
-        grid.innerHTML = Object.entries(productsByCategory).map(([category, categoryProducts]) => {
-            const ranges = calculateCategoryRanges(category);
-            const representativeProduct = categoryProducts[0]; // Use first product as representative
-            const categoryImage = getCategoryImage(category);
-            const representativeImage = resolveProductImage(representativeProduct) || categoryImage;
-            
-            return `
+            const mapped = (window.productImageMapping && window.productImageMapping.getProductImagePath(
+                product.Category || '',
+                product.Product || '',
+                product.Density || ''
+            )) || '';
+            return mapped || getCategoryImage(product.Category || '');
+        }
+
+        // Function to calculate ranges for a category
+        function calculateCategoryRanges(category) {
+            const categoryProducts = productData.filter(p => p.Category === category);
+
+            if (categoryProducts.length === 0) {
+                return {
+                    priceRange: 'N/A',
+                    lengthRange: 'N/A',
+                    colorRange: 'N/A',
+                    styleRange: 'N/A'
+                };
+            }
+
+            // Currency conversion helpers
+            const getCatalogCurrency = () => (document.getElementById('catalog-currency')?.value) || (DEFAULT_RATES?.base || 'INR');
+            const getRates = () => {
+                const r = (window.catalogExchangeRates && (window.catalogExchangeRates.rates || window.catalogExchangeRates)) || DEFAULT_RATES.rates;
+                return r || DEFAULT_RATES.rates;
+            };
+            const convertAmount = (amt, from, to) => {
+                const rates = getRates();
+                const fromRate = rates[from] || 1;
+                const toRate = rates[to] || 1;
+                const inr = amt / fromRate;
+                return inr * toRate;
+            };
+
+            // Calculate price range (converted to selected currency)
+            const targetCurrency = getCatalogCurrency();
+            const pricesConverted = categoryProducts
+                .map(p => {
+                    const base = Number(p.Rate);
+                    const fromCur = p.Currency || 'INR';
+                    if (!Number.isFinite(base)) return null;
+                    return convertAmount(base, fromCur, targetCurrency);
+                })
+                .filter(v => v !== null && v !== undefined && Number.isFinite(v));
+            const priceRange = pricesConverted.length > 1 ?
+                `${SYMBOL[targetCurrency] || ''}${Math.min(...pricesConverted).toFixed(2)} - ${SYMBOL[targetCurrency] || ''}${Math.max(...pricesConverted).toFixed(2)}` :
+                `${SYMBOL[targetCurrency] || ''}${(pricesConverted[0] ?? 'N/A') && Number.isFinite(pricesConverted[0]) ? pricesConverted[0].toFixed(2) : 'N/A'}`;
+
+            // Calculate length range
+            const lengths = categoryProducts.map(p => p.Length).filter(Boolean);
+            const lengthRange = lengths.length > 1 ?
+                `${Math.min(...lengths)}" - ${Math.max(...lengths)}"` :
+                `${lengths[0] || 'N/A'}"`;
+
+            // Use Firebase collections for color and style counts
+            const colorRange = firebaseColors.length > 0 ?
+                `${firebaseColors.length} colors available` :
+                'Colors available';
+
+            const styleRange = firebaseStyles.length > 0 ?
+                `${firebaseStyles.length} styles available` :
+                'Styles available';
+
+            return { priceRange, lengthRange, colorRange, styleRange };
+        }
+
+        // Product rendering function
+        async function renderProducts(products = productData) {
+            const grid = document.getElementById('catalog-products-grid');
+
+            // Load Firebase collections if not already loaded
+            if (firebaseColors.length === 0 || firebaseStyles.length === 0) {
+                await loadFirebaseCollections();
+            }
+
+            if (!products || products.length === 0) {
+                document.getElementById('catalog-empty').classList.remove('hidden');
+                grid.innerHTML = '';
+                return;
+            }
+
+            document.getElementById('catalog-empty').classList.add('hidden');
+
+            // Group products by category to show ranges
+            const productsByCategory = {};
+            products.forEach(product => {
+                if (!productsByCategory[product.Category]) {
+                    productsByCategory[product.Category] = [];
+                }
+                productsByCategory[product.Category].push(product);
+            });
+
+            grid.innerHTML = Object.entries(productsByCategory).map(([category, categoryProducts]) => {
+                const ranges = calculateCategoryRanges(category);
+                const representativeProduct = categoryProducts[0]; // Use first product as representative
+                const categoryImage = getCategoryImage(category);
+                const representativeImage = resolveProductImage(representativeProduct) || categoryImage;
+
+                return `
                 <div class="bg-white rounded-lg shadow-soft overflow-hidden card-hover flex flex-col h-full">
                     <div class="aspect-w-16 aspect-h-9 bg-gray-200">
                         <img src="${representativeImage}" 
@@ -984,65 +994,65 @@
                     </div>
                 </div>
             `;
-        }).join('');
-        
-        document.getElementById('catalog-results-count').textContent = `${Object.keys(productsByCategory).length} categories found`;
-        document.getElementById('catalog-results-count-display').textContent = `${Object.keys(productsByCategory).length} categories`;
-    }
-    
-    // View category details function - shows all products in that category
-    function viewCategoryDetails(category) {
-        const source = Array.isArray(window.catalogProducts) ? window.catalogProducts : (Array.isArray(window.productData) ? window.productData : []);
-        const categoryProducts = source.filter(p => p.Category === category);
-        showProductModal(categoryProducts, category);
-    }
+            }).join('');
 
-    // Build a comprehensive, well-structured price list table for a set of products
-    function renderPriceListTable(products = [], categoryName = '') {
-        const safe = v => (v === undefined || v === null) ? '' : v;
-        const toNumber = v => {
-            const n = Number(v);
-            return Number.isFinite(n) ? n : null;
-        };
+            document.getElementById('catalog-results-count').textContent = `${Object.keys(productsByCategory).length} categories found`;
+            document.getElementById('catalog-results-count-display').textContent = `${Object.keys(productsByCategory).length} categories`;
+        }
 
-        // Currency helpers (shared)
-        const getSelectedCatalogCurrency = () => (document.getElementById('catalog-currency')?.value) || (DEFAULT_RATES?.base || 'INR');
-        const getCatalogRates = () => {
-            const e = window.catalogExchangeRates;
-            const rates = (e && (e.rates || e)) || DEFAULT_RATES.rates;
-            return rates || DEFAULT_RATES.rates;
-        };
-        const convertCatalogAmount = (amt, from, to) => {
-            const rates = getCatalogRates();
-            const fromRate = rates[from] || 1;
-            const toRate = rates[to] || 1;
-            const inr = amt / fromRate;
-            return inr * toRate;
-        };
+        // View category details function - shows all products in that category
+        function viewCategoryDetails(category) {
+            const source = Array.isArray(window.catalogProducts) ? window.catalogProducts : (Array.isArray(window.productData) ? window.productData : []);
+            const categoryProducts = source.filter(p => p.Category === category);
+            showProductModal(categoryProducts, category);
+        }
 
-        // Prepare and sort rows by Product → Density → Length
-        const rows = (products || []).map(p => ({
-            Product: safe(p.Product || p['Product Name'] || p.Name || p.Item),
-            Category: safe(p.Category || p['Product Category']),
-            Density: safe(p.Density || p['Hair Density'] || p['Density Options']),
-            Length: toNumber(p.Length),
-            Colors: safe(p.Colors || p['Color Options'] || ''),
-            Rate: toNumber(p.Rate),
-            Currency: safe(p.Currency || p['Currency Code'] || ''),
-        })).sort((a, b) => {
-            const byProduct = String(a.Product).localeCompare(String(b.Product));
-            if (byProduct !== 0) return byProduct;
-            const byDensity = String(a.Density).localeCompare(String(b.Density));
-            if (byDensity !== 0) return byDensity;
-            const lenA = toNumber(a.Length) ?? 0;
-            const lenB = toNumber(b.Length) ?? 0;
-            return lenA - lenB;
-        });
+        // Build a comprehensive, well-structured price list table for a set of products
+        function renderPriceListTable(products = [], categoryName = '') {
+            const safe = v => (v === undefined || v === null) ? '' : v;
+            const toNumber = v => {
+                const n = Number(v);
+                return Number.isFinite(n) ? n : null;
+            };
 
-        const total = rows.length;
-        const title = categoryName ? `${categoryName} — Price List` : 'Price List';
+            // Currency helpers (shared)
+            const getSelectedCatalogCurrency = () => (document.getElementById('catalog-currency')?.value) || (DEFAULT_RATES?.base || 'INR');
+            const getCatalogRates = () => {
+                const e = window.catalogExchangeRates;
+                const rates = (e && (e.rates || e)) || DEFAULT_RATES.rates;
+                return rates || DEFAULT_RATES.rates;
+            };
+            const convertCatalogAmount = (amt, from, to) => {
+                const rates = getCatalogRates();
+                const fromRate = rates[from] || 1;
+                const toRate = rates[to] || 1;
+                const inr = amt / fromRate;
+                return inr * toRate;
+            };
 
-        return `
+            // Prepare and sort rows by Product → Density → Length
+            const rows = (products || []).map(p => ({
+                Product: safe(p.Product || p['Product Name'] || p.Name || p.Item),
+                Category: safe(p.Category || p['Product Category']),
+                Density: safe(p.Density || p['Hair Density'] || p['Density Options']),
+                Length: toNumber(p.Length),
+                Colors: safe(p.Colors || p['Color Options'] || ''),
+                Rate: toNumber(p.Rate),
+                Currency: safe(p.Currency || p['Currency Code'] || ''),
+            })).sort((a, b) => {
+                const byProduct = String(a.Product).localeCompare(String(b.Product));
+                if (byProduct !== 0) return byProduct;
+                const byDensity = String(a.Density).localeCompare(String(b.Density));
+                if (byDensity !== 0) return byDensity;
+                const lenA = toNumber(a.Length) ?? 0;
+                const lenB = toNumber(b.Length) ?? 0;
+                return lenA - lenB;
+            });
+
+            const total = rows.length;
+            const title = categoryName ? `${categoryName} — Price List` : 'Price List';
+
+            return `
             <div class="bg-white rounded-lg">
               <div class="p-4 border-b bg-gray-50 flex justify-between items-center">
                 <h3 class="text-xl font-bold text-gray-900">${title}</h3>
@@ -1060,14 +1070,14 @@
                   </thead>
                   <tbody class="divide-y divide-gray-200 bg-white">
                     ${rows.map(r => {
-                        const target = getSelectedCatalogCurrency();
-                        const sym = (typeof SYMBOL === 'object' && SYMBOL) ? (SYMBOL[target] || '') : '';
-                        const converted = (r.Rate !== null && r.Rate !== undefined)
-                          ? convertCatalogAmount(r.Rate, r.Currency || 'INR', target)
-                          : null;
-                        const rateDisplay = (converted !== null && converted !== undefined && Number.isFinite(converted)) ? `${sym}${converted.toFixed(2)}` : 'N/A';
-                        const lengthDisplay = (r.Length !== null && r.Length !== undefined) ? `${r.Length}"` : 'N/A';
-                        return `
+                const target = getSelectedCatalogCurrency();
+                const sym = (typeof SYMBOL === 'object' && SYMBOL) ? (SYMBOL[target] || '') : '';
+                const converted = (r.Rate !== null && r.Rate !== undefined)
+                    ? convertCatalogAmount(r.Rate, r.Currency || 'INR', target)
+                    : null;
+                const rateDisplay = (converted !== null && converted !== undefined && Number.isFinite(converted)) ? `${sym}${converted.toFixed(2)}` : 'N/A';
+                const lengthDisplay = (r.Length !== null && r.Length !== undefined) ? `${r.Length}"` : 'N/A';
+                return `
                           <tr class="hover:bg-gray-50">
                             <td class="px-3 py-2 text-sm text-gray-900">${r.Product || 'N/A'}</td>
                             <td class="px-3 py-2 text-sm text-gray-700">${r.Density || 'N/A'}</td>
@@ -1075,103 +1085,103 @@
                             <td class="px-3 py-2 text-sm text-right font-semibold" style="color:#081249;">${rateDisplay}</td>
                           </tr>
                         `;
-                    }).join('')}
+            }).join('')}
                   </tbody>
                 </table>
               </div>
             </div>
         `;
-    }
+        }
 
-    // Build grouped, responsive detailed price lists with prominent images
-    function renderDetailedPriceLists(products = [], categoryName = '') {
-        const safe = v => (v === undefined || v === null) ? '' : v;
-        const toNumber = v => { const n = Number(v); return Number.isFinite(n) ? n : null; };
+        // Build grouped, responsive detailed price lists with prominent images
+        function renderDetailedPriceLists(products = [], categoryName = '') {
+            const safe = v => (v === undefined || v === null) ? '' : v;
+            const toNumber = v => { const n = Number(v); return Number.isFinite(n) ? n : null; };
 
-        const rows = (products || []).map(p => ({
-            Product: safe(p.Product || p['Product Name'] || p.Name || p.Item),
-            Category: safe(p.Category || p['Product Category'] || categoryName || ''),
-            Density: safe(p.Density || p['Hair Density'] || p['Density Options']),
-            Length: toNumber(p.Length),
-            Colors: safe(p.Colors || p['Color Options'] || ''),
-            Rate: toNumber(p.Rate),
-            Currency: safe(p.Currency || p['Currency Code'] || ''),
-            PriceListName: safe(p.PriceListName || p.PriceList || p['Price List Name'] || ''),
-        })).filter(r => r.Product);
+            const rows = (products || []).map(p => ({
+                Product: safe(p.Product || p['Product Name'] || p.Name || p.Item),
+                Category: safe(p.Category || p['Product Category'] || categoryName || ''),
+                Density: safe(p.Density || p['Hair Density'] || p['Density Options']),
+                Length: toNumber(p.Length),
+                Colors: safe(p.Colors || p['Color Options'] || ''),
+                Rate: toNumber(p.Rate),
+                Currency: safe(p.Currency || p['Currency Code'] || ''),
+                PriceListName: safe(p.PriceListName || p.PriceList || p['Price List Name'] || ''),
+            })).filter(r => r.Product);
 
-        const groups = {};
-        rows.forEach(r => { (groups[r.Product] = groups[r.Product] || []).push(r); });
-        Object.keys(groups).forEach(k => {
-            groups[k].sort((a, b) => {
-                const byDensity = String(a.Density).localeCompare(String(b.Density));
-                if (byDensity !== 0) return byDensity;
-                const lenA = toNumber(a.Length) ?? 0; const lenB = toNumber(b.Length) ?? 0; return lenA - lenB;
+            const groups = {};
+            rows.forEach(r => { (groups[r.Product] = groups[r.Product] || []).push(r); });
+            Object.keys(groups).forEach(k => {
+                groups[k].sort((a, b) => {
+                    const byDensity = String(a.Density).localeCompare(String(b.Density));
+                    if (byDensity !== 0) return byDensity;
+                    const lenA = toNumber(a.Length) ?? 0; const lenB = toNumber(b.Length) ?? 0; return lenA - lenB;
+                });
             });
-        });
 
-        const productNames = Object.keys(groups).sort((a,b)=>a.localeCompare(b));
-        const title = categoryName ? `${categoryName} — Price Lists` : 'Price Lists';
+            const productNames = Object.keys(groups).sort((a, b) => a.localeCompare(b));
+            const title = categoryName ? `${categoryName} — Price Lists` : 'Price Lists';
 
-        const sections = productNames.map(name => {
-            const group = groups[name];
-            const representative = group[0] || {};
-            const category = representative.Category || categoryName || '';
-            const density = representative.Density || '';
+            const sections = productNames.map(name => {
+                const group = groups[name];
+                const representative = group[0] || {};
+                const category = representative.Category || categoryName || '';
+                const density = representative.Density || '';
 
-            let imagePath = '';
-            try {
-                if (typeof getProductImagePath === 'function') {
-                    imagePath = getProductImagePath(category, name, density) || '';
-                } else if (window.productImageMapping && typeof window.productImageMapping.getProductImagePath === 'function') {
-                    imagePath = window.productImageMapping.getProductImagePath(category, name, density) || '';
-                }
-            } catch (_) {}
-
-            // Group by Price List first, then Density → Color
-            const priceLists = Array.from(new Set(group.map(r => r.PriceListName || '')))
-                .sort((a, b) => String(a).localeCompare(String(b)));
-
-            const priceListSections = priceLists.map(pl => {
-                const plItems = group.filter(r => (r.PriceListName || '') === pl);
-                const densities = Array.from(new Set(plItems.map(r => r.Density || '')))
-                    .sort((a, b) => String(a).localeCompare(String(b)));
-
-                const densitySections = densities.map(d => {
-                    const items = plItems.filter(r => (r.Density || '') === d);
-
-                let densityImagePath = '';
+                let imagePath = '';
                 try {
                     if (typeof getProductImagePath === 'function') {
-                        densityImagePath = getProductImagePath(category, name, d) || '';
+                        imagePath = getProductImagePath(category, name, density) || '';
                     } else if (window.productImageMapping && typeof window.productImageMapping.getProductImagePath === 'function') {
-                        densityImagePath = window.productImageMapping.getProductImagePath(category, name, d) || '';
+                        imagePath = window.productImageMapping.getProductImagePath(category, name, density) || '';
                     }
-                } catch (_) {}
+                } catch (_) { }
 
-                const colors = Array.from(new Set(items.map(r => r.Colors || '')))
+                // Group by Price List first, then Density → Color
+                const priceLists = Array.from(new Set(group.map(r => r.PriceListName || '')))
                     .sort((a, b) => String(a).localeCompare(String(b)));
 
-                const colorTables = colors.map(c => {
-                    const rowsForColor = items.filter(r => (r.Colors || '') === c);
-                    const rowsHtml = rowsForColor.map(r => {
-                        const target = (document.getElementById('catalog-currency')?.value) || (DEFAULT_RATES?.base || 'INR');
-                        const sym = (typeof SYMBOL === 'object' && SYMBOL) ? (SYMBOL[target] || '') : '';
-                        const rates = (window.catalogExchangeRates && (window.catalogExchangeRates.rates || window.catalogExchangeRates)) || DEFAULT_RATES.rates;
-                        const fromRate = rates[r.Currency || 'INR'] || 1;
-                        const toRate = rates[target] || 1;
-                        const converted = (r.Rate !== null && r.Rate !== undefined) ? ( (r.Rate / fromRate) * toRate ) : null;
-                        const rateDisplay = (converted !== null && Number.isFinite(converted)) ? `${sym}${converted.toFixed(2)}` : 'N/A';
-                        const lengthDisplay = (r.Length !== null && r.Length !== undefined) ? `${r.Length}"` : 'N/A';
-                        return `
+                const priceListSections = priceLists.map(pl => {
+                    const plItems = group.filter(r => (r.PriceListName || '') === pl);
+                    const densities = Array.from(new Set(plItems.map(r => r.Density || '')))
+                        .sort((a, b) => String(a).localeCompare(String(b)));
+
+                    const densitySections = densities.map(d => {
+                        const items = plItems.filter(r => (r.Density || '') === d);
+
+                        let densityImagePath = '';
+                        try {
+                            if (typeof getProductImagePath === 'function') {
+                                densityImagePath = getProductImagePath(category, name, d) || '';
+                            } else if (window.productImageMapping && typeof window.productImageMapping.getProductImagePath === 'function') {
+                                densityImagePath = window.productImageMapping.getProductImagePath(category, name, d) || '';
+                            }
+                        } catch (_) { }
+
+                        const colors = Array.from(new Set(items.map(r => r.Colors || '')))
+                            .sort((a, b) => String(a).localeCompare(String(b)));
+
+                        const colorTables = colors.map(c => {
+                            const rowsForColor = items.filter(r => (r.Colors || '') === c);
+                            const rowsHtml = rowsForColor.map(r => {
+                                const target = (document.getElementById('catalog-currency')?.value) || (DEFAULT_RATES?.base || 'INR');
+                                const sym = (typeof SYMBOL === 'object' && SYMBOL) ? (SYMBOL[target] || '') : '';
+                                const rates = (window.catalogExchangeRates && (window.catalogExchangeRates.rates || window.catalogExchangeRates)) || DEFAULT_RATES.rates;
+                                const fromRate = rates[r.Currency || 'INR'] || 1;
+                                const toRate = rates[target] || 1;
+                                const converted = (r.Rate !== null && r.Rate !== undefined) ? ((r.Rate / fromRate) * toRate) : null;
+                                const rateDisplay = (converted !== null && Number.isFinite(converted)) ? `${sym}${converted.toFixed(2)}` : 'N/A';
+                                const lengthDisplay = (r.Length !== null && r.Length !== undefined) ? `${r.Length}"` : 'N/A';
+                                return `
                           <tr class="hover:bg-gray-50">
                             <td class="px-3 py-2 text-sm text-gray-700">${lengthDisplay}</td>
                             <td class="px-3 py-2 text-sm text-right font-semibold" style="color:#081249;">${rateDisplay}</td>
                           </tr>
                         `;
-                    }).join('');
+                            }).join('');
 
-                    const colorKey = `${name}::pricelist::${pl || 'N/A'}::density::${d}::color::${c || 'N/A'}`;
-                    return `
+                            const colorKey = `${name}::pricelist::${pl || 'N/A'}::density::${d}::color::${c || 'N/A'}`;
+                            return `
                       <details class="mb-4" data-state-key="${colorKey}" open>
                         <summary class="px-3 py-2 text-xs font-medium text-gray-700 bg-white border-l-4 border-indigo-500 cursor-pointer select-none">Color: ${c || 'N/A'}</summary>
                         <div class="overflow-x-auto">
@@ -1189,10 +1199,10 @@
                         </div>
                       </details>
                     `;
-                }).join('');
+                        }).join('');
 
-                const densityKey = `${name}::pricelist::${pl || 'N/A'}::density::${d || 'N/A'}`;
-                return `
+                        const densityKey = `${name}::pricelist::${pl || 'N/A'}::density::${d || 'N/A'}`;
+                        return `
                   <details class="mb-5 rounded border" data-state-key="${densityKey}" open>
                     <summary class="px-3 py-2 text-sm font-semibold text-gray-700 bg-gray-50 border-b cursor-pointer select-none flex items-center justify-between">
                       <span>Density: ${d || 'N/A'}</span>
@@ -1205,10 +1215,10 @@
                     </div>
                   </details>
                 `;
-            }).join('');
+                    }).join('');
 
-            const priceListKey = `${name}::pricelist::${pl || 'N/A'}`;
-            return `
+                    const priceListKey = `${name}::pricelist::${pl || 'N/A'}`;
+                    return `
               <details class="mb-6 rounded border" data-state-key="${priceListKey}" open>
                 <summary class="px-4 py-2 text-sm font-semibold text-gray-800 bg-gray-100 border-b cursor-pointer select-none">Price List: ${pl || 'N/A'}</summary>
                 <div class="p-3">
@@ -1216,9 +1226,9 @@
                 </div>
               </details>
             `;
-            }).join('');
+                }).join('');
 
-            return `
+                return `
               <section class="mb-6 rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                 <div class="px-5 py-3 bg-gradient-to-r from-gray-50 to-white border-b flex items-center justify-between">
                   <div class="flex items-center gap-3">
@@ -1237,9 +1247,9 @@
                 </div>
               </section>
             `;
-        }).join('');
+            }).join('');
 
-        return `
+            return `
           <div class="bg-white rounded-lg">
             <div class="p-4 border-b bg-gray-50 flex justify-between items-center">
               <h3 class="text-xl font-bold text-gray-900">${title}</h3>
@@ -1252,314 +1262,314 @@
             ${sections}
           </div>
         `;
-    }
-
-    // --- Collapsible sections state management (persist to localStorage) ---
-    function getDetailsStateKey(categoryName) {
-        return `catalogDetailsState::${categoryName || 'ALL'}`;
-    }
-
-    function loadDetailsState(categoryName) {
-        try {
-            return JSON.parse(localStorage.getItem(getDetailsStateKey(categoryName)) || '{}');
-        } catch (_) {
-            return {};
         }
-    }
 
-    function saveDetailsState(categoryName, state) {
-        try {
-            localStorage.setItem(getDetailsStateKey(categoryName), JSON.stringify(state || {}));
-        } catch (_) {}
-    }
+        // --- Collapsible sections state management (persist to localStorage) ---
+        function getDetailsStateKey(categoryName) {
+            return `catalogDetailsState::${categoryName || 'ALL'}`;
+        }
 
-    function applyDetailsStateToModal(categoryName) {
-        const container = document.getElementById('modalProductList');
-        if (!container) return;
-        const state = loadDetailsState(categoryName);
-        container.querySelectorAll('details[data-state-key]').forEach(d => {
-            const k = d.getAttribute('data-state-key');
-            if (state && Object.prototype.hasOwnProperty.call(state, k)) {
-                d.open = !!state[k];
+        function loadDetailsState(categoryName) {
+            try {
+                return JSON.parse(localStorage.getItem(getDetailsStateKey(categoryName)) || '{}');
+            } catch (_) {
+                return {};
             }
-        });
-    }
+        }
 
-    function bindModalDetailsTogglePersistence(categoryName) {
-        const container = document.getElementById('modalProductList');
-        if (!container) return;
-        let state = loadDetailsState(categoryName);
-        container.querySelectorAll('details[data-state-key]').forEach(d => {
-            d.addEventListener('toggle', () => {
+        function saveDetailsState(categoryName, state) {
+            try {
+                localStorage.setItem(getDetailsStateKey(categoryName), JSON.stringify(state || {}));
+            } catch (_) { }
+        }
+
+        function applyDetailsStateToModal(categoryName) {
+            const container = document.getElementById('modalProductList');
+            if (!container) return;
+            const state = loadDetailsState(categoryName);
+            container.querySelectorAll('details[data-state-key]').forEach(d => {
                 const k = d.getAttribute('data-state-key');
-                state[k] = d.open;
-                saveDetailsState(categoryName, state);
+                if (state && Object.prototype.hasOwnProperty.call(state, k)) {
+                    d.open = !!state[k];
+                }
             });
-        });
-    }
-
-    function expandAllDetails() {
-        const container = document.getElementById('modalProductList');
-        if (!container) return;
-        container.querySelectorAll('details').forEach(d => { d.open = true; });
-        const cat = (document.getElementById('modalCategoryTitle')?.textContent || '').replace(' — Details', '') || '';
-        let state = loadDetailsState(cat);
-        container.querySelectorAll('details[data-state-key]').forEach(d => {
-            state[d.getAttribute('data-state-key')] = true;
-        });
-        saveDetailsState(cat, state);
-    }
-
-    function collapseAllDetails() {
-        const container = document.getElementById('modalProductList');
-        if (!container) return;
-        container.querySelectorAll('details').forEach(d => { d.open = false; });
-        const cat = (document.getElementById('modalCategoryTitle')?.textContent || '').replace(' — Details', '') || '';
-        let state = loadDetailsState(cat);
-        container.querySelectorAll('details[data-state-key]').forEach(d => {
-            state[d.getAttribute('data-state-key')] = false;
-        });
-        saveDetailsState(cat, state);
-    }
-    // Show product modal as a comprehensive price list for the selected category
-    function showProductModal(products, categoryName) {
-        const modal = document.getElementById('productModal');
-        const modalContent = document.getElementById('modalProductList');
-        
-        // Render grouped price lists with prominent product images and responsive tables
-        modalContent.innerHTML = renderDetailedPriceLists(products, categoryName);
-        
-        document.getElementById('modalCategoryTitle').textContent = categoryName ? `${categoryName} — Details` : 'Product Details';
-        // Apply persisted expand/collapse state and bind toggle listeners
-        applyDetailsStateToModal(categoryName);
-        bindModalDetailsTogglePersistence(categoryName);
-        modal.classList.remove('hidden');
-        document.body.style.overflow = 'hidden';
-    }
-
-    // Close modal function
-    function closeProductModal() {
-        const modal = document.getElementById('productModal');
-        modal.classList.add('hidden');
-        document.body.style.overflow = 'auto';
-    }
-    
-    // Remove legacy unified data initialization (Firebase/universal/unified managers)
-
-    // Load product data using unified data sources
-    // Remove legacy unified/universal product loading function (INHDATA-only now)
-
-    // Populate category dropdown using unified data source
-    // Remove legacy category population function (INHDATA populates categories)
-
-    // Load categories using unified data source with retry mechanism
-    // Remove legacy retry loader (INHDATA updates are event-driven)
-
-    // Wait for unified data to be available
-    // Remove legacy unified data readiness check
-
-    // Show category loading success message
-    function showCategorySuccess(message) {
-        const resultsCount = document.getElementById('catalog-results-count');
-        if (resultsCount) {
-            resultsCount.innerHTML = `<span class="text-green-600"><i class="fas fa-check-circle mr-1"></i>${message}</span>`;
-            
-            // Clear success message after 3 seconds
-            setTimeout(() => {
-                updateCategoryCount();
-            }, 3000);
-        }
-    }
-
-    // Show category loading error message
-    function showCategoryError(message) {
-        const categorySelect = document.getElementById('catalog-category');
-        const resultsCount = document.getElementById('catalog-results-count');
-        
-        if (categorySelect) {
-            categorySelect.innerHTML = `<option value="">Error: ${message}</option>`;
-            categorySelect.disabled = true;
-        }
-        
-        if (resultsCount) {
-            resultsCount.innerHTML = `<span class="text-red-600"><i class="fas fa-exclamation-triangle mr-1"></i>${message}</span>`;
         }
 
-        // Show retry button
-        showCategoryRetryButton();
-    }
-
-    // Non-destructive warning message (does NOT modify dropdown)
-    function showCategoryWarning(message) {
-        const resultsCount = document.getElementById('catalog-results-count');
-        if (resultsCount) {
-            resultsCount.innerHTML = `<span class="text-yellow-600"><i class="fas fa-exclamation-circle mr-1"></i>${message}</span>`;
-            // Restore default count message shortly after
-            setTimeout(() => { try { updateCategoryCount(); } catch (_) {} }, 3000);
+        function bindModalDetailsTogglePersistence(categoryName) {
+            const container = document.getElementById('modalProductList');
+            if (!container) return;
+            let state = loadDetailsState(categoryName);
+            container.querySelectorAll('details[data-state-key]').forEach(d => {
+                d.addEventListener('toggle', () => {
+                    const k = d.getAttribute('data-state-key');
+                    state[k] = d.open;
+                    saveDetailsState(categoryName, state);
+                });
+            });
         }
-    }
 
-    // INHDATA readiness check
-    function isINHDATAReady() {
-        try {
-            return !!(window.INHDATA && typeof INHDATA.subscribe === 'function' && typeof INHDATA.distinct === 'function');
-        } catch (_) {
+        function expandAllDetails() {
+            const container = document.getElementById('modalProductList');
+            if (!container) return;
+            container.querySelectorAll('details').forEach(d => { d.open = true; });
+            const cat = (document.getElementById('modalCategoryTitle')?.textContent || '').replace(' — Details', '') || '';
+            let state = loadDetailsState(cat);
+            container.querySelectorAll('details[data-state-key]').forEach(d => {
+                state[d.getAttribute('data-state-key')] = true;
+            });
+            saveDetailsState(cat, state);
+        }
+
+        function collapseAllDetails() {
+            const container = document.getElementById('modalProductList');
+            if (!container) return;
+            container.querySelectorAll('details').forEach(d => { d.open = false; });
+            const cat = (document.getElementById('modalCategoryTitle')?.textContent || '').replace(' — Details', '') || '';
+            let state = loadDetailsState(cat);
+            container.querySelectorAll('details[data-state-key]').forEach(d => {
+                state[d.getAttribute('data-state-key')] = false;
+            });
+            saveDetailsState(cat, state);
+        }
+        // Show product modal as a comprehensive price list for the selected category
+        function showProductModal(products, categoryName) {
+            const modal = document.getElementById('productModal');
+            const modalContent = document.getElementById('modalProductList');
+
+            // Render grouped price lists with prominent product images and responsive tables
+            modalContent.innerHTML = renderDetailedPriceLists(products, categoryName);
+
+            document.getElementById('modalCategoryTitle').textContent = categoryName ? `${categoryName} — Details` : 'Product Details';
+            // Apply persisted expand/collapse state and bind toggle listeners
+            applyDetailsStateToModal(categoryName);
+            bindModalDetailsTogglePersistence(categoryName);
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        // Close modal function
+        function closeProductModal() {
+            const modal = document.getElementById('productModal');
+            modal.classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        // Remove legacy unified data initialization (Firebase/universal/unified managers)
+
+        // Load product data using unified data sources
+        // Remove legacy unified/universal product loading function (INHDATA-only now)
+
+        // Populate category dropdown using unified data source
+        // Remove legacy category population function (INHDATA populates categories)
+
+        // Load categories using unified data source with retry mechanism
+        // Remove legacy retry loader (INHDATA updates are event-driven)
+
+        // Wait for unified data to be available
+        // Remove legacy unified data readiness check
+
+        // Show category loading success message
+        function showCategorySuccess(message) {
+            const resultsCount = document.getElementById('catalog-results-count');
+            if (resultsCount) {
+                resultsCount.innerHTML = `<span class="text-green-600"><i class="fas fa-check-circle mr-1"></i>${message}</span>`;
+
+                // Clear success message after 3 seconds
+                setTimeout(() => {
+                    updateCategoryCount();
+                }, 3000);
+            }
+        }
+
+        // Show category loading error message
+        function showCategoryError(message) {
+            const categorySelect = document.getElementById('catalog-category');
+            const resultsCount = document.getElementById('catalog-results-count');
+
+            if (categorySelect) {
+                categorySelect.innerHTML = `<option value="">Error: ${message}</option>`;
+                categorySelect.disabled = true;
+            }
+
+            if (resultsCount) {
+                resultsCount.innerHTML = `<span class="text-red-600"><i class="fas fa-exclamation-triangle mr-1"></i>${message}</span>`;
+            }
+
+            // Show retry button
+            showCategoryRetryButton();
+        }
+
+        // Non-destructive warning message (does NOT modify dropdown)
+        function showCategoryWarning(message) {
+            const resultsCount = document.getElementById('catalog-results-count');
+            if (resultsCount) {
+                resultsCount.innerHTML = `<span class="text-yellow-600"><i class="fas fa-exclamation-circle mr-1"></i>${message}</span>`;
+                // Restore default count message shortly after
+                setTimeout(() => { try { updateCategoryCount(); } catch (_) { } }, 3000);
+            }
+        }
+
+        // INHDATA readiness check
+        function isINHDATAReady() {
+            try {
+                return !!(window.INHDATA && typeof INHDATA.subscribe === 'function' && typeof INHDATA.distinct === 'function');
+            } catch (_) {
+                return false;
+            }
+        }
+
+        // Wait for INHDATA readiness with timeout
+        async function waitForINHDATAReady(maxWaitMs = 6000, intervalMs = 200) {
+            const start = Date.now();
+            while (Date.now() - start < maxWaitMs) {
+                if (isINHDATAReady()) return true;
+                await new Promise(r => setTimeout(r, intervalMs));
+            }
             return false;
         }
-    }
 
-    // Wait for INHDATA readiness with timeout
-    async function waitForINHDATAReady(maxWaitMs = 6000, intervalMs = 200) {
-        const start = Date.now();
-        while (Date.now() - start < maxWaitMs) {
-            if (isINHDATAReady()) return true;
-            await new Promise(r => setTimeout(r, intervalMs));
-        }
-        return false;
-    }
-
-    // Helper: set options with safe fallback
-    function setDropdownOptions(select, options, placeholderText) {
-        try {
-            if (typeof setOptionsGlobal === 'function') {
-                setOptionsGlobal(select, options, placeholderText);
-                return;
-            }
-            if (typeof setOptions === 'function') {
-                setOptions(select, options, placeholderText);
-                return;
-            }
-        } catch (_) {}
-        // Manual population fallback
-        if (!select) return;
-        const placeholder = typeof placeholderText === 'string' ? placeholderText : 'All Categories';
-        select.innerHTML = `<option value="">${placeholder}</option>`;
-        (Array.isArray(options) ? options : []).forEach(opt => {
-            const value = typeof opt === 'object' ? (opt.name || opt.Category || opt.category || JSON.stringify(opt)) : String(opt);
-            const optionEl = document.createElement('option');
-            optionEl.value = value;
-            optionEl.textContent = value;
-            select.appendChild(optionEl);
-        });
-    }
-
-    // Get fallback categories from multiple sources
-    function getFallbackCategories() {
-        try {
-            // Prefer live products
-            const products = Array.isArray(window.catalogProducts) ? window.catalogProducts : (Array.isArray(window.productData) ? window.productData : []);
-            const fromProducts = [...new Set((products || []).map(p => p && p.Category).filter(Boolean))];
-            if (fromProducts.length > 0) return fromProducts.sort((a,b) => String(a).localeCompare(String(b)));
-        } catch (_) {}
-        try {
-            // Local storage fallback
-            const stored = localStorage.getItem('catalogCategories');
-            if (stored) {
-                const parsed = JSON.parse(stored);
-                if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-            }
-        } catch (_) {}
-        // Final defaults
-        return ['Bulk', 'Weaves', 'Weaves DD', 'Tapes', 'Closures', 'Frontals', 'I Tips', 'ClipOn', 'Genius Weaves', 'Toppers'];
-    }
-
-    // Robust loader: tries INHDATA with retries, falls back gracefully
-    async function loadCategoriesWithRetry(maxRetries = 3, baseDelayMs = 500) {
-        const select = document.getElementById('catalog-category');
-        if (!select) return false;
-        try { setCategoryLoadingState(true); } catch (_) {}
-        let lastError = null;
-        for (let attempt = 0; attempt < maxRetries; attempt++) {
+        // Helper: set options with safe fallback
+        function setDropdownOptions(select, options, placeholderText) {
             try {
-                if (!isINHDATAReady()) throw new Error('INHDATA not ready');
-                const names = await INHDATA.distinct('products', 'Category');
-                const categories = (Array.isArray(names) ? names : []).filter(Boolean).map(c => String(c)).sort((a,b) => a.localeCompare(b));
-                if (categories.length > 0) {
-                    setDropdownOptions(select, categories, 'All Categories');
-                    try { updateCategoryCount(categories.length); } catch (_) {}
-                    try { localStorage.setItem('catalogCategories', JSON.stringify(categories)); } catch (_) {}
-                    try { select.disabled = false; } catch (_) {}
-                    try { showCategorySuccess(`${categories.length} categories loaded`); } catch (_) {}
-                    try { setCategoryLoadingState(false); } catch (_) {}
-                    return true;
+                if (typeof setOptionsGlobal === 'function') {
+                    setOptionsGlobal(select, options, placeholderText);
+                    return;
                 }
-                throw new Error('No categories returned');
-            } catch (err) {
-                lastError = err;
-                const delay = baseDelayMs * Math.pow(2, attempt);
-                await new Promise(r => setTimeout(r, delay));
+                if (typeof setOptions === 'function') {
+                    setOptions(select, options, placeholderText);
+                    return;
+                }
+            } catch (_) { }
+            // Manual population fallback
+            if (!select) return;
+            const placeholder = typeof placeholderText === 'string' ? placeholderText : 'All Categories';
+            select.innerHTML = `<option value="">${placeholder}</option>`;
+            (Array.isArray(options) ? options : []).forEach(opt => {
+                const value = typeof opt === 'object' ? (opt.name || opt.Category || opt.category || JSON.stringify(opt)) : String(opt);
+                const optionEl = document.createElement('option');
+                optionEl.value = value;
+                optionEl.textContent = value;
+                select.appendChild(optionEl);
+            });
+        }
+
+        // Get fallback categories from multiple sources
+        function getFallbackCategories() {
+            try {
+                // Prefer live products
+                const products = Array.isArray(window.catalogProducts) ? window.catalogProducts : (Array.isArray(window.productData) ? window.productData : []);
+                const fromProducts = [...new Set((products || []).map(p => p && p.Category).filter(Boolean))];
+                if (fromProducts.length > 0) return fromProducts.sort((a, b) => String(a).localeCompare(String(b)));
+            } catch (_) { }
+            try {
+                // Local storage fallback
+                const stored = localStorage.getItem('catalogCategories');
+                if (stored) {
+                    const parsed = JSON.parse(stored);
+                    if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+                }
+            } catch (_) { }
+            // Final defaults
+            return ['Bulk', 'Weaves', 'Weaves DD', 'Tapes', 'Closures', 'Frontals', 'I Tips', 'ClipOn', 'Genius Weaves', 'Toppers'];
+        }
+
+        // Robust loader: tries INHDATA with retries, falls back gracefully
+        async function loadCategoriesWithRetry(maxRetries = 3, baseDelayMs = 500) {
+            const select = document.getElementById('catalog-category');
+            if (!select) return false;
+            try { setCategoryLoadingState(true); } catch (_) { }
+            let lastError = null;
+            for (let attempt = 0; attempt < maxRetries; attempt++) {
+                try {
+                    if (!isINHDATAReady()) throw new Error('INHDATA not ready');
+                    const names = await INHDATA.distinct('products', 'Category');
+                    const categories = (Array.isArray(names) ? names : []).filter(Boolean).map(c => String(c)).sort((a, b) => a.localeCompare(b));
+                    if (categories.length > 0) {
+                        setDropdownOptions(select, categories, 'All Categories');
+                        try { updateCategoryCount(categories.length); } catch (_) { }
+                        try { localStorage.setItem('catalogCategories', JSON.stringify(categories)); } catch (_) { }
+                        try { select.disabled = false; } catch (_) { }
+                        try { showCategorySuccess(`${categories.length} categories loaded`); } catch (_) { }
+                        try { setCategoryLoadingState(false); } catch (_) { }
+                        return true;
+                    }
+                    throw new Error('No categories returned');
+                } catch (err) {
+                    lastError = err;
+                    const delay = baseDelayMs * Math.pow(2, attempt);
+                    await new Promise(r => setTimeout(r, delay));
+                }
+            }
+            // Fallback path
+            try {
+                const fallback = getFallbackCategories();
+                setDropdownOptions(select, fallback, 'All Categories');
+                try { updateCategoryCount(fallback.length); } catch (_) { }
+                try { select.disabled = false; } catch (_) { }
+                // Show a non-blocking warning instead of error that clears the dropdown
+                try { showCategoryWarning(`Loaded ${fallback.length} fallback categories. ${lastError ? lastError.message : ''}`); } catch (_) { }
+            } catch (_) { }
+            try { setCategoryLoadingState(false); } catch (_) { }
+            return false;
+        }
+
+        // Update category count display
+        function updateCategoryCount(count = null) {
+            const resultsCount = document.getElementById('catalog-results-count');
+            if (!resultsCount) return;
+
+            if (count !== null) {
+                resultsCount.innerHTML = `${count} categories available`;
+            } else {
+                // Calculate current count from dropdown
+                const categorySelect = document.getElementById('catalog-category');
+                if (categorySelect) {
+                    const optionCount = categorySelect.options.length - 1; // Subtract "All Categories" option
+                    resultsCount.innerHTML = optionCount > 0 ? `${optionCount} categories available` : 'Loading categories...';
+                }
             }
         }
-        // Fallback path
-        try {
-            const fallback = getFallbackCategories();
-            setDropdownOptions(select, fallback, 'All Categories');
-            try { updateCategoryCount(fallback.length); } catch (_) {}
-            try { select.disabled = false; } catch (_) {}
-            // Show a non-blocking warning instead of error that clears the dropdown
-            try { showCategoryWarning(`Loaded ${fallback.length} fallback categories. ${lastError ? lastError.message : ''}`); } catch (_) {}
-        } catch (_) {}
-        try { setCategoryLoadingState(false); } catch (_) {}
-        return false;
-    }
 
-    // Update category count display
-    function updateCategoryCount(count = null) {
-        const resultsCount = document.getElementById('catalog-results-count');
-        if (!resultsCount) return;
+        // Show retry button for category loading
+        function showCategoryRetryButton() {
+            const resultsCount = document.getElementById('catalog-results-count');
+            if (!resultsCount) return;
 
-        if (count !== null) {
-            resultsCount.innerHTML = `${count} categories available`;
-        } else {
-            // Calculate current count from dropdown
+            const retryButton = document.createElement('button');
+            retryButton.className = 'ml-2 px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 transition-colors';
+            retryButton.innerHTML = '<i class="fas fa-redo mr-1"></i>Retry';
+            retryButton.onclick = () => {
+                retryButton.remove();
+                loadCategoriesWithRetry();
+            };
+
+            resultsCount.appendChild(retryButton);
+        }
+
+        // Enhanced category change handler with loading feedback
+        function onCategoryChange() {
             const categorySelect = document.getElementById('catalog-category');
-            if (categorySelect) {
-                const optionCount = categorySelect.options.length - 1; // Subtract "All Categories" option
-                resultsCount.innerHTML = optionCount > 0 ? `${optionCount} categories available` : 'Loading categories...';
+            if (!categorySelect) return;
+
+            const selectedCategory = categorySelect.value;
+
+            // Show loading state
+            const resultsCount = document.getElementById('catalog-results-count-display');
+            if (resultsCount) {
+                resultsCount.innerHTML = 'Filtering products...';
             }
-        }
-    }
 
-    // Show retry button for category loading
-    function showCategoryRetryButton() {
-        const resultsCount = document.getElementById('catalog-results-count');
-        if (!resultsCount) return;
-
-        const retryButton = document.createElement('button');
-        retryButton.className = 'ml-2 px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 transition-colors';
-        retryButton.innerHTML = '<i class="fas fa-redo mr-1"></i>Retry';
-        retryButton.onclick = () => {
-            retryButton.remove();
-            loadCategoriesWithRetry();
-        };
-
-        resultsCount.appendChild(retryButton);
-    }
-
-    // Enhanced category change handler with loading feedback
-    function onCategoryChange() {
-        const categorySelect = document.getElementById('catalog-category');
-        if (!categorySelect) return;
-
-        const selectedCategory = categorySelect.value;
-        
-        // Show loading state
-        const resultsCount = document.getElementById('catalog-results-count-display');
-        if (resultsCount) {
-            resultsCount.innerHTML = 'Filtering products...';
+            // Apply filters with selected category
+            setTimeout(() => {
+                applyCatalogFilters();
+            }, 100);
         }
 
-        // Apply filters with selected category
-        setTimeout(() => {
-            applyCatalogFilters();
-        }, 100);
-    }
-
-    // Show error message to user
-    function showErrorMessage(message) {
-        const catalogGrid = document.getElementById('catalog-grid');
-        if (catalogGrid) {
-            catalogGrid.innerHTML = `
+        // Show error message to user
+        function showErrorMessage(message) {
+            const catalogGrid = document.getElementById('catalog-grid');
+            if (catalogGrid) {
+                catalogGrid.innerHTML = `
                 <div class="col-span-full flex flex-col items-center justify-center py-12 text-center">
                     <div class="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md">
                         <div class="flex items-center justify-center w-12 h-12 mx-auto mb-4 bg-red-100 rounded-full">
@@ -1573,257 +1583,260 @@
                     </div>
                 </div>
             `;
-        }
-    }
-        
-    // Global helper to set dropdown options
-    function setOptionsGlobal(el, values, placeholder) {
-        if (!el) return;
-        const opts = Array.isArray(values) ? values : [];
-        el.innerHTML = `<option value="">${placeholder || 'Select'}</option>`;
-        opts.forEach(v => {
-            const o = document.createElement('option');
-            o.value = v;
-            o.textContent = v;
-            el.appendChild(o);
-        });
-    }
-
-    // Populate category dropdown even if INHDATA isn’t available
-    function populateCategoryFilterFallback() {
-        try {
-            const select = document.getElementById('catalog-category');
-            if (!select) return;
-
-            // Prefer runtime catalogProducts; then local embedded productData; then window.productData
-            const runtimeProducts = Array.isArray(window.catalogProducts) ? window.catalogProducts : [];
-            const embeddedProducts = (typeof productData !== 'undefined' && Array.isArray(productData))
-                ? productData
-                : (Array.isArray(window.productData) ? window.productData : []);
-            const source = runtimeProducts.length ? runtimeProducts : embeddedProducts;
-
-            const categories = Array.from(new Set((source || [])
-                .map(p => p && p.Category)
-                .filter(Boolean)))
-                .sort((a, b) => a.localeCompare(b));
-
-            // Ensure it’s interactable
-            select.disabled = false;
-            if (categories.length > 0) {
-                setOptionsGlobal(select, categories, 'All Categories');
-                updateCategoryCount(categories.length);
-            } else {
-                // Final fallback: default known categories to ensure dropdown is usable
-                const defaults = ['Bulk', 'Weaves', 'Weaves DD', 'Tapes', 'Closures', 'Frontals', 'I Tips', 'ClipOn', 'Genius Weaves', 'Toppers'];
-                setOptionsGlobal(select, defaults, 'All Categories');
-                updateCategoryCount(defaults.length);
             }
-
-            // Also populate derived filters from available products
-            try { refreshDerivedFilterOptions(source); } catch (_) {}
-        } catch (_) {
-            // Silent fallback; UI remains usable with placeholder only
-        }
-    }
-
-    // Populate product, density, and shade filters from product list
-    function refreshDerivedFilterOptions(products) {
-        try {
-            const productSelect = document.getElementById('catalog-product');
-            const densitySelect = document.getElementById('catalog-density');
-            const shadeSelect = document.getElementById('catalog-shade');
-            const prev = {
-                product: productSelect?.value || '',
-                density: densitySelect?.value || '',
-                shade: shadeSelect?.value || '',
-            };
-
-            const productNames = Array.from(new Set((products || [])
-                .map(p => p && (p.Product || p['Product Name'] || p.Name || p.Item))
-                .filter(Boolean)))
-                .sort((a,b)=>String(a).localeCompare(String(b)));
-
-            const densities = Array.from(new Set((products || [])
-                .map(p => p && (p.Density || p['Hair Density'] || p['Density Options']))
-                .filter(Boolean)))
-                .sort((a,b)=>String(a).localeCompare(String(b)));
-
-            const shades = Array.from(new Set((products || [])
-                .flatMap(p => String(p && (p.Colors || p['Color Options'] || '')).split(/[,/|]/)
-                    .map(s => s.trim()).filter(Boolean))) )
-                .sort((a,b)=>String(a).localeCompare(String(b)));
-
-            if (productSelect) { setOptionsGlobal(productSelect, productNames, 'All Products'); if (prev.product && productNames.includes(prev.product)) productSelect.value = prev.product; }
-            if (densitySelect) { setOptionsGlobal(densitySelect, densities, 'All Densities'); if (prev.density && densities.includes(prev.density)) densitySelect.value = prev.density; }
-            if (shadeSelect) { setOptionsGlobal(shadeSelect, shades, 'All Shades'); if (prev.shade && shades.includes(prev.shade)) shadeSelect.value = prev.shade; }
-        } catch (_) {}
-    }
-        
-    // Apply catalog filters
-    async function applyCatalogFilters() {
-        const category = document.getElementById('catalog-category').value;
-        const search = (document.getElementById('catalog-search').value || '').toLowerCase();
-        const priceList = document.getElementById('catalog-price-list')?.value || '';
-        const productName = document.getElementById('catalog-product')?.value || '';
-        const densitySel = document.getElementById('catalog-density')?.value || '';
-        const shadeSel = document.getElementById('catalog-shade')?.value || '';
-        const normalize = (s) => String(s || '').trim().toLowerCase();
-
-        let filteredProducts = Array.isArray(window.catalogProducts) ? window.catalogProducts : (Array.isArray(window.productData) ? window.productData : []);
-
-        // Filter by category (robust, case-insensitive)
-        if (category) {
-            const catNorm = normalize(category);
-            filteredProducts = filteredProducts.filter(product => normalize(product.Category) === catNorm);
         }
 
-        // Filter by search term
-        if (search) {
-            filteredProducts = filteredProducts.filter(product => 
-                (product.Product && product.Product.toLowerCase().includes(search)) ||
-                (product.Category && product.Category.toLowerCase().includes(search)) ||
-                (product.Colors && product.Colors.toLowerCase().includes(search))
-            );
-        }
-
-        // Filter by Price List
-        if (priceList) {
-            const plNorm = normalize(priceList);
-            filteredProducts = filteredProducts.filter(p => {
-                const plVal = p.PriceListName || p.PriceList || p['Price List Name'] || '';
-                return normalize(plVal) === plNorm;
+        // Global helper to set dropdown options
+        function setOptionsGlobal(el, values, placeholder) {
+            if (!el) return;
+            const opts = Array.isArray(values) ? values : [];
+            el.innerHTML = `<option value="">${placeholder || 'Select'}</option>`;
+            opts.forEach(v => {
+                const o = document.createElement('option');
+                o.value = v;
+                o.textContent = v;
+                el.appendChild(o);
             });
         }
 
-        // Filter by Product
-        if (productName) {
-            const prodNorm = normalize(productName);
-            filteredProducts = filteredProducts.filter(p => normalize(p.Product || p['Product Name'] || p.Name || p.Item) === prodNorm);
-        }
-
-        // Filter by Density
-        if (densitySel) {
-            const dNorm = normalize(densitySel);
-            filteredProducts = filteredProducts.filter(p => normalize(p.Density || p['Hair Density'] || p['Density Options']) === dNorm);
-        }
-
-        // Filter by Shade/Color (supports comma-separated lists)
-        if (shadeSel) {
-            const sNorm = normalize(shadeSel);
-            filteredProducts = filteredProducts.filter(p => {
-                const raw = p.Colors || p['Color Options'] || '';
-                const parts = String(raw).split(/[,/|]/).map(x => normalize(x)).filter(Boolean);
-                return parts.includes(sNorm);
-            });
-        }
-
-        await renderProducts(filteredProducts);
-    }
-    
-    function clearCatalogFilters() {
-        document.getElementById('catalog-category').value = '';
-        document.getElementById('catalog-search').value = '';
-        renderProducts();
-    }
-    
-    // Firebase Readiness Check
-    // Remove legacy Firebase readiness helper
-
-    // Enhanced initialization with category loading
-    document.addEventListener('DOMContentLoaded', async function() {
-        try {
-            // Set up event listeners for filters (INHDATA will populate options)
-            const categorySelect = document.getElementById('catalog-category');
-            if (categorySelect) {
-                categorySelect.addEventListener('change', onCategoryChange);
-            }
-            const searchInput = document.getElementById('catalog-search');
-            if (searchInput) {
-                // Debounce search to reduce re-renders
-                const debounce = (fn, wait) => {
-                    let t;
-                    return (...args) => { clearTimeout(t); t = setTimeout(() => fn.apply(null, args), wait); };
-                };
-                const debouncedApply = debounce(applyCatalogFilters, 200);
-                searchInput.addEventListener('input', debouncedApply);
-            }
-            const filterBtn = document.getElementById('catalog-filter-btn');
-            if (filterBtn) {
-                filterBtn.addEventListener('click', applyCatalogFilters);
-            }
-            const clearBtn = document.getElementById('catalog-clear-btn');
-            if (clearBtn) {
-                clearBtn.addEventListener('click', clearCatalogFilters);
-            }
-
-            // Extended filter listeners
-            ['catalog-price-list','catalog-product','catalog-density','catalog-shade'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.addEventListener('change', applyCatalogFilters);
-            });
-
-            // Currency converter: populate and re-render on change
+        // Populate category dropdown even if INHDATA isn’t available
+        function populateCategoryFilterFallback() {
             try {
-                const currencySelect = document.getElementById('catalog-currency');
-                if (currencySelect) {
-                    const supported = (typeof SUPPORTED === 'object' && SUPPORTED) ? Object.keys(SUPPORTED) : ['INR','USD','EUR','GBP'];
-                    setOptionsGlobal(currencySelect, supported.map(c => `${c}`), 'Select Currency');
-                    currencySelect.value = 'INR';
-                    // Load exchange rates
-                    await loadCatalogExchangeRates('INR');
-                    currencySelect.addEventListener('change', async () => {
-                        // Re-render grid with selected currency
-                        await applyCatalogFilters();
-                        // If modal is open, re-render its content with new currency
-                        const modal = document.getElementById('productModal');
-                        if (modal && !modal.classList.contains('hidden')) {
-                            const catTitle = document.getElementById('modalCategoryTitle')?.textContent || '';
-                            const cat = catTitle.replace(' — Details','');
-                            const source = Array.isArray(window.catalogProducts) ? window.catalogProducts : (Array.isArray(window.productData) ? window.productData : []);
-                            const catProducts = source.filter(p => p.Category === cat);
-                            showProductModal(catProducts, cat);
-                        }
-                    });
-                }
-            } catch (_) {}
+                const select = document.getElementById('catalog-category');
+                if (!select) return;
 
-            // Fallback: activate and populate category dropdown from available data
-            populateCategoryFilterFallback();
-            console.log('Product catalog initialized (event listeners set). INHDATA will drive data.');
+                // Prefer runtime catalogProducts; then local embedded productData; then window.productData
+                const runtimeProducts = Array.isArray(window.catalogProducts) ? window.catalogProducts : [];
+                const embeddedProducts = (typeof productData !== 'undefined' && Array.isArray(productData))
+                    ? productData
+                    : (Array.isArray(window.productData) ? window.productData : []);
+                const source = runtimeProducts.length ? runtimeProducts : embeddedProducts;
 
-            // Try loading categories via INHDATA with retries
-            try { setCategoryLoadingState(true); } catch (_) {}
-            const ready = await waitForINHDATAReady(6000, 200);
-            if (ready) {
-                const ok = await loadCategoriesWithRetry(3, 500);
-                if (!ok) {
-                    console.warn('INHDATA categories failed, using fallback.');
+                const categories = Array.from(new Set((source || [])
+                    .map(p => p && p.Category)
+                    .filter(Boolean)))
+                    .sort((a, b) => a.localeCompare(b));
+
+                // Ensure it’s interactable
+                select.disabled = false;
+                if (categories.length > 0) {
+                    setOptionsGlobal(select, categories, 'All Categories');
+                    updateCategoryCount(categories.length);
+                } else {
+                    // Final fallback: default known categories to ensure dropdown is usable
+                    const defaults = ['Bulk', 'Weaves', 'Weaves DD', 'Tapes', 'Closures', 'Frontals', 'I Tips', 'ClipOn', 'Genius Weaves', 'Toppers'];
+                    setOptionsGlobal(select, defaults, 'All Categories');
+                    updateCategoryCount(defaults.length);
                 }
-            } else {
-                console.warn('INHDATA not ready within timeout, keeping fallback categories.');
+
+                // Also populate derived filters from available products
+                try { refreshDerivedFilterOptions(source); } catch (_) { }
+            } catch (_) {
+                // Silent fallback; UI remains usable with placeholder only
             }
-            try { setCategoryLoadingState(false); } catch (_) {}
-        } catch (error) {
-            console.error('Error initializing product catalog UI:', error);
-            showCategoryError('Failed to initialize catalog UI');
         }
-    });
 
-    // Load exchange rates for currency converter (INR base)
-    async function loadCatalogExchangeRates(base = 'INR') {
-        try {
-            const resp = await fetch(`https://open.er-api.com/v6/latest/${base}`);
-            const data = await resp.json();
-            if (data && (data.rates || data.result === 'success')) {
-                window.catalogExchangeRates = { base, rates: data.rates || {} };
-            } else {
+        // Populate product, density, and shade filters from product list
+        function refreshDerivedFilterOptions(products) {
+            try {
+                const productSelect = document.getElementById('catalog-product');
+                const densitySelect = document.getElementById('catalog-density');
+                const shadeSelect = document.getElementById('catalog-shade');
+                const prev = {
+                    product: productSelect?.value || '',
+                    density: densitySelect?.value || '',
+                    shade: shadeSelect?.value || '',
+                };
+
+                const productNames = Array.from(new Set((products || [])
+                    .map(p => p && (p.Product || p['Product Name'] || p.Name || p.Item))
+                    .filter(Boolean)))
+                    .sort((a, b) => String(a).localeCompare(String(b)));
+
+                const densities = Array.from(new Set((products || [])
+                    .map(p => p && (p.Density || p['Hair Density'] || p['Density Options']))
+                    .filter(Boolean)))
+                    .sort((a, b) => String(a).localeCompare(String(b)));
+
+                const shades = Array.from(new Set((products || [])
+                    .flatMap(p => String(p && (p.Colors || p['Color Options'] || '')).split(/[,/|]/)
+                        .map(s => s.trim()).filter(Boolean))))
+                    .sort((a, b) => String(a).localeCompare(String(b)));
+
+                if (productSelect) { setOptionsGlobal(productSelect, productNames, 'All Products'); if (prev.product && productNames.includes(prev.product)) productSelect.value = prev.product; }
+                if (densitySelect) { setOptionsGlobal(densitySelect, densities, 'All Densities'); if (prev.density && densities.includes(prev.density)) densitySelect.value = prev.density; }
+                if (shadeSelect) { setOptionsGlobal(shadeSelect, shades, 'All Shades'); if (prev.shade && shades.includes(prev.shade)) shadeSelect.value = prev.shade; }
+            } catch (_) { }
+        }
+
+        // Apply catalog filters
+        async function applyCatalogFilters() {
+            const category = document.getElementById('catalog-category').value;
+            const search = (document.getElementById('catalog-search').value || '').toLowerCase();
+            const priceList = document.getElementById('catalog-price-list')?.value || '';
+            const productName = document.getElementById('catalog-product')?.value || '';
+            const densitySel = document.getElementById('catalog-density')?.value || '';
+            const shadeSel = document.getElementById('catalog-shade')?.value || '';
+            const normalize = (s) => String(s || '').trim().toLowerCase();
+
+            let filteredProducts = Array.isArray(window.catalogProducts) ? window.catalogProducts : (Array.isArray(window.productData) ? window.productData : []);
+
+            // Filter by category (robust, case-insensitive)
+            if (category) {
+                const catNorm = normalize(category);
+                filteredProducts = filteredProducts.filter(product => normalize(product.Category) === catNorm);
+            }
+
+            // Filter by search term
+            if (search) {
+                filteredProducts = filteredProducts.filter(product =>
+                    (product.Product && product.Product.toLowerCase().includes(search)) ||
+                    (product.Category && product.Category.toLowerCase().includes(search)) ||
+                    (product.Colors && product.Colors.toLowerCase().includes(search))
+                );
+            }
+
+            // Filter by Price List
+            if (priceList) {
+                const plNorm = normalize(priceList);
+                filteredProducts = filteredProducts.filter(p => {
+                    const plVal = p.PriceListName || p.PriceList || p['Price List Name'] || '';
+                    return normalize(plVal) === plNorm;
+                });
+            }
+
+            // Filter by Product
+            if (productName) {
+                const prodNorm = normalize(productName);
+                filteredProducts = filteredProducts.filter(p => normalize(p.Product || p['Product Name'] || p.Name || p.Item) === prodNorm);
+            }
+
+            // Filter by Density
+            if (densitySel) {
+                const dNorm = normalize(densitySel);
+                filteredProducts = filteredProducts.filter(p => normalize(p.Density || p['Hair Density'] || p['Density Options']) === dNorm);
+            }
+
+            // Filter by Shade/Color (supports comma-separated lists)
+            if (shadeSel) {
+                const sNorm = normalize(shadeSel);
+                filteredProducts = filteredProducts.filter(p => {
+                    const raw = p.Colors || p['Color Options'] || '';
+                    const parts = String(raw).split(/[,/|]/).map(x => normalize(x)).filter(Boolean);
+                    return parts.includes(sNorm);
+                });
+            }
+
+            await renderProducts(filteredProducts);
+        }
+
+        function clearCatalogFilters() {
+            document.getElementById('catalog-category').value = '';
+            document.getElementById('catalog-search').value = '';
+            renderProducts();
+        }
+
+        // Firebase Readiness Check
+        // Remove legacy Firebase readiness helper
+
+        // Enhanced initialization with category loading
+        document.addEventListener('DOMContentLoaded', async function () {
+            try {
+                // Set up event listeners for filters (INHDATA will populate options)
+                const categorySelect = document.getElementById('catalog-category');
+                if (categorySelect) {
+                    categorySelect.addEventListener('change', onCategoryChange);
+                }
+                const searchInput = document.getElementById('catalog-search');
+                if (searchInput) {
+                    // Debounce search to reduce re-renders
+                    const debounce = (fn, wait) => {
+                        let t;
+                        return (...args) => { clearTimeout(t); t = setTimeout(() => fn.apply(null, args), wait); };
+                    };
+                    const debouncedApply = debounce(applyCatalogFilters, 200);
+                    searchInput.addEventListener('input', debouncedApply);
+                }
+                const filterBtn = document.getElementById('catalog-filter-btn');
+                if (filterBtn) {
+                    filterBtn.addEventListener('click', applyCatalogFilters);
+                }
+                const clearBtn = document.getElementById('catalog-clear-btn');
+                if (clearBtn) {
+                    clearBtn.addEventListener('click', clearCatalogFilters);
+                }
+
+                // Extended filter listeners
+                ['catalog-price-list', 'catalog-product', 'catalog-density', 'catalog-shade'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.addEventListener('change', applyCatalogFilters);
+                });
+
+                // Currency converter: populate and re-render on change
+                try {
+                    const currencySelect = document.getElementById('catalog-currency');
+                    if (currencySelect) {
+                        const supported = (typeof SUPPORTED === 'object' && SUPPORTED) ? Object.keys(SUPPORTED) : ['INR', 'USD', 'EUR', 'GBP'];
+                        setOptionsGlobal(currencySelect, supported.map(c => `${c}`), 'Select Currency');
+                        currencySelect.value = 'INR';
+                        // Load exchange rates
+                        await loadCatalogExchangeRates('INR');
+                        currencySelect.addEventListener('change', async () => {
+                            // Re-render grid with selected currency
+                            await applyCatalogFilters();
+                            // If modal is open, re-render its content with new currency
+                            const modal = document.getElementById('productModal');
+                            if (modal && !modal.classList.contains('hidden')) {
+                                const catTitle = document.getElementById('modalCategoryTitle')?.textContent || '';
+                                const cat = catTitle.replace(' — Details', '');
+                                const source = Array.isArray(window.catalogProducts) ? window.catalogProducts : (Array.isArray(window.productData) ? window.productData : []);
+                                const catProducts = source.filter(p => p.Category === cat);
+                                showProductModal(catProducts, cat);
+                            }
+                        });
+                    }
+                } catch (_) { }
+
+                // Fallback: activate and populate category dropdown from available data
+                populateCategoryFilterFallback();
+                console.log('Product catalog initialized (event listeners set). INHDATA will drive data.');
+
+                // Try loading categories via INHDATA with retries
+                try { setCategoryLoadingState(true); } catch (_) { }
+                setTimeout(() => { try { const el = document.getElementById('catalog-category'); if (el && el.classList.contains('loading')) { populateCategoryFilterFallback(); setCategoryLoadingState(false); } } catch (_) { } }, 3000);
+                const ready = await waitForINHDATAReady(6000, 200);
+                if (ready) {
+                    const ok = await loadCategoriesWithRetry(3, 500);
+                    if (!ok) {
+                        console.warn('INHDATA categories failed, using fallback.');
+                    }
+                } else {
+                    console.warn('INHDATA not ready within timeout, keeping fallback categories.');
+                }
+                try { setCategoryLoadingState(false); } catch (_) { }
+            } catch (error) {
+                console.error('Error initializing product catalog UI:', error);
+                showCategoryError('Failed to initialize catalog UI');
+            }
+        });
+
+        // Load exchange rates for currency converter (INR base)
+        async function loadCatalogExchangeRates(base = 'INR') {
+            try {
+                const resp = await fetch(`https://open.er-api.com/v6/latest/${base}`);
+                const data = await resp.json();
+                if (data && (data.rates || data.result === 'success')) {
+                    window.catalogExchangeRates = { base, rates: data.rates || {} };
+                } else {
+                    window.catalogExchangeRates = DEFAULT_RATES;
+                }
+            } catch (e) {
                 window.catalogExchangeRates = DEFAULT_RATES;
             }
-        } catch (e) {
-            window.catalogExchangeRates = DEFAULT_RATES;
         }
-    }
     </script>
+    <!-- Removed app-shell.js to fix double navigation -->
+    <script src="js/admin-menu-visibility.js"></script>
 
     <!-- Product Details Modal -->
     <div id="productModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
@@ -1832,7 +1845,8 @@
                 <h2 id="modalCategoryTitle" class="text-2xl font-bold text-gray-900">Product Details</h2>
                 <button onclick="closeProductModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
                     </svg>
                 </button>
             </div>
@@ -1843,161 +1857,156 @@
     </div>
 
     <!-- Loading Overlay -->
-    <div id="loading-indicator" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div id="loading-indicator"
+        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
         <div class="bg-white rounded-lg p-6 flex flex-col items-center">
             <div class="loading"></div>
             <span class="text-gray-700 font-medium mt-4">Loading products...</span>
         </div>
     </div>
-    
+
     <script>
         // Mobile menu functionality
         function toggleMobileMenu() {
             const hamburger = document.querySelector('.hamburger-menu');
             const mobileMenu = document.querySelector('.mobile-menu');
-            
+            if (!hamburger || !mobileMenu) return;
             hamburger.classList.toggle('active');
             mobileMenu.classList.toggle('active');
         }
 
         // Close mobile menu when clicking outside
-        document.addEventListener('click', function(event) {
+        document.addEventListener('click', function (event) {
             const hamburger = document.querySelector('.hamburger-menu');
             const mobileMenu = document.querySelector('.mobile-menu');
-            
+            if (!hamburger || !mobileMenu) return;
             if (!hamburger.contains(event.target) && !mobileMenu.contains(event.target)) {
                 hamburger.classList.remove('active');
                 mobileMenu.classList.remove('active');
             }
         });
-    // Show/hide loading indicator
-    function showLoading(show) {
-        const loadingElement = document.getElementById('loading-indicator');
-        if (loadingElement) {
-            loadingElement.style.display = show ? 'flex' : 'none';
-        }
-        
-        // Also update catalog loading state
-        const catalogLoading = document.getElementById('catalog-loading');
-        if (catalogLoading) {
-            if (show) {
-                catalogLoading.classList.remove('hidden');
-            } else {
-                catalogLoading.classList.add('hidden');
+        // Show/hide loading indicator
+        function showLoading(show) {
+            const loadingElement = document.getElementById('loading-indicator');
+            if (loadingElement) {
+                loadingElement.style.display = show ? 'flex' : 'none';
+            }
+
+            // Also update catalog loading state
+            const catalogLoading = document.getElementById('catalog-loading');
+            if (catalogLoading) {
+                if (show) {
+                    catalogLoading.classList.remove('hidden');
+                } else {
+                    catalogLoading.classList.add('hidden');
+                }
             }
         }
-    }
 
-    // Enhanced loading state management for categories
-    function setCategoryLoadingState(isLoading) {
-        const categorySelect = document.getElementById('catalog-category');
-        if (!categorySelect) return;
-
-        if (isLoading) {
-            categorySelect.classList.add('loading');
-            categorySelect.disabled = true;
-        } else {
-            categorySelect.classList.remove('loading');
-            categorySelect.disabled = false;
-        }
-    }
-
-    </script>
-<!-- Sync Status UI initialization removed -->
-</body>
-</html>
-    <script>
-      // INHDATA integration: initialize and wire subscriptions for catalog rendering
-      document.addEventListener('DOMContentLoaded', async function() {
-        try {
-          window.forceINHDATA = true;
-          await INHDATA.initialize();
-
-          function setOptions(el, values, placeholder) {
-            if (!el) return;
-            el.innerHTML = `<option value="">${placeholder || 'Select'}</option>`;
-            (values || []).forEach(v => { const o = document.createElement('option'); o.value = v; o.textContent = v; el.appendChild(o); });
-          }
-
-          // Helper: refresh category dropdown from live products without losing fallback
-          function refreshCategoryOptionsFromProducts(products) {
+        // Enhanced loading state management for categories
+        function setCategoryLoadingState(isLoading) {
             const categorySelect = document.getElementById('catalog-category');
             if (!categorySelect) return;
-
-            const previous = categorySelect.value;
-            const categories = Array.from(new Set((products || [])
-              .map(p => (p && p.Category ? String(p.Category).trim() : ''))
-              .filter(Boolean)))
-              .sort((a,b)=>a.localeCompare(b));
-
-            if (categories.length) {
-              setOptions(categorySelect, categories, 'All Categories');
-              try { updateCategoryCount(categories.length); } catch (_) {}
-              if (previous && categories.includes(previous)) {
-                categorySelect.value = previous;
-              }
-            } else {
-              // Fall back to existing logic if INHDATA has no categories yet
-              try { if (typeof populateCategoryFilterFallback === 'function') { populateCategoryFilterFallback(); } } catch (_) {}
-            }
-
-            try { setCategoryLoadingState(false); } catch (_) {}
-          }
-
-          // Products → drive catalog list/grid
-          INHDATA.subscribe('products', (products) => {
-            try { window.catalogProducts = Array.isArray(products) ? products : []; window.productData = window.catalogProducts; } catch (_) {}
-            // Refresh dropdown options from live data
-            try { refreshCategoryOptionsFromProducts(window.catalogProducts); } catch (_) {}
-            // Populate derived filter options
-            try { if (typeof refreshDerivedFilterOptions === 'function') { refreshDerivedFilterOptions(window.catalogProducts); } } catch (_) {}
-            // Keep rendering in sync
-            try { if (typeof renderCatalog === 'function') { renderCatalog(window.catalogProducts); } } catch (_) {}
-            try { if (typeof renderProducts === 'function') { renderProducts(window.catalogProducts); } } catch (_) {}
-          });
-
-          // Price lists → optional filters derived from products
-          INHDATA.subscribe('products', async () => {
-            try {
-              const names = await INHDATA.distinct('products', ['PriceList','Price List Name','PriceListName']);
-              setOptions(document.getElementById('catalog-price-list'), names, 'All Price Lists');
-              updateCategoryCount();
-            } catch (_) {}
-          });
-
-          // Categories derived from products
-          let initial = await INHDATA.getAll('products');
-          window.catalogProducts = Array.isArray(initial) ? initial : [];
-          // Offline fallback: seed minimal sample products if none are available
-          try {
-            if (!Array.isArray(window.catalogProducts) || window.catalogProducts.length === 0) {
-              const samples = [
-                { id: 'SAMPLE-INDIA25-Bulk-100', PriceListName: 'INDIA25', Category: 'Bulk', Product: 'Bulk', Density: '100%', Shade: 'Natural Black', Rate: 100, SoldinKG: 'Y', updatedAt: Date.now() },
-                { id: 'SAMPLE-INDIA25-Tapes-130', PriceListName: 'INDIA25', Category: 'Tapes', Product: 'Tapes', Density: '130%', Shade: 'Natural Black', Rate: 160, SoldinKG: 'N', updatedAt: Date.now() },
-                { id: 'SAMPLE-INDIA25-Closures-120', PriceListName: 'INDIA25', Category: 'Closures', Product: 'Lace Closure', Density: '120%', Shade: 'Brown', Rate: 220, SoldinKG: 'N', updatedAt: Date.now() },
-                { id: 'SAMPLE-INDIA25-ClipOn-130', PriceListName: 'INDIA25', Category: 'ClipOn', Product: 'ClipOn', Density: '130%', Shade: 'Brown', Rate: 180, SoldinKG: 'N', updatedAt: Date.now() }
-              ];
-              for (const doc of samples) { try { await INHDATA.upsert('products', doc); } catch (_) {} }
-              initial = await INHDATA.getAll('products');
-              window.catalogProducts = Array.isArray(initial) ? initial : [];
-            }
-          } catch (_) {}
-          try { refreshCategoryOptionsFromProducts(window.catalogProducts); } catch (_) {}
-          try { refreshDerivedFilterOptions(window.catalogProducts); } catch (_) {}
-
-          // Colors/styles if present
-          try {
-            const colors = await INHDATA.getAll('colors');
-            const shades = Array.from(new Set((colors || []).map(c => c.Color || c.color || c.Shade).filter(Boolean))).sort((a,b)=>a.localeCompare(b));
-            setOptions(document.getElementById('catalog-shade'), shades, 'All Shades');
-            window.catalogColors = colors || [];
-          } catch (_) {}
-          try {
-            const styles = await INHDATA.getAll('styles');
-            window.catalogStyles = styles || [];
-          } catch (_) {}
-        } catch (e) {
-          console.warn('INHDATA initialization in productcatalog failed:', e.message);
+            categorySelect.disabled = !!isLoading;
         }
-      });
+
     </script>
+    <!-- Sync Status UI initialization removed -->
+</body>
+
+</html>
+<script>
+    // INHDATA integration: initialize and wire subscriptions for catalog rendering
+    document.addEventListener('DOMContentLoaded', async function () {
+        try {
+            window.forceINHDATA = true;
+            await INHDATA.initialize();
+
+            function setOptions(el, values, placeholder) {
+                if (!el) return;
+                el.innerHTML = `<option value="">${placeholder || 'Select'}</option>`;
+                (values || []).forEach(v => { const o = document.createElement('option'); o.value = v; o.textContent = v; el.appendChild(o); });
+            }
+
+            // Helper: refresh category dropdown from live products without losing fallback
+            function refreshCategoryOptionsFromProducts(products) {
+                const categorySelect = document.getElementById('catalog-category');
+                if (!categorySelect) return;
+
+                const previous = categorySelect.value;
+                const categories = Array.from(new Set((products || [])
+                    .map(p => (p && p.Category ? String(p.Category).trim() : ''))
+                    .filter(Boolean)))
+                    .sort((a, b) => a.localeCompare(b));
+
+                if (categories.length) {
+                    setOptions(categorySelect, categories, 'All Categories');
+                    try { updateCategoryCount(categories.length); } catch (_) { }
+                    if (previous && categories.includes(previous)) {
+                        categorySelect.value = previous;
+                    }
+                } else {
+                    // Fall back to existing logic if INHDATA has no categories yet
+                    try { if (typeof populateCategoryFilterFallback === 'function') { populateCategoryFilterFallback(); } } catch (_) { }
+                }
+
+                try { setCategoryLoadingState(false); } catch (_) { }
+            }
+
+            // Products → drive catalog list/grid
+            INHDATA.subscribe('products', (products) => {
+                try { window.catalogProducts = Array.isArray(products) ? products : []; window.productData = window.catalogProducts; } catch (_) { }
+                // Refresh dropdown options from live data
+                try { refreshCategoryOptionsFromProducts(window.catalogProducts); } catch (_) { }
+                // Populate derived filter options
+                try { if (typeof refreshDerivedFilterOptions === 'function') { refreshDerivedFilterOptions(window.catalogProducts); } } catch (_) { }
+                // Keep rendering in sync
+                try { if (typeof renderCatalog === 'function') { renderCatalog(window.catalogProducts); } } catch (_) { }
+                try { if (typeof renderProducts === 'function') { renderProducts(window.catalogProducts); } } catch (_) { }
+            });
+
+            // Price lists → optional filters derived from products
+            INHDATA.subscribe('products', async () => {
+                try {
+                    const names = await INHDATA.distinct('products', ['PriceList', 'Price List Name', 'PriceListName']);
+                    setOptions(document.getElementById('catalog-price-list'), names, 'All Price Lists');
+                    updateCategoryCount();
+                } catch (_) { }
+            });
+
+            // Categories derived from products
+            let initial = await INHDATA.getAll('products');
+            window.catalogProducts = Array.isArray(initial) ? initial : [];
+            // Offline fallback: seed minimal sample products if none are available
+            try {
+                if (!Array.isArray(window.catalogProducts) || window.catalogProducts.length === 0) {
+                    const samples = [
+                        { id: 'SAMPLE-INDIA25-Bulk-100', PriceListName: 'INDIA25', Category: 'Bulk', Product: 'Bulk', Density: '100%', Shade: 'Natural Black', Rate: 100, SoldinKG: 'Y', updatedAt: Date.now() },
+                        { id: 'SAMPLE-INDIA25-Tapes-130', PriceListName: 'INDIA25', Category: 'Tapes', Product: 'Tapes', Density: '130%', Shade: 'Natural Black', Rate: 160, SoldinKG: 'N', updatedAt: Date.now() },
+                        { id: 'SAMPLE-INDIA25-Closures-120', PriceListName: 'INDIA25', Category: 'Closures', Product: 'Lace Closure', Density: '120%', Shade: 'Brown', Rate: 220, SoldinKG: 'N', updatedAt: Date.now() },
+                        { id: 'SAMPLE-INDIA25-ClipOn-130', PriceListName: 'INDIA25', Category: 'ClipOn', Product: 'ClipOn', Density: '130%', Shade: 'Brown', Rate: 180, SoldinKG: 'N', updatedAt: Date.now() }
+                    ];
+                    for (const doc of samples) { try { await INHDATA.upsert('products', doc); } catch (_) { } }
+                    initial = await INHDATA.getAll('products');
+                    window.catalogProducts = Array.isArray(initial) ? initial : [];
+                }
+            } catch (_) { }
+            try { refreshCategoryOptionsFromProducts(window.catalogProducts); } catch (_) { }
+            try { refreshDerivedFilterOptions(window.catalogProducts); } catch (_) { }
+
+            // Colors/styles if present
+            try {
+                const colors = await INHDATA.getAll('colors');
+                const shades = Array.from(new Set((colors || []).map(c => c.Color || c.color || c.Shade).filter(Boolean))).sort((a, b) => a.localeCompare(b));
+                setOptions(document.getElementById('catalog-shade'), shades, 'All Shades');
+                window.catalogColors = colors || [];
+            } catch (_) { }
+            try {
+                const styles = await INHDATA.getAll('styles');
+                window.catalogStyles = styles || [];
+            } catch (_) { }
+        } catch (e) {
+            console.warn('INHDATA initialization in productcatalog failed:', e.message);
+        }
+    });
+</script>

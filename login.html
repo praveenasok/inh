@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login — Indian Natural Hair</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
+  <link rel="stylesheet" href="styles.css">
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <!-- Config and global init -->
+  <script src="firebase-config.js"></script>
+  <script src="firebase-global-init.js"></script>
+  <style>
+    html.pre-init body {
+      visibility: hidden;
+    }
+
+    html.pre-init * {
+      transition: none !important;
+    }
+  </style>
+  <script>
+    try { document.documentElement.classList.add('pre-init'); } catch (_) { }
+  </script>
+</head>
+
+<body class="min-h-screen bg-gradient-to-br from-amber-50 via-rose-50 to-orange-100">
+  <div id="redirecting-overlay" class="fixed inset-0 flex items-center justify-center bg-white/80"
+    style="display:none;">
+    <div class="flex items-center gap-2 text-slate-700"><span
+        class="animate-spin inline-block h-5 w-5 border-2 border-t-transparent rounded-full"></span><span>Loading Quote
+        Maker…</span></div>
+  </div>
+  <!-- Navigation -->
+  <script>window.navConfig = { siteTitle: 'InstaQuote - Login' };</script>
+  <script src="js/navigation-loader.js"></script>
+  <main class="px-6 pb-16 flex justify-center">
+    <div class="mx-auto w-full max-w-md">
+      <section>
+        <div id="login-card" class="w-full rounded-2xl bg-white/95 backdrop-blur-sm shadow-lg ring-1 ring-black/5 p-7">
+          <div class="mb-6 text-center">
+            <div class="mx-auto w-16 h-16 rounded-full overflow-hidden ring-1 ring-slate-200">
+              <img src="/images/logo-optimized.png" alt="Indian Natural Hair" class="w-full h-full object-contain" />
+            </div>
+            <h2 class="mt-3 text-2xl font-semibold tracking-tight text-slate-900">Welcome back</h2>
+            <p class="mt-1 text-sm text-slate-600">Sign in to continue</p>
+          </div>
+          <form id="login-form" class="space-y-4" novalidate>
+            <div>
+              <label for="email" class="block text-sm font-medium text-slate-700">Email</label>
+              <input id="email" name="email" type="email" autocomplete="email" required
+                class="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:bg-white"
+                placeholder="you@example.com" />
+            </div>
+            <div>
+              <div class="flex items-center justify-between">
+                <label for="password" class="block text-sm font-medium text-slate-700">Password</label>
+                <button id="toggle-password" type="button"
+                  class="text-xs text-slate-600 hover:text-slate-900">Show</button>
+              </div>
+              <input id="password" name="password" type="password" autocomplete="current-password" required
+                class="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:bg-white"
+                placeholder="••••••••" />
+            </div>
+            <div id="status" aria-live="polite" class="text-sm text-slate-600 h-5"></div>
+            <button id="btn-login" type="submit"
+              class="w-full rounded-xl bg-neutral-900 text-white py-2.5 font-medium hover:bg-neutral-800 transition">Sign
+              In</button>
+            <div class="grid grid-cols-2 gap-3">
+              <button id="btn-reset" type="button"
+                class="w-full rounded-xl bg-white border border-slate-200 text-slate-800 py-2 hover:bg-slate-50 transition">Forgot
+                Password</button>
+              <button id="btn-login-google" type="button"
+                class="w-full rounded-xl bg-white border border-slate-200 text-slate-800 py-2 hover:bg-slate-50 transition">Sign
+                in with Google</button>
+            </div>
+          </form>
+          <div class="mt-6 flex items-center justify-between text-xs text-slate-600">
+            <button id="btn-logout" class="underline">Sign out</button>
+            <div class="flex items-center gap-3">
+              <a href="#" class="hover:text-slate-900">Privacy</a>
+              <a href="#" class="hover:text-slate-900">Terms</a>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+  <footer class="px-6 pb-10 text-center text-xs text-slate-600">Need help? Email support@indiannaturalhair.com</footer>
+
+  <script>
+    function redirectToQuote() { try { var c = document.getElementById('login-card'); if (c) c.style.display = 'none'; var o = document.getElementById('redirecting-overlay'); if (o) o.style.display = 'flex'; } catch (_) { } if (!__redirecting) { __redirecting = true; window.location.replace('/quotemaker.html'); } }
+    // Prevent rapid double navigations that cause visible flicker
+    let __redirecting = false;
+    function delay(ms) { return new Promise(res => setTimeout(res, ms)); }
+    function withTimeout(promise, ms, onTimeoutMsg) {
+      let timeoutId;
+      const timeoutPromise = new Promise((_, rej) => {
+        timeoutId = setTimeout(() => rej(new Error(onTimeoutMsg || 'Operation timed out')), ms);
+      });
+      return Promise.race([promise.finally(() => clearTimeout(timeoutId)), timeoutPromise]);
+    }
+
+    async function callAuth(base, path, options) {
+      const url = `${base}${path}`;
+      const opts = { ...(options || {}) };
+      // Ensure cookies are sent/received and avoid aborts on navigation
+      if (!opts.credentials) opts.credentials = 'include';
+      if ((opts.method || 'GET').toUpperCase() === 'POST') opts.keepalive = true;
+      const res = await fetch(url, opts);
+      return res;
+    }
+
+    async function getAuthBases() {
+      // Prefer API server on :3000 during local dev; include current origin only if it is :3000
+      const bases = [];
+      try {
+        const origin = window.location.origin || '';
+        const u = new URL(origin);
+        if (u.port === '3000') {
+          bases.push(origin);
+        }
+      } catch (_) { }
+      const local3000 = 'http://localhost:3000';
+      if (!bases.includes(local3000)) {
+        bases.push(local3000);
+      }
+      return bases;
+    }
+
+    async function checkSession() {
+      // If we just logged out, skip redirect once to avoid bounce-back
+      try {
+        const jl = sessionStorage.getItem('justLoggedOut');
+        if (jl === '1') {
+          sessionStorage.removeItem('justLoggedOut');
+          return false;
+        }
+      } catch (_) { }
+      // Removed optimistic local storage check to prevent infinite redirect loops if cookie is missing
+      // try { if (localStorage.getItem('SESSION_AUTH') === '1' && (localStorage.getItem('SESSION_UID') || localStorage.getItem('SESSION_EMAIL'))) { redirectToQuote(); return true; } } catch (_) { }
+      const bases = await getAuthBases();
+      for (const base of bases) {
+        try {
+          const res = await callAuth(base, '/auth/me', { method: 'GET' });
+          if (res.ok) {
+            const json = await res.json();
+            if (json && json.authenticated) {
+              try {
+                localStorage.setItem('SESSION_AUTH', '1');
+                localStorage.setItem('SESSION_UID', json.uid || '');
+                localStorage.setItem('SESSION_EMAIL', json.email || '');
+              } catch (_) { }
+              redirectToQuote();
+              return true;
+            }
+          }
+        } catch (_) { }
+      }
+      return false;
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      try { await initializeFirebaseApp(); } catch (_) { }
+      await checkSession();
+      try { document.documentElement.classList.remove('pre-init'); } catch (_) { }
+
+      const form = document.getElementById('login-form');
+      const statusEl = document.getElementById('status');
+      const logoutBtn = document.getElementById('btn-logout');
+      const resetBtn = document.getElementById('btn-reset');
+      const googleBtn = document.getElementById('btn-login-google');
+      const togglePwBtn = document.getElementById('toggle-password');
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        statusEl.textContent = 'Signing in…';
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+        try {
+          if (!firebase || !firebase.auth) throw new Error('Firebase not available');
+          console.log('[login] starting signInWithEmailAndPassword');
+          await withTimeout(
+            firebase.auth().signInWithEmailAndPassword(email, password),
+            12000,
+            'Sign-in timed out. Check network/Firebase Auth configuration.'
+          );
+          console.log('[login] signIn completed');
+          const user = firebase.auth().currentUser;
+          const idToken = await withTimeout(user.getIdToken(true), 6000, 'ID token fetch timed out');
+          const bases = await getAuthBases();
+          let success = false;
+          for (const base of bases) {
+            try {
+              const res = await callAuth(base, '/auth/sessionLogin', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ idToken })
+              });
+              if (res.ok) { success = true; break; }
+            } catch (_) { }
+          }
+          if (!success) {
+            try {
+              const fiveDays = 5 * 24 * 60 * 60;
+              document.cookie = `session=dev; Path=/; Max-Age=${fiveDays}; SameSite=Lax`;
+            } catch (_) { }
+          }
+          try { localStorage.setItem('SESSION_AUTH', '1'); localStorage.setItem('SESSION_EMAIL', user && user.email ? user.email : ''); localStorage.setItem('SESSION_UID', user && user.uid ? user.uid : ''); } catch (_) { }
+          statusEl.textContent = 'Signed in';
+          redirectToQuote();
+        } catch (err) {
+          let msg = err && err.message ? err.message : 'Login failed';
+          if (err && err.code) {
+            if (err.code === 'auth/invalid-login-credentials' || err.code === 'auth/wrong-password') msg = 'Invalid email or password';
+            if (err.code === 'auth/user-not-found') msg = 'User not found';
+            if (err.code === 'auth/network-request-failed') msg = 'Network error. Check connection';
+          }
+          statusEl.textContent = msg;
+          console.error('[login] error during sign-in flow:', err);
+        }
+      });
+
+      if (resetBtn) {
+        resetBtn.addEventListener('click', async () => {
+          try {
+            const email = document.getElementById('email').value.trim();
+            if (!email) { statusEl.textContent = 'Enter your email to reset password'; return; }
+            await firebase.auth().sendPasswordResetEmail(email);
+            statusEl.textContent = 'Password reset email sent';
+          } catch (e) {
+            statusEl.textContent = (e && e.message) ? e.message : 'Password reset failed';
+          }
+        });
+      }
+
+      if (googleBtn) {
+        googleBtn.addEventListener('click', async () => {
+          statusEl.textContent = 'Signing in with Google…';
+          try {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            await firebase.auth().signInWithPopup(provider);
+            const user = firebase.auth().currentUser;
+            const idToken = await withTimeout(user.getIdToken(true), 6000, 'ID token fetch timed out');
+            const bases = await getAuthBases();
+            let success = false;
+            for (const base of bases) {
+              try {
+                const res = await callAuth(base, '/auth/sessionLogin', {
+                  method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ idToken })
+                });
+                if (res.ok) { success = true; break; }
+              } catch (_) { }
+            }
+            if (!success) { try { const fiveDays = 5 * 24 * 60 * 60; document.cookie = `session=dev; Path=/; Max-Age=${fiveDays}; SameSite=Lax`; } catch (_) { } }
+            try { localStorage.setItem('SESSION_AUTH', '1'); localStorage.setItem('SESSION_EMAIL', user && user.email ? user.email : ''); localStorage.setItem('SESSION_UID', user && user.uid ? user.uid : ''); } catch (_) { }
+            statusEl.textContent = 'Signed in';
+            redirectToQuote();
+          } catch (e) {
+            let msg = e && e.message ? e.message : 'Google sign-in failed';
+            if (e && e.code === 'auth/popup-blocked') msg = 'Popup blocked. Allow popups for this site';
+            statusEl.textContent = msg;
+          }
+        });
+      }
+
+      logoutBtn.addEventListener('click', async () => {
+        statusEl.textContent = 'Signing out…';
+        try {
+          if (firebase && firebase.auth) {
+            await firebase.auth().signOut();
+          }
+          const bases = await getAuthBases();
+          for (const base of bases) {
+            try { await callAuth(base, '/auth/sessionLogout', { method: 'POST' }); } catch (_) { }
+          }
+          statusEl.textContent = 'Signed out';
+        } catch (e) {
+          statusEl.textContent = 'Sign out failed';
+        }
+      });
+
+      if (togglePwBtn) {
+        togglePwBtn.addEventListener('click', () => {
+          const input = document.getElementById('password');
+          if (!input) return;
+          const isPw = input.type === 'password';
+          input.type = isPw ? 'text' : 'password';
+          togglePwBtn.textContent = isPw ? 'Hide' : 'Show';
+        });
+      }
+    });
+  </script>
+  <!-- Legacy scripts removed -->
+</body>
+
+</html>

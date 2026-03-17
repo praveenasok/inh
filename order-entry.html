@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Order Entry - InstaQuote Suite</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .form-group label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #475569;
+            text-transform: uppercase;
+            margin-bottom: 0.25rem;
+        }
+        .form-control {
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .form-control:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        .item-table th {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: #475569;
+            background: #f8fafc;
+        }
+        .item-table td {
+            padding: 0.25rem;
+        }
+        .item-table input.form-control, .item-table select.form-control {
+            padding: 0.35rem 0.5rem;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <!-- Global Navigation -->
+    <script>window.navConfig = { siteTitle: 'InstaQuote Suite' };</script>
+    <script src="js/navigation-loader.js"></script>
+
+    <div class="max-w-7xl mx-auto py-8 px-4">
+        
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h1 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fas fa-file-signature text-blue-600"></i> New Order Entry
+                </h1>
+                <p class="text-sm text-slate-500 mt-1">Create a new multi-item order that feeds directly into the master spreadsheet.</p>
+            </div>
+            <div>
+                <a href="order-list.html" class="text-blue-600 hover:text-blue-800 text-sm font-semibold flex items-center gap-1">
+                    <i class="fas fa-arrow-left"></i> Back to Spreadsheet
+                </a>
+            </div>
+        </div>
+
+        <form id="orderForm" class="space-y-6">
+            
+            <!-- Dynamic Datalists -->
+            <div id="datalist-container"></div>
+            <datalist id="list-PriceList"></datalist>
+
+            <!-- ORDER HEADER SECTION -->
+            <div class="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+                <div class="bg-slate-100 px-6 py-3 border-b border-slate-200">
+                    <h2 class="font-semibold text-slate-700">Order Information</h2>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                        <div class="form-group">
+                            <label>Order Number *</label>
+                            <input type="text" id="h-order-num" class="form-control" placeholder="e.g. ORD-1001" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Order Date</label>
+                            <input type="date" id="h-order-date" class="form-control" required>
+                        </div>
+                        <div class="form-group relative">
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="mb-0">Client Name</label>
+                                <button type="button" id="manageClientBtn" class="text-xs text-blue-600 hover:text-blue-800 transition-colors" title="Manage Client Details">
+                                    <i class="fas fa-address-book"></i> Details
+                                </button>
+                            </div>
+                            <input type="text" id="h-client" list="list-ClientName" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label>Order Status</label>
+                            <input type="text" id="h-status" list="list-OrderStatus" class="form-control" value="Pending">
+                        </div>
+                        <div class="form-group">
+                            <label>Contact Info</label>
+                            <input type="text" id="h-contact" list="list-Contact" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label>Country</label>
+                            <input type="text" id="h-country" list="list-Country" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label>Currency</label>
+                            <input type="text" id="h-currency" list="list-Currency" class="form-control" value="USD">
+                        </div>
+                        <div class="form-group">
+                            <label>Exchange Rate</label>
+                            <input type="number" step="any" id="h-ex-rate" class="form-control" placeholder="1">
+                        </div>
+                        <div class="form-group">
+                            <label>Assigned To</label>
+                            <input type="text" id="h-assigned" list="list-AssignedTo" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label>Sales Person</label>
+                            <input type="text" id="h-sales" list="list-SalesPerson" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label>Delivered Date</label>
+                            <input type="date" id="h-deliver-date" class="form-control">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ORDER ITEMS SECTION -->
+            <div class="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+                <div class="bg-slate-100 px-6 py-3 border-b border-slate-200 flex justify-between items-center">
+                    <h2 class="font-semibold text-slate-700">Order Items</h2>
+                    <button type="button" id="addItemBtn" class="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 text-xs px-3 py-1 rounded shadow-sm transition-colors flex items-center gap-1">
+                        <i class="fas fa-plus text-blue-600"></i> Add Item Row
+                    </button>
+                </div>
+                <div class="p-2 overflow-x-auto">
+                    <table class="w-full text-left border-collapse item-table">
+                        <thead>
+                            <tr>
+                                <th class="p-2 border-b whitespace-nowrap min-w-[140px]">Price List</th>
+                                <th class="p-2 border-b whitespace-nowrap min-w-[80px]">Length</th>
+                                <th class="p-2 border-b whitespace-nowrap min-w-[150px]">Product</th>
+                                <th class="p-2 border-b whitespace-nowrap min-w-[130px]">Type</th>
+                                <th class="p-2 border-b whitespace-nowrap min-w-[130px]">Style</th>
+                                <th class="p-2 border-b whitespace-nowrap min-w-[130px]">Color</th>
+                                <th class="p-2 border-b whitespace-nowrap min-w-[80px]">Weight</th>
+                                <th class="p-2 border-b whitespace-nowrap min-w-[80px]">Qty</th>
+                                <th class="p-2 border-b whitespace-nowrap min-w-[100px]">Rate</th>
+                                <th class="p-2 border-b whitespace-nowrap min-w-[100px]">Amount</th>
+                                <th class="p-2 border-b whitespace-nowrap min-w-[150px]">Comment</th>
+                                <th class="p-2 border-b whitespace-nowrap w-12 text-center">Act</th>
+                            </tr>
+                        </thead>
+                        <tbody id="itemsBody">
+                            <!-- Items inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+                <div class="bg-slate-50 px-6 py-4 border-t border-slate-200 flex justify-between items-center">
+                    <div class="text-sm text-slate-500 italic">Amounts calculate automatically. Base Amount is compiled on save.</div>
+                    <div class="text-lg font-bold text-slate-800">
+                        Total Amount: <span id="totalAmountDisplay">0.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-end pt-4 pb-12 gap-3">
+                <button type="button" id="resetBtn" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-6 py-2.5 rounded shadow transition-colors font-medium">
+                    Clear Form
+                </button>
+                <button type="submit" id="saveOrderBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-2.5 rounded shadow transition-colors font-medium flex items-center gap-2">
+                    <i class="fas fa-save"></i> Save Order to Spreadsheet
+                </button>
+            </div>
+
+        </form>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-lg p-8 max-w-sm w-full text-center shadow-2xl transform transition-all scale-95 opacity-0 duration-200" id="successModalContent">
+            <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 text-green-600 text-3xl">
+                <i class="fas fa-check"></i>
+            </div>
+            <h3 class="text-xl font-bold text-slate-800 mb-2">Order Saved!</h3>
+            <p class="text-slate-500 mb-6">The order has been successfully appended to your Spreadsheet.</p>
+            <div class="flex flex-col gap-2">
+                <button type="button" id="modalAddAnotherBtn" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded font-medium transition-colors">
+                    Add Another Order
+                </button>
+                <a href="order-list.html" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded font-medium transition-colors">
+                    View Spreadsheet
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Client Details Modal -->
+    <div id="clientModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-lg p-6 max-w-lg w-full shadow-2xl transform transition-all scale-95 opacity-0 duration-200" id="clientModalContent">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-slate-800">Client Details</h3>
+                <button type="button" id="closeClientModalBtn" class="text-slate-400 hover:text-slate-600">
+                    <i class="fas fa-times text-lg"></i>
+                </button>
+            </div>
+            
+            <form id="clientForm" class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="form-group col-span-2">
+                        <label>Client Name *</label>
+                        <input type="text" id="c-name" class="form-control" placeholder="Acme Corp" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Contact Person</label>
+                        <input type="text" id="c-contact" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Phone Number</label>
+                        <input type="text" id="c-phone" class="form-control">
+                    </div>
+                    <div class="form-group col-span-2">
+                        <label>Address</label>
+                        <input type="text" id="c-address" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>City</label>
+                        <input type="text" id="c-city" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Postal Code</label>
+                        <input type="text" id="c-postal" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Country</label>
+                        <input type="text" id="c-country" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Currency</label>
+                        <input type="text" id="c-currency" class="form-control">
+                    </div>
+                    <div class="form-group col-span-2">
+                        <label>Applicable Price List</label>
+                        <input type="text" id="c-pricelist" list="list-PriceList" class="form-control">
+                    </div>
+                </div>
+                <div class="flex justify-end pt-4 gap-3 border-t border-slate-200 mt-6">
+                    <button type="button" id="cancelClientBtn" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-2 rounded transition-colors font-medium">Cancel</button>
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition-colors font-medium">Save Client</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/order-entry.js"></script>
+
+</body>
+</html>

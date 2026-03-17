@@ -76,29 +76,12 @@ async function initializeFirebaseApp() {
           throw new Error('Firebase configuration not found. Please ensure firebase-config.js is loaded.');
         }
         
-        const enhancedConfig = {
-          ...window.firebaseConfig,
-          experimentalForceLongPolling: true,
-          useFetchStreams: false
-        };
-        
-        window.firebaseGlobalApp = firebase.initializeApp(enhancedConfig);
+        const config = { ...window.firebaseConfig };
+        window.firebaseGlobalApp = firebase.initializeApp(config);
         
         // Configure authentication if available
         if (firebase.auth) {
-          firebase.auth().languageCode = 'en';
-          
-          // Enable anonymous authentication for unauthenticated users with retry
-          try {
-            const currentUser = firebase.auth().currentUser;
-            if (!currentUser) {
-              await retryWithBackoff(async () => {
-                await firebase.auth().signInAnonymously();
-              }, 3, 1000);
-            }
-          } catch (authError) {
-            // Continue without authentication - some operations may still work
-          }
+          try { firebase.auth().languageCode = 'en'; } catch (_) {}
         }
         
         // Configure Firestore with offline persistence and retry settings

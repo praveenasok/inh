@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Configurator - InstaQuote Suite</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <!-- Global Navigation -->
+    <script>window.navConfig = { siteTitle: 'InstaQuote Suite' };</script>
+    <script src="js/navigation-loader.js"></script>
+
+    <div class="max-w-[98%] mx-auto py-6">
+        
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h1 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fas fa-cogs text-blue-600"></i> Product Configurator
+                </h1>
+                <p class="text-sm text-slate-500 mt-1">Design final products by applying specifications on top of raw ratio mixes.</p>
+            </div>
+            <div>
+                 <button id="viewSavedBtn" class="bg-indigo-100 hover:bg-indigo-200 text-indigo-700 text-sm px-4 py-2 rounded shadow-sm transition-colors flex items-center gap-2">
+                    <i class="fas fa-list"></i> View Saved Products
+                </button>
+                 <button id="saveProductBtn" class="bg-blue-600 hover:bg-blue-700 text-white text-sm px-6 py-2 rounded shadow transition-colors flex items-center gap-2">
+                    <i class="fas fa-save"></i> Save Product Final Price List
+                </button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- Left Panel: Configuration -->
+            <div class="lg:col-span-4 space-y-6">
+                
+                <div class="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="bg-slate-100 px-4 py-3 border-b border-slate-200">
+                        <h2 class="font-semibold text-slate-700">Product Details</h2>
+                    </div>
+                    <div class="p-4 space-y-4">
+                        <!-- Type Toggle -->
+                        <div class="mb-5 bg-slate-100 p-1 flex rounded">
+                            <button id="type-standard-btn" class="flex-1 py-1.5 text-sm font-semibold rounded shadow-sm bg-white text-blue-600 transition-colors">Standard Product</button>
+                            <button id="type-combo-btn" class="flex-1 py-1.5 text-sm font-semibold rounded text-slate-500 hover:text-slate-700 transition-colors">Combo Product</button>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Target Price List Name *</label>
+                            <input type="text" id="pc-pricelist" list="existing-pricelists" class="w-full px-3 py-2 border border-slate-300 rounded focus:border-blue-500 outline-none transition-colors" placeholder="e.g. Retail 2026" required>
+                            <datalist id="existing-pricelists"></datalist>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Product Name *</label>
+                            <input type="text" id="pc-name" class="w-full px-3 py-2 border border-slate-300 rounded focus:border-blue-500 outline-none transition-colors" placeholder="e.g. #613 Blonde Bone Straight Frontal" required>
+                        </div>
+                        <div id="standard-config-group" class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Base Raw Material (From RM) *</label>
+                                <select id="pc-base" class="w-full px-3 py-2 border border-slate-300 rounded focus:border-blue-500 outline-none transition-colors">
+                                    <option value="">Select a Ratio Mixer Price List...</option>
+                                </select>
+                                <p class="text-xs text-slate-400 mt-1">This provides the base cost profile per length.</p>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Base Cost Weight Unit (g) *</label>
+                                <input type="number" id="pc-base-weight" class="w-full px-3 py-2 border border-slate-300 rounded focus:border-blue-500 outline-none transition-colors" placeholder="1000" value="1000" required>
+                                <p class="text-xs text-slate-400 mt-1">Weight that Ratio Mixer prices represent (usually 1kg = 1000).</p>
+                            </div>
+                            <div class="flex flex-col gap-1 mt-4 p-3 bg-slate-50 border border-slate-200 rounded">
+                                <label for="pc-extra-length" class="text-xs font-semibold text-slate-700 select-none flex items-center justify-between">
+                                    Raw Material Length Offset
+                                    <span class="text-xs text-slate-400" title="Adjust the required raw hair length relative to the finished product length.">
+                                        <i class="fas fa-info-circle"></i>
+                                    </span>
+                                </label>
+                                <div class="flex gap-2 w-full mt-1">
+                                    <select id="pc-extra-length-dir" class="w-1/3 px-3 py-2 border border-slate-300 rounded focus:border-blue-500 outline-none transition-colors text-sm">
+                                        <option value="+">Plus (+)</option>
+                                        <option value="-">Minus (-)</option>
+                                    </select>
+                                    <select id="pc-extra-length-val" class="w-2/3 px-3 py-2 border border-slate-300 rounded focus:border-blue-500 outline-none transition-colors text-sm">
+                                        <option value="0" selected>0 Inches (Same as finished)</option>
+                                        <option value="1">1 Inch</option>
+                                        <option value="2">2 Inches</option>
+                                        <option value="3">3 Inches</option>
+                                        <option value="4">4 Inches</option>
+                                        <option value="5">5 Inches</option>
+                                        <option value="6">6 Inches</option>
+                                        <option value="7">7 Inches</option>
+                                        <option value="8">8 Inches</option>
+                                        <option value="9">9 Inches</option>
+                                        <option value="10">10 Inches</option>
+                                        <option value="11">11 Inches</option>
+                                        <option value="12">12 Inches</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="combo-config-group" class="space-y-4 hidden bg-indigo-50/30 p-3 rounded border border-indigo-100">
+                            <div>
+                                <label class="block text-xs font-semibold text-indigo-700 uppercase mb-1">Select Base Product *</label>
+                                <select id="cc-base" class="w-full px-3 py-2 border border-indigo-200 rounded focus:border-indigo-500 outline-none transition-colors bg-white">
+                                    <option value="">Select a Saved Product...</option>
+                                </select>
+                                <p class="text-xs text-slate-500 mt-1">This product determines the available lengths for the Combo.</p>
+                            </div>
+                            
+                            <div class="flex flex-col gap-3 mt-3 hidden" id="cc-base-config-row">
+                                <div>
+                                    <label class="block text-[10px] font-semibold text-slate-500 uppercase mb-0.5">Length Offset</label>
+                                    <div class="flex">
+                                        <select id="cc-base-dir" class="w-16 px-2 py-1.5 border border-r-0 border-slate-300 rounded-l text-sm outline-none bg-white">
+                                            <option value="+">+</option>
+                                            <option value="-">-</option>
+                                        </select>
+                                        <select id="cc-base-offset" class="flex-1 px-2 py-1.5 border border-slate-300 rounded-r text-sm outline-none bg-white">
+                                            <option value="0" selected>0"</option>
+                                            <option value="1">1"</option>
+                                            <option value="2">2"</option>
+                                            <option value="3">3"</option>
+                                            <option value="4">4"</option>
+                                            <option value="5">5"</option>
+                                            <option value="6">6"</option>
+                                            <option value="7">7"</option>
+                                            <option value="8">8"</option>
+                                            <option value="9">9"</option>
+                                            <option value="10">10"</option>
+                                        </select>
+                                    </div>
+                                    <p class="text-[10px] text-slate-400 mt-1">Offset applied to the master length.</p>
+                                </div>
+                                <div class="flex gap-4">
+                                    <div class="w-1/2">
+                                        <label class="block text-[10px] font-semibold text-slate-500 uppercase mb-0.5">Use Saved Unit</label>
+                                        <select id="cc-base-unit" class="w-full px-3 py-1.5 border border-slate-300 rounded text-sm outline-none bg-white"></select>
+                                    </div>
+                                    <div class="w-1/2">
+                                        <label class="block text-[10px] font-semibold text-slate-500 uppercase mb-0.5">Quantity</label>
+                                        <input type="number" step="any" id="cc-base-qty" class="w-full px-3 py-1.5 border border-slate-300 rounded text-sm outline-none" value="1">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="lengthsContainerWrapper" class="hidden">
+                            <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Available Lengths</label>
+                            <div id="lengthsCheckboxContainer" class="flex flex-wrap gap-2 mt-2">
+                                <!-- Checkboxes injected here -->
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Target Sale Weights (g) *</label>
+                            <input type="text" id="pc-product-weights" class="w-full px-3 py-2 border border-slate-300 rounded focus:border-blue-500 outline-none transition-colors" placeholder="e.g. 100, 150, 200" required>
+                            <p class="text-[10px] text-slate-400 mt-1">Comma-separated weights for the final products.</p>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Production Wastage (%)</label>
+                            <input type="number" step="any" id="pc-wastage" class="w-full px-3 py-2 border border-slate-300 rounded focus:border-blue-500 outline-none transition-colors" placeholder="0" value="0">
+                            <p class="text-[10px] text-slate-400 mt-1">Extra percentage added to the final cost to account for physical loss during manufacturing.</p>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Sale Margin (%)</label>
+                            <input type="number" step="any" id="pc-margin" class="w-full px-3 py-2 border border-slate-300 rounded focus:border-blue-500 outline-none transition-colors" placeholder="0" value="0">
+                        </div>
+                    </div>
+                </div>
+
+                <div id="combo-components-box" class="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden hidden">
+                    <div class="bg-slate-100 px-4 py-3 border-b border-slate-200 flex justify-between items-center">
+                        <h2 class="font-semibold text-slate-700">Additional Components</h2>
+                        <button id="addComponentBtn" class="bg-white border border-slate-300 text-slate-600 hover:text-indigo-600 hover:bg-slate-50 text-xs px-2 py-1 rounded shadow-sm transition-colors flex items-center gap-1">
+                            <i class="fas fa-plus"></i> Add Part
+                        </button>
+                    </div>
+                    <div class="p-4 bg-slate-50">
+                        <div id="componentsContainer" class="space-y-4">
+                            <!-- Additional components injected here -->
+                            <div class="text-sm text-slate-500 italic text-center" id="emptyComponentsMsg">No extra components added. Usually you'll add frontals or closures here.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="bg-slate-100 px-4 py-3 border-b border-slate-200 flex justify-between items-center">
+                        <h2 class="font-semibold text-slate-700">Specifications (Added Cost)</h2>
+                        <button id="addSpecBtn" class="bg-white border border-slate-300 text-slate-600 hover:text-blue-600 hover:bg-slate-50 text-xs px-2 py-1 rounded shadow-sm transition-colors flex items-center gap-1">
+                            <i class="fas fa-plus"></i> Add Spec
+                        </button>
+                    </div>
+                    <div class="p-4">
+                        <div id="specsContainer" class="space-y-3">
+                            <!-- Specs injected here -->
+                            <div class="text-xs text-slate-400 italic text-center" id="emptySpecsMsg">No specifications added yet. Add costs like dyeing, bleaching, lace closure hand-knotting, packaging, etc.</div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Right Panel: Output Price Matrix -->
+            <div class="lg:col-span-8">
+                <div class="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden h-full flex flex-col">
+                    <div class="bg-slate-100 px-4 py-3 border-b border-slate-200 flex justify-between items-center">
+                        <h2 class="font-semibold text-slate-700">Final Projected Price List</h2>
+                        <div class="text-xs font-mono bg-slate-200 px-2 py-1 rounded text-slate-600" id="currencyDisplay">Currency: -</div>
+                    </div>
+                    
+                    <div class="p-0 overflow-auto flex-grow h-[600px]">
+                        <table class="w-full text-left border-collapse text-sm">
+                            <thead class="sticky top-0 bg-white shadow-sm z-10">
+                                <tr id="priceOutputHeader">
+                                    <th class="p-3 border-b border-r bg-slate-50 text-slate-600 font-semibold sticky left-0 z-20">Len & Wt</th>
+                                    <th class="p-3 border-b text-slate-500 font-medium whitespace-nowrap">Raw Cost</th>
+                                    <th class="p-3 border-b text-slate-500 font-medium whitespace-nowrap">Specs Total</th>
+                                    <th class="p-3 border-b text-slate-500 font-medium whitespace-nowrap">Product Cost</th>
+                                    <th class="p-3 border-b text-indigo-600 font-bold whitespace-nowrap bg-indigo-50/50">Final Sale Price</th>
+                                </tr>
+                            </thead>
+                            <tbody id="priceOutputBody">
+                                <!-- Price rows -->
+                                <tr>
+                                    <td colspan="5" class="p-8 text-center text-slate-400">
+                                        Select a Base Raw Material to calculate prices.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- View Saved Products Modal -->
+    <div id="savedProductsModal" class="fixed inset-0 bg-black/50 z-50 flex flex-col items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-lg shadow-2xl w-full max-w-4xl max-h-full flex flex-col transform transition-all scale-95 opacity-0 duration-200" id="savedProductsModalContent">
+            <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50 rounded-t-lg">
+                <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fas fa-list text-indigo-600"></i> Saved Product Final Price Lists
+                </h3>
+                <button type="button" id="closeSavedModalBtn" class="text-slate-400 hover:text-red-500 transition-colors">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto flex-grow flex flex-col gap-6" id="savedProductsList">
+                <div class="text-center text-slate-500 italic py-8">Loading...</div>
+            </div>
+            <div class="px-6 py-4 border-t border-slate-200 bg-slate-50 text-right rounded-b-lg">
+                <button type="button" id="closeSavedModalBtnBottom" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-6 py-2 rounded font-medium transition-colors">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- DB Injection Script -->
+    <script src="js/product-configurator.js"></script>
+</body>
+</html>

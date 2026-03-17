@@ -2,7 +2,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyCW3FsY_QwFuqZiQaWg4jmmmjlSUR9DxNA",
   authDomain: "inhsuite.firebaseapp.com",
   projectId: "inhsuite",
-  storageBucket: "inhsuite.firebasestorage.app",
+  storageBucket: "inhsuite.appspot.com",
   messagingSenderId: "263357798472",
   appId: "1:263357798472:web:e03f4a7264a19fe4bfe07d"
 };

@@ -1,58 +1,109 @@
 // Offline INHDATA seeding: ensures basic data is available when Firebase is unreachable
 (function(){
+  async function safeFetchJson(url){
+    try {
+      const res = await fetch(url, { method: 'GET' });
+      if (!res.ok) return [];
+      const data = await res.json().catch(() => []);
+      return Array.isArray(data) ? data : [];
+    } catch (_) { return []; }
+  }
+
+  function deriveName(obj){
+    try {
+      const n = obj && (obj.name || obj.salesmanName || obj.SalesmanName || obj.Name);
+      return typeof n === 'string' ? n : (n != null ? String(n) : '');
+    } catch (_) { return ''; }
+  }
+
   async function seedIfEmpty(){
     try {
       if (!window.INHDATA || typeof INHDATA.initialize !== 'function') return;
       try { await INHDATA.initialize(); } catch (_) {}
 
-      // Seed products
+      // Products: if empty, pull from server (Firestore/Sheets backed) and upsert
       try {
-        const products = await INHDATA.getAll('products');
-        if (!Array.isArray(products) || products.length === 0) {
-          const samples = [
-            { id: 'SAMPLE-INDIA25-Bulk-100', PriceListName: 'INDIA25', Category: 'Bulk', Product: 'Bulk', Density: '100%', Shade: 'Natural Black', Rate: 100, SoldinKG: 'Y', updatedAt: Date.now() },
-            { id: 'SAMPLE-INDIA25-Tapes-130', PriceListName: 'INDIA25', Category: 'Tapes', Product: 'Tapes', Density: '130%', Shade: 'Natural Black', Rate: 160, SoldinKG: 'N', updatedAt: Date.now() },
-            { id: 'SAMPLE-INDIA25-Closures-120', PriceListName: 'INDIA25', Category: 'Closures', Product: 'Lace Closure', Density: '120%', Shade: 'Brown', Rate: 220, SoldinKG: 'N', updatedAt: Date.now() },
-            { id: 'SAMPLE-INDIA25-ClipOn-130', PriceListName: 'INDIA25', Category: 'ClipOn', Product: 'ClipOn', Density: '130%', Shade: 'Brown', Rate: 180, SoldinKG: 'N', updatedAt: Date.now() }
-          ];
-          for (const doc of samples) { try { await INHDATA.upsert('products', doc); } catch (_) {} }
+        const productsLocal = await INHDATA.getAll('products');
+        if (!Array.isArray(productsLocal) || productsLocal.length === 0) {
+          const productsRemote = await safeFetchJson('http://localhost:3000/api/products');
+          if (productsRemote.length > 0) {
+            for (const doc of productsRemote) {
+              try { await INHDATA.upsert('products', { ...doc, updatedAt: Date.now() }); } catch (_) {}
+            }
+          }
         }
       } catch (_) {}
 
-      // Seed colors
+      // Colors: if empty, pull from server generic get-data
       try {
-        const colors = await INHDATA.getAll('colors');
-        if (!Array.isArray(colors) || colors.length === 0) {
-          const colorSamples = [
-            { id: 'color_nat_black', Color: 'Natural Black', Shade: 'Natural Black', updatedAt: Date.now() },
-            { id: 'color_brown', Color: 'Brown', Shade: 'Brown', updatedAt: Date.now() }
-          ];
-          for (const c of colorSamples) { try { await INHDATA.upsert('colors', c); } catch (_) {} }
+        const colorsLocal = await INHDATA.getAll('colors');
+        if (!Array.isArray(colorsLocal) || colorsLocal.length === 0) {
+          const colorsRemote = await safeFetchJson('http://localhost:3000/api/get-data?collection=colors');
+          if (colorsRemote.length > 0) {
+            for (const c of colorsRemote) {
+              try { await INHDATA.upsert('colors', { ...c, updatedAt: Date.now() }); } catch (_) {}
+            }
+          }
         }
       } catch (_) {}
 
-      // Seed styles
+      // Styles: if empty, pull from server generic get-data (or fallback endpoint)
       try {
-        const styles = await INHDATA.getAll('styles');
-        if (!Array.isArray(styles) || styles.length === 0) {
-          const styleSamples = [
-            { id: 'style_straight', Style: 'Straight', updatedAt: Date.now() },
-            { id: 'style_wavy', Style: 'Wavy', updatedAt: Date.now() }
-          ];
-          for (const s of styleSamples) { try { await INHDATA.upsert('styles', s); } catch (_) {} }
+        const stylesLocal = await INHDATA.getAll('styles');
+        if (!Array.isArray(stylesLocal) || stylesLocal.length === 0) {
+          let stylesRemote = await safeFetchJson('http://localhost:3000/api/get-data?collection=styles');
+          if (stylesRemote.length === 0) {
+            stylesRemote = await safeFetchJson('http://localhost:3000/api/get-styles');
+          }
+          if (stylesRemote.length > 0) {
+            for (const s of stylesRemote) {
+              try { await INHDATA.upsert('styles', { ...s, updatedAt: Date.now() }); } catch (_) {}
+            }
+          }
         }
       } catch (_) {}
 
-      // Seed salesmen
+      // Salesmen: if empty, pull salespeople and map to local salesmen store
       try {
-        const salesmen = await INHDATA.getAll('salesmen');
-        if (!Array.isArray(salesmen) || salesmen.length === 0) {
-          const sm = [
-            { id: 'salesman_praveen', name: 'Praveen Asok', updatedAt: Date.now() },
-            { id: 'salesman_john', name: 'John Doe', updatedAt: Date.now() }
-          ];
-          for (const d of sm) { try { await INHDATA.upsert('salesmen', d); } catch (_) {} }
-          try { if (typeof INHDATA._updateSalesmenNamesMeta === 'function') { await INHDATA._updateSalesmenNamesMeta(); } } catch (_) {}
+        const salesmenLocal = await INHDATA.getAll('salesmen');
+        if (!Array.isArray(salesmenLocal) || salesmenLocal.length === 0) {
+          const people = await safeFetchJson('http://localhost:3000/api/salespeople');
+          if (people.length > 0) {
+            for (const p of people) {
+              const name = deriveName(p).trim();
+              const id = p && (p.id || p.ID || p.docId || name || `salesman_${Date.now()}`);
+              const record = { id: String(id), name, updatedAt: Date.now(), _origin: 'remote' };
+              try { await INHDATA.upsert('salesmen', record); } catch (_) {}
+            }
+            try { if (typeof INHDATA._updateSalesmenNamesMeta === 'function') { await INHDATA._updateSalesmenNamesMeta(); } } catch (_) {}
+          }
+        }
+      } catch (_) {}
+
+      // Clients: if empty, pull from server and upsert to INHDATA
+      try {
+        const clientsLocal = await INHDATA.getAll('clients');
+        if (!Array.isArray(clientsLocal) || clientsLocal.length === 0) {
+          const clientsRemote = await safeFetchJson('http://localhost:3000/api/clients');
+          if (clientsRemote.length > 0) {
+            for (const cl of clientsRemote) {
+              const name =
+                deriveName(cl).trim() ||
+                (cl.clientName || cl.name || cl.Name || '');
+              const id =
+                cl && (cl.id || cl.clientId || cl.ID || name || `client_${Date.now()}`);
+              const record = {
+                id: String(id),
+                name,
+                email: cl.email || '',
+                phone: cl.phone || cl.Phone || '',
+                company: cl.company || cl.companyName || cl.Company || '',
+                updatedAt: Date.now(),
+                _origin: 'remote',
+              };
+              try { await INHDATA.upsert('clients', record); } catch (_) {}
+            }
+          }
         }
       } catch (_) {}
     } catch (_) {}

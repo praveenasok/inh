@@ -66,33 +66,65 @@ async function convertToOrder() {
             return;
         }
         
-        // Show loading state
         const loadingMessage = showLoadingMessage('Converting quote to order...');
-        
-        // Check if Firebase is available
-        if (!window.firebaseDB || !window.firebaseDB.isAvailable()) {
+
+        if (window.firebaseDB && typeof window.firebaseDB.isAvailable === 'function' && window.firebaseDB.isAvailable()) {
+            const savedQuote = await window.firebaseDB.saveQuote(quoteData);
+            const quoteId = savedQuote.id;
+            const orderData = await window.firebaseDB.convertQuoteToOrder(quoteId, {
+                orderDate: new Date().toISOString(),
+                orderSource: 'quote_conversion',
+                priority: 'normal'
+            });
             hideLoadingMessage(loadingMessage);
+            const orderNumber = orderData.orderNumber;
+            alert(`✅ Order ${orderNumber} created successfully!\nCustomer: ${quoteData.customerName} | Total: ${quoteData.currency} ${quoteData.total}`);
+        } else if (window.INHDATA && typeof INHDATA.upsert === 'function') {
+            const savedQuote = await INHDATA.upsert('quotes', {
+                quoteName: quoteData.quoteName,
+                customerName: quoteData.customerName,
+                clientContact: quoteData.clientContact,
+                salesman: quoteData.salesman,
+                currency: quoteData.currency,
+                priceList: quoteData.priceList,
+                items: quoteData.items,
+                notes: quoteData.notes,
+                discount: quoteData.discount,
+                tax: quoteData.tax,
+                shipping: quoteData.shipping,
+                subtotal: quoteData.subtotal,
+                total: quoteData.total,
+                source: 'quotemaker',
+                status: 'converted'
+            });
+            const quoteId = savedQuote.id;
+            const now = new Date();
+            const pad2 = (n) => String(n).padStart(2, '0');
+            const time = `${pad2(now.getHours())}${pad2(now.getMinutes())}${pad2(now.getSeconds())}`;
+            const orderNumber = `ORD-${now.getFullYear()}${pad2(now.getMonth()+1)}${pad2(now.getDate())}-${time}`;
+            const orderDoc = await INHDATA.upsert('orders', {
+                orderNumber,
+                orderDate: now.toISOString(),
+                orderSource: 'quote_conversion',
+                priority: 'normal',
+                quoteId,
+                customerName: quoteData.customerName,
+                clientContact: quoteData.clientContact,
+                salesman: quoteData.salesman,
+                currency: quoteData.currency,
+                priceList: quoteData.priceList,
+                items: quoteData.items,
+                subtotal: quoteData.subtotal,
+                total: quoteData.total,
+                status: 'new'
+            });
+            hideLoadingMessage(loadingMessage);
+            alert(`✅ Order ${orderDoc.orderNumber} created successfully!\nCustomer: ${quoteData.customerName} | Total: ${quoteData.currency} ${quoteData.total}`);
+        } else {
+            hideLoadingMessage(loadingMessage);
+            alert('Conversion not available: data layer not initialized.');
             return;
         }
-        
-        // First save the quote to get a valid quote ID
-        const savedQuote = await window.firebaseDB.saveQuote(quoteData);
-        const quoteId = savedQuote.id;
-        
-        // Convert quote to order
-        const orderData = await window.firebaseDB.convertQuoteToOrder(quoteId, {
-            orderDate: new Date().toISOString(),
-            orderSource: 'quote_conversion',
-            priority: 'normal'
-        });
-        
-        hideLoadingMessage(loadingMessage);
-        
-        // Show success message with order details
-        const orderNumber = orderData.orderNumber;
-        const successMessage = `✅ Order ${orderNumber} created successfully!\nCustomer: ${quoteData.customerName} | Total: ${quoteData.currency} ${quoteData.total}`;
-        
-        alert(successMessage);
         
         // Automatically clear the current quote form
         clearAllQuoteData();

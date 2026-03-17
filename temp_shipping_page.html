@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shipping Rate Calculator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <!-- jsPDF and AutoTable -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        /* Custom CSS from pricelists.html */
+        .mobile-padding {
+            padding: 1rem;
+        }
+
+        .shadow-soft {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        /* Navigation link styles */
+        .nav-btn {
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 48px;
+            padding: 12px 16px;
+            font-weight: 500;
+            cursor: pointer;
+            touch-action: manipulation;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            border: 2px solid #e2e8f0;
+            box-shadow: 0 4px 12px rgba(71, 85, 105, 0.15);
+        }
+
+        .nav-btn:hover {
+            text-decoration: none;
+            background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+            border-color: #cbd5e1;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(71, 85, 105, 0.2);
+        }
+
+        .nav-btn.nav-btn-active {
+            background: #081249;
+            color: white !important;
+            border: 2px solid #081249;
+            box-shadow: 0 4px 12px rgba(8, 18, 73, 0.3);
+        }
+
+        .nav-btn.nav-btn-active:hover {
+            background: #0a1555;
+            border-color: #0a1555;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(8, 18, 73, 0.4);
+        }
+
+        /* Mobile menu styles handled by Tailwind classes */
+    </style>
+</head>
+
+<body class="min-h-screen bg-gradient-to-br from-amber-50 via-rose-50 to-orange-100 text-slate-800">
+
+    <div class="app-container flex flex-col md:flex-row h-screen overflow-hidden">
+        <!-- Mobile Header -->
+        <div class="md:hidden flex items-center justify-between px-4 py-3 bg-white shadow-sm relative z-50">
+            <div class="flex items-center gap-2">
+                <img src="inh/images/logo-optimized.png" alt="INHmanager" class="h-8">
+                <span class="font-bold text-lg text-slate-800">INHmanager</span>
+            </div>
+            <button id="mobile-menu-toggle" class="text-slate-800 focus:outline-none p-2">
+                <i class="fas fa-bars text-2xl"></i>
+            </button>
+        </div>
+
+        <!-- Mobile Dropdown Menu -->
+        <div id="mobile-menu-dropdown"
+            class="md:hidden absolute top-[52px] left-0 w-full bg-white shadow-lg transform -translate-y-full transition-transform duration-300 z-40 flex flex-col border-t border-slate-100">
+            <nav class="flex flex-col p-4 gap-2">
+                <a href="#"
+                    class="px-4 py-3 rounded-lg bg-blue-50 text-blue-700 font-medium transition-all flex items-center gap-3">
+                    <i class="fas fa-calculator text-blue-500 w-6"></i> Shipping Calculator
+                </a>
+                <a href="inh/quotemaker.html"
+                    class="px-4 py-3 rounded-lg hover:bg-slate-50 text-slate-700 font-medium transition-all flex items-center gap-3">
+                    <i class="fas fa-file-invoice-dollar text-slate-400 w-6"></i> Quote Maker
+                </a>
+                <a href="inh/pricelists.html"
+                    class="px-4 py-3 rounded-lg hover:bg-slate-50 text-slate-700 font-medium transition-all flex items-center gap-3">
+                    <i class="fas fa-list text-slate-400 w-6"></i> Price Lists
+                </a>
+                <a href="inh/share-files.html"
+                    class="px-4 py-3 rounded-lg hover:bg-slate-50 text-slate-700 font-medium transition-all flex items-center gap-3">
+                    <i class="fas fa-share-alt text-slate-400 w-6"></i> Share Files
+                </a>
+            </nav>
+        </div>
+
+        <!-- Overlay -->
+        <div id="mobile-overlay"
+            class="fixed inset-0 bg-black/50 z-30 hidden transition-opacity duration-300 opacity-0 backdrop-blur-sm mt-[52px]">
+        </div>
+
+        <main class="main-content">
+            <!-- Desktop Navigation -->
+            <nav
+                class="hidden md:flex items-center justify-between px-6 py-4 bg-white/50 backdrop-blur-sm border-b border-white/20 mb-8 rounded-xl shadow-sm">
+                <div class="flex items-center gap-3">
+                    <img src="inh/images/logo-optimized.png" alt="INHmanager" class="h-8">
+                    <span class="font-bold text-xl text-slate-800">INHmanager</span>
+                </div>
+                <div class="flex gap-2">
+                    <a href="#"
+                        class="px-4 py-2 rounded-lg bg-slate-800 text-white font-medium transition-all shadow-md">Shipping
+                        Calculator</a>
+                    <a href="inh/quotemaker.html"
+                        class="px-4 py-2 rounded-lg hover:bg-white/60 text-slate-700 font-medium transition-all hover:shadow-sm">Quote
+                        Maker</a>
+                    <a href="inh/pricelists.html"
+                        class="px-4 py-2 rounded-lg hover:bg-white/60 text-slate-700 font-medium transition-all hover:shadow-sm">Price
+                        Lists</a>
+                    <a href="inh/share-files.html"
+                        class="px-4 py-2 rounded-lg hover:bg-white/60 text-slate-700 font-medium transition-all hover:shadow-sm">Share
+                        Files</a>
+                </div>
+            </nav>
+            <section id="shipping-calculator" class="tool-section active">
+                <header>
+                    <h1>Shipping Rate Calculator</h1>
+                </header>
+
+                <div class="calculator-card">
+                    <div class="input-group">
+                        <label for="currency-select">Currency</label>
+                        <div class="select-wrapper">
+                            <select id="currency-select">
+                                <option value="INR" selected>INR - Indian Rupee</option>
+                                <option value="USD">USD - US Dollar</option>
+                                <option value="EUR">EUR - Euro</option>
+                                <option value="GBP">GBP - British Pound</option>
+                                <option value="AED">AED - UAE Dirham</option>
+                                <option value="CAD">CAD - Canadian Dollar</option>
+                                <option value="AUD">AUD - Australian Dollar</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label for="provider-select">Shipping Provider</label>
+                        <div class="select-wrapper">
+                            <select id="provider-select">
+                                <!-- Options will be populated by JS -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="country-select">Destination Country</label>
+                        <div class="select-wrapper">
+                            <select id="country-select">
+                                <option value="" disabled selected>Select a country</option>
+                                <!-- Options will be populated by JS -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="weight-input">Weight (kg)</label>
+                        <input type="number" id="weight-input" placeholder="0.0" step="0.5" min="0.5">
+                    </div>
+
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label for="fuel-surcharge">Fuel Surcharge (%)</label>
+                            <input type="number" id="fuel-surcharge" value="32.5" step="0.1" min="0">
+                        </div>
+                        <div class="input-group checkbox-group">
+                            <label for="commercial-check">
+                                <input type="checkbox" id="commercial-check">
+                                Commercial Shipment
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="results-section" id="results-section" style="display: none;">
+                        <div class="result-row">
+                            <span class="label">Zone</span>
+                            <span class="value" id="zone-display">-</span>
+                        </div>
+                        <div class="divider"></div>
+                        <div class="result-row">
+                            <span class="label">Base Rate</span>
+                            <span class="value" id="base-rate">-</span>
+                        </div>
+                        <div class="result-row">
+                            <span class="label">Demand Charge</span>
+                            <span class="value" id="demand-charge">-</span>
+                        </div>
+                        <div class="result-row">
+                            <span class="label">Fuel Surcharge</span>
+                            <span class="value" id="fuel-amount">-</span>
+                        </div>
+                        <div class="result-row" id="commercial-row" style="display: none;">
+                            <span class="label">Commercial Charge</span>
+                            <span class="value" id="commercial-charge">-</span>
+                        </div>
+                        <div class="divider"></div>
+                        <div class="result-row subtotal">
+                            <span class="label">Subtotal</span>
+                            <span class="value" id="subtotal">-</span>
+                        </div>
+                        <div class="result-row">
+                            <span class="label">GST (18%)</span>
+                            <span class="value" id="gst-amount">-</span>
+                        </div>
+                        <div class="result-row total highlight">
+                            <span class="label">Total Payable</span>
+                            <span class="value" id="total-payable">-</span>
+                        </div>
+                    </div>
+                </div>
+    </div>
+
+    <div class="mt-6 flex justify-center">
+        <button id="generate-table-btn"
+            class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md transition-all flex items-center gap-2">
+            <i class="fas fa-table"></i> Generate Rate Table
+        </button>
+    </div>
+    </div>
+    </section>
+
+    <!-- Rate Table Modal -->
+    <div id="rate-table-modal"
+        class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+            <div class="p-6 border-b border-gray-200 flex justify-between items-center bg-gray-50 rounded-t-xl">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-800">Shipping Rate Table</h2>
+                    <p class="text-sm text-gray-600 mt-1" id="modal-subtitle">Rates for [Country] via [Provider]</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button id="print-btn"
+                        class="text-gray-600 hover:text-blue-600 transition-colors p-2 rounded-lg hover:bg-blue-50"
+                        title="Print Table">
+                        <i class="fas fa-print text-xl"></i>
+                    </button>
+                    <button id="download-pdf-btn"
+                        class="text-gray-600 hover:text-red-600 transition-colors p-2 rounded-lg hover:bg-red-50"
+                        title="Download PDF">
+                        <i class="fas fa-file-pdf text-xl"></i>
+                    </button>
+                    <div class="h-6 w-px bg-gray-300 mx-1"></div>
+                    <button id="close-modal-btn"
+                        class="text-gray-500 hover:text-gray-700 transition-colors p-2 rounded-full hover:bg-gray-200">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="p-6 overflow-y-auto flex-grow">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col"
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Weight (kg)</th>
+                                <th scope="col"
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Base Rate</th>
+                                <th scope="col"
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Fuel Surcharge</th>
+                                <th scope="col"
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Demand Charge</th>
+                                <th scope="col"
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Commercial</th>
+                                <th scope="col"
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    GST (18%)</th>
+                                <th scope="col"
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-bold">
+                                    Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rate-table-body" class="bg-white divide-y divide-gray-200">
+                            <!-- Rows will be populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="p-4 border-t border-gray-200 bg-gray-50 rounded-b-xl flex justify-end">
+                <button id="close-modal-footer-btn"
+                    class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-6 rounded-lg transition-all">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <section id="quote-maker" class="tool-section">
+        <header>
+            <h1>Quote Maker</h1>
+            <p>Create professional quotes for your customers.</p>
+        </header>
+        <div class="placeholder-content">
+            <p>Coming Soon...</p>
+        </div>
+    </section>
+
+    <section id="price-lists" class="tool-section">
+        <header>
+            <h1>Price Lists Generator</h1>
+            <p>Generate custom price lists.</p>
+        </header>
+        <div class="placeholder-content">
+            <p>Coming Soon...</p>
+        </div>
+    </section>
+    </main>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const toggleBtn = document.getElementById('mobile-menu-toggle');
+            const menu = document.getElementById('mobile-menu-dropdown');
+            const overlay = document.getElementById('mobile-overlay');
+            const icon = toggleBtn?.querySelector('i');
+            let isOpen = false;
+
+            function toggleMenu() {
+                isOpen = !isOpen;
+                if (isOpen) {
+                    menu.classList.remove('-translate-y-full');
+                    overlay.classList.remove('hidden');
+                    icon.classList.remove('fa-bars');
+                    icon.classList.add('fa-times');
+                    setTimeout(() => {
+                        overlay.classList.remove('opacity-0');
+                    }, 10);
+                } else {
+                    closeMenu();
+                }
+            }
+
+            function closeMenu() {
+                isOpen = false;
+                menu.classList.add('-translate-y-full');
+                overlay.classList.add('opacity-0');
+                icon.classList.add('fa-bars');
+                icon.classList.remove('fa-times');
+                setTimeout(() => {
+                    overlay.classList.add('hidden');
+                }, 300);
+            }
+
+            if (toggleBtn) toggleBtn.addEventListener('click', toggleMenu);
+            if (overlay) overlay.addEventListener('click', closeMenu);
+        });
+    </script>
+</body>
+
+</html>

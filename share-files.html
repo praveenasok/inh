@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>instaQuote - Share Files</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="unified-button-system.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"
+    integrity="sha512-9Xb/1nQpM0MZqSxw+5lEnHfQ0kQnUu3hKkWQv3bTQkH1uM2oV4t0YdK8oFzH4GmFzEWY4QJm3k1oP5pT0kYQfA=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="js/google-drive-config.js"></script>
+  <script src="js/google-drive-files.js"></script>
+  <style>
+    .file-card {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 0.75rem;
+      padding: 0.75rem;
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+    }
+
+    .file-thumb {
+      width: 56px;
+      height: 56px;
+      border-radius: 0.5rem;
+      background: #f3f4f6;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .file-name {
+      font-weight: 600;
+      color: #374151;
+    }
+
+    .file-meta {
+      font-size: 0.75rem;
+      color: #6b7280;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      border-radius: 9999px;
+      background: #eef2ff;
+      color: #4338ca;
+      font-size: 12px;
+    }
+
+    .search-input {
+      width: 100%;
+      border: 1px solid #e5e7eb;
+      border-radius: 0.5rem;
+      padding: 0.5rem 0.75rem;
+    }
+
+    .action-btn {
+      padding: 0.5rem 0.75rem;
+      border: 1px solid #e5e7eb;
+      border-radius: 0.5rem;
+      background: #f8fafc;
+      color: #334155;
+      font-weight: 500;
+    }
+
+    .action-btn:hover {
+      background: #f1f5f9;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 12px;
+    }
+
+    /* List view styles */
+    .list-table {
+      width: 100%;
+      border: 1px solid #e5e7eb;
+      border-radius: 0.75rem;
+      background: #ffffff;
+      overflow: hidden;
+    }
+
+    .list-header,
+    .list-row {
+      display: grid;
+      grid-template-columns: 1.5fr 0.8fr 0.7fr 0.9fr;
+      gap: 0;
+      align-items: center;
+    }
+
+    .list-header {
+      background: #f8fafc;
+      color: #334155;
+      font-weight: 600;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .list-row {
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .list-cell {
+      padding: 10px 12px;
+      font-size: 14px;
+      color: #374151;
+    }
+
+    .list-name {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+    }
+
+    .list-name .file-thumb {
+      width: 32px;
+      height: 32px;
+    }
+
+    .list-actions {
+      display: flex;
+      gap: 6px;
+      justify-content: flex-end;
+    }
+
+    /* Modal styles */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal {
+      background: #fff;
+      border-radius: 0.75rem;
+      width: 90%;
+      max-width: 980px;
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    }
+
+    .modal-header {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid #e5e7eb;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-title {
+      font-weight: 600;
+      color: #1f2937;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .modal-body {
+      padding: 0;
+      flex: 1;
+    }
+
+    .modal-body iframe,
+    .modal-body img {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      display: block;
+      object-fit: contain;
+    }
+
+    /* Subfolder chips */
+    .folder-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border: 1px solid #e5e7eb;
+      border-radius: 9999px;
+      background: #ffffff;
+      color: #334155;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .folder-chip:hover {
+      background: #f8fafc;
+    }
+
+    /* Breadcrumbs */
+    .breadcrumbs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+      font-size: 14px;
+      color: #334155;
+    }
+
+    .breadcrumb-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      border-radius: 9999px;
+      background: #f8fafc;
+      cursor: pointer;
+    }
+
+    .breadcrumb-item:hover {
+      background: #eef2ff;
+    }
+
+    .breadcrumb-sep {
+      color: #94a3b8;
+    }
+
+    /* Accordion preview */
+    .accordion-section {
+      border: 1px solid #e5e7eb;
+      border-radius: 0.75rem;
+      padding: 0.75rem;
+      background: #f9fafb;
+    }
+
+    .accordion-title {
+      font-weight: 600;
+      color: #334155;
+      margin-bottom: 6px;
+    }
+
+    .accordion-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 8px;
+    }
+
+    .expand-btn {
+      padding: 2px 8px;
+      border: 1px solid #e5e7eb;
+      border-radius: 9999px;
+      background: #f8fafc;
+      color: #334155;
+      cursor: pointer;
+    }
+
+    .expand-btn:hover {
+      background: #eef2ff;
+    }
+  </style>
+</head>
+
+<body class="min-h-screen bg-gradient-to-br from-amber-50 via-rose-50 to-orange-100">
+  <!-- Navigation -->
+  <!-- Navigation -->
+  <script>window.navConfig = { siteTitle: 'InstaQuote - Files' };</script>
+  <script src="js/navigation-loader.js"></script>
+
+  <!-- Native section is present in DOM but hidden when embed-only mode is enabled -->
+  <section id="native-section" class="bg-white rounded-xl shadow-soft p-4 sm:p-6 mb-4" style="background:#eef2ff;">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="section-heading-large flex items-center"><i class="fas fa-folder-open mr-2"></i> Google Drive Folder
+      </h3>
+      <div class="flex items-center gap-2">
+        <button id="btn-auth" class="nav-btn"><i class="fas fa-user-lock"></i> Authorize</button>
+        <button id="btn-share-folder" class="nav-btn"><i class="fas fa-link"></i> Share Folder</button>
+      </div>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
+      <div class="md:col-span-2">
+        <input id="search-input" class="search-input" type="text" placeholder="Search by name...">
+      </div>
+      <div>
+        <select id="type-filter" class="search-input">
+          <option value="">All Types</option>
+          <option value="image">Images</option>
+          <option value="pdf">PDFs</option>
+          <option value="folder">Folders</option>
+        </select>
+      </div>
+      <div class="flex gap-2">
+        <button id="btn-back" class="action-btn"><i class="fas fa-arrow-left"></i> Back</button>
+        <button id="btn-refresh" class="action-btn"><i class="fas fa-sync"></i> Refresh</button>
+        <button id="btn-copy-folder-link" class="action-btn"><i class="fas fa-copy"></i> Copy Folder Link</button>
+        <button id="btn-open-folder" class="action-btn"><i class="fas fa-folder-open"></i> Open Folder</button>
+      </div>
+    </div>
+    <div class="mb-3"><span id="auth-status" class="chip"><i class="fas fa-circle"></i> Not authorized</span></div>
+    <div id="files-grid"></div>
+    <div id="empty-state" class="text-center text-slate-500 mt-6" style="display:none;">No files found in this folder.
+    </div>
+  </section>
+
+
+  <!-- Viewer Modal -->
+  <div id="viewer-overlay" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="viewer-title">
+    <div class="modal">
+      <div class="modal-header">
+        <div id="viewer-title" class="modal-title">Preview</div>
+        <div class="modal-actions">
+          <button id="viewer-share" class="action-btn"><i class="fas fa-share"></i> Share</button>
+          <a id="viewer-drive-link" class="action-btn" target="_blank"><i class="fas fa-external-link-alt"></i> Open in
+            Drive</a>
+          <button id="viewer-close" class="action-btn"><i class="fas fa-times"></i> Close</button>
+        </div>
+      </div>
+      <div id="viewer-body" class="modal-body"></div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const USE_EMBED_ONLY = false; // show native section as file explorer
+      let embedMode = 'grid';
+      let currentEmbedFolderId = (window.GoogleDriveConfig && window.GoogleDriveConfig.FOLDER_ID) || null;
+      const accordionCache = new Map();
+      const folderCoverCache = new Map();
+
+      function getFolderKey(f) { return (f.isShortcut && f.targetId) ? f.targetId : f.id; }
+      async function ensureFolderCover(folderFile, thumbEl) {
+        if (!folderFile || !thumbEl) return;
+        const key = getFolderKey(folderFile);
+        const cached = folderCoverCache.get(key);
+        if (cached) {
+          const img = document.createElement('img'); img.src = cached; img.loading = 'lazy'; img.style.width = '100%'; img.style.height = '100%'; img.style.objectFit = 'cover'; thumbEl.innerHTML = ''; thumbEl.appendChild(img);
+          return;
+        }
+        try {
+          const files = await ShareFiles.peekFolder(folderFile);
+          const firstImage = (files || []).find(x => (x.mimeType || '').startsWith('image/') && (x.thumbnailLink || x.thumbUrl));
+          const url = firstImage ? (firstImage.thumbnailLink || firstImage.thumbUrl) : null;
+          if (url) {
+            folderCoverCache.set(key, url);
+            const img = document.createElement('img'); img.src = url; img.loading = 'lazy'; img.style.width = '100%'; img.style.height = '100%'; img.style.objectFit = 'cover'; thumbEl.innerHTML = ''; thumbEl.appendChild(img);
+          }
+        } catch (_) { /* ignore */ }
+      }
+
+      function setEmbedFolder(id) {
+        const embedEl = document.getElementById('folder-embed');
+        if (embedEl && id) {
+          currentEmbedFolderId = id;
+          embedEl.src = `https://drive.google.com/embeddedfolderview?id=${id}#${embedMode}`;
+        }
+      }
+
+      // Viewer helpers
+      const overlay = document.getElementById('viewer-overlay');
+      const bodyEl = document.getElementById('viewer-body');
+      const titleEl = document.getElementById('viewer-title');
+      const driveLinkEl = document.getElementById('viewer-drive-link');
+      const shareBtnEl = document.getElementById('viewer-share');
+      let currentViewedFile = null;
+      document.getElementById('viewer-close').onclick = () => { overlay.style.display = 'none'; bodyEl.innerHTML = ''; currentViewedFile = null; };
+      if (shareBtnEl) shareBtnEl.onclick = async () => { if (!currentViewedFile) return; try { await ShareFiles.shareFile(currentViewedFile); } catch (e) { alert('Share failed: ' + (e.message || e)); } };
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { overlay.style.display = 'none'; bodyEl.innerHTML = ''; currentViewedFile = null; } });
+      async function openViewer(file) {
+        currentViewedFile = file;
+        const isShortcut = file.isShortcut;
+        const targetId = isShortcut && file.targetId ? file.targetId : file.id;
+        const targetMime = isShortcut && file.targetMimeType ? file.targetMimeType : file.mimeType;
+        const isImage = (targetMime || '').startsWith('image/');
+        const isPdf = (targetMime || '') === 'application/pdf';
+        const name = file.name || 'Preview';
+        titleEl.textContent = name;
+        const previewUrl = `https://drive.google.com/file/d/${targetId}/preview`;
+        const imageUrl = `https://drive.google.com/uc?export=view&id=${targetId}`;
+        driveLinkEl.href = file.webViewLink || `https://drive.google.com/file/d/${targetId}/view`;
+        bodyEl.innerHTML = '';
+        if (isImage) {
+          const img = document.createElement('img');
+          img.src = imageUrl;
+          img.alt = name;
+          // Avoid lazy loading in modal to ensure immediate load
+          img.decoding = 'async';
+          // OAuth + iframe fallback if direct image URL fails
+          img.onerror = async () => {
+            let fetched = false;
+            try {
+              if (window.ShareFiles && ShareFiles.authorize) { await ShareFiles.authorize(); }
+              const tokenObj = (gapi.client && gapi.client.getToken && gapi.client.getToken()) || (gapi.auth && gapi.auth.getToken && gapi.auth.getToken());
+              const accessToken = tokenObj && tokenObj.access_token;
+              if (accessToken) {
+                const resp = await fetch(`https://www.googleapis.com/drive/v3/files/${targetId}?alt=media`, {
+                  headers: { Authorization: `Bearer ${accessToken}` }
+                });
+                if (resp.ok) {
+                  const blob = await resp.blob();
+                  const objectUrl = URL.createObjectURL(blob);
+                  img.src = objectUrl;
+                  fetched = true;
+                }
+              }
+            } catch (_) { /* ignore */ }
+            if (!fetched) {
+              // Final fallback: Drive preview iframe
+              bodyEl.innerHTML = '';
+              const iframe = document.createElement('iframe');
+              iframe.src = previewUrl;
+              iframe.setAttribute('allowfullscreen', 'true');
+              bodyEl.appendChild(iframe);
+            }
+          };
+          bodyEl.appendChild(img);
+        } else if (isPdf) {
+          // Try OAuth-backed direct media fetch for PDFs first
+          let loaded = false;
+          try {
+            if (window.ShareFiles && ShareFiles.authorize) { await ShareFiles.authorize(); }
+            const tokenObj = (gapi.client && gapi.client.getToken && gapi.client.getToken()) || (gapi.auth && gapi.auth.getToken && gapi.auth.getToken());
+            const accessToken = tokenObj && tokenObj.access_token;
+            if (accessToken) {
+              const resp = await fetch(`https://www.googleapis.com/drive/v3/files/${targetId}?alt=media`, {
+                headers: { Authorization: `Bearer ${accessToken}` }
+              });
+              if (resp.ok) {
+                const blob = await resp.blob();
+                const objectUrl = URL.createObjectURL(blob);
+                const embed = document.createElement('embed');
+                embed.src = objectUrl;
+                embed.type = 'application/pdf';
+                embed.style.width = '100%';
+                embed.style.height = '100%';
+                bodyEl.appendChild(embed);
+                loaded = true;
+              }
+            }
+          } catch (_) { /* ignore */ }
+          if (!loaded) {
+            const iframe = document.createElement('iframe');
+            iframe.src = previewUrl;
+            iframe.setAttribute('allowfullscreen', 'true');
+            bodyEl.appendChild(iframe);
+          }
+        } else {
+          const iframe = document.createElement('iframe');
+          iframe.src = previewUrl;
+          iframe.setAttribute('allowfullscreen', 'true');
+          bodyEl.appendChild(iframe);
+        }
+        overlay.style.display = 'flex';
+      }
+
+      // Initialize embed mode toggle
+      const embedToggle = document.getElementById('embed-view-toggle');
+      if (embedToggle) {
+        embedToggle.onchange = (e) => { embedMode = e.target.value || 'grid'; if (currentEmbedFolderId) { setEmbedFolder(currentEmbedFolderId); } };
+      }
+
+      // Helper: render subfolder chips
+      function renderSubfolders(subfolders) {
+        const listEl = document.getElementById('embed-subfolders-list');
+        if (!listEl) return;
+        listEl.innerHTML = '';
+        if (!subfolders || !subfolders.length) {
+          const none = document.createElement('div');
+          none.className = 'text-slate-500';
+          none.textContent = 'No subfolders';
+          listEl.appendChild(none);
+          return;
+        }
+        for (const f of subfolders) {
+          const chip = document.createElement('div');
+          chip.className = 'folder-chip';
+          chip.style.gap = '8px';
+          const navPart = document.createElement('span');
+          navPart.innerHTML = `<i class=\"fas fa-folder\"></i> ${f.name}`;
+          navPart.style.cursor = 'pointer';
+          navPart.onclick = () => {
+            setEmbedFolder(f.isShortcut && f.targetId ? f.targetId : f.id);
+            ShareFiles.openFile(f);
+          };
+          const expandBtn = document.createElement('button');
+          expandBtn.className = 'expand-btn';
+          expandBtn.innerHTML = '<i class=\"fas fa-chevron-down\"></i> Expand';
+          expandBtn.onclick = (e) => { e.stopPropagation(); toggleAccordion(f); };
+          chip.appendChild(navPart);
+          chip.appendChild(expandBtn);
+          listEl.appendChild(chip);
+        }
+      }
+
+      async function toggleAccordion(folder) {
+        const container = document.getElementById('embed-accordion');
+        if (!container) return;
+        const placeholder = document.getElementById('accordion-placeholder');
+        if (placeholder) placeholder.remove();
+        const folderId = folder.isShortcut && folder.targetId ? folder.targetId : folder.id;
+        const panelId = `accordion-${folderId}`;
+        let panel = document.getElementById(panelId);
+        if (panel) { panel.remove(); return; }
+        const files = await ShareFiles.peekFolder(folder);
+        panel = document.createElement('div');
+        panel.className = 'accordion-section';
+        panel.id = panelId;
+        panel.innerHTML = `<div class="accordion-title"><i class="fas fa-folder-open mr-1"></i> ${folder.name} <span class="text-slate-500 font-normal">(${files.length})</span></div><div class="accordion-grid"></div>`;
+        container.appendChild(panel);
+        const gridEl = panel.querySelector('.accordion-grid');
+        for (const f of files) {
+          const card = document.createElement('div');
+          card.className = 'file-card';
+          card.style.cursor = 'pointer';
+          const thumb = document.createElement('div'); thumb.className = 'file-thumb';
+          if (f.thumbUrl || f.thumbnailLink) {
+            const img = document.createElement('img'); img.src = f.thumbUrl || f.thumbnailLink; img.loading = 'lazy'; img.style.width = '100%'; img.style.height = '100%'; img.style.objectFit = 'cover'; thumb.appendChild(img);
+          } else {
+            thumb.innerHTML = `<i class=\"${f.icon || 'fas fa-file'}\"></i>`;
+            const isFolderCandidate = f.isFolder || (f.mimeType || '') === 'application/vnd.google-apps.folder' || (f.isShortcut && f.targetMimeType === 'application/vnd.google-apps.folder');
+            if (isFolderCandidate) { ensureFolderCover(f, thumb); }
+          }
+          const meta = document.createElement('div');
+          meta.style.flex = '1';
+          meta.innerHTML = `<div class=\"file-name\">${f.name}</div><div class=\"file-meta\">${f.mimeType}</div>`;
+          card.appendChild(thumb);
+          card.appendChild(meta);
+          const actions = document.createElement('div');
+          actions.className = 'flex gap-2';
+          const btnOpen = document.createElement('button'); btnOpen.className = 'action-btn'; btnOpen.innerHTML = '<i class=\"fas fa-eye\"></i> Open'; btnOpen.onclick = () => ShareFiles.openFile(f);
+          const btnCopy = document.createElement('button'); btnCopy.className = 'action-btn'; btnCopy.innerHTML = '<i class=\"fas fa-copy\"></i> Copy Link'; btnCopy.onclick = () => ShareFiles.copyLink(f);
+          actions.appendChild(btnOpen); actions.appendChild(btnCopy);
+          card.appendChild(actions);
+          card.onclick = () => ShareFiles.openFile(f);
+          gridEl.appendChild(card);
+        }
+      }
+
+      // Render breadcrumbs from path array [{id,name}, ...]
+      function renderBreadcrumbs(path) {
+        const el = document.getElementById('embed-breadcrumbs-list');
+        if (!el) return;
+        el.innerHTML = '';
+        if (!path || !path.length) return;
+        path.forEach((seg, idx) => {
+          const item = document.createElement('span');
+          item.className = 'breadcrumb-item';
+          item.innerHTML = `<i class=\"fas fa-folder\"></i> ${seg.name || 'Folder'}`;
+          item.onclick = () => ShareFiles.goToPath(idx);
+          el.appendChild(item);
+          if (idx < path.length - 1) {
+            const sep = document.createElement('span');
+            sep.className = 'breadcrumb-sep';
+            sep.innerHTML = '<i class=\"fas fa-angle-right\"></i>';
+            el.appendChild(sep);
+          }
+        });
+      }
+
+      // Ensure embedded folder view is set immediately
+
+
+
+
+      if (window.ShareFiles) {
+        ShareFiles.init({
+          onAuthChanged: (state) => {
+            const el = document.getElementById('auth-status');
+            if (el) {
+              el.textContent = state ? `Authorized as ${state.email || 'Google user'}` : 'Not authorized';
+              el.style.background = state ? '#ecfdf5' : '#eef2ff';
+              el.style.color = state ? '#065f46' : '#4338ca';
+            }
+          },
+          onFolderChanged: () => {
+            /* no-op: embed view removed */
+          },
+          onFileOpen: (file) => { openViewer(file); },
+          onPathChanged: () => { /* no-op: embed view removed */ },
+          renderFiles: (files) => {
+
+            // Render main explorer in list format
+            const grid = document.getElementById('files-grid');
+            const empty = document.getElementById('empty-state');
+            if (!grid || !empty) return;
+            grid.innerHTML = '';
+            if (!files || !files.length) { empty.style.display = 'block'; empty.textContent = 'No files found in this folder. If the folder is private, click Authorize to access it.'; return; } else { empty.style.display = 'none'; }
+
+            const table = document.createElement('div');
+            table.className = 'list-table';
+            const header = document.createElement('div');
+            header.className = 'list-header';
+            header.innerHTML = `
+              <div class="list-cell">Name</div>
+              <div class="list-cell">Type</div>
+              <div class="list-cell">Size</div>
+              <div class="list-cell" style="text-align:right;">Actions</div>
+            `;
+            table.appendChild(header);
+
+            for (const f of files) {
+              const row = document.createElement('div');
+              row.className = 'list-row';
+
+              // Name cell with icon/thumbnail
+              const nameCell = document.createElement('div');
+              nameCell.className = 'list-cell';
+              const nameWrap = document.createElement('div');
+              nameWrap.className = 'list-name';
+              const thumb = document.createElement('div'); thumb.className = 'file-thumb';
+              if (f.thumbUrl || f.thumbnailLink) {
+                const img = document.createElement('img'); img.src = f.thumbUrl || f.thumbnailLink; img.loading = 'lazy'; img.style.width = '100%'; img.style.height = '100%'; img.style.objectFit = 'cover'; thumb.appendChild(img);
+              } else {
+                const targetMime = (f.isShortcut && f.targetMimeType) ? f.targetMimeType : (f.mimeType || '');
+                const isImageCandidate = targetMime.startsWith('image/');
+                if (isImageCandidate) {
+                  const targetId = (f.isShortcut && f.targetId) ? f.targetId : f.id;
+                  const directUrl = `https://drive.google.com/uc?export=view&id=${targetId}`;
+                  const img = document.createElement('img');
+                  img.src = directUrl; img.loading = 'lazy'; img.style.width = '100%'; img.style.height = '100%'; img.style.objectFit = 'cover';
+                  img.onerror = async () => {
+                    try {
+                      if (window.ShareFiles && ShareFiles.authorize) { await ShareFiles.authorize(); }
+                      const accessToken = (window.ShareFiles && ShareFiles.getAccessToken && ShareFiles.getAccessToken()) || null;
+                      if (!accessToken) return;
+                      const resp = await fetch(`https://www.googleapis.com/drive/v3/files/${targetId}?alt=media`, {
+                        headers: { Authorization: `Bearer ${accessToken}` }
+                      });
+                      if (!resp.ok) return;
+                      const blob = await resp.blob();
+                      const objectUrl = URL.createObjectURL(blob);
+                      img.src = objectUrl;
+                    } catch (_) { /* ignore */ }
+                  };
+                  thumb.appendChild(img);
+                } else {
+                  thumb.innerHTML = `<i class="${f.icon || 'fas fa-file'}"></i>`;
+                  const isFolderCandidate = f.isFolder || (f.mimeType || '') === 'application/vnd.google-apps.folder' || (f.isShortcut && f.targetMimeType === 'application/vnd.google-apps.folder');
+                  if (isFolderCandidate) { ensureFolderCover(f, thumb); }
+                }
+              }
+              const nameText = document.createElement('span');
+              nameText.textContent = f.name;
+              nameWrap.appendChild(thumb);
+              nameWrap.appendChild(nameText);
+              nameWrap.onclick = () => { ShareFiles.openFile(f); };
+              nameCell.appendChild(nameWrap);
+
+              // Type cell
+              const typeCell = document.createElement('div');
+              typeCell.className = 'list-cell';
+              const isFolder = f.isFolder || (f.mimeType || '') === 'application/vnd.google-apps.folder' || (f.isShortcut && f.targetMimeType === 'application/vnd.google-apps.folder');
+              typeCell.textContent = isFolder ? 'Folder' : (f.mimeType || '');
+
+              // Size cell
+              const sizeCell = document.createElement('div');
+              sizeCell.className = 'list-cell';
+              sizeCell.textContent = isFolder ? '' : (f.sizeHuman || '');
+
+              // Actions cell
+              const actionsCell = document.createElement('div');
+              actionsCell.className = 'list-cell';
+              const actions = document.createElement('div');
+              actions.className = 'list-actions';
+              const btnOpen = document.createElement('button'); btnOpen.className = 'action-btn'; btnOpen.innerHTML = '<i class="fas fa-eye"></i> Open'; btnOpen.onclick = () => {
+                ShareFiles.openFile(f);
+              };
+              const btnShare = document.createElement('button'); btnShare.className = 'action-btn'; btnShare.innerHTML = '<i class="fas fa-share"></i> Share'; btnShare.onclick = () => ShareFiles.shareFile(f);
+              const btnCopy = document.createElement('button'); btnCopy.className = 'action-btn'; btnCopy.innerHTML = '<i class="fas fa-copy"></i> Copy Link'; btnCopy.onclick = () => ShareFiles.copyLink(f);
+              actions.appendChild(btnOpen);
+              actions.appendChild(btnShare);
+              actions.appendChild(btnCopy);
+              actionsCell.appendChild(actions);
+
+              row.appendChild(nameCell);
+              row.appendChild(typeCell);
+              row.appendChild(sizeCell);
+              row.appendChild(actionsCell);
+
+              table.appendChild(row);
+            }
+
+            grid.appendChild(table);
+          }
+        });
+      }
+      const backBtn = document.getElementById('btn-back');
+      if (backBtn) backBtn.onclick = () => ShareFiles.goBack();
+      const authBtn = document.getElementById('btn-auth');
+      if (authBtn) authBtn.onclick = async () => {
+        const status = document.getElementById('auth-status');
+        try {
+          if (status) { status.textContent = 'Authorizing…'; status.style.background = '#fff7ed'; status.style.color = '#92400e'; }
+          await ShareFiles.authorize();
+          if (status) { status.textContent = 'Authorized'; status.style.background = '#ecfdf5'; status.style.color = '#065f46'; }
+          await ShareFiles.loadFiles();
+        } catch (e) {
+          const msg = (e && (e.details || e.error || e.message)) ? (e.details || e.error || e.message) : 'Authorization failed';
+          const isOrigin = /origin/i.test(msg) || /idpiframe_initialization_failed/i.test(msg) || /not\s+a\s+valid\s+origin/i.test(msg);
+          if (isOrigin) {
+            if (status) { status.textContent = 'Origin not whitelisted. Showing public view if available…'; status.style.background = '#fff7ed'; status.style.color = '#92400e'; }
+            try { await ShareFiles.loadFiles(); } catch (_) { }
+          } else {
+            if (status) { status.textContent = `Auth error: ${msg}`; status.style.background = '#fee2e2'; status.style.color = '#991b1b'; }
+            alert(msg);
+          }
+        }
+      };
+      const refreshBtn = document.getElementById('btn-refresh');
+      if (refreshBtn) refreshBtn.onclick = () => ShareFiles.loadFiles();
+      const openBtn = document.getElementById('btn-open-folder');
+      if (openBtn) openBtn.onclick = () => {
+        const rootId = (window.GoogleDriveConfig && window.GoogleDriveConfig.FOLDER_ID) || null;
+        if (!rootId) return;
+        const fakeFolder = { id: rootId, name: 'Root Folder', mimeType: 'application/vnd.google-apps.folder', isFolder: true };
+        ShareFiles.openFile(fakeFolder);
+      };
+      const searchInput = document.getElementById('search-input');
+      if (searchInput) searchInput.oninput = (e) => ShareFiles.search(e.target.value);
+      const typeFilter = document.getElementById('type-filter');
+      if (typeFilter) typeFilter.onchange = (e) => ShareFiles.filterType(e.target.value);
+
+      if (currentEmbedFolderId) { setEmbedFolder(currentEmbedFolderId); }
+    });
+  </script>
+
+  <script>
+    function toggleMobileMenu() {
+      const hamburger = document.querySelector('.hamburger-menu');
+      const mobileMenu = document.querySelector('.mobile-menu');
+      if (!hamburger || !mobileMenu) return;
+      hamburger.classList.toggle('active');
+      mobileMenu.classList.toggle('active');
+    }
+    // Close mobile menu when clicking outside
+    document.addEventListener('click', function (event) {
+      const hamburger = document.querySelector('.hamburger-menu');
+      const mobileMenu = document.querySelector('.mobile-menu');
+      if (!hamburger || !mobileMenu) return;
+      if (!hamburger.contains(event.target) && !mobileMenu.contains(event.target)) {
+        hamburger.classList.remove('active');
+        mobileMenu.classList.remove('active');
+      }
+    });
+  </script>
+</body>
+
+</html>

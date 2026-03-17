@@ -267,9 +267,14 @@ class FirebaseDatabase {
     }
 
     try {
+        const cu = this.getCurrentUser ? this.getCurrentUser() : null;
+        const createdByUid = cu && cu.uid ? cu.uid : null;
+        const createdByEmail = cu && cu.email ? cu.email : null;
         // Ensure consistent timestamp handling
         const processedQuoteData = {
             ...quoteData,
+            createdByUid,
+            createdByEmail,
             createdAt: quoteData.createdAt ? quoteData.createdAt : firebase.firestore.FieldValue.serverTimestamp(),
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         };
@@ -308,9 +313,14 @@ class FirebaseDatabase {
     }
 
     try {
+        const cu = this.getCurrentUser ? this.getCurrentUser() : null;
+        const createdByUid = cu && cu.uid ? cu.uid : null;
+        const createdByEmail = cu && cu.email ? cu.email : null;
         // Ensure consistent timestamp handling
         const processedOrderData = {
             ...orderData,
+            createdByUid,
+            createdByEmail,
             createdAt: orderData.createdAt ? orderData.createdAt : firebase.firestore.FieldValue.serverTimestamp(),
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         };
@@ -337,7 +347,14 @@ class FirebaseDatabase {
     }
 
     try {
-        const orderId = await this.saveOrder(orderData);
+        const cu = this.getCurrentUser ? this.getCurrentUser() : null;
+        const convertedByUid = cu && cu.uid ? cu.uid : null;
+        const convertedByEmail = cu && cu.email ? cu.email : null;
+        const orderId = await this.saveOrder({
+          ...orderData,
+          convertedByUid,
+          convertedByEmail
+        });
         
         try {
             await deleteDoc(doc(this.db, 'quotes', quoteId));
@@ -501,7 +518,7 @@ class FirebaseDatabase {
       const sheetData = this.formatClientForGoogleSheets(clientData);
       
       const response = await fetch(
-        `https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SHEET_ID}/values/clients:append?valueInputOption=RAW&key=${API_KEY}`,
+        `https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SHEET_ID}/values/Clients!A:M:append?valueInputOption=RAW&key=${API_KEY}`,
         {
           method: 'POST',
           headers: {
@@ -545,7 +562,7 @@ class FirebaseDatabase {
       
       // Clear existing data and update with new data
       const response = await fetch(
-        `https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SHEET_ID}/values/clients!A2:L?valueInputOption=RAW&key=${API_KEY}`,
+        `https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SHEET_ID}/values/Clients!A2:M?valueInputOption=RAW&key=${API_KEY}`,
         {
           method: 'PUT',
           headers: {
@@ -572,28 +589,60 @@ class FirebaseDatabase {
   // Create client headers in Google Sheets
   async createClientHeaders() {
     try {
+      // Prefer using the dedicated Google Sheets integration if available
+      if (window.googleSheetsFetch) {
+        const ok = await window.googleSheetsFetch.createClientHeaders();
+        if (!ok) throw new Error('Failed to create client headers via Fetch API');
+        return true;
+      } else if (window.googleSheets && typeof window.googleSheets.createClientHeaders === 'function') {
+        const ok = await window.googleSheets.createClientHeaders();
+        if (!ok) throw new Error('Failed to create client headers via gapi');
+        return true;
+      }
+
+      // Fallback: write canonical client headers directly via REST API
+      const GOOGLE_SHEET_ID = '199EnMjmbc6idiOLnaEs8diG8h9vNHhkSH3xK4cyPrsU';
+      const API_KEY = (typeof process !== 'undefined' && process.env) ? 
+                      process.env.GOOGLE_SHEETS_API_KEY || 'YOUR_GOOGLE_SHEETS_API_KEY' :
+                      window.GOOGLE_SHEETS_API_KEY || 'YOUR_GOOGLE_SHEETS_API_KEY';
+
+      if (API_KEY === 'YOUR_GOOGLE_SHEETS_API_KEY') {
+        throw new Error('Google Sheets API key not configured');
+      }
+
       const headers = [
-        'Client ID', 'Client Name', 'Company', 'Contact Person', 'Phone', 'Email', 
-        'Address', 'City', 'State', 'Postal Code', 'Country', 'GST Number', 
-        'PAN Number', 'Credit Limit', 'Payment Terms', 'Salesman', 'Notes', 
-        'Created Date', 'Updated Date'
+        'Client Code',
+        'Company Name',
+        'Contact Person',
+        'Phone',
+        'Email',
+        'Address',
+        'GST Number',
+        'PAN Number',
+        'Credit Limit',
+        'Payment Terms',
+        'Salesman Code',
+        'Created Date',
+        'Status'
       ];
 
-      const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${window.GOOGLE_SHEETS_CONFIG.spreadsheetId}/values/Clients!A1:S1?valueInputOption=RAW&key=${window.GOOGLE_SHEETS_CONFIG.apiKey}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          values: [headers]
-        })
-      });
+      const response = await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SHEET_ID}/values/Clients!A1:M1?valueInputOption=RAW&key=${API_KEY}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ values: [headers] })
+        }
+      );
 
-      if (response.ok) {
-        const result = await response.json();
-      } else {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Google Sheets API error: ${response.status} - ${errorText}`);
       }
+      await response.json();
+      return true;
     } catch (error) {
       throw error;
     }
@@ -601,20 +650,35 @@ class FirebaseDatabase {
 
   // Format client data for Google Sheets
   formatClientForGoogleSheets(clientData) {
+    const now = new Date();
     return [
-      clientData.id || '',
-      clientData.clientName || '',
-      clientData.companyName || '',
-      clientData.phone1 || '',
-      clientData.phone2 || '',
+      clientData.clientCode || clientData.code || clientData.id || '',
+      clientData.companyName || clientData.company || '',
+      clientData.contactPerson || clientData.clientName || clientData.name || '',
+      clientData.phone || clientData.phone1 || clientData.phone2 || '',
       clientData.email || '',
-      clientData.address?.line1 || '',
-      clientData.address?.line2 || '',
-      clientData.address?.city || '',
-      clientData.address?.state || '',
-      clientData.address?.postalCode || '',
-      clientData.address?.country || ''
+      this.formatAddressForGoogleSheets(clientData.address || {}),
+      clientData.gstNumber || clientData.gst || '',
+      clientData.panNumber || clientData.pan || '',
+      clientData.creditLimit != null ? clientData.creditLimit : 0,
+      clientData.paymentTerms || '',
+      clientData.salesmanCode || clientData.salesman || '',
+      now.toISOString().split('T')[0],
+      clientData.status || 'Active'
     ];
+  }
+
+  // Helper to join address into a single field for Sheets
+  formatAddressForGoogleSheets(address) {
+    const parts = [
+      address.line1 || address.street || '',
+      address.line2 || '',
+      address.city || '',
+      address.state || '',
+      address.postalCode || address.pincode || '',
+      address.country || ''
+    ].filter(part => typeof part === 'string' && part.trim() !== '');
+    return parts.join(', ');
   }
 
   async getQuotes(filters = {}) {

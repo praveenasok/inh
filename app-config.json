@@ -31,6 +31,13 @@
         "description": "Price calculation and list generation",
         "status": "active",
         "priority": 4
+      },
+      {
+        "file": "share-files.html",
+        "name": "Share Files",
+        "description": "Browse and share files from Google Drive folder",
+        "status": "active",
+        "priority": 5
       }
     ],
     "dormantFiles": [
@@ -96,7 +103,8 @@
       "/quote": "quotemaker.html",
       "/catalog": "product-catalog.html",
       "/admin": "admin-panel.html",
-      "/calculator": "price-calculator.html"
+      "/calculator": "price-calculator.html",
+      "/share": "share-files.html"
     }
   }
 }

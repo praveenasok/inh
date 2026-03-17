@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hair Ratio Mixer | Premium Edition</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=3.6">
+    <link rel="stylesheet" href="../styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!-- Tailwind and FontAwesome for Navigation -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    
+    <!-- Firebase configuration and helpers -->
+    <script src="../firebase-config.js"></script>
+    <script src="../firebase-global-init.js"></script>
+    <style>
+        /* Preserve Ratio Mixer specific styles from Tailwind Preflight reset */
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
+            font-size: revert;
+            font-weight: revert;
+        }
+
+        button {
+            background-color: transparent;
+            background-image: none;
+        }
+
+        /* Navigation link styles */
+        .nav-btn {
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 48px;
+            padding: 12px 16px;
+            font-weight: 500;
+            cursor: pointer;
+            touch-action: manipulation;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            border: 2px solid #e2e8f0;
+            box-shadow: 0 4px 12px rgba(71, 85, 105, 0.15);
+        }
+
+        .nav-btn:hover {
+            text-decoration: none;
+            background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+            border-color: #cbd5e1;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(71, 85, 105, 0.2);
+        }
+
+        .nav-btn.nav-btn-active {
+            background: #081249;
+            color: white !important;
+            border: 2px solid #081249;
+            box-shadow: 0 4px 12px rgba(8, 18, 73, 0.3);
+        }
+
+        .nav-btn.nav-btn-active:hover {
+            background: #0a1555;
+            border-color: #0a1555;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(8, 18, 73, 0.4);
+        }
+    </style>
+</head>
+
+<body class="min-h-screen bg-gradient-to-br from-amber-50 via-rose-50 to-orange-100 text-slate-800">
+    <!-- Standard Desktop Navigation -->
+    <!-- Standard Desktop Navigation -->
+    <!-- Navigation -->
+    <script>window.navConfig = { siteTitle: 'Ratio Mixer' };</script>
+    <script src="../js/navigation-loader.js?v=2.1"></script>
+    <div class="app-container" style="padding-top: 0;">
+        <header class="app-header">
+            <h1 class="logo">Ratio<span class="highlight">Mixer</span></h1>
+            <nav class="main-nav">
+                <button class="nav-tab active" data-tab="mixer">Ratio Mixer</button>
+                <button class="nav-tab" data-tab="suppliers">Supplier Management</button>
+                <button class="nav-tab" data-tab="ratios">Saved Ratios</button>
+                <button class="nav-tab" data-tab="pricelists">Saved Price Lists</button>
+            </nav>
+        </header>
+
+        <!-- MIXER TAB -->
+        <div id="mixer-view" class="view-section active">
+            <section class="meta-data-section">
+                <!-- Group 1: Setup -->
+                <div class="input-container">
+                    <div class="input-group">
+                        <label for="supplierSelect">Supplier</label>
+                        <select id="supplierSelect">
+                            <option value="">Select a Supplier</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label for="clientSelect">Load Saved Ratios</label>
+                        <select id="clientSelect">
+                            <option value="">-- Load Ratio --</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Group 2: Pricing Factors -->
+                <div class="input-container pricing-factors">
+                    <div class="input-group">
+                        <label for="wastageInput">BulkToMR Wastage %</label>
+                        <input type="number" id="wastageInput" placeholder="0" value="0">
+                    </div>
+                    <div class="input-group">
+                        <label for="machineRemyInput">MR/Washing Charge</label>
+                        <input type="number" id="machineRemyInput" placeholder="2500" value="2500">
+                    </div>
+                    <!-- Wefting Inputs -->
+                    <div class="input-group">
+                        <label for="weftingWastageInput">Wefting Wastage %</label>
+                        <input type="number" id="weftingWastageInput" placeholder="0" value="">
+                    </div>
+                    <div class="input-group">
+                        <label for="weftingChargeInput">Wefting Charge</label>
+                        <input type="number" id="weftingChargeInput" placeholder="0" value="">
+                    </div>
+                    <div class="input-group">
+                        <label for="marginInput">Margin %</label>
+                        <input type="number" id="marginInput" placeholder="0" value="0">
+                    </div>
+                    <!-- Currency Inputs -->
+                    <div class="input-group">
+                        <label for="currencySelect">Currency</label>
+                        <select id="currencySelect">
+                            <option value="INR">INR (₹)</option>
+                            <option value="USD">USD ($)</option>
+                            <option value="EUR">EUR (€)</option>
+                            <option value="NGN">Naira (₦)</option>
+                            <option value="CAD">CAD ($)</option>
+                            <option value="AUD">AUD ($)</option>
+                            <option value="AED">AED (د.إ)</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label for="exchangeRateInput">Exchange Rate</label>
+                        <input type="number" id="exchangeRateInput" placeholder="1" value="1" step="0.01">
+                    </div>
+                </div>
+
+
+
+
+                <!-- Group 4: Ratio & Export -->
+                <div class="input-container">
+                    <div class="input-group">
+                        <label for="clientName">Ratio Name</label>
+                        <div class="client-controls">
+                            <input type="text" id="clientName" placeholder="e.g. 70-30 Mix">
+                            <button id="saveClientBtn" class="btn btn-icon" title="Save Ratio">💾</button>
+                            <button id="deleteClientBtn" class="btn btn-icon btn-danger hidden"
+                                title="Delete Ratio">🗑️</button>
+                        </div>
+                        <!-- Legacy Migration Button (Hidden by default) -->
+
+
+
+
+                    </div>
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        <button id="downloadBtn" class="btn btn-primary">Download Price List</button>
+                        <button id="multiExportBtn" class="btn btn-secondary">Multi-Export</button>
+                    </div>
+                </div>
+            </section>
+
+            <div class="action-bar">
+                <button id="resetMixerBtn" class="btn btn-secondary">Reset Matrix</button>
+            </div>
+
+            <main class="table-wrapper">
+                <div class="table-scroll-container">
+                    <table id="ratioTable">
+                        <thead>
+                            <tr>
+                                <th class="sticky-col-1">Raw Material Price</th>
+                                <th class="sticky-col-2">Raw Length</th>
+                                <!-- Dynamic Columns will be injected here -->
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            <!-- Dynamic Rows will be injected here -->
+                        </tbody>
+                        <tfoot id="tableFooter">
+                            <tr class="total-row">
+                                <td class="sticky-col-1" colspan="2">Total Percentage</td>
+                                <!-- Dynamic Totals -->
+                            </tr>
+                            <tr class="wastage-row">
+                                <td class="sticky-col-1" colspan="2">Wastage Cost</td>
+                                <!-- Dynamic Wastage -->
+                            </tr>
+                            <tr class="machine-row">
+                                <td class="sticky-col-1" colspan="2">MR + Washing Charge</td>
+                                <!-- Dynamic Machine -->
+                            </tr>
+                            <!-- Wefting Rows (Conditional) -->
+                            <tr class="wefting-wastage-row hidden">
+                                <td class="sticky-col-1" colspan="2">Wefting Wastage</td>
+                                <!-- Dynamic Wefting Wastage -->
+                            </tr>
+                            <tr class="wefting-charge-row hidden">
+                                <td class="sticky-col-1" colspan="2">Wefting Charge</td>
+                                <!-- Dynamic Wefting Charge -->
+                            </tr>
+                            <tr class="margin-row">
+                                <td class="sticky-col-1" colspan="2">Margin Value</td>
+                                <!-- Dynamic Margin -->
+                            </tr>
+                            <tr class="price-row">
+                                <td class="sticky-col-1 label-cell" colspan="2">Total Price Per Kg</td>
+                                <!-- Dynamic Prices -->
+                            </tr>
+                            <tr class="rounded-price-row">
+                                <td class="sticky-col-1 label-cell" colspan="2">Rounded Total (to 50)</td>
+                                <!-- Dynamic Rounded Prices -->
+                            </tr>
+                            <tr class="converted-price-row">
+                                <td class="sticky-col-1 label-cell" colspan="2">Price in <span
+                                        id="currencyCodeDisplay">INR</span></td>
+                                <!-- Dynamic Converted Prices -->
+                            </tr>
+                            <tr id="custom-price-row" class="hidden">
+                                <td class="sticky-col-1 label-cell" colspan="2" style="background-color: #f1f5f9; color: #081249;">Custom Output Price</td>
+                                <!-- Dynamic Custom Price inputs injected by JS -->
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </main>
+
+            <!-- Group 3: Price List Management (Bottom placement) -->
+            <section class="meta-data-section" style="margin-top: 20px;">
+                <div class="input-container price-management-section" style="flex-direction: row; align-items: flex-end;">
+                    <div class="input-group" style="flex: 1; margin: 0;">
+                        <label for="priceListSelect" style="text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; margin-bottom: 6px;">Load Price List</label>
+                        <select id="priceListSelect" style="height: 38px; padding: 0 12px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 13px; color: #334155; width: 100%; box-sizing: border-box;">
+                            <option value="">-- Load Price List --</option>
+                        </select>
+                    </div>
+                    <div class="input-group" style="flex: 2; margin: 0;">
+                        <label for="priceListName" style="text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; margin-bottom: 6px;">Price List Name</label>
+                        <div class="client-controls" style="display: flex; gap: 8px; align-items: center;">
+                            <input type="text" id="priceListName" placeholder="e.g. Summer Sale 2026" style="flex: 1; height: 38px; padding: 0 12px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 13px; min-width: 0; box-sizing: border-box;">
+                            <button id="savePriceListBtn" class="btn btn-icon" title="Save Full Price List" style="height: 38px; width: 38px; border-radius: 6px; display: flex; align-items: center; justify-content: center; background: #e2e8f0; border: 1px solid #cbd5e1; color: #334155; padding: 0; transition: all 0.2s;"><i class="fa-solid fa-floppy-disk"></i></button>
+                            <button id="deletePriceListBtn" class="btn btn-icon btn-danger hidden" title="Delete Price List" style="height: 38px; width: 38px; border-radius: 6px; display: flex; align-items: center; justify-content: center; padding: 0;"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </div>
+                    <div class="input-group" style="margin: 0 0 0 10px; display: flex; align-items: center; flex-direction: row; gap: 8px; height: 38px;">
+                        <input type="checkbox" id="customizePricesCheckbox" style="cursor: pointer; width: 18px; height: 18px; accent-color: #4f46e5; margin: 0;" />
+                        <label for="customizePricesCheckbox" style="font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer; white-space: nowrap; color: #334155; margin: 0; height: 18px; line-height: 18px;">Customize Prices</label>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- SUPPLIER MANAGEMENT TAB -->
+        <div id="suppliers-view" class="view-section">
+            <div class="mgmt-container">
+                <aside class="supplier-list-panel">
+                    <h3>Suppliers</h3>
+                    <ul id="supplierList">
+                        <!-- List populated by JS -->
+                    </ul>
+                    <button id="newSupplierBtn" class="btn btn-secondary full-width">+ New Supplier</button>
+                </aside>
+
+                <div class="supplier-editor">
+                    <div class="editor-header">
+                        <div class="input-group">
+                            <label>Supplier Name</label>
+                            <input type="text" id="editSupplierName" placeholder="Enter Supplier Name">
+                        </div>
+                        <div class="editor-actions">
+                            <button id="deleteSupplierBtn" class="btn btn-danger hidden">Delete</button>
+                            <button id="saveSupplierBtn" class="btn btn-primary">Save Supplier</button>
+                        </div>
+                    </div>
+
+                    <div class="price-grid-wrapper">
+                        <h4>Raw Material Price List</h4>
+                        <div class="table-scroll-container">
+                            <table class="supplier-price-table">
+                                <thead>
+                                    <tr>
+                                        <th>Length</th>
+                                        <th>Price</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="supplierPriceBody">
+                                    <!-- Generated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+        <!-- SAVED RATIOS TAB -->
+        <div id="ratios-view" class="view-section">
+            <div class="mgmt-container" style="display: block; padding: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 class="text-2xl font-bold text-slate-800">Saved Ratios / Client Matrices</h2>
+                    <span class="badge badge-indigo" id="savedRatioCount">0 Presets</span>
+                </div>
+
+                <div class="table-container shadow-sm border border-slate-200 bg-white rounded-xl">
+                    <table class="w-full text-left border-collapse custom-table">
+                        <thead class="bg-slate-50 border-b border-slate-200">
+                            <tr>
+                                <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Ratio Name /
+                                    Client</th>
+                                <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Date Created /
+                                    Modified</th>
+                                <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">
+                                    Actions
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="savedRatiosTableBody" class="divide-y divide-slate-100">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            </div>
+        </div>
+
+        <!-- SAVED PRICE LISTS TAB -->
+        <div id="pricelists-view" class="view-section">
+            <div class="mgmt-container" style="display: block; padding: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 class="text-2xl font-bold text-slate-800">Saved Price Lists</h2>
+                </div>
+
+                <div class="table-container shadow-sm border border-slate-200 bg-white rounded-xl">
+                    <table class="w-full text-left border-collapse custom-table">
+                        <thead class="bg-slate-50 border-b border-slate-200">
+                            <tr>
+                                <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">List Name</th>
+                                <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Details</th>
+                                <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="savedPriceListsTableBody" class="divide-y divide-slate-100">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    </div>
+
+    <!-- Multi-Export Modal -->
+    <div id="multiExportModal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h3>Select Price Lists to Compare</h3>
+            <div class="client-list-scroll" id="multiExportList">
+                <!-- Checkboxes injected here -->
+            </div>
+            <div class="modal-actions">
+                <button id="closeMultiExportBtn" class="btn btn-secondary">Cancel</button>
+                <button id="generateMultiExportBtn" class="btn btn-primary">Generate Comparison</button>
+            </div>
+        </div>
+    </div>
+
+    </div>
+
+    <script src="script.js?v=3.1"></script>
+    <script>
+        function toggleMobileMenu() {
+            const hamburger = document.querySelector('.hamburger-menu');
+            const mobileMenu = document.querySelector('.mobile-menu');
+            if (!hamburger || !mobileMenu) return;
+            hamburger.classList.toggle('active');
+            mobileMenu.classList.toggle('active');
+        }
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', function (event) {
+            const hamburger = document.querySelector('.hamburger-menu');
+            const mobileMenu = document.querySelector('.mobile-menu');
+            if (!hamburger || !mobileMenu) return;
+            if (!hamburger.contains(event.target) && !mobileMenu.contains(event.target)) {
+                hamburger.classList.remove('active');
+                mobileMenu.classList.remove('active');
+            }
+        });
+    </script>
+</body>
+
+</html>

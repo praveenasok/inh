@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>instaQuote Suite</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="unified-button-system.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
+</head>
+
+<body class="min-h-screen bg-gradient-to-br from-amber-50 via-rose-50 to-orange-100">
+  <!-- Navigation -->
+  <script src="js/navigation-loader.js"></script>
+
+  <header class="bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+        <div>
+          <h1 class="text-2xl md:text-3xl font-bold text-slate-900">Welcome to instaQuote</h1>
+          <p class="mt-2 text-slate-600">A unified suite for quoting, catalogs, price lists, admin dashboards, orders,
+            and file sharing.</p>
+        </div>
+        <div class="flex gap-3">
+          <a class="nav-btn" href="login.html"><i class="fas fa-user"></i> Login</a>
+          <a class="nav-btn" href="quotemaker.html"><i class="fas fa-bolt"></i> Start Quoting</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <a href="quotemaker.html" class="block bg-white rounded-xl shadow-soft p-5 hover:shadow-lg transition">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center"><i
+              class="fas fa-file-invoice-dollar"></i></div>
+          <div>
+            <div class="font-semibold text-slate-900">Quote Maker</div>
+            <div class="text-sm text-slate-600">Create and export quotes with jsPDF and html2canvas.</div>
+          </div>
+        </div>
+      </a>
+      <a href="shipping-calculator/index.html"
+        class="block bg-white rounded-xl shadow-soft p-5 hover:shadow-lg transition">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center"><i
+              class="fas fa-truck"></i></div>
+          <div>
+            <div class="font-semibold text-slate-900">Shipping Calculator</div>
+            <div class="text-sm text-slate-600">Calculate shipping rates.</div>
+          </div>
+        </div>
+      </a>
+      <a href="productcatalog.html" class="block bg-white rounded-xl shadow-soft p-5 hover:shadow-lg transition">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-teal-100 text-teal-700 flex items-center justify-center"><i
+              class="fas fa-th-large"></i></div>
+          <div>
+            <div class="font-semibold text-slate-900">Product Catalog</div>
+            <div class="text-sm text-slate-600">Browse products backed by local-first INHDATA.</div>
+          </div>
+        </div>
+      </a>
+      <a href="pricelists.html" class="block bg-white rounded-xl shadow-soft p-5 hover:shadow-lg transition">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center"><i
+              class="fas fa-calculator"></i></div>
+          <div>
+            <div class="font-semibold text-slate-900">Price Lists</div>
+            <div class="text-sm text-slate-600">Calculate pricing using cached data and Firestore sync.</div>
+          </div>
+        </div>
+      </a>
+      <a href="adminpanel.html" class="block bg-white rounded-xl shadow-soft p-5 hover:shadow-lg transition">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center"><i
+              class="fas fa-cog"></i></div>
+          <div>
+            <div class="font-semibold text-slate-900">Admin Panel</div>
+            <div class="text-sm text-slate-600">Manage data with Firebase adapter and Chart.js.</div>
+          </div>
+        </div>
+      </a>
+      <a href="orders.html" class="block bg-white rounded-xl shadow-soft p-5 hover:shadow-lg transition">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center"><i
+              class="fas fa-list"></i></div>
+          <div>
+            <div class="font-semibold text-slate-900">Orders</div>
+            <div class="text-sm text-slate-600">View and filter orders connected to Firestore.</div>
+          </div>
+        </div>
+      </a>
+      <a href="inh-ratio-mix/index.html" class="block bg-white rounded-xl shadow-soft p-5 hover:shadow-lg transition">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-pink-100 text-pink-700 flex items-center justify-center"><i
+              class="fas fa-balance-scale"></i></div>
+          <div>
+            <div class="font-semibold text-slate-900">Ratio Mixer</div>
+            <div class="text-sm text-slate-600">Calculate hair ratios and blends.</div>
+          </div>
+        </div>
+      </a>
+      <a href="raw-manufacturing-order.html" class="block bg-white rounded-xl shadow-soft p-5 hover:shadow-lg transition">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-orange-100 text-orange-700 flex items-center justify-center"><i
+              class="fas fa-industry"></i></div>
+          <div>
+            <div class="font-semibold text-slate-900">Manufacturing Order</div>
+            <div class="text-sm text-slate-600">Calculate output yields from ratio templates.</div>
+          </div>
+        </div>
+      </a>
+      <a href="share-files.html" class="block bg-white rounded-xl shadow-soft p-5 hover:shadow-lg transition">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-rose-100 text-rose-700 flex items-center justify-center"><i
+              class="fas fa-share-alt"></i></div>
+          <div>
+            <div class="font-semibold text-slate-900">Share Files</div>
+            <div class="text-sm text-slate-600">Browse and share Google Drive files.</div>
+          </div>
+        </div>
+      </a>
+      <a href="google-sheets-config-interface.html"
+        class="block bg-white rounded-xl shadow-soft p-5 hover:shadow-lg transition">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-lime-100 text-lime-700 flex items-center justify-center"><i
+              class="fas fa-table"></i></div>
+          <div>
+            <div class="font-semibold text-slate-900">Sheets Config</div>
+            <div class="text-sm text-slate-600">Configure Google Sheets integrations.</div>
+          </div>
+        </div>
+      </a>
+    </section>
+
+    <section class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div class="bg-white rounded-xl shadow-soft p-6">
+        <div class="font-semibold text-slate-900 mb-2">Local-first Data</div>
+        <p class="text-slate-600 text-sm">Powered by <code>js/inhdata.js</code>, using IndexedDB with bidirectional
+          Firestore sync and subscription APIs.</p>
+      </div>
+      <div class="bg-white rounded-xl shadow-soft p-6">
+        <div class="font-semibold text-slate-900 mb-2">Admin & Sync</div>
+        <p class="text-slate-600 text-sm">Admin dashboards, Google Sheets integration, and sync services available via
+          dedicated pages and Node scripts.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="mt-10 py-8 text-center text-sm text-slate-500">
+    <div class="max-w-7xl mx-auto px-4">© instaQuote</div>
+  </footer>
+  <script>
+    function toggleMobileMenu() {
+      const hamburger = document.querySelector('.hamburger-menu');
+      const mobileMenu = document.querySelector('.mobile-menu');
+      if (!hamburger || !mobileMenu) return;
+      hamburger.classList.toggle('active');
+      mobileMenu.classList.toggle('active');
+    }
+
+    // Close mobile menu when clicking outside
+    document.addEventListener('click', function (event) {
+      const hamburger = document.querySelector('.hamburger-menu');
+      const mobileMenu = document.querySelector('.mobile-menu');
+      if (!hamburger || !mobileMenu) return;
+      if (!hamburger.contains(event.target) && !mobileMenu.contains(event.target)) {
+        hamburger.classList.remove('active');
+        mobileMenu.classList.remove('active');
+      }
+    });
+  </script>
+</body>
+
+</html>

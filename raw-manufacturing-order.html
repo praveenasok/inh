@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Raw Hair Manufacturing Order - InstaQuote Suite</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        /* Hide number input spinners */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+            appearance: none;
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+            appearance: textfield;
+        }
+    </style>
+</head>
+
+<body class="bg-[#f8fafc] min-h-screen text-slate-900">
+    <script>window.navConfig = { siteTitle: 'InstaQuote Suite' };</script>
+    <script src="js/navigation-loader.js"></script>
+
+    <div class="container mx-auto px-4 py-8 max-w-5xl">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-black text-slate-900 tracking-tight flex items-center">
+                <i class="fa-solid fa-industry text-indigo-600 mr-3"></i> Raw Hair Manufacturing Tracker
+            </h1>
+            <p class="text-slate-500 mt-2 font-medium">Calculate expected raw length output based on specific ratio templates.</p>
+        </div>
+
+        <!-- Main Content -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- Controls Sidebar -->
+            <div class="lg:col-span-4 space-y-6">
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                    <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-2">
+                        <h2 class="text-sm font-black text-slate-800 uppercase tracking-widest text-left">Configuration</h2>
+                        <select id="loadSavedMoSelect" class="bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-bold rounded focus:ring-indigo-500 focus:border-indigo-500 p-1.5 outline-none w-1/2 truncate cursor-pointer transition-colors hover:bg-indigo-100 hidden">
+                            <option value="">Load Past MO...</option>
+                        </select>
+                    </div>
+                    
+                    <div class="space-y-4 mb-6 pb-4 border-b border-slate-100">
+                        <!-- Order Details -->
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-1">Order Number</label>
+                                <input type="text" id="orderNumber" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block p-2 outline-none transition-all" placeholder="e.g. ORD-1024">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-1">Date</label>
+                                <input type="date" id="orderDate" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block p-2 outline-none transition-all">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3 mb-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-1">Supplier</label>
+                                <input type="text" id="orderSupplier" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block p-2 outline-none transition-all" placeholder="Supplier Name">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-1">Reference</label>
+                                <input type="text" id="orderRef" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block p-2 outline-none transition-all" placeholder="Client / PO #">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-1">Hair Type</label>
+                                <select id="orderHairType" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block p-2 outline-none transition-all">
+                                    <option value="Normal">Normal</option>
+                                    <option value="Bleachable">Bleachable</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">Select Ratio Template</label>
+                            <select id="ratioSelect" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block p-2.5 outline-none transition-all">
+                                <option value="">Loading ratios...</option>
+                            </select>
+                        </div>
+
+                        <div id="dynamicInputsContainer">
+                            <!-- Dynamic inputs loaded by JS -->
+                        </div>
+
+                        <div class="flex justify-between items-center bg-slate-100 p-3 rounded-lg mt-4 mb-2 hidden" id="totalInputSection">
+                            <span class="text-sm font-bold text-slate-600">Total Input Size</span>
+                            <span id="totalInputKg" class="text-lg font-black text-indigo-700">0.00 kg</span>
+                        </div>
+
+                        <button id="calculateBtn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg shadow-md transition-colors mt-2 flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-calculator"></i> Calculate Output
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Info Box -->
+                <div class="bg-indigo-50 rounded-xl p-5 border border-indigo-100 text-sm">
+                    <div class="flex items-start gap-3">
+                        <i class="fa-solid fa-circle-info text-indigo-500 mt-0.5"></i>
+                        <p class="text-indigo-900 leading-relaxed font-medium">Use this tool to generate a picking slip for manufacturing. It calculates exact quantities of raw lengths required based on your pre-configured Hair Ratio Mixes.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results Area -->
+            <div class="lg:col-span-8">
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 min-h-[400px]">
+                    <div class="flex items-center justify-between mb-6 border-b border-slate-100 pb-3">
+                        <h2 class="text-lg font-black text-slate-800">Manufacturing Order Output</h2>
+                        <span id="outputSummary" class="text-sm font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full hidden"></span>
+                    </div>
+
+                    <div id="resultsContainer">
+                        <!-- Default empty state -->
+                        <div class="flex flex-col items-center justify-center h-64 text-slate-400">
+                            <i class="fa-solid fa-boxes-stacked text-5xl mb-4 opacity-20"></i>
+                            <p class="font-medium text-slate-500">Select a ratio and enter kilos to view order breakdown.</p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Core Script -->
+    <script src="js/raw-manufacturing-order.js"></script>
+</body>
+</html>

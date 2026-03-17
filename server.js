@@ -2,18 +2,26 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const url = require('url');
-const SyncScheduler = require('./sync-scheduler');
-const FirebaseSyncService = require('./firebase-sync-service');
-const GoogleSheetsService = require('./google-sheets-service');
-const BidirectionalSyncService = require('./bidirectional-sync-service');
+let SyncScheduler = null;
+let FirebaseSyncService = null;
+let GoogleSheetsService = null;
+let BidirectionalSyncService = null;
 const { googleSheetsAutoConfig } = require('./js/google-sheets-auto-config');
-const admin = require('firebase-admin');
+let admin = null;
 
 const PORT = 3000;
 const HTML_FILE_PATH = path.join(__dirname, 'index.html');
 const DATA_FILE_PATH = path.join(__dirname, 'data.json');
 const PRICE_LIST_FILE_PATH = path.join(__dirname, 'oldfiles', 'Price List Generator — Indian Natural Hair.html');
 const QUOTE_MAKER_FILE_PATH = path.join(__dirname, 'quotemaker', 'index.html');
+const CLIENTS_DIR = path.join(__dirname, 'data', 'clients');
+const SUPPLIERS_DIR = path.join(__dirname, 'data', 'suppliers');
+const PRICELISTS_DIR = path.join(__dirname, 'data', 'pricelists');
+
+// Ensure directories exist
+if (!fs.existsSync(CLIENTS_DIR)) fs.mkdirSync(CLIENTS_DIR, { recursive: true });
+if (!fs.existsSync(SUPPLIERS_DIR)) fs.mkdirSync(SUPPLIERS_DIR, { recursive: true });
+if (!fs.existsSync(PRICELISTS_DIR)) fs.mkdirSync(PRICELISTS_DIR, { recursive: true });
 
 // In-memory data storage
 let currentProductData = null;
@@ -30,18 +38,19 @@ let sseClients = new Set();
 // Initialize sync services
 async function initializeSyncServices() {
   try {
-    syncScheduler = new SyncScheduler();
-    syncService = new FirebaseSyncService();
-    googleSheetsService = new GoogleSheetsService();
-    
-    await syncScheduler.initialize();
-    await syncService.initialize();
-    await googleSheetsService.initialize();
-    
+    try { if (!admin) admin = require('firebase-admin'); } catch (e) { console.error('Failed to load firebase-admin:', e.message); }
+    try { if (!SyncScheduler) SyncScheduler = require('./sync-scheduler'); syncScheduler = new SyncScheduler(); } catch (_) { syncScheduler = null; }
+    try { if (!FirebaseSyncService) FirebaseSyncService = require('./firebase-sync-service'); syncService = new FirebaseSyncService(); } catch (_) { syncService = null; }
+    try { if (!GoogleSheetsService) GoogleSheetsService = require('./google-sheets-service'); googleSheetsService = new GoogleSheetsService(); } catch (_) { googleSheetsService = null; }
+
+    try { if (syncScheduler && typeof syncScheduler.initialize === 'function') await syncScheduler.initialize(); } catch (_) { }
+    try { if (syncService && typeof syncService.initialize === 'function') await syncService.initialize(); } catch (_) { syncService = null; }
+    try { if (googleSheetsService && typeof googleSheetsService.initialize === 'function') await googleSheetsService.initialize(); } catch (_) { googleSheetsService = null; }
+
     // Load service account credentials
     let serviceAccountCredentials = null;
     const serviceAccountPath = path.join(__dirname, 'service-account-key.json');
-    
+
     try {
       if (fs.existsSync(serviceAccountPath)) {
         const serviceAccountData = fs.readFileSync(serviceAccountPath, 'utf8');
@@ -50,10 +59,10 @@ async function initializeSyncServices() {
       }
     } catch (error) {
     }
-    
+
     // Get the spreadsheet ID from the Google Sheets configuration
     const spreadsheetId = googleSheetsAutoConfig.getSheetId();
-    
+
     // Initialize bidirectional sync service with configuration
     const bidirectionalSyncConfig = {
       googleSheets: {
@@ -77,37 +86,50 @@ async function initializeSyncServices() {
         watchedKeys: ['fallback_salespeople', 'fallback_price_lists', 'salespeople', 'price_lists']
       }
     };
-    
-    bidirectionalSyncService = new BidirectionalSyncService(syncService, googleSheetsService, bidirectionalSyncConfig);
-    
+
+    try {
+      if (!BidirectionalSyncService) {
+        BidirectionalSyncService = require('./bidirectional-sync-service');
+      }
+      if (BidirectionalSyncService && syncService && googleSheetsService) {
+        bidirectionalSyncService = new BidirectionalSyncService(syncService, googleSheetsService, bidirectionalSyncConfig);
+      }
+    } catch (e) {
+      bidirectionalSyncService = null;
+    }
+
     // Setup event listeners for SSE broadcasting
-    setupBidirectionalSyncEventListeners();
-    
+    try { setupBidirectionalSyncEventListeners(); } catch (_) { }
+
     // Start the bidirectional sync service
-    await bidirectionalSyncService.start();
-    
+    try { if (bidirectionalSyncService && typeof bidirectionalSyncService.start === 'function') await bidirectionalSyncService.start(); } catch (_) { }
+
     // Start the scheduler automatically
-    syncScheduler.startScheduler();
-    
+    try { if (syncScheduler && typeof syncScheduler.startScheduler === 'function') syncScheduler.startScheduler(); } catch (_) { }
+
     // Perform initial sync for colors and styles on startup
     try {
       // Performing initial sync for colors and styles
       const productSheetId = googleSheetsAutoConfig.getSheetId();
-      
+
       // Sync colors
-      const colorsResult = await syncService.syncColorsData(productSheetId);
+      if (syncService && typeof syncService.syncColorsData === 'function') {
+        const colorsResult = await syncService.syncColorsData(productSheetId);
+      }
       // Initial colors sync completed
-      
+
       // Sync styles
-      const stylesResult = await syncService.syncStylesData(productSheetId);
+      if (syncService && typeof syncService.syncStylesData === 'function') {
+        const stylesResult = await syncService.syncStylesData(productSheetId);
+      }
       // Initial styles sync completed
-      
+
     } catch (error) {
       // Initial colors/styles sync failed, will be synced during next scheduled sync
     }
-    
+
     // Sync services initialized successfully
-    
+
     // Make scheduler globally available for graceful shutdown
     global.syncScheduler = syncScheduler;
   } catch (error) {
@@ -156,7 +178,7 @@ function setupBidirectionalSyncEventListeners() {
 // Broadcast data to all SSE clients
 function broadcastToSSEClients(eventType, data) {
   const message = `event: ${eventType}\ndata: ${JSON.stringify(data)}\n\n`;
-  
+
   sseClients.forEach(client => {
     try {
       client.write(message);
@@ -172,7 +194,7 @@ function getSalesmenFromData() {
   if (currentProductData && currentProductData.salesmen) {
     return currentProductData.salesmen;
   }
-  
+
   // Return default salesmen if no data available
   return [
     "Praveen", "Rupa", "INH", "HW", "Vijay", "Pankaj", "Sunil"
@@ -192,26 +214,209 @@ const mimeTypes = {
   '.ico': 'image/x-icon'
 };
 
+// CORS: allow credentialed requests from local dev servers
+const ALLOWED_ORIGINS = new Set([
+  'http://localhost:3000',
+  'http://localhost:8080',
+  'http://localhost:8000',
+  'http://localhost:8001',
+  'http://localhost:8002',
+  'http://localhost:8081',
+  // Allow local static preview server used during development
+  'http://localhost:5500',
+  'http://localhost:5501'
+]);
+
+// Session and auth helpers
+const SESSION_COOKIE_NAME = 'session';
+const SESSION_EXPIRES_MS = 60 * 60 * 24 * 5 * 1000; // 5 days
+
+// Dev fallback: allow local login when Firebase Admin is not initialized
+const HAS_SERVICE_ACCOUNT = fs.existsSync(path.join(__dirname, 'service-account-key.json'));
+const DEV_AUTH_FALLBACK = !HAS_SERVICE_ACCOUNT;
+
+function parseCookies(req) {
+  const header = req.headers['cookie'] || '';
+  const pairs = header.split(';').map(s => s.trim()).filter(Boolean);
+  const cookies = {};
+  for (const p of pairs) {
+    const idx = p.indexOf('=');
+    if (idx > -1) {
+      const k = p.slice(0, idx);
+      const v = p.slice(idx + 1);
+      cookies[k] = decodeURIComponent(v);
+    }
+  }
+  return cookies;
+}
+
+async function verifySessionCookie(cookie) {
+  try {
+    if (!cookie) return null;
+    if (!admin || !admin.apps || !admin.apps.length) {
+      // If service account is missing, allow local dev access when a cookie exists
+      if (DEV_AUTH_FALLBACK) {
+        return { uid: 'dev', email: null };
+      }
+      return null;
+    }
+    const decoded = await admin.auth().verifySessionCookie(cookie, true);
+    return decoded || null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function buildSetCookie(name, value, options = {}) {
+  const parts = [`${name}=${encodeURIComponent(value || '')}`];
+  const opts = { path: '/', httpOnly: true, sameSite: 'Lax', ...options };
+  if (opts.maxAge != null) parts.push(`Max-Age=${Math.floor(opts.maxAge / 1000)}`);
+  if (opts.expires instanceof Date) parts.push(`Expires=${opts.expires.toUTCString()}`);
+  if (opts.path) parts.push(`Path=${opts.path}`);
+  if (opts.domain) parts.push(`Domain=${opts.domain}`);
+  if (opts.secure) parts.push('Secure');
+  if (opts.httpOnly) parts.push('HttpOnly');
+  if (opts.sameSite) parts.push(`SameSite=${opts.sameSite}`);
+  return parts.join('; ');
+}
+
 const server = http.createServer(async (req, res) => {
   const parsedUrl = new URL(req.url, `http://${req.headers.host}`);
   const pathname = parsedUrl.pathname;
 
   // Enable CORS
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  const origin = req.headers.origin;
+  if (origin && ALLOWED_ORIGINS.has(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Vary', 'Origin');
+  } else {
+    // Fallback for non-credentialed requests
+    res.setHeader('Access-Control-Allow-Origin', '*');
+  }
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') {
-    res.writeHead(200);
+    res.writeHead(204);
     res.end();
+    return;
+  }
+
+  // Auth endpoints
+  if (pathname === '/auth/sessionLogin' && req.method === 'POST') {
+    try {
+      if (!admin || !admin.apps || !admin.apps.length) {
+        // Dev fallback: set a simple cookie to allow local access
+        if (DEV_AUTH_FALLBACK) {
+          let body = '';
+          req.on('data', chunk => { body += chunk.toString(); });
+          req.on('end', async () => {
+            try {
+              // Accept the request and set a dev session cookie
+              const secure = (req.headers['x-forwarded-proto'] === 'https');
+              const setCookie = buildSetCookie(SESSION_COOKIE_NAME, 'dev', { maxAge: SESSION_EXPIRES_MS, secure });
+              res.setHeader('Set-Cookie', setCookie);
+              res.writeHead(200, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ success: true, uid: 'dev', email: null, fallback: true }));
+            } catch (e) {
+              res.writeHead(500, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ error: e.message || 'Login failed' }));
+            }
+          });
+          return;
+        }
+        res.writeHead(503, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Auth service not available' }));
+        return;
+      }
+      let body = '';
+      req.on('data', chunk => { body += chunk.toString(); });
+      req.on('end', async () => {
+        try {
+          const { idToken } = JSON.parse(body || '{}');
+          if (!idToken) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'idToken is required' }));
+            return;
+          }
+          let decoded;
+          try {
+            decoded = await admin.auth().verifyIdToken(idToken);
+          } catch (e) {
+            res.writeHead(401, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Invalid idToken' }));
+            return;
+          }
+          const sessionCookie = await admin.auth().createSessionCookie(idToken, { expiresIn: SESSION_EXPIRES_MS });
+          const secure = (req.headers['x-forwarded-proto'] === 'https');
+          const setCookie = buildSetCookie(SESSION_COOKIE_NAME, sessionCookie, { maxAge: SESSION_EXPIRES_MS, secure });
+          res.setHeader('Set-Cookie', setCookie);
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: true, uid: decoded.uid, email: decoded.email || null }));
+        } catch (e) {
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: e.message || 'Login failed' }));
+        }
+      });
+    } catch (e) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: e.message || 'Login failed' }));
+    }
+    return;
+  }
+
+  if (pathname === '/auth/sessionLogout' && req.method === 'POST') {
+    try {
+      const setCookie = buildSetCookie(SESSION_COOKIE_NAME, '', { maxAge: 0 });
+      res.setHeader('Set-Cookie', setCookie);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true }));
+    } catch (e) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: e.message || 'Logout failed' }));
+    }
+    return;
+  }
+
+  if (pathname === '/auth/me' && req.method === 'GET') {
+    try {
+      const cookies = parseCookies(req);
+      const session = cookies[SESSION_COOKIE_NAME];
+      // Dev fallback: if admin is not initialized, trust presence of cookie
+      if (!admin || !admin.apps || !admin.apps.length) {
+        if (DEV_AUTH_FALLBACK) {
+          if (session) {
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ authenticated: true, uid: 'dev', email: null, fallback: true }));
+            return;
+          } else {
+            res.writeHead(401, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ authenticated: false }));
+            return;
+          }
+        }
+      }
+      const decoded = await verifySessionCookie(session);
+      if (!decoded) {
+        res.writeHead(401, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ authenticated: false }));
+        return;
+      }
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ authenticated: true, uid: decoded.uid, email: decoded.email || null }));
+    } catch (e) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: e.message || 'Auth check failed' }));
+    }
     return;
   }
 
   // Handle API endpoints
   if (pathname === '/api/status' && req.method === 'GET') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ 
-      status: 'running', 
+    res.end(JSON.stringify({
+      status: 'running',
       port: PORT,
       timestamp: new Date().toISOString()
     }));
@@ -225,15 +430,272 @@ const server = http.createServer(async (req, res) => {
       try {
         const data = JSON.parse(body);
         currentProductData = data;
-        
+
         // Save to file for persistence
         fs.writeFileSync(DATA_FILE_PATH, JSON.stringify(data, null, 2), 'utf8');
-        
+
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ success: true, message: 'Data saved successfully' }));
       } catch (error) {
         res.writeHead(500, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: 'Failed to save data: ' + error.message }));
+      }
+    });
+    return;
+  }
+
+  // --- Client JSON Persistence APIs ---
+  if (pathname === '/api/clients' && req.method === 'GET') {
+    try {
+      const files = fs.readdirSync(CLIENTS_DIR);
+      const jsonFiles = files.filter(f => f.endsWith('.json'));
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, files: jsonFiles }));
+    } catch (e) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Failed to list clients: ' + e.message }));
+    }
+    return;
+  }
+
+  if (pathname.startsWith('/api/clients/') && req.method === 'GET') {
+    const filename = decodeURIComponent(pathname.split('/').pop());
+    // Basic security check to prevent directory traversal
+    if (filename.includes('..') || filename.includes('/')) {
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Invalid filename' }));
+      return;
+    }
+    const filePath = path.join(CLIENTS_DIR, filename);
+    if (fs.existsSync(filePath)) {
+      try {
+        const content = fs.readFileSync(filePath, 'utf8');
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(content);
+      } catch (e) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Failed to read file' }));
+      }
+    } else {
+      res.writeHead(404, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Client not found' }));
+    }
+    return;
+  }
+
+  if (pathname === '/api/save-client' && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => { body += chunk.toString(); });
+    req.on('end', () => {
+      try {
+        const data = JSON.parse(body);
+        if (!data.name) throw new Error("Client name required");
+
+        // Key sanitization for filename
+        const safeName = data.name.replace(/[^a-z0-9_\-\. ]/gi, '_');
+        const filename = `${safeName}.json`;
+        const filePath = path.join(CLIENTS_DIR, filename);
+
+        fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8');
+
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, filename: filename }));
+      } catch (error) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Failed to save client: ' + error.message }));
+      }
+    });
+    return;
+  }
+
+  if (pathname === '/api/delete-client' && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => { body += chunk.toString(); });
+    req.on('end', () => {
+      try {
+        const { filename } = JSON.parse(body);
+        if (!filename) throw new Error("Filename required");
+
+        // Basic validation
+        if (filename.includes('..') || filename.includes('/')) {
+          throw new Error("Invalid filename");
+        }
+
+        const filePath = path.join(CLIENTS_DIR, filename);
+
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: true }));
+        } else {
+          res.writeHead(404, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Client file not found' }));
+        }
+      } catch (error) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Failed to delete client: ' + error.message }));
+      }
+    });
+    return;
+  }
+
+  // --- Price List JSON Persistence APIs ---
+  if (pathname === '/api/pricelists' && req.method === 'GET') {
+    try {
+      const files = fs.readdirSync(PRICELISTS_DIR);
+      const jsonFiles = files.filter(f => f.endsWith('.json'));
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, files: jsonFiles }));
+    } catch (e) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Failed to list price lists: ' + e.message }));
+    }
+    return;
+  }
+
+  if (pathname.startsWith('/api/pricelists/') && req.method === 'GET') {
+    const filename = decodeURIComponent(pathname.split('/').pop());
+    if (filename.includes('..') || filename.includes('/')) {
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Invalid filename' }));
+      return;
+    }
+    const filePath = path.join(PRICELISTS_DIR, filename);
+    if (fs.existsSync(filePath)) {
+      try {
+        const content = fs.readFileSync(filePath, 'utf8');
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(content);
+      } catch (e) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Failed to read file' }));
+      }
+    } else {
+      res.writeHead(404, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Price list not found' }));
+    }
+    return;
+  }
+
+  if (pathname === '/api/save-pricelist' && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => { body += chunk.toString(); });
+    req.on('end', () => {
+      try {
+        const data = JSON.parse(body);
+        if (!data.name) throw new Error("Price list name required");
+
+        const safeName = data.name.replace(/[^a-z0-9_\-\. ]/gi, '_');
+        const filename = `${safeName}.json`;
+        const filePath = path.join(PRICELISTS_DIR, filename);
+
+        fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8');
+
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, filename: filename }));
+      } catch (error) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Failed to save price list: ' + error.message }));
+      }
+    });
+    return;
+  }
+
+  if (pathname === '/api/delete-pricelist' && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => { body += chunk.toString(); });
+    req.on('end', () => {
+      try {
+        const { filename } = JSON.parse(body);
+        if (!filename) throw new Error("Filename required");
+        if (filename.includes('..') || filename.includes('/')) throw new Error("Invalid filename");
+
+        const filePath = path.join(PRICELISTS_DIR, filename);
+
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: true }));
+        } else {
+          res.writeHead(404, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Price list file not found' }));
+        }
+      } catch (error) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Failed to delete price list: ' + error.message }));
+      }
+    });
+    return;
+  }
+
+  // --- Supplier JSON Persistence APIs ---
+  if (pathname === '/api/suppliers' && req.method === 'GET') {
+    try {
+      const files = fs.readdirSync(SUPPLIERS_DIR);
+      const jsonFiles = files.filter(f => f.endsWith('.json'));
+      const suppliers = [];
+
+      for (const file of jsonFiles) {
+        try {
+          const content = fs.readFileSync(path.join(SUPPLIERS_DIR, file), 'utf8');
+          suppliers.push(JSON.parse(content));
+        } catch (e) { console.error(`Failed to read supplier ${file}`, e); }
+      }
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, suppliers: suppliers }));
+    } catch (e) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Failed to list suppliers: ' + e.message }));
+    }
+    return;
+  }
+
+  if (pathname === '/api/save-supplier' && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => { body += chunk.toString(); });
+    req.on('end', () => {
+      try {
+        const data = JSON.parse(body);
+        if (!data.id || !data.name) throw new Error("Supplier ID and Name required");
+
+        const filename = `${data.id}.json`; // Use ID as filename for stability
+        const filePath = path.join(SUPPLIERS_DIR, filename);
+
+        fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8');
+
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, filename: filename }));
+      } catch (error) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Failed to save supplier: ' + error.message }));
+      }
+    });
+    return;
+  }
+
+  if (pathname === '/api/delete-supplier' && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => { body += chunk.toString(); });
+    req.on('end', () => {
+      try {
+        const { id } = JSON.parse(body);
+        if (!id) throw new Error("Supplier ID required");
+
+        const filename = `${id}.json`;
+        const filePath = path.join(SUPPLIERS_DIR, filename);
+
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: true }));
+        } else {
+          res.writeHead(404, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Supplier not found' }));
+        }
+      } catch (error) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Failed to delete supplier: ' + error.message }));
       }
     });
     return;
@@ -469,32 +931,32 @@ const server = http.createServer(async (req, res) => {
         // Fetching styles from Firebase
         const stylesSnapshot = await syncService.db.collection('styles').get();
         const styles = [];
-        
+
         stylesSnapshot.forEach(doc => {
           styles.push({ id: doc.id, ...doc.data() });
         });
-        
+
         // Found styles in Firebase
         res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ 
-          success: true, 
+        res.end(JSON.stringify({
+          success: true,
           data: styles,
-          count: styles.length 
+          count: styles.length
         }));
       } else {
         // Firebase not available
         res.writeHead(503, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ 
-          success: false, 
-          error: 'Firebase service not available' 
+        res.end(JSON.stringify({
+          success: false,
+          error: 'Firebase service not available'
         }));
       }
     } catch (error) {
       // Error getting styles
       res.writeHead(500, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ 
-        success: false, 
-        error: 'Failed to get styles: ' + error.message 
+      res.end(JSON.stringify({
+        success: false,
+        error: 'Failed to get styles: ' + error.message
       }));
     }
     return;
@@ -506,7 +968,7 @@ const server = http.createServer(async (req, res) => {
     req.on('end', () => {
       try {
         const { target, data } = JSON.parse(body);
-        
+
         if (target === 'priceList') {
           embedDataIntoFile(PRICE_LIST_FILE_PATH, data, 'price-list');
         } else if (target === 'quoteMaker') {
@@ -520,7 +982,7 @@ const server = http.createServer(async (req, res) => {
         } else {
           throw new Error('Invalid target specified. Use: priceList, quoteMaker, mainApp, or all');
         }
-        
+
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ success: true, message: `Data embedded into ${target}` }));
       } catch (error) {
@@ -537,7 +999,7 @@ const server = http.createServer(async (req, res) => {
     req.on('end', async () => {
       try {
         const { collection, id, data, merge } = JSON.parse(body);
-        
+
         if (!collection || !data) {
           res.writeHead(400, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: 'Collection and data are required' }));
@@ -565,7 +1027,7 @@ const server = http.createServer(async (req, res) => {
           const docRef = await syncService.db.collection(collection).add(data);
           result = { id: docRef.id };
         }
-        
+
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ success: true, ...result }));
       } catch (error) {
@@ -582,7 +1044,7 @@ const server = http.createServer(async (req, res) => {
     req.on('end', async () => {
       try {
         const { collection, id } = JSON.parse(body);
-        
+
         if (!collection || !id) {
           res.writeHead(400, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: 'Collection and id are required' }));
@@ -596,7 +1058,7 @@ const server = http.createServer(async (req, res) => {
         }
 
         await syncService.db.collection(collection).doc(id).delete();
-        
+
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ success: true, message: 'Document deleted' }));
       } catch (error) {
@@ -610,11 +1072,11 @@ const server = http.createServer(async (req, res) => {
   if (pathname === '/api/clear-data' && req.method === 'POST') {
     try {
       currentProductData = null;
-      
+
       if (fs.existsSync(DATA_FILE_PATH)) {
         fs.unlinkSync(DATA_FILE_PATH);
       }
-      
+
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ success: true, message: 'All data cleared' }));
     } catch (error) {
@@ -630,30 +1092,30 @@ const server = http.createServer(async (req, res) => {
     req.on('end', () => {
       try {
         const { priceLists, timestamp } = JSON.parse(body);
-        
+
         const mainHtmlPath = path.join(__dirname, 'index.html');
         if (fs.existsSync(mainHtmlPath)) {
           let htmlContent = fs.readFileSync(mainHtmlPath, 'utf8');
-          
+
           const backupPath = mainHtmlPath.replace('.html', `_backup_${Date.now()}.html`);
           fs.writeFileSync(backupPath, htmlContent, 'utf8');
-          
+
           const priceListsJson = JSON.stringify(priceLists);
           const priceListRegex = /availablePriceLists\s*=\s*new\s+Set\(\[.*?\]\);/s;
-          
+
           if (priceListRegex.test(htmlContent)) {
             htmlContent = htmlContent.replace(
               priceListRegex,
               `availablePriceLists = new Set(${priceListsJson});`
             );
-            
+
             fs.writeFileSync(mainHtmlPath, htmlContent, 'utf8');
           }
         }
-        
+
         res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ 
-          success: true, 
+        res.end(JSON.stringify({
+          success: true,
           message: 'Price lists synchronized successfully',
           priceLists: priceLists
         }));
@@ -671,7 +1133,7 @@ const server = http.createServer(async (req, res) => {
     req.on('end', () => {
       try {
         const { priceLists, timestamp } = JSON.parse(body);
-        
+
         const syncData = {
           priceLists: priceLists || [],
           lastSync: timestamp || Date.now(),
@@ -681,15 +1143,15 @@ const server = http.createServer(async (req, res) => {
             quoteMaker: { status: 'synchronized', lastUpdate: timestamp }
           }
         };
-        
+
         const syncFilePath = path.join(__dirname, 'sync-metadata.json');
         fs.writeFileSync(syncFilePath, JSON.stringify(syncData, null, 2), 'utf8');
-        
+
         res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ 
-          success: true, 
+        res.end(JSON.stringify({
+          success: true,
           message: 'Synchronization initialized successfully',
-          syncData 
+          syncData
         }));
       } catch (error) {
         res.writeHead(500, { 'Content-Type': 'application/json' });
@@ -705,20 +1167,20 @@ const server = http.createServer(async (req, res) => {
     req.on('end', () => {
       try {
         const { action, priceLists, sourceModule } = JSON.parse(body);
-        
+
         let syncData = {};
         try {
           syncData = JSON.parse(fs.readFileSync(path.join(__dirname, 'sync-metadata.json'), 'utf8'));
         } catch (e) {
           syncData = { timestamp: Date.now(), priceLists: [], modules: {} };
         }
-        
+
         syncData.timestamp = Date.now();
         syncData.priceLists = priceLists || [];
         syncData.modules[sourceModule] = { status: 'updated', lastUpdate: Date.now() };
-        
+
         fs.writeFileSync(path.join(__dirname, 'sync-metadata.json'), JSON.stringify(syncData, null, 2));
-        
+
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ success: true, syncData, action }));
       } catch (error) {
@@ -745,16 +1207,16 @@ const server = http.createServer(async (req, res) => {
     try {
       if (!googleSheetsService) {
         res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ 
-          connected: false, 
-          error: 'Google Sheets service not initialized' 
+        res.end(JSON.stringify({
+          connected: false,
+          error: 'Google Sheets service not initialized'
         }));
         return;
       }
 
       // Test connection by trying to access the spreadsheet
       const testResult = await googleSheetsService.testConnection();
-      
+
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({
         connected: testResult.success,
@@ -766,9 +1228,40 @@ const server = http.createServer(async (req, res) => {
       }));
     } catch (error) {
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ 
-        connected: false, 
-        error: 'Failed to check Google Sheets status: ' + error.message 
+      res.end(JSON.stringify({
+        connected: false,
+        error: 'Failed to check Google Sheets status: ' + error.message
+      }));
+    }
+    return;
+  }
+
+  // Fetch client headers from Google Sheets (clients!A1:Z1)
+  if (pathname === '/api/client-headers' && req.method === 'GET') {
+    try {
+      // Ensure service is ready
+      if (!googleSheetsService) {
+        googleSheetsService = new GoogleSheetsService();
+        await googleSheetsService.initialize();
+      }
+
+      const sheetId = googleSheetsAutoConfig.getSheetId();
+      const headers = await googleSheetsService.getClientHeaders(sheetId);
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        success: true,
+        headers,
+        count: headers.length,
+        range: 'clients!A1:Z1',
+        source: 'google_sheets',
+        timestamp: new Date().toISOString()
+      }));
+    } catch (error) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        success: false,
+        error: 'Failed to fetch client headers: ' + (error?.message || String(error))
       }));
     }
     return;
@@ -776,42 +1269,42 @@ const server = http.createServer(async (req, res) => {
 
   if (pathname === '/save-html' && req.method === 'POST') {
     let body = '';
-    
+
     req.on('data', chunk => {
       body += chunk.toString();
     });
-    
+
     req.on('end', () => {
       try {
         const data = JSON.parse(body);
         const { htmlContent, timestamp } = data;
-        
+
         if (!htmlContent) {
           res.writeHead(400, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: 'Missing htmlContent' }));
           return;
         }
-        
+
         const backupPath = path.join(__dirname, `index_backup_${Date.now()}.html`);
         if (fs.existsSync(HTML_FILE_PATH)) {
           fs.copyFileSync(HTML_FILE_PATH, backupPath);
         }
-        
+
         fs.writeFileSync(HTML_FILE_PATH, htmlContent, 'utf8');
-        
+
         res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ 
-          success: true, 
+        res.end(JSON.stringify({
+          success: true,
           message: 'HTML file updated successfully',
           backup: backupPath
         }));
-        
+
       } catch (error) {
         res.writeHead(500, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: 'Failed to save HTML file: ' + error.message }));
       }
     });
-    
+
     return;
   }
 
@@ -824,25 +1317,25 @@ const server = http.createServer(async (req, res) => {
       }
       if (!syncScheduler) {
         res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ 
-          success: false, 
-          error: 'Sync service not available. Please configure service account credentials.' 
+        res.end(JSON.stringify({
+          success: false,
+          error: 'Sync service not available. Please configure service account credentials.'
         }));
         return;
       }
-      
+
       let body = '';
       req.on('data', chunk => {
         body += chunk.toString();
       });
-      
+
       req.on('end', async () => {
         try {
           let options = {};
           if (body) {
             options = JSON.parse(body);
           }
-          
+
           const result = await syncScheduler.triggerManualSync(options);
           res.writeHead(200, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ success: true, result }));
@@ -863,15 +1356,15 @@ const server = http.createServer(async (req, res) => {
         'invalid service account email',
         'google sheets synchronization is not available'
       ];
-      
-      const isCredentialError = credentialErrorPatterns.some(pattern => 
+
+      const isCredentialError = credentialErrorPatterns.some(pattern =>
         error.message.toLowerCase().includes(pattern.toLowerCase())
       );
-      
+
       if (isCredentialError) {
         res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ 
-          success: false, 
+        res.end(JSON.stringify({
+          success: false,
           error: 'Google Sheets synchronization is not available. Please configure valid Google Sheets credentials to enable sync functionality.',
           details: error.message,
           setupGuide: 'See GOOGLE_SHEETS_CREDENTIALS_SETUP.md for detailed setup instructions.'
@@ -891,25 +1384,25 @@ const server = http.createServer(async (req, res) => {
       }
       if (!syncScheduler) {
         res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ 
-          success: false, 
+        res.end(JSON.stringify({
+          success: false,
           error: 'Google Sheets synchronization is not available. Please configure valid Google Sheets credentials to enable sync functionality.',
           details: 'Sync service not available. Please configure service account credentials.',
           setupGuide: 'See GOOGLE_SHEETS_CREDENTIALS_SETUP.md for detailed setup instructions.'
         }));
         return;
       }
-      
-      const result = await syncScheduler.triggerManualSync({ 
-        syncProducts: true, 
-        syncSalesmen: false, 
-        syncCompanies: false, 
-        syncColors: false, 
-        syncStyles: false 
+
+      const result = await syncScheduler.triggerManualSync({
+        syncProducts: true,
+        syncSalesmen: false,
+        syncCompanies: false,
+        syncColors: false,
+        syncStyles: false
       });
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ 
-        success: true, 
+      res.end(JSON.stringify({
+        success: true,
         result,
         totalProducts: result.productResult ? result.productResult.totalProducts : 0
       }));
@@ -925,15 +1418,15 @@ const server = http.createServer(async (req, res) => {
         'invalid service account email',
         'google sheets synchronization is not available'
       ];
-      
-      const isCredentialError = credentialErrorPatterns.some(pattern => 
+
+      const isCredentialError = credentialErrorPatterns.some(pattern =>
         error.message.toLowerCase().includes(pattern.toLowerCase())
       );
-      
+
       if (isCredentialError) {
         res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ 
-          success: false, 
+        res.end(JSON.stringify({
+          success: false,
           error: 'Google Sheets synchronization is not available. Please configure valid Google Sheets credentials to enable sync functionality.',
           details: error.message,
           setupGuide: 'See GOOGLE_SHEETS_CREDENTIALS_SETUP.md for detailed setup instructions.'
@@ -953,25 +1446,25 @@ const server = http.createServer(async (req, res) => {
       }
       if (!syncScheduler) {
         res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ 
-          success: false, 
+        res.end(JSON.stringify({
+          success: false,
           error: 'Google Sheets synchronization is not available. Please configure valid Google Sheets credentials to enable sync functionality.',
           details: 'Sync service not available. Please configure service account credentials.',
           setupGuide: 'See GOOGLE_SHEETS_CREDENTIALS_SETUP.md for detailed setup instructions.'
         }));
         return;
       }
-      
-      const result = await syncScheduler.triggerManualSync({ 
-        syncProducts: false, 
-        syncSalesmen: true, 
-        syncCompanies: false, 
-        syncColors: false, 
-        syncStyles: false 
+
+      const result = await syncScheduler.triggerManualSync({
+        syncProducts: false,
+        syncSalesmen: true,
+        syncCompanies: false,
+        syncColors: false,
+        syncStyles: false
       });
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ 
-        success: true, 
+      res.end(JSON.stringify({
+        success: true,
         result,
         totalSalesmen: result.salesmanResult ? result.salesmanResult.totalSalesmen : 0
       }));
@@ -987,15 +1480,15 @@ const server = http.createServer(async (req, res) => {
         'invalid service account email',
         'google sheets synchronization is not available'
       ];
-      
-      const isCredentialError = credentialErrorPatterns.some(pattern => 
+
+      const isCredentialError = credentialErrorPatterns.some(pattern =>
         error.message.toLowerCase().includes(pattern.toLowerCase())
       );
-      
+
       if (isCredentialError) {
         res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ 
-          success: false, 
+        res.end(JSON.stringify({
+          success: false,
           error: 'Google Sheets synchronization is not available. Please configure valid Google Sheets credentials to enable sync functionality.',
           details: error.message,
           setupGuide: 'See GOOGLE_SHEETS_CREDENTIALS_SETUP.md for detailed setup instructions.'
@@ -1015,25 +1508,25 @@ const server = http.createServer(async (req, res) => {
       }
       if (!syncScheduler) {
         res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ 
-          success: false, 
+        res.end(JSON.stringify({
+          success: false,
           error: 'Google Sheets synchronization is not available. Please configure valid Google Sheets credentials to enable sync functionality.',
           details: 'Sync service not available. Please configure service account credentials.',
           setupGuide: 'See GOOGLE_SHEETS_CREDENTIALS_SETUP.md for detailed setup instructions.'
         }));
         return;
       }
-      
-      const result = await syncScheduler.triggerManualSync({ 
-        syncProducts: false, 
-        syncSalesmen: false, 
-        syncCompanies: true, 
-        syncColors: false, 
-        syncStyles: false 
+
+      const result = await syncScheduler.triggerManualSync({
+        syncProducts: false,
+        syncSalesmen: false,
+        syncCompanies: true,
+        syncColors: false,
+        syncStyles: false
       });
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ 
-        success: true, 
+      res.end(JSON.stringify({
+        success: true,
         result,
         companiesData: result.companiesResult || { added: 0, updated: 0, deleted: 0, total: 0 }
       }));
@@ -1049,15 +1542,15 @@ const server = http.createServer(async (req, res) => {
         'invalid service account email',
         'google sheets synchronization is not available'
       ];
-      
-      const isCredentialError = credentialErrorPatterns.some(pattern => 
+
+      const isCredentialError = credentialErrorPatterns.some(pattern =>
         error.message.toLowerCase().includes(pattern.toLowerCase())
       );
-      
+
       if (isCredentialError) {
         res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ 
-          success: false, 
+        res.end(JSON.stringify({
+          success: false,
           error: 'Google Sheets synchronization is not available. Please configure valid Google Sheets credentials to enable sync functionality.',
           details: error.message,
           setupGuide: 'See GOOGLE_SHEETS_CREDENTIALS_SETUP.md for detailed setup instructions.'
@@ -1088,13 +1581,13 @@ const server = http.createServer(async (req, res) => {
         return;
       }
       const status = await syncService.getSyncStatus();
-      
+
       if (syncScheduler) {
         const schedulerStatus = syncScheduler.getSchedulerStatus();
         status.schedulerRunning = schedulerStatus.isRunning;
         status.nextRun = schedulerStatus.nextRun;
       }
-      
+
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ success: true, status }));
     } catch (error) {
@@ -1173,9 +1666,9 @@ const server = http.createServer(async (req, res) => {
       }
       if (!syncService) {
         res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ 
-          success: false, 
-          error: 'Sync service not available. Please configure service account credentials.' 
+        res.end(JSON.stringify({
+          success: false,
+          error: 'Sync service not available. Please configure service account credentials.'
         }));
         return;
       }
@@ -1189,8 +1682,8 @@ const server = http.createServer(async (req, res) => {
         try {
           const result = await syncService.syncCountData();
           res.writeHead(200, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ 
-            success: true, 
+          res.end(JSON.stringify({
+            success: true,
             result,
             message: 'Count data synchronized to Firebase successfully'
           }));
@@ -1240,7 +1733,7 @@ const server = http.createServer(async (req, res) => {
       if (!bidirectionalSyncService) {
         await initializeSyncServices();
       }
-      
+
       if (!bidirectionalSyncService) {
         res.writeHead(503, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ success: false, error: 'Bidirectional sync service not available' }));
@@ -1284,7 +1777,7 @@ const server = http.createServer(async (req, res) => {
         res.end(JSON.stringify({ error: error.message }));
       } else {
         // If headers already sent, just end safely
-        try { res.end(); } catch (_) {}
+        try { res.end(); } catch (_) { }
       }
     }
     return;
@@ -1299,7 +1792,7 @@ const server = http.createServer(async (req, res) => {
     req.on('end', async () => {
       try {
         const { collection, data, timestamp } = JSON.parse(body);
-        
+
         if (!syncService || !syncService.db) {
           res.writeHead(503, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ success: false, error: 'Firebase service not available' }));
@@ -1343,7 +1836,7 @@ const server = http.createServer(async (req, res) => {
     req.on('end', async () => {
       try {
         const { type, source } = JSON.parse(body);
-        
+
         if (!bidirectionalSyncService) {
           res.writeHead(503, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ success: false, error: 'Bidirectional sync service not available' }));
@@ -1352,7 +1845,7 @@ const server = http.createServer(async (req, res) => {
 
         // Create a mock inconsistency object for resolution
         const inconsistency = { type, [source]: 'user_selected_value' };
-        
+
         if (source === 'firebase') {
           await bidirectionalSyncService.resolveWithFirebasePriority(inconsistency);
         } else {
@@ -1379,7 +1872,7 @@ const server = http.createServer(async (req, res) => {
     req.on('end', async () => {
       try {
         const { strategy } = JSON.parse(body);
-        
+
         if (!bidirectionalSyncService) {
           res.writeHead(503, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ success: false, error: 'Bidirectional sync service not available' }));
@@ -1408,8 +1901,8 @@ const server = http.createServer(async (req, res) => {
 
       bidirectionalSyncService.startPeriodicValidation();
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ 
-        success: true, 
+      res.end(JSON.stringify({
+        success: true,
         message: 'Periodic data validation started',
         interval: bidirectionalSyncService.validationIntervalMs
       }));
@@ -1431,8 +1924,8 @@ const server = http.createServer(async (req, res) => {
 
       bidirectionalSyncService.stopPeriodicValidation();
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ 
-        success: true, 
+      res.end(JSON.stringify({
+        success: true,
         message: 'Periodic data validation stopped'
       }));
     } catch (error) {
@@ -1453,8 +1946,8 @@ const server = http.createServer(async (req, res) => {
 
       const validationResults = await bidirectionalSyncService.performComprehensiveValidation();
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ 
-        success: true, 
+      res.end(JSON.stringify({
+        success: true,
         message: 'Data validation completed',
         results: validationResults
       }));
@@ -1479,10 +1972,10 @@ const server = http.createServer(async (req, res) => {
         validationInterval: bidirectionalSyncService.validationIntervalMs,
         lastValidation: bidirectionalSyncService.lastValidationTime || null
       };
-      
+
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ 
-        success: true, 
+      res.end(JSON.stringify({
+        success: true,
         status
       }));
     } catch (error) {
@@ -1631,13 +2124,13 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
-      const stats = bidirectionalSyncService.errorHandler ? 
-        bidirectionalSyncService.errorHandler.getErrorStats() : 
+      const stats = bidirectionalSyncService.errorHandler ?
+        bidirectionalSyncService.errorHandler.getErrorStats() :
         { message: 'Error handler not available' };
-      
+
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ 
-        success: true, 
+      res.end(JSON.stringify({
+        success: true,
         stats
       }));
     } catch (error) {
@@ -1656,13 +2149,13 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
-      const stats = bidirectionalSyncService.conflictResolver ? 
-        bidirectionalSyncService.conflictResolver.getConflictStats() : 
+      const stats = bidirectionalSyncService.conflictResolver ?
+        bidirectionalSyncService.conflictResolver.getConflictStats() :
         { message: 'Conflict resolver not available' };
-      
+
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ 
-        success: true, 
+      res.end(JSON.stringify({
+        success: true,
         stats
       }));
     } catch (error) {
@@ -1684,7 +2177,7 @@ const server = http.createServer(async (req, res) => {
           { id: 'client_4', name: 'Glamour Studio', email: 'sales@glamourstudio.com', phone: '+1-555-0104' },
           { id: 'client_5', name: 'Natural Hair Co', email: 'support@naturalhairco.com', phone: '+1-555-0105' }
         ];
-        
+
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(sampleClients));
         return;
@@ -1694,7 +2187,7 @@ const server = http.createServer(async (req, res) => {
       snapshot.forEach(doc => {
         data.push({ id: doc.id, ...doc.data() });
       });
-      
+
       // If Firebase collection is empty, fall back to sample data
       if (data.length === 0) {
         const sampleClients = [
@@ -1704,12 +2197,12 @@ const server = http.createServer(async (req, res) => {
           { id: 'client_4', name: 'Glamour Studio', email: 'sales@glamourstudio.com', phone: '+1-555-0104' },
           { id: 'client_5', name: 'Natural Hair Co', email: 'support@naturalhairco.com', phone: '+1-555-0105' }
         ];
-        
+
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(sampleClients));
         return;
       }
-      
+
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(data));
     } catch (error) {
@@ -1730,7 +2223,7 @@ const server = http.createServer(async (req, res) => {
           { id: 'product_4', name: 'Weft Hair', category: 'Hair Extensions', basePrice: 200, PriceList: 'VIP' },
           { id: 'product_5', name: 'Closure', category: 'Hair Closures', basePrice: 250, PriceList: 'Wholesale' }
         ];
-        
+
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(sampleProducts));
         return;
@@ -1740,7 +2233,7 @@ const server = http.createServer(async (req, res) => {
       snapshot.forEach(doc => {
         data.push({ id: doc.id, ...doc.data() });
       });
-      
+
       // If Firebase collection is empty, fall back to sample data
       if (data.length === 0) {
         const sampleProducts = [
@@ -1750,12 +2243,12 @@ const server = http.createServer(async (req, res) => {
           { id: 'product_4', name: 'Weft Hair', category: 'Hair Extensions', basePrice: 200, PriceList: 'VIP' },
           { id: 'product_5', name: 'Closure', category: 'Hair Closures', basePrice: 250, PriceList: 'Wholesale' }
         ];
-        
+
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(sampleProducts));
         return;
       }
-      
+
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(data));
     } catch (error) {
@@ -1778,7 +2271,7 @@ const server = http.createServer(async (req, res) => {
           { id: 'salesman_5', name: 'Pankaj', email: 'pankaj@inh.com', territory: 'Northeast' },
           { id: 'salesman_6', name: 'Sunil', email: 'sunil@inh.com', territory: 'Southwest' }
         ];
-        
+
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(sampleSalespeople));
         return;
@@ -1811,7 +2304,7 @@ const server = http.createServer(async (req, res) => {
           snapshot.forEach(doc => {
             data.push({ id: doc.id, ...doc.data() });
           });
-          
+
           // If Firebase collection is empty, fall back to sample data
           if (data.length === 0) {
             const sampleColors = [
@@ -1827,7 +2320,7 @@ const server = http.createServer(async (req, res) => {
             res.end(JSON.stringify(sampleColors));
             return;
           }
-          
+
           res.writeHead(200, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify(data));
           return;
@@ -1835,7 +2328,7 @@ const server = http.createServer(async (req, res) => {
           // Firebase failed, fall back to Google Sheets
         }
       }
-      
+
       // Fallback to Google Sheets
       if (googleSheetsService) {
         const sheetId = googleSheetsAutoConfig.getSheetId();
@@ -1846,7 +2339,7 @@ const server = http.createServer(async (req, res) => {
           return;
         }
       }
-      
+
       // Final fallback data for testing
       const sampleColors = [
         { id: 'color_1', name: 'Natural Black', code: '#1B1B1B' },
@@ -1857,7 +2350,7 @@ const server = http.createServer(async (req, res) => {
         { id: 'color_6', name: 'Ash Blonde', code: '#C4A484' },
         { id: 'color_7', name: 'Platinum Blonde', code: '#E5E4E2' }
       ];
-      
+
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(sampleColors));
     } catch (error) {
@@ -1877,7 +2370,7 @@ const server = http.createServer(async (req, res) => {
           snapshot.forEach(doc => {
             data.push({ id: doc.id, ...doc.data() });
           });
-          
+
           // If Firebase collection is empty, fall back to sample data
           if (data.length === 0) {
             const sampleStyles = [
@@ -1891,7 +2384,7 @@ const server = http.createServer(async (req, res) => {
             res.end(JSON.stringify(sampleStyles));
             return;
           }
-          
+
           res.writeHead(200, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify(data));
           return;
@@ -1899,7 +2392,7 @@ const server = http.createServer(async (req, res) => {
           // Firebase failed, fall back to Google Sheets
         }
       }
-      
+
       // Fallback to Google Sheets
       if (googleSheetsService) {
         const sheetId = googleSheetsAutoConfig.getSheetId();
@@ -1910,7 +2403,7 @@ const server = http.createServer(async (req, res) => {
           return;
         }
       }
-      
+
       // Temporary fallback data for testing
       const sampleStyles = [
         { id: 'style_1', name: 'Straight', description: 'Natural straight hair' },
@@ -1919,7 +2412,7 @@ const server = http.createServer(async (req, res) => {
         { id: 'style_4', name: 'Deep Wave', description: 'Deep wave pattern' },
         { id: 'style_5', name: 'Body Wave', description: 'Loose body wave' }
       ];
-      
+
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(sampleStyles));
     } catch (error) {
@@ -2024,15 +2517,15 @@ const server = http.createServer(async (req, res) => {
   if (pathname === '/api/salesmen-count' && req.method === 'GET') {
     try {
       let salesmenCount = 0;
-      
+
       // Try Google Sheets first for most accurate count
       if (googleSheetsService) {
         try {
           const salesmenData = await googleSheetsService.fetchSalesmanData(googleSheetsAutoConfig.getSheetId());
           salesmenCount = salesmenData ? salesmenData.length : 0;
           res.writeHead(200, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ 
-            count: salesmenCount, 
+          res.end(JSON.stringify({
+            count: salesmenCount,
             source: 'google_sheets',
             timestamp: new Date().toISOString()
           }));
@@ -2040,15 +2533,15 @@ const server = http.createServer(async (req, res) => {
         } catch (sheetsError) {
         }
       }
-      
+
       // Fallback to Firebase
       if (syncService && syncService.db) {
         try {
           const snapshot = await syncService.db.collection('salespeople').get();
           salesmenCount = snapshot.size;
           res.writeHead(200, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ 
-            count: salesmenCount, 
+          res.end(JSON.stringify({
+            count: salesmenCount,
             source: 'firebase',
             timestamp: new Date().toISOString()
           }));
@@ -2056,7 +2549,7 @@ const server = http.createServer(async (req, res) => {
         } catch (firebaseError) {
         }
       }
-      
+
       res.writeHead(503, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ error: 'No data service available for salesmen count' }));
     } catch (error) {
@@ -2070,7 +2563,7 @@ const server = http.createServer(async (req, res) => {
     try {
       let priceListsCount = 0;
       let priceLists = new Set();
-      
+
       // Try Google Sheets first for most accurate count
       if (googleSheetsService) {
         try {
@@ -2082,8 +2575,8 @@ const server = http.createServer(async (req, res) => {
             });
             priceListsCount = priceLists.size;
             res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ 
-              count: priceListsCount, 
+            res.end(JSON.stringify({
+              count: priceListsCount,
               priceLists: Array.from(priceLists),
               source: 'google_sheets',
               timestamp: new Date().toISOString()
@@ -2093,7 +2586,7 @@ const server = http.createServer(async (req, res) => {
         } catch (sheetsError) {
         }
       }
-      
+
       // Fallback to Firebase
       if (syncService && syncService.db) {
         try {
@@ -2105,8 +2598,8 @@ const server = http.createServer(async (req, res) => {
           });
           priceListsCount = priceLists.size;
           res.writeHead(200, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ 
-            count: priceListsCount, 
+          res.end(JSON.stringify({
+            count: priceListsCount,
             priceLists: Array.from(priceLists),
             source: 'firebase',
             timestamp: new Date().toISOString()
@@ -2115,7 +2608,7 @@ const server = http.createServer(async (req, res) => {
         } catch (firebaseError) {
         }
       }
-      
+
       res.writeHead(503, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ error: 'No data service available for price lists count' }));
     } catch (error) {
@@ -2130,7 +2623,7 @@ const server = http.createServer(async (req, res) => {
       if (syncService && syncService.db && syncService.isInitialized) {
         const counts = {};
         const collections = ['products', 'colors', 'styles', 'quotes', 'clients', 'price_lists', 'salesmen'];
-        
+
         for (const collection of collections) {
           try {
             // Use the Firebase db directly to get collection counts
@@ -2141,22 +2634,22 @@ const server = http.createServer(async (req, res) => {
             counts[collection] = 0;
           }
         }
-        
+
         // Map price_lists back to pricelists for frontend compatibility
         if (counts.price_lists !== undefined) {
           counts.pricelists = counts.price_lists;
           delete counts.price_lists;
         }
-        
+
         res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ 
+        res.end(JSON.stringify({
           counts,
           source: 'firebase',
           timestamp: new Date().toISOString()
         }));
         return;
       }
-      
+
       const errorDetails = {
         syncService: !!syncService,
         firebaseDb: !!(syncService && syncService.db),
@@ -2164,7 +2657,7 @@ const server = http.createServer(async (req, res) => {
         message: 'Firebase service not available - services may still be initializing'
       };
       res.writeHead(503, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ 
+      res.end(JSON.stringify({
         error: 'Firebase service not available',
         details: errorDetails
       }));
@@ -2176,21 +2669,35 @@ const server = http.createServer(async (req, res) => {
   }
 
   let filePath;
+  // Gate quotemaker behind session cookie
+  const cookies = parseCookies(req);
+  const sessionCookie = cookies[SESSION_COOKIE_NAME];
+  const needsAuth = (pathname === '/' || pathname === '/quotemaker' || pathname === '/quotemaker.html');
+  if (needsAuth) {
+    const decoded = await verifySessionCookie(sessionCookie);
+    if (!decoded) {
+      // Redirect to login
+      res.writeHead(302, { Location: '/login.html' });
+      res.end();
+      return;
+    }
+  }
+
   if (pathname === '/quotemaker') {
     filePath = QUOTE_MAKER_FILE_PATH;
   } else if (pathname.startsWith('/quotemaker/')) {
     filePath = path.join(__dirname, pathname);
   } else {
-    // Set quotemaker.html as the default page for root access
+    // Default page
     filePath = path.join(__dirname, pathname === '/' ? 'quotemaker.html' : pathname);
   }
-  
+
   if (!filePath.startsWith(__dirname)) {
     res.writeHead(403, { 'Content-Type': 'text/plain' });
     res.end('Forbidden');
     return;
   }
-  
+
   fs.readFile(filePath, (err, content) => {
     if (err) {
       if (err.code === 'ENOENT') {
@@ -2203,7 +2710,7 @@ const server = http.createServer(async (req, res) => {
     } else {
       const ext = path.extname(filePath).toLowerCase();
       const contentType = mimeTypes[ext] || 'application/octet-stream';
-      
+
       res.writeHead(200, { 'Content-Type': contentType });
       res.end(content);
     }
@@ -2214,13 +2721,13 @@ function embedDataIntoFile(filePath, data, type) {
   if (!fs.existsSync(filePath)) {
     throw new Error(`File not found: ${filePath}`);
   }
-  
+
   let htmlContent = fs.readFileSync(filePath, 'utf8');
-  
+
   // Create backup
   const backupPath = filePath.replace('.html', `_backup_${Date.now()}.html`);
   fs.writeFileSync(backupPath, htmlContent, 'utf8');
-  
+
   // Prepare data for embedding - handle both array and object with products property
   let productsArray;
   if (Array.isArray(data)) {
@@ -2230,9 +2737,9 @@ function embedDataIntoFile(filePath, data, type) {
   } else {
     throw new Error('Invalid data format: expected array or object with products property');
   }
-  
+
   const jsonData = JSON.stringify(productsArray, null, 2);
-  
+
   if (type === 'price-list') {
     // For price list generator, replace the productData array
     const productDataRegex = /const productData = \[\s*\];/;
@@ -2293,7 +2800,7 @@ function embedDataIntoFile(filePath, data, type) {
         `$1${JSON.stringify(embeddedDataContent, null, 2)}$2`
       );
     }
-    
+
     // Then replace productData for price list generator
     const productDataRegex = /(const|let)\s+productData\s*=\s*\[\s*\];/;
     if (productDataRegex.test(htmlContent)) {
@@ -2310,7 +2817,7 @@ function embedDataIntoFile(filePath, data, type) {
         );
       }
     }
-    
+
     // Then replace products for quote maker
     const productsRegex = /let products = \[\s*\];/;
     if (productsRegex.test(htmlContent)) {
@@ -2327,7 +2834,7 @@ function embedDataIntoFile(filePath, data, type) {
         );
       }
     }
-    
+
     // Replace hardcoded productCatalog with dynamic data from Firebase
     const productCatalogRegex = /const productCatalog = \{[\s\S]*?\};/;
     if (productCatalogRegex.test(htmlContent)) {
@@ -2335,7 +2842,7 @@ function embedDataIntoFile(filePath, data, type) {
         const category = product.Category || product.category;
         const productName = product.Product || product.product;
         const density = product.Density || product.density;
-        
+
         if (category && !catalog[category]) {
           catalog[category] = {
             image: product.image || 'default.png',
@@ -2343,24 +2850,24 @@ function embedDataIntoFile(filePath, data, type) {
             variants: []
           };
         }
-        
+
         if (category && density && !catalog[category].variants.includes(density)) {
           catalog[category].variants.push(density);
         }
-        
+
         return catalog;
       }, {});
-      
+
       htmlContent = htmlContent.replace(
         productCatalogRegex,
         `const productCatalog = ${JSON.stringify(catalogData, null, 2)};`
       );
     }
   }
-  
+
   // Write updated content
   fs.writeFileSync(filePath, htmlContent, 'utf8');
-  
+
   // Data embedded into file
   // Backup created
 }
@@ -2370,7 +2877,7 @@ function embedDataIntoFile(filePath, data, type) {
 // Server now only uses Firebase data - no local data.json fallback
 
 server.listen(PORT, () => {
-  // Server running at http://localhost:PORT
+  console.log(`Server running at http://localhost:${PORT}`);
   // This server supports:
   // - Static file serving
   // - Admin interface at /admin.html
@@ -2387,7 +2894,7 @@ server.listen(PORT, () => {
   //   - POST /api/sync/scheduler/stop - Stop scheduler
   // - POST /save-html endpoint for permanent JSON embedding
   // - Automatic HTML file backups
-  
+
   // Initialize sync services asynchronously (don't block server startup)
   // Initializing sync services in background
   initializeSyncServices()

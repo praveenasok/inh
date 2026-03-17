@@ -275,7 +275,7 @@ class GoogleSheetsService {
           salesman[header] = row[index] || '';
         });
         
-        if (salesman.name || salesman.Name || salesman.salesman_name) {
+        if (salesman.name || salesman.Name || salesman.salesman_name || salesman.FullName || salesman['Full Name'] || salesman.fullName) {
           salesmen.push(salesman);
         }
       }
@@ -361,6 +361,30 @@ class GoogleSheetsService {
 
       return clients;
 
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Fetch client headers from the first row of the Clients sheet.
+   * Returns a trimmed array of header names.
+   */
+  async getClientHeaders(spreadsheetId = this.spreadsheetId, range = 'clients!A1:Z1') {
+    try {
+      if (!this.isInitialized) {
+        await this.initialize();
+      }
+
+      const response = await this.sheets.spreadsheets.values.get({
+        spreadsheetId,
+        range,
+      });
+
+      const rows = response?.data?.values || [];
+      const headersRow = rows[0] || [];
+      const headers = headersRow.map(h => (h || '').toString().trim()).filter(Boolean);
+      return headers;
     } catch (error) {
       throw error;
     }
