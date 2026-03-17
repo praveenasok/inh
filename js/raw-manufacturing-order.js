@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     let clientsDB = [];
     let currentActiveFinishedLengths = [];
+    window.currentLoadedMoIndex = null;
 
     // Utility: Live sync config inputs to picking slip header if it exists
     function syncHeaderField(inputId, headerId, defaultVal) {
@@ -102,10 +103,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (loadSavedMoSelect) {
             loadSavedMoSelect.addEventListener('change', (e) => {
-                const selectedIdx = e.target.value;
-                if (selectedIdx === "") return;
+                const selectedIdx = parseInt(e.target.value, 10);
+                if (isNaN(selectedIdx)) return;
                 const mo = reversedMOs[selectedIdx];
                 if (!mo) return;
+
+                // Track the true index in the savedMOs array for updating/deleting
+                let savedMOs = JSON.parse(localStorage.getItem('savedMOs') || '[]');
+                window.currentLoadedMoIndex = savedMOs.length - 1 - selectedIdx;
 
                 // Set Ratio and immediately trigger the build of input fields first
                 ratioSelect.value = mo.clientName;
@@ -135,6 +140,30 @@ document.addEventListener('DOMContentLoaded', async () => {
                 
                 // Reset select back to default so same MO can be clicked again later if needed
                 loadSavedMoSelect.value = "";
+                
+                // Show the New MO button so user knows they are editing and can exit
+                const newMoBtn = document.getElementById('newMoBtn');
+                if (newMoBtn) newMoBtn.classList.remove('hidden');
+            });
+        }
+        
+        const newMoBtn = document.getElementById('newMoBtn');
+        if (newMoBtn) {
+            newMoBtn.addEventListener('click', () => {
+                window.currentLoadedMoIndex = null;
+                document.getElementById('orderNumber').value = '';
+                document.getElementById('orderDate').value = new Date().toISOString().split('T')[0];
+                document.getElementById('orderSupplier').value = '';
+                document.getElementById('orderRef').value = '';
+                document.getElementById('orderHairType').value = 'Normal';
+                
+                ratioSelect.value = '';
+                dynamicInputsContainer.innerHTML = '';
+                resultsContainer.innerHTML = '';
+                resultsContainer.classList.add('hidden');
+                outputSummary.classList.add('hidden');
+                
+                newMoBtn.classList.add('hidden');
             });
         }
 
@@ -451,12 +480,23 @@ document.addEventListener('DOMContentLoaded', async () => {
             </div> <!-- End mo-export-container -->
             
             <div class="mt-6 pt-4 flex flex-wrap justify-center gap-4">
-                <button id="saveMoBtn" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 shadow-md text-white font-bold rounded-lg transition-colors flex items-center gap-2">
-                    <i class="fa-solid fa-floppy-disk"></i> Save MO
+                <button id="saveMoBtn" class="px-5 py-2 bg-[#081249] hover:bg-[#0a1860] shadow-md text-white font-bold rounded-lg transition-colors flex items-center gap-2">
+                    <i class="fa-solid fa-floppy-disk"></i> ${window.currentLoadedMoIndex !== null ? 'Update MO' : 'Save MO'}
                 </button>
-                <button id="shareMoBtn" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 shadow-md text-white font-bold rounded-lg transition-colors flex items-center gap-2">
+                <button id="shareMoBtn" class="px-5 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 shadow-sm text-[#081249] font-bold rounded-lg transition-colors flex items-center gap-2">
                     <i class="fa-solid fa-share-nodes"></i> Share MO
                 </button>
+        `;
+
+        if (window.currentLoadedMoIndex !== null) {
+            resultsHTML += `
+                <button id="deleteMoBtn" class="px-5 py-2 bg-red-50 hover:bg-red-100 border border-red-200 shadow-sm text-red-600 font-bold rounded-lg transition-colors flex items-center gap-2">
+                    <i class="fa-solid fa-trash"></i> Delete MO
+                </button>
+            `;
+        }
+
+        resultsHTML += `
             </div>
         `;
 
@@ -484,14 +524,52 @@ document.addEventListener('DOMContentLoaded', async () => {
                 try {
                     savedMOs = JSON.parse(localStorage.getItem('savedMOs') || '[]');
                 } catch(e) {}
-                savedMOs.push(moData);
+                
+                if (window.currentLoadedMoIndex !== null && window.currentLoadedMoIndex >= 0 && window.currentLoadedMoIndex < savedMOs.length) {
+                    savedMOs[window.currentLoadedMoIndex] = moData; // Update existing
+                } else {
+                    savedMOs.push(moData); // Create new
+                    window.currentLoadedMoIndex = savedMOs.length - 1; // Now it is loaded
+                }
+
                 localStorage.setItem('savedMOs', JSON.stringify(savedMOs));
                 
                 if (typeof window.populateSavedMoDropdown === 'function') {
                     window.populateSavedMoDropdown();
                 }
 
+                // Re-render buttons to reflect "Update MO" state instantly
+                calculateBtn.dispatchEvent(new Event('click'));
                 alert(`Manufacturing Order ${moData.orderNumber !== 'N/A' ? moData.orderNumber : '(Draft)'} saved successfully!`);
+            });
+        }
+
+        // Attach Delete MO listener
+        const deleteBtn = document.getElementById('deleteMoBtn');
+        if (deleteBtn) {
+            deleteBtn.addEventListener('click', () => {
+                if (confirm('Are you sure you want to permanently delete this Manufacturing Order?')) {
+                    let savedMOs = [];
+                    try {
+                        savedMOs = JSON.parse(localStorage.getItem('savedMOs') || '[]');
+                    } catch(e) {}
+
+                    if (window.currentLoadedMoIndex !== null && window.currentLoadedMoIndex >= 0 && window.currentLoadedMoIndex < savedMOs.length) {
+                        savedMOs.splice(window.currentLoadedMoIndex, 1);
+                        localStorage.setItem('savedMOs', JSON.stringify(savedMOs));
+                        
+                        window.currentLoadedMoIndex = null;
+                        if (typeof window.populateSavedMoDropdown === 'function') {
+                            window.populateSavedMoDropdown();
+                        }
+
+                        alert('Manufacturing Order deleted.');
+                        // Clear out the view by emptying the results container
+                        resultsContainer.innerHTML = '';
+                        resultsContainer.classList.add('hidden');
+                        outputSummary.classList.add('hidden');
+                    }
+                }
             });
         }
 
