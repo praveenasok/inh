@@ -6,6 +6,7 @@
   "hosting": [
     {
       "target": "inhpricelistgenerator",
+      "maxReleases": 2,
       "public": ".",
       "ignore": [
         "firebase.json",

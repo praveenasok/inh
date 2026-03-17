@@ -197,16 +197,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Build input fields for each active finished length
         let inputsHTML = '<div class="mt-4 pt-4 border-t border-slate-200">';
         inputsHTML += '<label class="block text-[10px] font-bold text-slate-500 mb-3 uppercase tracking-wider">Target Output Kilos per Length</label>';
-        inputsHTML += '<div class="flex flex-wrap gap-4">';
+        inputsHTML += '<div class="flex flex-wrap gap-2 md:gap-3">';
         
         currentActiveFinishedLengths.forEach(fl => {
             inputsHTML += `
-                <div class="flex-1 min-w-[120px] max-w-[160px]">
-                    <label for="input-len-${fl.idx}" class="block text-[10px] font-bold text-slate-500 mb-1">Finished ${fl.length}"</label>
+                <div class="flex-1 min-w-[70px] max-w-[120px]">
+                    <label for="input-len-${fl.idx}" class="block text-[11px] font-bold text-slate-700 mb-1 text-center">${fl.length}"</label>
                     <div class="relative">
-                        <input type="number" id="input-len-${fl.idx}" class="target-qty-input w-full bg-white border border-slate-300 text-slate-900 text-sm font-bold rounded focus:ring-[#081249] focus:border-[#081249] block p-1.5 pr-8 outline-none transition-all" placeholder="0" min="0" step="0.5" data-idx="${fl.idx}" data-len="${fl.length}">
-                        <div class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                            <span class="text-slate-400 font-bold text-[10px]">KG</span>
+                        <input type="number" id="input-len-${fl.idx}" class="target-qty-input w-full bg-white border border-slate-300 text-slate-900 text-sm font-bold rounded focus:ring-[#081249] focus:border-[#081249] block p-1.5 pr-7 text-center outline-none transition-all" placeholder="0" min="0" step="0.5" data-idx="${fl.idx}" data-len="${fl.length}">
+                        <div class="absolute inset-y-0 right-0 flex items-center pr-1.5 pointer-events-none">
+                            <span class="text-slate-400 font-bold text-[9px]">KG</span>
                         </div>
                     </div>
                 </div>
