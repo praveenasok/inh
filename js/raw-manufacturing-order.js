@@ -11,6 +11,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     let clientsDB = [];
     let currentActiveFinishedLengths = [];
 
+    // Utility: Live sync config inputs to picking slip header if it exists
+    function syncHeaderField(inputId, headerId, defaultVal) {
+        const source = document.getElementById(inputId);
+        if(!source) return;
+        const sync = () => {
+            const dest = document.getElementById(headerId);
+            if(dest) dest.textContent = source.value.trim() || defaultVal;
+        };
+        source.addEventListener('input', sync);
+        source.addEventListener('change', sync);
+    }
+    
+    syncHeaderField('orderNumber', 'mo-header-number', 'N/A');
+    syncHeaderField('orderDate', 'mo-header-date', new Date().toISOString().split('T')[0]);
+    syncHeaderField('orderSupplier', 'mo-header-supplier', 'N/A');
+    syncHeaderField('orderRef', 'mo-header-ref', 'N/A');
+    syncHeaderField('orderHairType', 'mo-header-hairtype', 'Normal');
+
     // 1. Fetch Clients
     try {
         let serverClients = [];
@@ -307,23 +325,23 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <div class="grid grid-cols-2 md:grid-cols-5 gap-2">
                         <div>
                             <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-0.5">Order #</p>
-                            <p class="font-bold text-slate-900 text-sm">${orderNumber}</p>
+                            <p id="mo-header-number" class="font-bold text-slate-900 text-sm">${orderNumber}</p>
                         </div>
                         <div>
                             <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-0.5">Date</p>
-                            <p class="font-bold text-slate-900 text-sm">${orderDate}</p>
+                            <p id="mo-header-date" class="font-bold text-slate-900 text-sm">${orderDate}</p>
                         </div>
                         <div>
                             <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-0.5">Supplier</p>
-                            <p class="font-bold text-slate-900 text-sm">${orderSupplier}</p>
+                            <p id="mo-header-supplier" class="font-bold text-slate-900 text-sm">${orderSupplier}</p>
                         </div>
                         <div>
                             <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-0.5">Ref / PO</p>
-                            <p class="font-bold text-slate-900 text-sm">${orderRef}</p>
+                            <p id="mo-header-ref" class="font-bold text-slate-900 text-sm">${orderRef}</p>
                         </div>
                         <div>
                             <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-0.5">Hair Type</p>
-                            <p class="font-bold text-indigo-700 text-sm">${orderHairType}</p>
+                            <p id="mo-header-hairtype" class="font-bold text-indigo-700 text-sm">${orderHairType}</p>
                         </div>
                     </div>
                 </div>
@@ -448,11 +466,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (saveBtn) {
             saveBtn.addEventListener('click', () => {
                 const moData = {
-                    orderNumber,
-                    orderDate,
-                    orderSupplier,
-                    orderRef,
-                    orderHairType,
+                    orderNumber: document.getElementById('orderNumber').value.trim() || 'N/A',
+                    orderDate: document.getElementById('orderDate').value || new Date().toISOString().split('T')[0],
+                    orderSupplier: document.getElementById('orderSupplier').value.trim() || 'N/A',
+                    orderRef: document.getElementById('orderRef').value.trim() || 'N/A',
+                    orderHairType: document.getElementById('orderHairType').value || 'Normal',
                     clientName,
                     totalOutputKilos,
                     totalRawRequiredKilos,
@@ -472,7 +490,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     window.populateSavedMoDropdown();
                 }
 
-                alert(`Manufacturing Order ${orderNumber !== 'N/A' ? orderNumber : '(Draft)'} saved successfully!`);
+                alert(`Manufacturing Order ${moData.orderNumber !== 'N/A' ? moData.orderNumber : '(Draft)'} saved successfully!`);
             });
         }
 
