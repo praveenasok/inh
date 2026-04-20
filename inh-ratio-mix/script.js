@@ -1,13 +1,16 @@
 document.addEventListener('DOMContentLoaded', () => {
     // Configuration
-    const RAW_LENGTHS = [4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34];
+    const EVEN_RAW_LENGTHS = [4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40];
+    const ALL_RAW_LENGTHS = [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40];
+    let ACTIVE_RAW_LENGTHS = [...EVEN_RAW_LENGTHS];
     const FINISHED_LENGTHS = [4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40];
 
     // Initial Starter Data
     const DEFAULT_PRICES = {
         4: 5000, 6: 6750, 8: 7650, 10: 9450, 12: 13500, 14: 15300,
         16: 18000, 18: 29250, 20: 40500, 22: 50400, 24: 54000,
-        26: 65250, 28: 69750, 30: 76500, 32: 80000, 34: 90000
+        26: 65250, 28: 69750, 30: 76500, 32: 80000, 34: 90000,
+        36: 100000, 38: 110000, 40: 120000
     };
 
     // State Variables
@@ -156,6 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
     resetMixerBtn.addEventListener('click', () => {
         if (confirm("Clear current matrix?")) {
             appState.matrix = {};
+            applyRawLengthsVisibility();
             refreshTableInputs();
             calculateAll();
             saveAppState();
@@ -703,7 +707,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // 3. Body
         // Clear body first to be safe
         tableBody.innerHTML = '';
-        RAW_LENGTHS.forEach(rawLen => {
+        ACTIVE_RAW_LENGTHS.forEach(rawLen => {
             const tr = document.createElement('tr');
 
             const tdPrice = document.createElement('td');
@@ -765,7 +769,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let totalPercent = 0;
         let weightedRawCost = 0;
 
-        RAW_LENGTHS.forEach(rawLen => {
+        ACTIVE_RAW_LENGTHS.forEach(rawLen => {
             const percent = colData[rawLen] || 0;
             const price = appState.prices[rawLen] || 0;
 
@@ -854,20 +858,49 @@ document.addEventListener('DOMContentLoaded', () => {
         return convertedPrice;
     }
 
+    function applyRawLengthsVisibility() {
+        let hasOdd = false;
+        if (appState.prices) {
+            hasOdd = Object.entries(appState.prices).some(([len, price]) => {
+                const l = parseInt(len);
+                return l % 2 !== 0 && l >= 4 && l <= 40 && price > 0;
+            });
+        }
+        if (!hasOdd && appState.matrix) {
+            const matrixHasOdd = Object.values(appState.matrix).some(colData => 
+                Object.entries(colData).some(([len, pct]) => pct > 0 && parseInt(len) % 2 !== 0)
+            );
+            if (matrixHasOdd) hasOdd = true;
+        }
+        
+        const newLengths = hasOdd ? ALL_RAW_LENGTHS : EVEN_RAW_LENGTHS;
+        
+        if (ACTIVE_RAW_LENGTHS.length !== newLengths.length) {
+            ACTIVE_RAW_LENGTHS = newLengths;
+            initTable();
+            refreshTableInputs();
+        }
+    }
+
     function loadSupplierPricesIntoMixer(supplierId) {
         appState.currentSupplierId = supplierId;
         const supplier = db.suppliers.find(s => s.id === supplierId);
 
         if (supplier) {
             appState.prices = { ...supplier.prices };
-            // Update UI
-            document.querySelectorAll('.price-input').forEach(inp => {
-                const len = inp.dataset.rawLen;
-                inp.value = appState.prices[len] || 0;
-            });
-            calculateAll(); // Recalc with new prices
-            saveAppState();
+        } else {
+            appState.prices = { ...DEFAULT_PRICES };
         }
+
+        applyRawLengthsVisibility();
+
+        // Update UI
+        document.querySelectorAll('.price-input').forEach(inp => {
+            const len = inp.dataset.rawLen;
+            inp.value = appState.prices[len] || 0;
+        });
+        calculateAll(); // Recalc with new prices
+        saveAppState();
     }
 
     function refreshTableInputs() {
@@ -975,7 +1008,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function initSupplierGrid() {
         supplierPriceBody.innerHTML = '';
-        RAW_LENGTHS.forEach(len => {
+        ALL_RAW_LENGTHS.forEach(len => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td>${len}"</td>
@@ -1384,6 +1417,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data.supplierId && db.suppliers.find(s => s.id === data.supplierId)) {
                 supplierSelect.value = data.supplierId;
                 loadSupplierPricesIntoMixer(data.supplierId);
+            } else {
+                supplierSelect.value = "";
+                appState.currentSupplierId = null;
+                appState.prices = { ...DEFAULT_PRICES };
+                applyRawLengthsVisibility();
             }
 
             refreshTableInputs();
@@ -1478,6 +1516,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data.supplierId && db.suppliers.find(s => s.id === data.supplierId)) {
                 supplierSelect.value = data.supplierId;
                 loadSupplierPricesIntoMixer(data.supplierId);
+            } else {
+                supplierSelect.value = "";
+                appState.currentSupplierId = null;
+                appState.prices = data.prices ? JSON.parse(JSON.stringify(data.prices)) : { ...DEFAULT_PRICES };
+                applyRawLengthsVisibility();
             }
 
             // Restore Modifiers
@@ -1889,6 +1932,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (appState.currentSupplierId) {
                     supplierSelect.value = appState.currentSupplierId;
                     loadSupplierPricesIntoMixer(appState.currentSupplierId);
+                } else {
+                    applyRawLengthsVisibility();
                 }
                 if (appState.currentClientName) clientNameInput.value = appState.currentClientName;
 
