@@ -1763,7 +1763,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            const res = await fetch('/data/suppliers.json');
+            const res = await fetch('/data/suppliers.json?nocache=' + new Date().getTime());
             if (res.ok) {
                 let serverSuppliers = await res.json();
                 if (serverSuppliers && serverSuppliers.length > 0) {
@@ -1789,7 +1789,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            const res = await fetch('/data/clients.json');
+            const res = await fetch('/data/clients.json?nocache=' + new Date().getTime());
             if (res.ok) {
                 let serverClients = await res.json();
                 if (serverClients && serverClients.length > 0) {
