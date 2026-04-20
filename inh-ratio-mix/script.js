@@ -102,6 +102,28 @@ document.addEventListener('DOMContentLoaded', () => {
             createSupplier('SONALI 2/2', DEFAULT_PRICES); // Ensure we have one
         }
 
+        // Auto-generate Bleach1x1 based on Sonali-NEW
+        const sonaliNew = db.suppliers.find(s => s.name === 'Sonali-NEW');
+        const hasBleach = db.suppliers.find(s => s.name === 'Bleach1x1');
+        if (sonaliNew && !hasBleach) {
+            let bleachPrices = { ...sonaliNew.prices };
+            for (let l = 6; l <= 38; l += 2) {
+                const p1 = parseFloat(bleachPrices[l]);
+                const p2 = parseFloat(bleachPrices[l + 2]);
+                if (!isNaN(p1) && !isNaN(p2)) {
+                    bleachPrices[l + 1] = (p1 + p2) / 2;
+                }
+            }
+            db.suppliers.push({
+                id: 'sup_bleach1x1_auto' + Date.now(),
+                name: 'Bleach1x1',
+                prices: bleachPrices
+            });
+            try { 
+                localStorage.setItem('hairRatioDB', JSON.stringify(db));
+            } catch(e) {}
+        }
+
         refreshSupplierDropdowns();
         refreshRatioDropdown();
         refreshPriceListDropdown();
