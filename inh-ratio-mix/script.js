@@ -120,7 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 prices: bleachPrices
             });
             try { 
-                localStorage.setItem('hairRatioDB', JSON.stringify(db));
+                saveDB();
             } catch(e) {}
         }
 
