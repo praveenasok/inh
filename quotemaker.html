@@ -1910,6 +1910,23 @@
                 // Initialize quote
                 initializeQuote();
 
+                // Auto-select price list if passed via URL
+                const urlParams = new URLSearchParams(window.location.search);
+                const presetPriceList = urlParams.get('priceList');
+                if (presetPriceList) {
+                    const selector = document.getElementById('price-list-selector');
+                    if (selector) {
+                        // Give a small delay to ensure options are fully populated
+                        setTimeout(() => {
+                            let optionExists = Array.from(selector.options).some(opt => opt.value === presetPriceList);
+                            if (optionExists) {
+                                selector.value = presetPriceList;
+                                selector.dispatchEvent(new Event('change'));
+                            }
+                        }, 800);
+                    }
+                }
+
                 // Mark as initialized
                 window.quoteMakerInitialized = true;
 
@@ -2393,6 +2410,19 @@
                 const name = typeof raw === 'string' ? raw.trim() : String(raw || '').trim();
                 if (name) namesSet.add(name);
             });
+
+            // Add Saved Ratios from Ratio Mixer
+            try {
+                const ratioData = localStorage.getItem('hairRatioDB');
+                if (ratioData) {
+                    const parsed = JSON.parse(ratioData);
+                    if (parsed && parsed.clients) {
+                        parsed.clients.forEach(c => {
+                            if (c.name) namesSet.add(c.name.trim());
+                        });
+                    }
+                }
+            } catch (e) {}
 
             const priceLists = Array.from(namesSet).sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
 

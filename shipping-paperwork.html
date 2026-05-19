@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shipping Paperwork - instaQuote</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="unified-button-system.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        
+        /* Print Styles */
+        @media print {
+            body { background: white; margin: 0; padding: 0; }
+            .no-print, .universal-nav { display: none !important; }
+            .print-only { display: block !important; }
+            .py-6 { padding-top: 0 !important; padding-bottom: 0 !important; }
+            .px-4 { padding-left: 0 !important; padding-right: 0 !important; }
+            #preview-wrapper { padding: 0 !important; margin: 0 !important; background: transparent !important; }
+            #invoice-preview-container { 
+                box-shadow: none !important; 
+                margin: 0 !important; 
+                padding: 5mm 10mm 5mm 10mm !important;
+                width: 210mm !important; 
+                max-width: 210mm !important;
+                min-height: auto !important;
+                height: auto !important;
+            }
+            @page { margin: 0; size: A4; }
+        }
+
+        /* Invoice Table Styles */
+        .invoice-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: Arial, sans-serif; /* Standard readable font for invoice */
+            font-size: 11px;
+            color: #000;
+        }
+        .invoice-table th, .invoice-table td {
+            border: 1px solid #000;
+            padding: 4px 6px;
+            vertical-align: top;
+        }
+        .invoice-table .header-cell {
+            background-color: #fff;
+            font-weight: bold;
+        }
+        .invoice-table .center-align { text-align: center; }
+        .invoice-table .right-align { text-align: right; }
+        .invoice-table .no-border-bottom { border-bottom: none; }
+        .invoice-table .no-border-top { border-top: none; }
+        .invoice-title {
+            font-size: 14px;
+            font-weight: bold;
+            border: none;
+            text-align: left;
+            padding-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <script src="js/navigation-loader.js"></script>
+
+    <div class="max-w-screen-2xl mx-auto px-4 py-6">
+        <div class="flex flex-col lg:flex-row gap-6 items-start">
+            
+            <!-- LEFT COLUMN: CONTROLS -->
+            <div class="w-full lg:w-1/3 flex flex-col gap-4 sticky top-6 no-print">
+                
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                    <!-- Tabs -->
+                    <div class="flex border-b border-slate-200 bg-slate-50">
+                        <button id="tab-invoice" class="flex-1 py-3 text-sm font-bold text-indigo-600 border-b-2 border-indigo-600 bg-white">Invoice Details</button>
+                        <button id="tab-database" class="flex-1 py-3 text-sm font-medium text-slate-500 hover:text-slate-700 transition-colors">Customer DB</button>
+                        <button id="tab-saved" class="flex-1 py-3 text-sm font-medium text-slate-500 hover:text-slate-700 transition-colors">Saved Invoices</button>
+                    </div>
+
+                    <!-- INVOICE TAB -->
+                    <div id="panel-invoice" class="p-5 space-y-5 h-[calc(100vh-200px)] overflow-y-auto">
+                        
+                        <!-- Top Meta -->
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">Document Type</label>
+                            <select id="inp-doc-type" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none mb-3">
+                                <option value="Proforma Invoice">Proforma Invoice</option>
+                                <option value="Commercial Invoice">Commercial Invoice</option>
+                                <option value="Packing List">Packing List</option>
+                            </select>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-1">Invoice No.</label>
+                                <input type="text" id="inp-invoice-no" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none" placeholder="INH270426-1">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-1">Date</label>
+                                <input type="text" id="inp-date" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none" placeholder="DD/MM/YY">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-1">IEC</label>
+                                <input type="text" id="inp-iec" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none" placeholder="0516971735">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-1">Exporter</label>
+                                <select id="inp-exporter-select" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none">
+                                    <option value="">Default Exporter</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <hr class="border-slate-100">
+
+                        <!-- Consignee / Buyer -->
+                        <div>
+                            <div class="flex justify-between items-end mb-1">
+                                <label class="block text-xs font-bold text-slate-500">Consignee</label>
+                                <button id="btn-load-customer" class="text-xs text-indigo-600 hover:underline">Load Saved</button>
+                            </div>
+                            <textarea id="inp-consignee" rows="4" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none resize-none" placeholder="Name&#10;Address&#10;City, State Zip&#10;Country"></textarea>
+                            <input type="text" id="inp-consignee-phone" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none mt-2" placeholder="Phone: +1 123 456 7890">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">Buyer (if other than consignee)</label>
+                            <textarea id="inp-buyer" rows="2" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none resize-none" placeholder="Leave blank if same"></textarea>
+                        </div>
+
+                        <hr class="border-slate-100">
+
+                        <!-- Routing -->
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-1">Port of Loading</label>
+                                <input type="text" id="inp-pol" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-1">Country of Origin</label>
+                                <input type="text" id="inp-coo" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none" value="India">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-1">Port of Discharge</label>
+                                <input type="text" id="inp-pod" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none" value="USA">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-1">Final Destination</label>
+                                <input type="text" id="inp-destination" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none" value="USA">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">Terms of Delivery & Payment</label>
+                            <input type="text" id="inp-terms" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none" value="SAMPLES">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">Currency</label>
+                            <select id="inp-currency" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none">
+                                <option value="USD">USD</option>
+                                <option value="EUR">EUR</option>
+                                <option value="GBP">GBP</option>
+                                <option value="INR">INR</option>
+                                <option value="AUD">AUD</option>
+                                <option value="CAD">CAD</option>
+                            </select>
+                        </div>
+
+                        <hr class="border-slate-100">
+
+                        <!-- Items -->
+                        <div>
+                            <div class="flex justify-between items-center mb-2">
+                                <label class="block text-xs font-bold text-slate-500">Items</label>
+                            </div>
+                            
+                            <div id="items-container" class="space-y-3">
+                                <!-- Item Row Template -->
+                                <div class="item-row bg-slate-50 border border-slate-200 p-3 rounded relative">
+                                    <button class="btn-remove-item absolute -top-2 -right-2 bg-red-100 text-red-600 rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-200">&times;</button>
+                                    <textarea class="item-desc w-full border border-slate-300 rounded p-1.5 text-xs focus:ring-1 focus:ring-indigo-500 outline-none mb-2 resize-none" rows="2" placeholder="Description of Goods">Wigs, false beards, eyebrows and eyelashes, switches and the like, of human or animal hair or of textile materials; articles of human hair not elsewhere specified or included:</textarea>
+                                    <div class="grid grid-cols-2 sm:grid-cols-6 gap-2">
+                                        <input type="text" class="item-hsn border border-slate-300 rounded p-1.5 text-xs" placeholder="HSN" value="6704.20.00" title="HSN Code">
+                                        <input type="number" class="item-pcs border border-slate-300 rounded p-1.5 text-xs" placeholder="Qty" value="18" title="Quantity">
+                                        <select class="item-unit border border-slate-300 rounded p-1.5 text-xs" title="Unit">
+                                            <option value="kg">kg</option>
+                                            <option value="pcs" selected>pcs</option>
+                                            <option value="sets">sets</option>
+                                        </select>
+                                        <input type="number" step="0.01" class="item-price border border-slate-300 rounded p-1.5 text-xs" placeholder="Price" value="14.00" title="Price">
+                                        <input type="number" step="0.01" class="item-net border border-slate-300 rounded p-1.5 text-xs" placeholder="Net Wt(kg)" title="Net Weight (kg)">
+                                        <input type="number" step="0.01" class="item-gross border border-slate-300 rounded p-1.5 text-xs" placeholder="Gross Wt(kg)" title="Gross Weight (kg)">
+                                    </div>
+                                </div>
+                            </div>
+                            <button id="btn-add-item" class="mt-3 w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium rounded transition"><i class="fas fa-plus mr-1"></i> Add Item</button>
+                        </div>
+
+                    </div>
+
+                    <!-- DATABASE TAB -->
+                    <div id="panel-database" class="p-5 space-y-5 hidden h-[calc(100vh-200px)] overflow-y-auto">
+                        <div class="bg-indigo-50 p-4 rounded-lg border border-indigo-100">
+                            <h3 class="font-bold text-indigo-900 text-sm mb-3">Add New Customer</h3>
+                            <div class="space-y-3">
+                                <input type="hidden" id="db-edit-id" value="">
+                                <input type="text" id="db-name" class="w-full border border-slate-300 rounded p-2 text-sm" placeholder="Company / Name">
+                                <input type="text" id="db-co" class="w-full border border-slate-300 rounded p-2 text-sm" placeholder="C/o (Optional)">
+                                <input type="text" id="db-addr1" class="w-full border border-slate-300 rounded p-2 text-sm" placeholder="Address Line 1">
+                                <input type="text" id="db-addr2" class="w-full border border-slate-300 rounded p-2 text-sm" placeholder="City, State Zip">
+                                <input type="text" id="db-country" class="w-full border border-slate-300 rounded p-2 text-sm" placeholder="Country">
+                                <input type="text" id="db-phone" class="w-full border border-slate-300 rounded p-2 text-sm" placeholder="Phone Number">
+                                <div class="flex gap-2">
+                                    <button id="btn-save-customer" class="flex-1 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded transition">Save Customer</button>
+                                    <button id="btn-cancel-edit" class="hidden py-2 px-4 bg-slate-200 hover:bg-slate-300 text-slate-700 text-sm font-bold rounded transition">Cancel</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 class="font-bold text-slate-700 text-sm mb-2">Saved Customers</h3>
+                            <div id="customer-list" class="space-y-2">
+                                <!-- Customer items injected here -->
+                            </div>
+                        </div>
+
+                        <hr class="border-slate-100">
+
+                        <!-- Exporter Settings -->
+                        <div class="bg-indigo-50 p-4 rounded-lg border border-indigo-100 mt-6">
+                            <h3 class="font-bold text-indigo-900 text-sm mb-3">Add New Exporter</h3>
+                            <div class="space-y-3">
+                                <input type="text" id="db-exp-name" class="w-full border border-slate-300 rounded p-2 text-sm" placeholder="Exporter Identifier (e.g. Branch A)">
+                                <textarea id="db-exp-details" rows="5" class="w-full border border-slate-300 rounded p-2 text-sm outline-none resize-none" placeholder="Full Exporter Details Block"></textarea>
+                                <button id="btn-save-exporter" class="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded transition">Save Exporter</button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 class="font-bold text-slate-700 text-sm mb-2 mt-4">Saved Exporters</h3>
+                            <div id="exporter-list" class="space-y-2">
+                                <!-- Exporter items injected here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SAVED INVOICES TAB -->
+                    <div id="panel-saved" class="p-5 space-y-5 hidden h-[calc(100vh-200px)] overflow-y-auto">
+                        <div class="flex justify-between items-center mb-2">
+                            <h3 class="font-bold text-slate-700 text-sm">Saved Invoices</h3>
+                        </div>
+                        <div id="saved-invoices-list" class="space-y-2">
+                            <!-- Invoices injected here -->
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- RIGHT COLUMN: PREVIEW -->
+            <div class="w-full lg:w-2/3 flex flex-col gap-4">
+                <div class="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-slate-200 no-print">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-800">Document Preview</h2>
+                        <p class="text-xs text-slate-500">Proforma Invoice formatting matches standard export requirements.</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button id="btn-save-invoice" class="px-4 py-2 bg-indigo-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100 font-medium rounded-lg text-sm flex items-center transition shadow-sm"><i class="fas fa-save mr-2"></i> Save</button>
+                        <button id="btn-print" class="px-4 py-2 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 font-medium rounded-lg text-sm flex items-center transition shadow-sm"><i class="fas fa-print mr-2"></i> Print</button>
+                        <button id="btn-export-pdf" class="px-4 py-2 bg-[#081249] text-white hover:bg-blue-900 font-medium rounded-lg text-sm flex items-center transition shadow-sm"><i class="fas fa-file-pdf mr-2"></i> Export PDF</button>
+                    </div>
+                </div>
+
+                <div id="preview-wrapper" class="bg-slate-300 p-4 sm:p-8 rounded-xl overflow-x-auto flex justify-center">
+                    <!-- The actual A4 container -->
+                    <div id="invoice-preview-container" class="bg-white shadow-lg mx-auto" style="width: 210mm; min-height: 297mm; padding: 15mm; box-sizing: border-box;">
+                        
+                        <!-- Table Wrapper -->
+                        <table class="invoice-table">
+                            <thead>
+                                <tr>
+                                    <th colspan="7" class="invoice-title" id="prev-doc-type">Proforma Invoice</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Row 1 -->
+                                <tr>
+                                    <td colspan="3" class="header-cell w-[50%]">Exporter</td>
+                                    <td colspan="1" class="header-cell center-align w-[15%]">Invoice No.</td>
+                                    <td colspan="1" class="header-cell center-align w-[15%]">Date</td>
+                                    <td colspan="2" class="header-cell center-align w-[20%]">IEC</td>
+                                </tr>
+                                <!-- Row 2 -->
+                                <tr>
+                                    <td colspan="3" rowspan="2" class="no-border-top whitespace-pre-wrap" id="prev-exporter"></td>
+                                    <td colspan="1" class="center-align font-bold" id="prev-invoice-no"></td>
+                                    <td colspan="1" class="center-align" id="prev-date"></td>
+                                    <td colspan="2" class="center-align" id="prev-iec"></td>
+                                </tr>
+                                <!-- Row 3 (Blank spaces below invoice no) -->
+                                <tr>
+                                    <td colspan="4" class="h-16"></td>
+                                </tr>
+
+                                <!-- Row 4 -->
+                                <tr>
+                                    <td colspan="3" class="header-cell">Consignee</td>
+                                    <td colspan="4" class="header-cell">Buyer (if other than consignee)</td>
+                                </tr>
+                                <!-- Row 5 -->
+                                <tr>
+                                    <td colspan="3" class="whitespace-pre-wrap min-h-[80px]" id="prev-consignee"></td>
+                                    <td colspan="4" class="whitespace-pre-wrap" id="prev-buyer"></td>
+                                </tr>
+                                <!-- Phone row -->
+                                <tr>
+                                    <td colspan="3" class="text-blue-700 font-medium" id="prev-consignee-phone"></td>
+                                    <td colspan="4"></td>
+                                </tr>
+
+                                <!-- Routing Headers -->
+                                <tr>
+                                    <td colspan="3" class="header-cell center-align">Port of Loading</td>
+                                    <td colspan="2" class="header-cell center-align">Country of Origin of goods</td>
+                                    <td colspan="2" class="header-cell center-align">Country of Final Destination</td>
+                                </tr>
+                                <!-- Routing Values -->
+                                <tr>
+                                    <td colspan="3" class="center-align font-medium py-3" id="prev-pol"></td>
+                                    <td colspan="2" class="center-align font-medium" id="prev-coo"></td>
+                                    <td colspan="2" class="center-align font-medium" id="prev-dest-country"></td>
+                                </tr>
+                                
+                                <!-- Routing Headers 2 -->
+                                <tr>
+                                    <td colspan="3" class="header-cell center-align">Port of Discharge</td>
+                                    <td colspan="2" class="header-cell center-align">Final Destination</td>
+                                    <td colspan="2" class="header-cell center-align">Terms of Delivery & Payment</td>
+                                </tr>
+                                <!-- Routing Values 2 -->
+                                <tr>
+                                    <td colspan="3" class="center-align font-medium py-3" id="prev-pod"></td>
+                                    <td colspan="2" class="center-align font-medium" id="prev-destination"></td>
+                                    <td colspan="2" class="center-align font-medium" id="prev-terms"></td>
+                                </tr>
+
+                                <!-- Items Header -->
+                                <!-- Items Header - INVOICE -->
+                                <tr class="inv-only">
+                                    <td rowspan="2" class="header-cell center-align w-[8%]">No &<br>Kind of<br>Pkgs</td>
+                                    <td rowspan="2" class="header-cell center-align w-[40%]">Description of Goods</td>
+                                    <td rowspan="2" class="header-cell center-align w-[12%]">HSN</td>
+                                    <td colspan="2" class="header-cell center-align w-[15%] border-b-0">Quantity</td>
+                                    <td rowspan="2" class="header-cell center-align w-[10%]">Currency</td>
+                                    <td rowspan="2" class="header-cell center-align w-[15%]">Amount</td>
+                                </tr>
+                                <tr class="inv-only">
+                                    <td class="header-cell center-align text-[10px]">Qty</td>
+                                    <td class="header-cell center-align text-[10px]">Rate</td>
+                                </tr>
+                                
+                                <!-- Items Header - PACKING LIST -->
+                                <tr class="pack-only" style="display:none;">
+                                    <td class="header-cell center-align w-[8%]">No &<br>Kind of<br>Pkgs</td>
+                                    <td class="header-cell center-align w-[44%]">Description of Goods</td>
+                                    <td class="header-cell center-align w-[12%]">HSN</td>
+                                    <td class="header-cell center-align w-[12%]">Quantity</td>
+                                    <td class="header-cell center-align w-[12%]">Net Wt.<br><span class="text-[10px]">(kg)</span></td>
+                                    <td class="header-cell center-align w-[12%]">Gross Wt.<br><span class="text-[10px]">(kg)</span></td>
+                                </tr>
+
+                                <!-- Items Body -->
+                                <tbody id="prev-items-body">
+                                    <!-- Dynamic Rows -->
+                                </tbody>
+
+                                <!-- Spacer to fill page height if needed -->
+                                <tr class="inv-only">
+                                    <td class="border-t-0 border-b-0 h-[100px]"></td>
+                                    <td class="border-t-0 border-b-0"></td>
+                                    <td class="border-t-0 border-b-0"></td>
+                                    <td class="border-t-0 border-b-0"></td>
+                                    <td class="border-t-0 border-b-0"></td>
+                                    <td class="border-t-0 border-b-0"></td>
+                                    <td class="border-t-0 border-b-0"></td>
+                                </tr>
+                                <tr class="pack-only" style="display:none;">
+                                    <td class="border-t-0 border-b-0 h-[100px]"></td>
+                                    <td class="border-t-0 border-b-0"></td>
+                                    <td class="border-t-0 border-b-0"></td>
+                                    <td class="border-t-0 border-b-0"></td>
+                                    <td class="border-t-0 border-b-0"></td>
+                                    <td class="border-t-0 border-b-0"></td>
+                                </tr>
+
+                                <!-- Totals -->
+                                <tr class="inv-only">
+                                    <td colspan="5" class="border-r-0"></td>
+                                    <td class="header-cell right-align border-l-0">Total Value</td>
+                                    <td class="center-align font-bold" id="prev-total-amount"></td>
+                                </tr>
+                                <tr class="pack-only" style="display:none;">
+                                    <td colspan="4" class="header-cell right-align">Total</td>
+                                    <td class="center-align font-bold" id="prev-total-net"></td>
+                                    <td class="center-align font-bold" id="prev-total-gross"></td>
+                                </tr>
+                                
+                                <!-- Footer / Signature -->
+                                <tr class="inv-only">
+                                    <td colspan="4" class="h-24 no-border-bottom relative">
+                                        <div class="absolute top-1 left-2 font-bold text-[11px]" id="prev-total-words"></div>
+                                    </td>
+                                    <td colspan="3" rowspan="2">
+                                        <div class="font-medium text-[10px]">Signature & Date</div>
+                                    </td>
+                                </tr>
+                                <tr class="inv-only">
+                                    <td colspan="4" class="no-border-top text-[10px]">
+                                        We declare that this invoice shows the actual price of the<br>
+                                        Goods described and that all particulars are true and correct.
+                                    </td>
+                                </tr>
+                                <tr class="pack-only" style="display:none;">
+                                    <td colspan="3" class="h-24 no-border-bottom relative"></td>
+                                    <td colspan="3" rowspan="2">
+                                        <div class="font-medium text-[10px]">Signature & Date</div>
+                                    </td>
+                                </tr>
+                                <tr class="pack-only" style="display:none;">
+                                    <td colspan="3" class="no-border-top text-[10px]">
+                                        We declare that this packing list shows the actual details of the<br>
+                                        Goods described and that all particulars are true and correct.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    <!-- Customer Modal -->
+    <div id="customer-modal" class="fixed inset-0 bg-slate-900 bg-opacity-50 hidden z-50 flex items-center justify-center">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-6 m-4">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-slate-800">Select Customer</h3>
+                <button id="btn-close-modal" class="text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="mb-4">
+                <input type="text" id="customer-search" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none" placeholder="Search customers...">
+            </div>
+            <div id="modal-customer-list" class="max-h-64 overflow-y-auto space-y-2 border border-slate-200 rounded-lg p-2 bg-slate-50">
+                <!-- Items injected here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="js/shipping-paperwork.js"></script>
+</body>
+</html>

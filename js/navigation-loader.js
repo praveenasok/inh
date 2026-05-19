@@ -16,6 +16,7 @@
         menuItems: [
             { name: 'Home', icon: 'fa-home', href: '/index.html' },
             { name: 'Quote Maker', icon: 'fa-file-invoice-dollar', href: '/quotemaker.html' },
+            { name: 'Quote Entry', icon: 'fa-file-invoice', href: '/quote-entry.html' },
             { name: 'Shipping', icon: 'fa-truck', href: '/shipping-calculator/index.html' },
             { name: 'Catalog', icon: 'fa-th-large', href: '/productcatalog.html' },
             { name: 'Price Lists', icon: 'fa-calculator', href: '/pricelists.html' },

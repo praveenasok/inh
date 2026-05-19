@@ -141,6 +141,11 @@ service cloud.firestore {
       allow read, write: if true; // Allow public access for localStorage replacement
     }
     
+    // Ratio Mixer collection for syncing settings
+    match /ratioMixer/{document=**} {
+      allow read, write: if true; // Allow public access for shared settings sync
+    }
+    
     // User profiles
     match /users/{userId} {
       allow read, write: if isOwner(userId) || isAdmin();

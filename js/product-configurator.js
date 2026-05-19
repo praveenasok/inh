@@ -50,9 +50,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeSavedModalBtnBottom = document.getElementById('closeSavedModalBtnBottom');
     const savedProductsList = document.getElementById('savedProductsList');
 
-    // Constants from Ratio Mixer
-    const RAW_LENGTHS = [4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34];
-    const FINISHED_LENGTHS = [4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40];
+    // Constants
+    const RAW_LENGTHS = [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40];
+    const FINISHED_LENGTHS = [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40];
 
     // State Variables
     let configMode = 'standard'; // 'standard' or 'combo'
@@ -66,12 +66,66 @@ document.addEventListener('DOMContentLoaded', () => {
     let extraComponents = [];    // Combo extra parts
 
     // Load available price lists
+    const DEFAULT_PRICES = {
+        4: 2500, 5: 2500, 6: 2500, 7: 2500, 8: 2500, 9: 2500, 10: 2500, 11: 2500, 12: 2500, 13: 2500, 14: 2500, 15: 2500,
+        16: 2500, 17: 2500, 18: 2500, 19: 2500, 20: 3000, 21: 3000, 22: 3000, 23: 3000, 24: 3000, 25: 3000, 26: 3500, 27: 3500,
+        28: 3500, 29: 3500, 30: 4000, 31: 4000, 32: 4000, 33: 4000, 34: 4000, 35: 4000, 36: 4000, 37: 4000, 38: 4000, 39: 4000, 40: 4000
+    };
+
     try {
         const ratioData = localStorage.getItem(RATIO_MIXER_DB_KEY);
         if (ratioData) {
             const parsed = JSON.parse(ratioData);
-            if (parsed && parsed.priceLists) {
-                rawPriceLists = parsed.priceLists;
+            const suppliers = parsed.suppliers || [];
+            
+            if (parsed && parsed.clients) {
+                rawPriceLists = parsed.clients.map(c => {
+                    // Attach supplier prices
+                    const supplier = suppliers.find(s => s.id === c.supplierId);
+                    if (supplier && supplier.prices) {
+                        c.prices = supplier.prices;
+                    } else {
+                        c.prices = DEFAULT_PRICES;
+                    }
+
+                    let isLegacy = false;
+                    const legacyMap = [4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40];
+                    if (c.matrix) {
+                        const keys = Object.keys(c.matrix).map(Number).filter(n => !isNaN(n));
+                        if (keys.some(k => k < 4)) isLegacy = true;
+                        else if (keys.length > 0 && keys.every(k => k <= 18 && k >= 4)) {
+                            const sampleKey = keys[0];
+                            const innerObj = c.matrix[sampleKey];
+                            if (innerObj && typeof innerObj === 'object') {
+                                const innerKeys = Object.keys(innerObj).map(Number).filter(n => !isNaN(n));
+                                if (innerKeys.length > 0) {
+                                    const maxRaw = Math.max(...innerKeys);
+                                    if (maxRaw >= legacyMap[sampleKey]) isLegacy = true;
+                                }
+                            }
+                        }
+                    }
+                    if (isLegacy) {
+                        const translateMap = (obj) => {
+                            if (!obj) return {};
+                            let mapped = {};
+                            Object.keys(obj).forEach(k => {
+                                const numK = parseInt(k);
+                                if (numK < 20) {
+                                    const lenStr = legacyMap[numK].toString();
+                                    mapped[lenStr] = obj[k];
+                                } else {
+                                    mapped[k] = obj[k];
+                                }
+                            });
+                            return mapped;
+                        };
+                        c.matrix = translateMap(c.matrix);
+                        if (c.customPrices) c.customPrices = translateMap(c.customPrices);
+                        if (c.individualMargins) c.individualMargins = translateMap(c.individualMargins);
+                    }
+                    return c;
+                });
             }
         }
     } catch (e) {
@@ -215,10 +269,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const extraOffset = dir === '+' ? val : -val;
 
         let targetLen = parseInt(finLenStr) + extraOffset;
-        const colIdx = FINISHED_LENGTHS.indexOf(targetLen);
-        if (colIdx === -1) return 0;
-
-        const colData = selectedBase.matrix[colIdx] || {};
+        const colData = selectedBase.matrix[targetLen.toString()];
+        if (!colData) return 0;
         let totalPercent = 0;
         let weightedRawCost = 0;
 

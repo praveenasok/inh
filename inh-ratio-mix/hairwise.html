@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hair Ratio Mixer | Premium Edition</title>
+    <title>HairWise Price Lists Generator</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -82,23 +82,46 @@
             box-shadow: 0 6px 16px rgba(8, 18, 73, 0.4);
         }
     </style>
+    <style>
+        header nav, #mixer-view, #ratioAdvancedFiltersPanel, #price-lists-view {
+            display: none !important;
+        }
+        #ratios-view {
+            display: block !important;
+        }
+        /* Custom Header Styling for Hairwise Page */
+        .hw-page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            padding: 20px 30px;
+            border-bottom: 2px solid #cbd5e1;
+            margin-bottom: 20px;
+        }
+        .hw-page-header img {
+            height: 45px;
+        }
+        .hw-page-header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: -0.5px;
+        }
+    </style>
 </head>
 
 <body class="min-h-screen bg-gradient-to-br from-amber-50 via-rose-50 to-orange-100 text-slate-800">
     <!-- Standard Desktop Navigation -->
     <!-- Standard Desktop Navigation -->
     <!-- Navigation -->
-    <script>window.navConfig = { siteTitle: 'Ratio Mixer' };</script>
-    <script src="../js/navigation-loader.js?v=2.1"></script>
+
     <div class="app-container" style="padding-top: 0;">
-        <header class="app-header">
-            <h1 class="logo">Ratio<span class="highlight">Mixer</span></h1>
-            <nav class="main-nav">
-                <button class="nav-tab active" data-tab="mixer">Ratio Mixer</button>
-                <button class="nav-tab" data-tab="suppliers">Supplier Management</button>
-                <button class="nav-tab" data-tab="ratios">Saved Ratios</button>
-            </nav>
-        </header>
+        <div class="hw-page-header">
+            <img src="../images/hw/hwstraightlogo.png" alt="HairWise Logo">
+            <h1>Official Price Lists Generator</h1>
+        </div>
 
         <!-- MIXER TAB -->
         <div id="mixer-view" class="view-section active">
@@ -329,7 +352,7 @@
             <div class="mgmt-container" style="display: block; padding: 20px;">
                 <div style="display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-                        <h2 class="text-2xl font-bold text-slate-800">Saved Ratios</h2>
+                        <h2 class="text-2xl font-bold text-slate-800" style="display: none;">Saved Ratios</h2>
                         <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; width: 100%; justify-content: flex-end;">
                             <div class="relative flex-1" style="min-width: 200px; max-width: 300px;">
                                 <i class="fa-solid fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
@@ -424,9 +447,6 @@
                                 </div>
                             </div>
                             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                                <button onclick="window.openCompositeBuilderModal()" style="display: inline-flex; align-items: center; gap: 7px; padding: 8px 16px; background: #f43f5e; color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.2s; box-shadow: 0 2px 8px rgba(244,63,94,0.25);" title="Create a composite product (like a Wig) from selected ratios">
-                                    <i class="fa-solid fa-boxes-stacked"></i> Build Product
-                                </button>
                                 <button id="exportCombinedImageBtn" onclick="exportSelectedRatiosToImage('download')" style="display: inline-flex; align-items: center; gap: 7px; padding: 8px 16px; background: #10b981; color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.2s; box-shadow: 0 2px 8px rgba(16,185,129,0.25);">
                                     <i class="fa-solid fa-image"></i> Share
                                 </button>
@@ -444,6 +464,8 @@
                     </div>
                 </div>
 
+
+
                 <div class="table-container shadow-sm border border-slate-200 bg-white rounded-xl">
                     <table class="w-full text-left border-collapse custom-table">
                         <thead class="bg-slate-50 border-b border-slate-200">
@@ -453,11 +475,9 @@
                                 </th>
                                 <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Ratio Name /
                                     Client</th>
-                                <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Date Created /
-                                    Modified</th>
-                                <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">
-                                    Actions
-                                </th>
+                                <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Date Created / Modified</th>
+                                <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Actions</th>
+                                
                             </tr>
                         </thead>
                         <tbody id="savedRatiosTableBody" class="divide-y divide-slate-100">

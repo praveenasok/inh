@@ -128,7 +128,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 // Now populate the generated dynamic inputs
                 mo.activeOrders.forEach(order => {
-                    const input = document.querySelector(`.target-qty-input[data-idx="${order.matrixIdx}"]`);
+                    const input = document.querySelector(`.target-qty-input[data-len="${order.finishedLength}"]`);
                     if (input) {
                         input.value = order.targetKilos;
                         input.dispatchEvent(new Event('input')); // trigger live total calculation
@@ -208,12 +208,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         const client = clientsDB.find(c => c.name === clientName);
         if (!client || !client.matrix) return;
 
+        const legacyMap = [4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40];
+
         // Find which Finished Lengths have data in this matrix
         FINISHED_LENGTHS.forEach((len, idx) => {
-            if (client.matrix[idx]) {
-                const hasValue = Object.values(client.matrix[idx]).some(val => val > 0);
+            // Check if the matrix has the length key (modern) or the index key (legacy)
+            const rowData = client.matrix[len] || client.matrix[idx];
+            if (rowData) {
+                const hasValue = Object.values(rowData).some(val => val > 0);
                 if (hasValue) {
-                    currentActiveFinishedLengths.push({ length: len, idx: idx });
+                    // Always use 'len' as the primary key reference moving forward,
+                    // but we store both for compatibility with existing DOM logic.
+                    currentActiveFinishedLengths.push({ length: len, idx: len, legacyIdx: idx });
                 }
             }
         });
@@ -231,9 +237,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         currentActiveFinishedLengths.forEach(fl => {
             inputsHTML += `
                 <div class="flex-1 min-w-[70px] max-w-[120px]">
-                    <label for="input-len-${fl.idx}" class="block text-[11px] font-bold text-slate-700 mb-1 text-center">${fl.length}"</label>
+                    <label for="input-len-${fl.length}" class="block text-[11px] font-bold text-slate-700 mb-1 text-center">${fl.length}"</label>
                     <div class="relative">
-                        <input type="number" id="input-len-${fl.idx}" class="target-qty-input w-full bg-white border border-slate-300 text-slate-900 text-sm font-bold rounded focus:ring-[#081249] focus:border-[#081249] block p-1.5 pr-7 text-center outline-none transition-all" placeholder="0" min="0" step="0.5" data-idx="${fl.idx}" data-len="${fl.length}">
+                        <input type="number" id="input-len-${fl.length}" class="target-qty-input w-full bg-white border border-slate-300 text-slate-900 text-sm font-bold rounded focus:ring-[#081249] focus:border-[#081249] block p-1.5 pr-7 text-center outline-none transition-all" placeholder="0" min="0" step="0.5" data-idx="${fl.idx}" data-len="${fl.length}">
                         <div class="absolute inset-y-0 right-0 flex items-center pr-1.5 pointer-events-none">
                             <span class="text-slate-400 font-bold text-[9px]">KG</span>
                         </div>
@@ -286,9 +292,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             const val = parseFloat(input.value);
             if (val > 0) {
                 totalOutputKilos += val;
+                // matrixIdx is the length in modern data, or the actual legacy idx if it's purely old
                 activeOrders.push({
                     finishedLength: parseInt(input.dataset.len),
-                    matrixIdx: parseInt(input.dataset.idx),
+                    matrixIdx: input.dataset.idx, // Could be string length "16" or legacy index "6"
                     targetKilos: val
                 });
             }
@@ -309,7 +316,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         let rawRequirements = {}; 
 
         activeOrders.forEach(order => {
-            const matrixRow = client.matrix[order.matrixIdx];
+            // Check both string form (e.g. "16") and integer form (e.g. 16 or legacy index)
+            const matrixRow = client.matrix[order.matrixIdx] || client.matrix[parseInt(order.matrixIdx)];
             if (!matrixRow) return;
 
             Object.keys(matrixRow).forEach(rawIdxStr => {
@@ -453,7 +461,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             `;
 
             activeOrders.forEach(order => {
-                const matrixRow = client.matrix[order.matrixIdx];
+                const matrixRow = client.matrix[order.matrixIdx] || client.matrix[parseInt(order.matrixIdx)];
                 const percent = matrixRow && matrixRow[rawLenStr] ? matrixRow[rawLenStr] : 0;
                 
                 if (percent > 0) {

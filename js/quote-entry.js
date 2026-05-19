@@ -1,10 +1,9 @@
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     
     // DB Keys
-    const DB_KEY = 'inhOrderListDB';
+    const DB_KEY = 'inhQuotesDB';
     const RATIO_MIXER_DB_KEY = 'hairRatioDB';
     const CLIENTS_DB_KEY = 'inhClientsDB';
-    const PRODUCTS_DB_KEY = 'inhProductListsDB';
 
     let currentClientPricelist = "";
     let clientsDb = [];
@@ -12,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Datalists Setup
     const datalistFields = [
-        "ClientName", "OrderStatus", "Contact", "Country", "Currency", 
+        "ClientName", "QuoteStatus", "Contact", "Country", "Currency", 
         "AssignedTo", "SalesPerson", "Length", "Product", "ProductType", 
         "Style", "Color", "Weight", "Comment"
     ];
@@ -22,8 +21,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // DOM Elements
     const itemsBody = document.getElementById('itemsBody');
     const addItemBtn = document.getElementById('addItemBtn');
-    const orderForm = document.getElementById('orderForm');
+    const quoteForm = document.getElementById('quoteForm');
     const totalAmountDisplay = document.getElementById('totalAmountDisplay');
+    const subtotalDisplay = document.getElementById('subtotalDisplay');
     const resetBtn = document.getElementById('resetBtn');
 
     // Modals
@@ -45,35 +45,54 @@ document.addEventListener('DOMContentLoaded', () => {
         if (cData) clientsDb = JSON.parse(cData);
     } catch(e) {}
 
-    // Load Products Config
-    try {
-        const pData = localStorage.getItem(PRODUCTS_DB_KEY);
-        if (pData) productsDb = JSON.parse(pData);
-    } catch(e) {}
-
-    // Load available price lists
+    // Load Products Config from INHDATA (Firebase)
     let availablePriceLists = [];
+    try {
+        // Wait briefly for INHDATA to initialize if needed
+        let retries = 0;
+        while ((typeof INHDATA === 'undefined' || typeof INHDATA.getAll !== 'function') && retries < 20) {
+            await new Promise(r => setTimeout(r, 200));
+            retries++;
+        }
+
+        if (typeof INHDATA !== 'undefined' && typeof INHDATA.getAll === 'function') {
+            const pData = await INHDATA.getAll('products');
+            if (pData) productsDb = pData;
+        } else {
+            console.warn("INHDATA not available, falling back to local products.");
+            const localPData = localStorage.getItem('inhProductListsDB');
+            if (localPData) productsDb = JSON.parse(localPData);
+        }
+    } catch(e) {
+        console.error("Failed to load products config", e);
+    }
+
+    // Load available price lists from Ratio Mixer local storage as fallback
     try {
         const ratioData = localStorage.getItem(RATIO_MIXER_DB_KEY);
         if (ratioData) {
             const parsed = JSON.parse(ratioData);
             if (parsed && parsed.clients) {
-                availablePriceLists = parsed.clients.map(pl => pl.name);
+                parsed.clients.forEach(pl => {
+                    if (!availablePriceLists.includes(pl.name)) {
+                        availablePriceLists.push(pl.name);
+                    }
+                });
             }
         }
-    } catch (e) {
-        console.error("Failed to load Ratio Mixer price lists", e);
-    }
+    } catch (e) {}
     
     // Combine base material lists with Configured Product Lists
     if (productsDb && productsDb.length > 0) {
         productsDb.forEach(p => {
-            const plName = p.priceListName || "Configured Products";
-            if (!availablePriceLists.includes(plName)) {
+            const plName = p.PriceList || p['Price List Name'] || p.PriceListName || p.priceListName || p.priceList || p.price_list_name || "Configured Products";
+            if (plName && !availablePriceLists.includes(plName)) {
                 availablePriceLists.push(plName);
             }
         });
     }
+
+    availablePriceLists.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
 
     // Initialize Datalists from Order DB
     function populateDatalists() {
@@ -89,7 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Simple mapping from safe name to actual Column Name
         const mapToCol = {
             "ClientName": "Client Name",
-            "OrderStatus": "Order Status",
+            "QuoteStatus": "Quote Status",
             "AssignedTo": "Assigned To",
             "SalesPerson": "Sales Person",
             "ProductType": "Product Type"
@@ -107,11 +126,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     uniqueVals.add(r[actualColName].trim());
                 }
             });
-
-            // Products will be handled dynamically per-row now, but we seed historical names
-            if (field === "Product") {
-                // Keep historical uniqueVals, don't auto-append all configs
-            }
 
             Array.from(uniqueVals).sort().forEach(val => {
                 const opt = document.createElement('option');
@@ -209,10 +223,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const wt = weightInp.value.trim();
 
             if (prodName && len && productsDb.length > 0) {
-                const prod = productsDb.find(p => p.name.toLowerCase() === prodName.toLowerCase());
+                const prod = productsDb.find(p => (p.name || p.Product || "").toLowerCase() === prodName.toLowerCase());
                 
+                // If it's a legacy product format with finalPrices
                 if (prod && prod.finalPrices && prod.finalPrices[len]) {
-                    // Update Weight Datalist
                     const wtDatalist = tr.querySelector(`#list-Weight-d-${tr.id.split('-').pop()}`);
                     const availWeights = Object.keys(prod.finalPrices[len]).sort((a,b)=>parseFloat(a)-parseFloat(b));
                     
@@ -225,33 +239,24 @@ document.addEventListener('DOMContentLoaded', () => {
                         });
                     }
 
-                    // Attempt exact match
                     if (wt && prod.finalPrices[len][wt]) {
                         rateInput.value = prod.finalPrices[len][wt].toFixed(2);
                         calcAmount();
-                    } 
-                    // Attempt closest float match if exact string match fails
-                    else if (wt && availWeights.find(k => parseFloat(k) === parseFloat(wt))) {
-                        const exactKey = availWeights.find(k => parseFloat(k) === parseFloat(wt));
-                        rateInput.value = prod.finalPrices[len][exactKey].toFixed(2);
-                        calcAmount();
-                    }
-                    // Proportional Scaling for Custom Unlisted Weights
-                    else if (wt && parseFloat(wt) > 0 && availWeights.length > 0) {
-                        // Prefer 100g as the ideal baseline, otherwise fallback to the first listed weight
-                        const baseWtStr = availWeights.includes("100") ? "100" : availWeights[0];
-                        const baseWtNum = parseFloat(baseWtStr);
-                        const basePrice = parseFloat(prod.finalPrices[len][baseWtStr]);
-
-                        // Per-gram price * target weight
-                        const customScaledPrice = (basePrice / baseWtNum) * parseFloat(wt);
-                        rateInput.value = customScaledPrice.toFixed(2);
-                        calcAmount();
-                    }
-                    // Auto-fill solitary (No weight specified by user yet)
-                    else if (!wt && availWeights.length === 1) {
+                    } else if (!wt && availWeights.length === 1) {
                         weightInp.value = availWeights[0];
                         rateInput.value = prod.finalPrices[len][availWeights[0]].toFixed(2);
+                        calcAmount();
+                    }
+                }
+                // If it's a direct INHDATA product record (flattened)
+                else if (prod && (prod.Length == len || prod.Length == len+'"')) {
+                    const basePrice = parseFloat(prod.Price || prod.Rate || 0);
+                    if (basePrice > 0) {
+                        if (wt) {
+                            rateInput.value = ((basePrice / 1000) * parseFloat(wt)).toFixed(2); // Assuming price is per KG if not finalPrices
+                        } else {
+                            rateInput.value = basePrice.toFixed(2);
+                        }
                         calcAmount();
                     }
                 }
@@ -263,14 +268,17 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!prodListEl) return;
             prodListEl.innerHTML = '';
             
-            const selectedPL = priceListInp.value.trim();
+            const selectedPL = priceListInp.value.trim().toLowerCase();
             let relevantProds = productsDb;
             
             if (selectedPL) {
-                relevantProds = productsDb.filter(p => (p.priceListName || "Configured Products").toLowerCase() === selectedPL.toLowerCase());
+                relevantProds = productsDb.filter(p => {
+                    const pList = p.PriceList || p['Price List Name'] || p.PriceListName || p.priceListName || p.priceList || p.price_list_name || "Configured Products";
+                    return String(pList).toLowerCase() === selectedPL;
+                });
             }
 
-            const uniqueProds = [...new Set(relevantProds.map(p => p.name))].sort();
+            const uniqueProds = [...new Set(relevantProds.map(p => p.name || p.Product).filter(Boolean))].sort();
             uniqueProds.forEach(n => {
                 const opt = document.createElement('option');
                 opt.value = n;
@@ -296,12 +304,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const commentInput = tr.querySelector('.i-comment');
         commentInput.addEventListener('keydown', (e) => {
             if (e.key === 'Tab' && !e.shiftKey) {
-                // Check if this is the last row in the table
                 const isLastRow = !tr.nextElementSibling;
                 if (isLastRow) {
                     e.preventDefault();
                     renderItemRow();
-                    // focus first input of the newly added row
                     const newRow = itemsBody.lastElementChild;
                     if (newRow) {
                         const firstInput = newRow.querySelector('.i-pricelist');
@@ -311,13 +317,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Default Pricelist if Client defined
         const plInp = tr.querySelector('.i-pricelist');
         if (currentClientPricelist && !plInp.value) {
             plInp.value = currentClientPricelist;
         }
 
-        // Remove btn
         tr.querySelector('.remove-item-btn').addEventListener('click', () => {
             tr.remove();
             calculateTotal();
@@ -325,34 +329,49 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function calculateTotal() {
-        let total = 0;
+        let subtotal = 0;
         document.querySelectorAll('.i-amount').forEach(inp => {
             const val = parseFloat(inp.value) || 0;
-            total += val;
+            subtotal += val;
         });
+        subtotalDisplay.textContent = subtotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+        const discount = parseFloat(document.getElementById('h-discount').value) || 0;
+        const tax = parseFloat(document.getElementById('h-tax').value) || 0;
+        const shipping = parseFloat(document.getElementById('h-shipping').value) || 0;
+
+        const total = subtotal - discount + tax + shipping;
         totalAmountDisplay.textContent = total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
+    ['h-discount', 'h-tax', 'h-shipping'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('input', calculateTotal);
+    });
+
     // Submit Logic
-    orderForm.addEventListener('submit', (e) => {
+    quoteForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         
-        const orderNum = document.getElementById('h-order-num').value.trim();
-        if (!orderNum) return alert('Order Number is required.');
+        const quoteNum = document.getElementById('h-quote-num').value.trim();
+        if (!quoteNum) return alert('Quote Number is required.');
 
         // Gather Header Data
         const headerData = {
-            "Order Number": orderNum,
-            "Order Date": document.getElementById('h-order-date').value,
+            "Quote Number": quoteNum,
+            "Quote Date": document.getElementById('h-quote-date').value,
             "Client Name": document.getElementById('h-client').value,
-            "Order Status": document.getElementById('h-status').value,
+            "Quote Status": document.getElementById('h-status').value,
             "Contact": document.getElementById('h-contact').value,
             "Country": document.getElementById('h-country').value,
             "Currency": document.getElementById('h-currency').value,
             "Exchange Rate": document.getElementById('h-ex-rate').value || "1",
             "Assigned To": document.getElementById('h-assigned').value,
             "Sales Person": document.getElementById('h-sales').value,
-            "Delivered Date": document.getElementById('h-deliver-date').value
+            "Valid Until": document.getElementById('h-valid-until').value,
+            "Discount": document.getElementById('h-discount').value,
+            "Tax": document.getElementById('h-tax').value,
+            "Shipping": document.getElementById('h-shipping').value
         };
 
         const exRate = parseFloat(headerData["Exchange Rate"]) || 1;
@@ -364,7 +383,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const rate = tr.querySelector('.i-rate').value;
             const amt = parseFloat(tr.querySelector('.i-amount').value) || (parseFloat(qty||0) * parseFloat(rate||0)) || undefined;
             
-            // Generate Base Amount if amt is populated
             const baseAmt = amt ? (amt / exRate).toFixed(2) : "";
 
             const itemData = {
@@ -382,7 +400,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 "Comment": tr.querySelector('.i-comment').value
             };
 
-            // Only add item if it has at least some actual content mapped
             const hasData = Object.values(itemData).some(v => v.trim() !== '');
             if (hasData) {
                 items.push(itemData);
@@ -392,10 +409,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // Assemble spreadsheet rows
         let finalRowsToInject = [];
         if (items.length === 0) {
-            // Push just the header
             finalRowsToInject.push({ ...headerData });
         } else {
-            // Explode header across all items
             items.forEach(item => {
                 finalRowsToInject.push({ ...headerData, ...item });
             });
@@ -405,46 +420,40 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             let dbData = JSON.parse(localStorage.getItem(DB_KEY));
             if (!dbData || !dbData.rows) {
-                // Initialize if doesn't exist
                 const defaultCols = [
-                    "Order Date", "Order Status", "Delivered Date", "Order Number", 
+                    "Quote Date", "Quote Status", "Valid Until", "Quote Number", 
                     "Client Name", "Contact", "Country", "Price List", "Length", 
                     "Product", "Product Type", "Style", "Color", "Weight", "Comment", 
                     "Quantity", "Currency", "Rate", "Amount", "Exchange Rate", 
-                    "Base Amount", "Assigned To", "Sales Person"
+                    "Base Amount", "Assigned To", "Sales Person", "Discount", "Tax", "Shipping"
                 ];
                 dbData = { columns: [...defaultCols], rows: [] };
             }
 
-            // We push the new rows to the END of the spreadsheet
             dbData.rows = [...dbData.rows, ...finalRowsToInject];
-
             localStorage.setItem(DB_KEY, JSON.stringify(dbData));
             
-            // Show Success UI
             showSuccessModal();
 
         } catch (err) {
             console.error(err);
-            alert("Failed to save order to spreadsheet database.");
+            alert("Failed to save quote to local database.");
         }
     });
 
     // Resetting
     resetBtn.addEventListener('click', () => {
         if(confirm("Are you sure you want to clear the form?")) {
-            orderForm.reset();
+            quoteForm.reset();
             itemsBody.innerHTML = '';
-            document.getElementById('h-order-date').valueAsDate = new Date();
-            renderItemRow(); // Start with 1 empty row
+            document.getElementById('h-quote-date').valueAsDate = new Date();
+            renderItemRow(); 
             calculateTotal();
         }
     });
 
-    // Modal behavior
     function showSuccessModal() {
         successModal.classList.remove('hidden');
-        // Trigger reflow for fade animation
         void successModal.offsetWidth;
         successModalContent.classList.remove('scale-95', 'opacity-0');
         successModalContent.classList.add('scale-100', 'opacity-100');
@@ -455,13 +464,10 @@ document.addEventListener('DOMContentLoaded', () => {
         successModalContent.classList.remove('scale-100', 'opacity-100');
         setTimeout(() => {
             successModal.classList.add('hidden');
-            // Hard reset the form for safety
-            orderForm.reset();
+            quoteForm.reset();
             itemsBody.innerHTML = '';
             renderItemRow();
-            document.getElementById('h-order-date').valueAsDate = new Date();
-            // Optional: Increment Order Number slightly? 
-            // Often left blank for safety
+            document.getElementById('h-quote-date').valueAsDate = new Date();
         }, 200);
     });
 
@@ -471,7 +477,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const currentName = document.getElementById('h-client').value.trim();
         if (currentName) {
             document.getElementById('c-name').value = currentName;
-            // Load if exists
             const existing = clientsDb.find(c => c.name.toLowerCase() === currentName.toLowerCase());
             if (existing) {
                 document.getElementById('c-contact').value = existing.contact || "";
@@ -526,14 +531,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         localStorage.setItem(CLIENTS_DB_KEY, JSON.stringify(clientsDb));
         
-        // Push back up to header
         document.getElementById('h-client').value = clientData.name;
         document.getElementById('h-client').dispatchEvent(new Event('change'));
 
         hideClientModal();
     });
 
-    // Client Selection Handler
     document.getElementById('h-client').addEventListener('change', (e) => {
         const val = e.target.value.trim();
         if (!val) {
@@ -548,7 +551,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (client.currency) document.getElementById('h-currency').value = client.currency;
             if (client.pricelist) {
                 currentClientPricelist = client.pricelist;
-                // Auto fill empty item rows
                 document.querySelectorAll('.i-pricelist').forEach(el => {
                     if(!el.value) el.value = currentClientPricelist;
                 });
@@ -559,7 +561,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Init Page setup
     addItemBtn.addEventListener('click', renderItemRow);
     populateDatalists();
-    document.getElementById('h-order-date').valueAsDate = new Date();
+    document.getElementById('h-quote-date').valueAsDate = new Date();
     
     // Spawn 3 default rows to start
     renderItemRow();

@@ -121,8 +121,8 @@ body {
     padding: 6px;
     border: 1px solid #cbd5e1;
     border-radius: 4px;
-    font-size: 11px;
-    height: 28px;
+    font-size: 14px;
+    height: 32px;
     outline: none;
     transition: border-color 0.2s;
 }
@@ -301,6 +301,10 @@ tfoot td {
     border: 1px solid #cbd5e1;
 }
 
+.custom-price-input {
+    width: 60px;
+}
+
 .cell-input:focus {
     background: white;
     border-color: var(--primary-color);
@@ -422,4 +426,268 @@ input::-webkit-inner-spin-button {
 input[type=number] {
   -moz-appearance: textfield;
   appearance: textfield;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .app-container {
+        padding: 10px;
+    }
+    
+    .app-header {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .main-nav {
+        width: 100%;
+        overflow-x: auto;
+        justify-content: flex-start;
+        padding-bottom: 5px;
+    }
+
+    .meta-data-section {
+        flex-direction: column;
+        padding: 10px;
+    }
+
+    .input-container {
+        flex-direction: column !important;
+        align-items: stretch !important;
+    }
+
+    .input-group[style*="min-width: 350px"],
+    .input-group {
+        min-width: 100% !important;
+        flex: 1 1 100% !important;
+    }
+
+    .client-controls {
+        flex-direction: column;
+        width: 100% !important;
+    }
+    
+    .client-controls input {
+        max-width: 100% !important;
+    }
+
+    .mgmt-container {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .supplier-list-panel {
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .supplier-editor {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 15px;
+    }
+    
+    .editor-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+    
+    .editor-actions {
+        display: flex;
+        width: 100%;
+        gap: 10px;
+        justify-content: flex-start;
+    }
+    
+    .editor-actions .btn {
+        flex: 1;
+    }
+
+    /* Extreme Matrix Compression */
+    .sticky-col-1 {
+        width: 60px !important;
+        min-width: 60px !important;
+        max-width: 60px !important;
+        font-size: 9px;
+        padding: 4px 1px;
+        line-height: 1.1;
+    }
+
+    .sticky-col-2 {
+        left: 60px !important;
+        width: 40px !important;
+        min-width: 40px !important;
+        max-width: 40px !important;
+        font-size: 9px;
+        padding: 4px 1px;
+    }
+
+    .price-input {
+        width: 45px;
+        font-size: 10px;
+        padding: 2px 0;
+    }
+
+    .cell-input {
+        width: 24px;
+        font-size: 9px;
+        padding: 2px 0;
+    }
+
+    .custom-price-input {
+        width: 45px;
+    }
+    
+    #ratioTable th, #ratioTable td {
+        padding: 2px 1px;
+    }
+    
+    .logo {
+        font-size: 22px;
+    }
+    
+    .nav-tab {
+        padding: 8px 10px;
+        font-size: 12px;
+        white-space: nowrap;
+    }
+    
+    /* Saved Ratios Tab Responsiveness - Card Layout */
+    #ratios-view .mgmt-container > div:first-child {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 10px;
+    }
+    
+    .table-container {
+        border: none !important;
+        box-shadow: none !important;
+        background: transparent !important;
+        overflow-x: visible;
+    }
+    
+    /* Fix preview rows squeezing on mobile */
+    .ratio-preview-row, .preview-row {
+        display: block !important;
+        width: 100% !important;
+        padding: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
+    
+    .ratio-preview-row > td, .preview-row > td {
+        display: block !important;
+        padding: 5px !important;
+        border: none !important;
+        width: 100% !important;
+        box-sizing: border-box;
+    }
+    
+    .ratio-preview-row > td::before, .preview-row > td::before {
+        display: none !important;
+    }
+    
+    /* Reset inner tables inside preview cards so they do not inherit mobile card-table layouts */
+    .preview-card-inner table {
+        display: table !important;
+        width: 100% !important;
+    }
+    .preview-card-inner thead {
+        display: table-header-group !important;
+    }
+    .preview-card-inner tbody {
+        display: table-row-group !important;
+    }
+    .preview-card-inner tr {
+        display: table-row !important;
+        margin: 0 !important;
+        box-shadow: none !important;
+        border: none !important;
+        border-radius: 0 !important;
+    }
+    .preview-card-inner th, .preview-card-inner td {
+        display: table-cell !important;
+        width: auto !important;
+        padding: 6px !important;
+        border: 1px solid #e2e8f0 !important;
+        text-align: center !important;
+    }
+    .preview-card-inner td::before {
+        display: none !important;
+    }
+    
+    /* Enhance dropdowns on mobile */
+    .action-dropdown {
+        width: 160px !important;
+        right: 0 !important;
+        z-index: 100 !important;
+    }
+    
+    .action-dropdown button {
+        padding: 12px 16px !important;
+        font-size: 14px !important;
+    }
+    
+    /* Enhance preview cards on mobile */
+    .preview-card-inner {
+        padding: 15px !important;
+        margin: 5px auto !important;
+    }
+    
+    .custom-table, .custom-table tbody, .custom-table tr, .custom-table td {
+        display: block;
+        width: 100%;
+        min-width: 0 !important;
+    }
+    
+    .custom-table thead {
+        display: none;
+    }
+
+    .custom-table tr {
+        background: white;
+        margin-bottom: 15px;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        display: flex;
+        flex-direction: column;
+    }
+
+    .custom-table td {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 12px 16px;
+        border-bottom: 1px solid #f1f5f9;
+        text-align: left;
+    }
+    
+    .custom-table td:last-child {
+        border-bottom: none;
+        flex-direction: row;
+        justify-content: flex-end;
+    }
+
+    .custom-table td::before {
+        content: attr(data-label);
+        font-weight: 700;
+        font-size: 10px;
+        text-transform: uppercase;
+        color: #64748b;
+        margin-bottom: 6px;
+        display: block;
+    }
+}
+
+/* Raw Material Price column collapse */
+#ratioTable.raw-price-hidden thead th.sticky-col-1,
+#ratioTable.raw-price-hidden tbody td.sticky-col-1 {
+    display: none;
+}
+
+#ratioTable.raw-price-hidden thead th.sticky-col-2,
+#ratioTable.raw-price-hidden tbody td.sticky-col-2 {
+    left: 0 !important;
 }
