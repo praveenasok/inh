@@ -1,5 +1,5 @@
 /**
- * InstaQuote Unified Navigation Loader
+ * INHsuite Unified Navigation Loader
  *
  * This script injects the standard navigation bar into any page.
  * It automatically handles:
@@ -12,21 +12,15 @@
     // Configuration
     const navConfig = {
         logoSrc: '/images/logo-optimized.png', // Root-relative path
-        siteTitle: (window.navConfig && window.navConfig.siteTitle) || 'InstaQuote Suite',
+        siteTitle: (window.navConfig && window.navConfig.siteTitle) || 'INHsuite',
         menuItems: [
             { name: 'Home', icon: 'fa-home', href: '/index.html' },
-            { name: 'Quote Maker', icon: 'fa-file-invoice-dollar', href: '/quotemaker.html' },
-            { name: 'Quote Entry', icon: 'fa-file-invoice', href: '/quote-entry.html' },
             { name: 'Shipping', icon: 'fa-truck', href: '/shipping-calculator/index.html' },
-            { name: 'Catalog', icon: 'fa-th-large', href: '/productcatalog.html' },
-            { name: 'Price Lists', icon: 'fa-calculator', href: '/pricelists.html' },
-            { name: 'Orders', icon: 'fa-list', href: '/orders.html' },
-            { name: 'Order List', icon: 'fa-table-list', href: '/order-list.html' },
-            { name: 'Order Entry', icon: 'fa-file-signature', href: '/order-entry.html' },
-            { name: 'Product Configurator', icon: 'fa-cogs', href: '/product-configurator.html' },
+            { name: 'Shipping Paperwork', icon: 'fa-file-invoice', href: '/shipping-paperwork.html' },
+            { name: 'Delegated Orders', icon: 'fa-clipboard-list', href: '/delegated-orders.html' },
             { name: 'Ratio Mixer', icon: 'fa-balance-scale', href: '/inh-ratio-mix/index.html' },
             { name: 'Manufacturing Order', icon: 'fa-industry', href: '/raw-manufacturing-order.html' },
-            { name: 'Inventory', icon: 'fa-boxes', href: '/inventory.html' },
+            { name: 'Inventory Hub', icon: 'fa-boxes-stacked', href: '/inventory-system/dist/index.html' },
             {
                 name: 'SOP',
                 icon: 'fa-book',
@@ -38,10 +32,7 @@
                     { name: 'Bleach Calculator', href: '/sop-bleach-calculator.html' },
                     { name: 'Cuticle Removal', href: '/sop-cuticle-removal.html' }
                 ]
-            },
-            { name: 'Admin', icon: 'fa-cog', href: '/adminpanel.html' },
-            { name: 'Files', icon: 'fa-share-alt', href: '/share-files.html' },
-            { name: 'Sheets Config', icon: 'fa-table', href: '/google-sheets-config-interface.html' }
+            }
         ]
     };
 

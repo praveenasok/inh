@@ -9,6 +9,9 @@ import Dashboard from './pages/Dashboard';
 import TraceabilityScreen from './pages/Traceability';
 import MOPage from './pages/MOPage';
 import BOMPage from './pages/BOMPage';
+import InventoryPage from './pages/InventoryPage';
+import PurchasePage from './pages/PurchasePage';
+import SuppliersPage from './pages/SuppliersPage';
 
 const Sidebar = () => {
   const location = useLocation();
@@ -20,6 +23,7 @@ const Sidebar = () => {
     { name: 'Suppliers Master', path: '/suppliers', icon: <Users size={20} /> },
     { name: 'Spec Sheet (BOM)', path: '/bom', icon: <FileText size={20} /> },
     { name: 'Order Entry', path: '/orders', icon: <ClipboardList size={20} /> },
+    { name: 'Inventory Manager', path: '/inventory-manager', icon: <Package size={20} /> },
     { name: 'Raw Hair Inventory', path: '/raw-inventory', icon: <Archive size={20} /> },
     { name: 'WIP Processing', path: '/wip', icon: <SplitSquareVertical size={20} /> },
     { name: 'Semi Finished Inventory', path: '/semi-inventory', icon: <Package size={20} /> },
@@ -93,15 +97,16 @@ export default function App() {
           <Route path="/" element={<Dashboard />} />
           <Route path="/traceability" element={<TraceabilityScreen />} />
           <Route path="/mo" element={<MOPage />} />
-          <Route path="/purchase" element={<PlaceholderPage title="Raw Hair Purchase Entry" />} />
-          <Route path="/suppliers" element={<PlaceholderPage title="Supplier Management" />} />
+          <Route path="/purchase" element={<PurchasePage />} />
+          <Route path="/suppliers" element={<SuppliersPage />} />
           <Route path="/bom" element={<BOMPage />} />
           <Route path="/orders" element={<PlaceholderPage title="Sales Order Entry" />} />
-          <Route path="/raw-inventory" element={<PlaceholderPage title="Raw Hair Inventory" />} />
+          <Route path="/inventory-manager" element={<InventoryPage />} />
+          <Route path="/raw-inventory" element={<InventoryPage />} />
           <Route path="/wip" element={<PlaceholderPage title="WIP Processing & Segregation" />} />
-          <Route path="/semi-inventory" element={<PlaceholderPage title="Semi Finished Stock" />} />
-          <Route path="/finished-inventory" element={<PlaceholderPage title="Finished Goods Stock" />} />
-          <Route path="/movements" element={<PlaceholderPage title="Stock Movement Register" />} />
+          <Route path="/semi-inventory" element={<InventoryPage />} />
+          <Route path="/finished-inventory" element={<InventoryPage />} />
+          <Route path="/movements" element={<InventoryPage />} />
           <Route path="/reports" element={<PlaceholderPage title="Analytics & Reports" />} />
         </Routes>
       </AppLayout>
