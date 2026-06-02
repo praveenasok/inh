@@ -18,18 +18,18 @@ const Sidebar = () => {
   const navItems = [
     { name: 'Dashboard', path: '/', icon: <LayoutDashboard size={20} /> },
     { name: 'Traceability', path: '/traceability', icon: <Search size={20} /> },
-    { name: 'Manufacturing Orders', path: '/mo', icon: <Factory size={20} /> },
+    { name: 'Manufacturing Orders', path: '/raw-manufacturing-order.html', external: true, icon: <Factory size={20} /> },
     { name: 'Raw Hair Purchase', path: '/purchase', icon: <ShoppingCart size={20} /> },
     { name: 'Suppliers Master', path: '/suppliers', icon: <Users size={20} /> },
     { name: 'Spec Sheet (BOM)', path: '/bom', icon: <FileText size={20} /> },
-    { name: 'Order Entry', path: '/orders', icon: <ClipboardList size={20} /> },
+    { name: 'Order Entry', path: '/delegated-orders.html', external: true, icon: <ClipboardList size={20} /> },
     { name: 'Inventory Manager', path: '/inventory-manager', icon: <Package size={20} /> },
-    { name: 'Raw Hair Inventory', path: '/raw-inventory', icon: <Archive size={20} /> },
-    { name: 'WIP Processing', path: '/wip', icon: <SplitSquareVertical size={20} /> },
-    { name: 'Semi Finished Inventory', path: '/semi-inventory', icon: <Package size={20} /> },
-    { name: 'Finished Goods', path: '/finished-inventory', icon: <PackageCheck size={20} /> },
-    { name: 'Movements & Audit', path: '/movements', icon: <ArrowLeftRight size={20} /> },
-    { name: 'Reports', path: '/reports', icon: <BarChart3 size={20} /> },
+    { name: 'Raw Hair Inventory', path: '/inventory-manager', icon: <Archive size={20} /> },
+    { name: 'WIP Processing', path: '/segregation-preview.html', external: true, icon: <SplitSquareVertical size={20} /> },
+    { name: 'Semi Finished Inventory', path: '/inventory-manager', icon: <Package size={20} /> },
+    { name: 'Finished Goods', path: '/inventory-manager', icon: <PackageCheck size={20} /> },
+    { name: 'Movements & Audit', path: '/inventory-manager', icon: <ArrowLeftRight size={20} /> },
+    { name: 'Reports', path: '/adminpanel.html', external: true, icon: <BarChart3 size={20} /> },
   ];
 
   return (
@@ -39,7 +39,19 @@ const Sidebar = () => {
       </div>
       <nav className="mt-4">
         {navItems.map((item) => {
-          const isActive = location.pathname === item.path;
+          const isActive = !item.external && location.pathname === item.path;
+          if (item.external) {
+            return (
+              <a
+                key={item.name}
+                href={item.path}
+                className="flex items-center px-6 py-3 hover:bg-gray-800 hover:text-white transition-colors gap-4 border-l-4 border-transparent"
+              >
+                {item.icon}
+                <span className="text-sm font-medium">{item.name}</span>
+              </a>
+            );
+          }
           return (
             <Link
               key={item.name}
