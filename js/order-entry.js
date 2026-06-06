@@ -556,11 +556,32 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Status color coding handler for "urgent"
+    const statusInput = document.getElementById('h-status');
+    if (statusInput) {
+        const updateStatusColor = () => {
+            const val = statusInput.value.trim().toLowerCase();
+            if (val === 'urgent') {
+                statusInput.style.backgroundColor = '#fee2e2'; // Tailwind red-100
+                statusInput.style.color = '#dc2626'; // Tailwind red-600
+                statusInput.style.fontWeight = 'bold';
+                statusInput.style.borderColor = '#f87171'; // Tailwind red-400
+            } else {
+                statusInput.style.backgroundColor = '';
+                statusInput.style.color = '';
+                statusInput.style.fontWeight = '';
+                statusInput.style.borderColor = '';
+            }
+        };
+        statusInput.addEventListener('input', updateStatusColor);
+        statusInput.addEventListener('change', updateStatusColor);
+        updateStatusColor();
+    }
     // Init Page setup
     addItemBtn.addEventListener('click', renderItemRow);
     populateDatalists();
     document.getElementById('h-order-date').valueAsDate = new Date();
-    
+
     // Spawn 3 default rows to start
     renderItemRow();
     renderItemRow();

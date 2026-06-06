@@ -1,10 +1,46 @@
 // Google Sheets API Service
 // Handles secure authentication and data fetching from Google Sheets
 
-const { google } = require('googleapis');
+const { GoogleAuth } = require('google-auth-library');
 const fs = require('fs');
 const path = require('path');
+const https = require('https');
 const { googleSheetsAutoConfig } = require('./js/google-sheets-auto-config');
+
+// Helper to make an HTTP GET request to Google Sheets API using built-in https module
+function fetchJson(url, token) {
+  return new Promise((resolve, reject) => {
+    const req = https.get(url, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/json'
+      }
+    }, (res) => {
+      let body = '';
+      res.on('data', chunk => body += chunk);
+      res.on('end', () => {
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          try {
+            resolve(JSON.parse(body));
+          } catch (e) {
+            reject(new Error(`Failed to parse response JSON: ${e.message}. Body: ${body}`));
+          }
+        } else {
+          try {
+            const errJson = JSON.parse(body);
+            reject(new Error(errJson.error?.message || `HTTP error ${res.statusCode}: ${body}`));
+          } catch (_) {
+            reject(new Error(`HTTP error ${res.statusCode}: ${body}`));
+          }
+        }
+      });
+    });
+
+    req.on('error', (err) => {
+      reject(err);
+    });
+  });
+}
 
 class GoogleSheetsService {
   constructor() {
@@ -27,7 +63,7 @@ class GoogleSheetsService {
         throw new Error(credentialValidation.error);
       }
 
-      this.auth = new google.auth.GoogleAuth({
+      this.auth = new GoogleAuth({
         keyFile: serviceAccountPath,
         scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly']
       });
@@ -37,13 +73,40 @@ class GoogleSheetsService {
         throw new Error('Failed to authenticate with Google Sheets API. Please check your service account credentials.');
       }
 
-      this.sheets = google.sheets({ version: 'v4', auth: this.auth });
+      const self = this;
+      this.sheets = {
+        spreadsheets: {
+          get: async ({ spreadsheetId }) => {
+            const token = await self.getAccessToken();
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}`;
+            const data = await fetchJson(url, token);
+            return { data };
+          },
+          values: {
+            get: async ({ spreadsheetId, range }) => {
+              const token = await self.getAccessToken();
+              const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}`;
+              const data = await fetchJson(url, token);
+              return { data };
+            }
+          }
+        }
+      };
+
       this.isInitialized = true;
-      
       return true;
     } catch (error) {
       throw error;
     }
+  }
+
+  async getAccessToken() {
+    if (!this.auth) {
+      throw new Error('Google Sheets service not initialized');
+    }
+    const authClient = await this.auth.getClient();
+    const tokenResponse = await authClient.getAccessToken();
+    return tokenResponse.token;
   }
 
   validateServiceAccountKey(keyFilePath) {

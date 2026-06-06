@@ -7,6 +7,34 @@
   let _lastTime = 0;
   const DEFAULT_DEBOUNCE_MS = 5000; // avoid re-checks within this window unless forced
 
+  // Helper to wait for Firebase Auth to initialize asynchronously
+  const waitForFirebaseAuth = () => {
+    return new Promise((resolve) => {
+      if (!window.firebase || !firebase.auth) {
+        resolve(null);
+        return;
+      }
+      
+      // If currentUser is already resolved, use it immediately
+      if (firebase.auth().currentUser) {
+        resolve(firebase.auth().currentUser);
+        return;
+      }
+      
+      // Listen to onAuthStateChanged once to see if a session loads
+      const unsubscribe = firebase.auth().onAuthStateChanged((user) => {
+        unsubscribe();
+        resolve(user);
+      });
+      
+      // Set a maximum fallback timeout of 2.0 seconds to keep initialization snappy
+      setTimeout(() => {
+        unsubscribe();
+        resolve(firebase.auth().currentUser || null);
+      }, 2000);
+    });
+  };
+
   window.sessionHelper = {
     async check(options) {
       const opts = options || {};
@@ -23,6 +51,7 @@
         try { return await _checkInFlight; } catch (_) { return null; }
       }
 
+      // 1. First try instant synchronous local storage lookup
       try {
         if (localStorage.getItem('SESSION_AUTH') === '1') {
           const email = localStorage.getItem('SESSION_EMAIL') || null;
@@ -33,11 +62,20 @@
         }
       } catch (_) {}
 
+      // 2. Next, wait for Firebase Auth to initialize asynchronously (vital for cold start / new devices)
       try {
-        if (window.firebase && firebase.auth && firebase.auth().currentUser) {
-          const cu = firebase.auth().currentUser;
-          _lastResult = { uid: cu && cu.uid ? cu.uid : null, email: cu && cu.email ? cu.email : null };
+        const user = await waitForFirebaseAuth();
+        if (user) {
+          const email = user.email || null;
+          const uid = user.uid || null;
+          _lastResult = { uid, email };
           _lastTime = Date.now();
+          // Write back to localStorage to speed up future checks on this device
+          try {
+            localStorage.setItem('SESSION_AUTH', '1');
+            localStorage.setItem('SESSION_EMAIL', email || '');
+            localStorage.setItem('SESSION_UID', uid || '');
+          } catch (_) {}
           return _lastResult;
         }
       } catch (_) {}

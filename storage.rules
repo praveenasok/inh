@@ -23,8 +23,8 @@ service firebase.storage {
 
     
     function isValidImageFile() {
-      return resource.contentType.matches('image/.*') ||
-             request.resource.name.matches('.*\\.(jpg|jpeg|png|gif|webp|svg)$');
+      return request.resource.contentType.lower().matches('image/.*') ||
+             request.resource.name.lower().matches('.*\\.(jpg|jpeg|png|gif|webp|svg)$');
     }
     
     // Public read access for product images
@@ -33,6 +33,12 @@ service firebase.storage {
       allow write: if isAdmin() && isValidImageFile();
     }
     
+    // Reference images for delegated orders
+    match /orders/{sheetId}/{orderId}/{fileName} {
+      allow read: if true;
+      allow write: if isValidImageFile();
+    }
+
     // User-specific client documents (allow anonymous users)
     match /clients/{clientId}/{fileName} {
       allow read: if true;

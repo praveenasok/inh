@@ -101,6 +101,8 @@ async function initializeSyncServices() {
     // Setup event listeners for SSE broadcasting
     try { setupBidirectionalSyncEventListeners(); } catch (_) { }
 
+    // Gated/Commented out startup sync to isolate deadlock issues
+    /*
     // Start the bidirectional sync service
     try { if (bidirectionalSyncService && typeof bidirectionalSyncService.start === 'function') await bidirectionalSyncService.start(); } catch (_) { }
 
@@ -127,6 +129,7 @@ async function initializeSyncServices() {
     } catch (error) {
       // Initial colors/styles sync failed, will be synced during next scheduled sync
     }
+    */
 
     // Sync services initialized successfully
 
@@ -281,6 +284,7 @@ function buildSetCookie(name, value, options = {}) {
 }
 
 const server = http.createServer(async (req, res) => {
+  console.log(`[REQUEST] ${req.method} ${req.url}`);
   const parsedUrl = new URL(req.url, `http://${req.headers.host}`);
   const pathname = parsedUrl.pathname;
 
@@ -1262,6 +1266,165 @@ const server = http.createServer(async (req, res) => {
       res.end(JSON.stringify({
         success: false,
         error: 'Failed to fetch client headers: ' + (error?.message || String(error))
+      }));
+    }
+    return;
+  }
+
+  // Fetch delegated orders from Google Sheets
+  if (pathname === '/api/delegated-orders' && req.method === 'GET') {
+    try {
+      const spreadsheetId = parsedUrl.searchParams.get('spreadsheetId') || '1-5mGLKf94MSLW9phoBNsqY7QoJSqkAh29YxVQs-Bf_s';
+      const gid = parsedUrl.searchParams.get('gid') || '191831864';
+
+      // Ensure service is ready
+      if (!googleSheetsService) {
+        try {
+          const GoogleSheetsServiceClass = require('./google-sheets-service');
+          googleSheetsService = new GoogleSheetsServiceClass();
+        } catch (_) {
+          // Fallback if load fails
+        }
+      }
+
+      if (googleSheetsService) {
+        if (typeof googleSheetsService.initialize === 'function' && !googleSheetsService.isInitialized) {
+          await googleSheetsService.initialize();
+        }
+      } else {
+        throw new Error('Google Sheets service is not available.');
+      }
+
+      // Find the tab title corresponding to the gid
+      const sheetsListResponse = await googleSheetsService.sheets.spreadsheets.get({ spreadsheetId });
+      const sheetsList = sheetsListResponse?.data?.sheets || [];
+      const targetSheet = sheetsList.find(s => String(s.properties?.sheetId) === String(gid));
+      
+      if (!targetSheet) {
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+          success: false,
+          error: `Sheet tab with GID ${gid} not found in spreadsheet ${spreadsheetId}.`
+        }));
+        return;
+      }
+
+      const tabTitle = targetSheet.properties.title;
+      
+      // Fetch all values from this tab
+      const range = `${tabTitle}!A1:ZZZ`; // large range to cover everything
+      const valuesResponse = await googleSheetsService.sheets.spreadsheets.values.get({
+        spreadsheetId,
+        range
+      });
+
+      const rawRows = valuesResponse.data.values || [];
+      if (rawRows.length === 0) {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+          success: true,
+          headers: [],
+          rows: [],
+          delegatedPersons: [],
+          sheetTitle: tabTitle
+        }));
+        return;
+      }
+
+      // First row contains the headers (deduplicated to prevent overwriting keys)
+      const rawHeaders = rawRows[0].map(h => (h || '').toString().trim());
+      const headerCounts = {};
+      const headers = rawHeaders.map(h => {
+        if (!h) return '';
+        if (headerCounts[h] === undefined) {
+          headerCounts[h] = 1;
+          return h;
+        } else {
+          headerCounts[h]++;
+          return `${h}_${headerCounts[h]}`;
+        }
+      });
+      // Find the index of the Status column dynamically
+      let statusColIdx = headers.findIndex(h => h && h.toLowerCase() === 'status');
+      if (statusColIdx === -1) {
+        statusColIdx = 2; // fallback to index 2 (Column C)
+      }
+
+      // Dynamically find delegate index!
+      let delegateColIdx = headers.findIndex(h => h && (h.toLowerCase().includes('delegate') || h.toLowerCase().includes('assigned')));
+      if (delegateColIdx === -1) {
+        delegateColIdx = 4; // fallback to index 4 (Column E)
+      }
+
+      const delegatedPersonsSet = new Set();
+      const rows = [];
+
+      for (let i = 1; i < rawRows.length; i++) {
+        const rawRow = rawRows[i];
+        if (!rawRow || rawRow.length === 0) continue;
+
+
+        // Map raw row values to header names as an object
+        const rowObj = {};
+        headers.forEach((header, idx) => {
+          if (!header) return;
+          rowObj[header] = rawRow[idx] !== undefined ? rawRow[idx] : '';
+        });
+
+        // Store column letter/index helpers
+        rowObj._rawIndex = i + 1; // 1-indexed row number in the spreadsheet
+        
+        // Find delegate value
+        const delegateVal = (rawRow[delegateColIdx] || '').toString().trim();
+        let normalizedDelegate = delegateVal;
+        const lowerVal = delegateVal.toLowerCase();
+        if (lowerVal === 'rupa') {
+          normalizedDelegate = 'Rupa';
+        } else if (lowerVal === 'sunil') {
+          normalizedDelegate = 'Sunil';
+        } else if (lowerVal === 'praveen') {
+          normalizedDelegate = 'Praveen';
+        } else if (lowerVal === 'inh') {
+          normalizedDelegate = 'INH';
+        } else if (lowerVal === 'hw') {
+          normalizedDelegate = 'HW';
+        } else if (lowerVal === 'focus') {
+          normalizedDelegate = 'Focus';
+        }
+        rowObj._delegate = normalizedDelegate;
+        
+        if (normalizedDelegate) {
+          delegatedPersonsSet.add(normalizedDelegate);
+        }
+
+        // Store the original array row as well for raw inspection
+        rowObj._raw = rawRow;
+
+        rows.push(rowObj);
+      }
+
+      if (!delegatedPersonsSet.has('Focus')) {
+        delegatedPersonsSet.add('Focus');
+      }
+      const delegatedPersons = Array.from(delegatedPersonsSet).sort();
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        success: true,
+        sheetTitle: tabTitle,
+        headers,
+        rows,
+        delegatedPersons,
+        abHeaderName: headers[delegateColIdx] || 'Column E (Delegated To)',
+        spreadsheetTitle: sheetsListResponse?.data?.properties?.title || 'Google Sheet'
+      }));
+
+    } catch (error) {
+      console.error('Error fetching delegated orders:', error);
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        success: false,
+        error: 'Failed to fetch delegated orders: ' + (error?.message || String(error))
       }));
     }
     return;
@@ -2897,6 +3060,7 @@ server.listen(PORT, () => {
 
   // Initialize sync services asynchronously (don't block server startup)
   // Initializing sync services in background
+  /*
   initializeSyncServices()
     .then(() => {
       // Google Sheets sync services initialized successfully
@@ -2904,6 +3068,7 @@ server.listen(PORT, () => {
     .catch((error) => {
       // Failed to initialize sync services - server will continue running without sync functionality
     });
+  */
 });
 
 module.exports = server;

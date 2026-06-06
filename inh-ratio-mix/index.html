@@ -131,10 +131,16 @@
                         <input type="number" id="machineRemyInput" placeholder="2500" value="2500">
                     </div>
                     <div class="input-group" style="flex: 1 1 80px;">
-                        <label for="marginInput">Margin %</label>
+                        <label for="marginTypeSelect">Margin Type</label>
+                        <select id="marginTypeSelect" style="padding: 4px;">
+                            <option value="percent">Percentage (%)</option>
+                            <option value="amount">Flat Amount</option>
+                        </select>
+                    </div>
+                    <div class="input-group" style="flex: 1 1 80px;">
+                        <label id="marginInputLabel" for="marginInput">Margin %</label>
                         <input type="number" id="marginInput" placeholder="30" value="30">
                     </div>
-
                     <div class="input-group" style="flex: 1 1 80px;">
                         <label for="currencySelect">Currency</label>
                         <select id="currencySelect" style="padding: 4px;">
@@ -166,6 +172,10 @@
                         <label for="exchangeRateInput">Exchange Rate</label>
                         <input type="number" id="exchangeRateInput" placeholder="1" value="1" step="0.01">
                     </div>
+                    <div class="input-group" style="flex: 1 1 80px;">
+                        <label for="roundingFactorInput">Rounding Factor</label>
+                        <input type="number" id="roundingFactorInput" placeholder="50" value="50" min="0" step="1">
+                    </div>
                     <div class="input-group" style="flex: 0 0 auto; min-width: 70px;">
                         <label for="accentColorInput" title="Export background color (10% opacity)">Export Color</label>
                         <input type="color" id="accentColorInput" value="#4f46e5" title="Pick background color for exported price list & ratio images" style="height:32px; padding:2px 3px; border:1px solid #cbd5e1; border-radius:4px; cursor:pointer; width:100%;">
@@ -181,7 +191,7 @@
                         <div class="input-group" style="flex: unset; min-width: 350px;">
                             <div class="client-controls" style="display: flex; gap: 8px; width: 100%;">
                                 <input type="text" id="clientName" placeholder="Ratio Name (e.g. 70-30 Mix)" style="flex: 2;">
-                                <input type="text" id="clientTag" placeholder="Tag (e.g. VIP)" style="flex: 1; max-width: 100px;">
+                                <input type="text" id="clientTag" placeholder="Tags (comma separated)" style="flex: 1; max-width: 150px;">
                                 <button id="saveClientBtn" class="btn btn-icon btn-secondary" title="Save Ratio" style="padding: 6px 10px;">💾</button>
                                 <button id="deleteClientBtn" class="btn btn-icon btn-danger hidden" title="Delete Ratio" style="padding: 6px 10px;">🗑️</button>
                             </div>
@@ -398,6 +408,7 @@
                             <div style="display: flex; align-items: center; gap: 8px; margin-left: 10px; border-left: 1px solid #c7d2fe; padding-left: 15px;">
                                 <label style="font-size: 11px; font-weight: 700; color: #4f46e5; text-transform: uppercase;">Output Unit:</label>
                                 <select id="exportMultiUnitSelect" style="padding: 4px 8px; border: 1px solid #c7d2fe; border-radius: 6px; font-size: 13px; font-weight: 600; color: #334155; background: white; cursor: pointer; outline: none;" onchange="document.getElementById('exportMultiGramsContainer').style.display = (this.value === 'grams' || this.value === 'pieces') ? 'flex' : 'none'; document.getElementById('exportGramsLabelText').innerText = this.value === 'pieces' ? 'Grams/pc:' : 'Grams:';">
+                                    <option value="original">Original Weight</option>
                                     <option value="kg">Per kg</option>
                                     <option value="grams">Per Grams</option>
                                     <option value="pieces">Per Piece</option>
@@ -422,13 +433,21 @@
                                     <label style="font-size: 11px; font-weight: 700; color: #4f46e5; text-transform: uppercase;">Discount (Amt):</label>
                                     <input type="number" id="exportDiscountAmountInput" placeholder="0" value="0" style="width: 60px; padding: 4px 6px; border: 1px solid #c7d2fe; border-radius: 6px; font-size: 13px; font-weight: 600; color: #334155; outline: none;">
                                 </div>
+                                <div style="display: flex; align-items: center; gap: 6px; margin-left: 10px; border-left: 1px solid #c7d2fe; padding-left: 15px;">
+                                    <input type="checkbox" id="exportIncludeImageToggle" checked style="cursor: pointer;">
+                                    <label for="exportIncludeImageToggle" style="font-size: 12px; font-weight: 700; color: #334155; cursor: pointer;">Include Product Images</label>
+                                </div>
                             </div>
                             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                                <button onclick="window.openCompositeBuilderModal()" style="display: inline-flex; align-items: center; gap: 7px; padding: 8px 16px; background: #f43f5e; color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.2s; box-shadow: 0 2px 8px rgba(244,63,94,0.25);" title="Create a composite product (like a Wig) from selected ratios">
-                                    <i class="fa-solid fa-boxes-stacked"></i> Build Product
+
+                                <button onclick="window.openComposeProductModal()" style="display: inline-flex; align-items: center; gap: 7px; padding: 8px 16px; background: #ec4899; color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.2s; box-shadow: 0 2px 8px rgba(236,72,153,0.25);" title="A better UI to build composite products from selected ratios">
+                                    <i class="fa-solid fa-layer-group"></i> Compose Product
+                                </button>
+                                <button id="previewCombinedImageBtn" onclick="exportSelectedRatiosToImage('preview')" style="display: inline-flex; align-items: center; gap: 7px; padding: 8px 16px; background: #6366f1; color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.2s; box-shadow: 0 2px 8px rgba(99,102,241,0.25);">
+                                    <i class="fa-solid fa-eye"></i> Generate Preview
                                 </button>
                                 <button id="exportCombinedImageBtn" onclick="exportSelectedRatiosToImage('download')" style="display: inline-flex; align-items: center; gap: 7px; padding: 8px 16px; background: #10b981; color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.2s; box-shadow: 0 2px 8px rgba(16,185,129,0.25);">
-                                    <i class="fa-solid fa-image"></i> Share
+                                    <i class="fa-solid fa-download"></i> Share
                                 </button>
                                 <button id="copyCombinedImageBtn" onclick="exportSelectedRatiosToImage('copy')" style="display: inline-flex; align-items: center; gap: 7px; padding: 8px 16px; background: #eab308; color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.2s; box-shadow: 0 2px 8px rgba(234,179,8,0.25);">
                                     <i class="fa-solid fa-copy"></i> Copy to Clipboard
@@ -442,6 +461,8 @@
                             </div>
                         </div>
                     </div>
+                    
+                    <div id="multiExportPreviewContainer" style="display: none; margin-bottom: 20px;"></div>
                 </div>
 
                 <div class="table-container shadow-sm border border-slate-200 bg-white rounded-xl">
@@ -503,15 +524,55 @@
                 <button onclick="document.getElementById('compositeBuilderModal').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 transition"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
             <div class="p-6 overflow-y-auto">
-                <p class="text-sm text-slate-500 mb-4">Combine multiple selected items into a single new product (e.g., Wig = Frontal + 2 Wefts).</p>
+                <p class="text-sm text-slate-500 mb-4">Combine multiple selected items into a single new product (e.g., Wig = Frontal + 2 Wefts). To determine how lengths scale, please specify the <b>Offset</b> (-/+) and <b>Weight in Grams</b> for each component relative to the final product length.</p>
                 
-                <div class="mb-4">
-                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">New Product Name</label>
-                    <input type="text" id="compositeProductName" placeholder="e.g. 200% Density Wig" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-shadow">
+                <div class="mb-4 flex gap-4">
+                    <div class="flex-1">
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">New Product Name</label>
+                        <input type="text" id="compositeProductName" placeholder="e.g. 200% Density Wig" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-shadow">
+                    </div>
+                    <div class="w-32">
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Target Length</label>
+                        <select id="compositeTargetLength" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-shadow">
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+                    <div class="w-32">
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Output Unit</label>
+                        <select id="compositeOutputUnit" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-shadow">
+                            <option value="pc">Per Piece (pc)</option>
+                            <option value="kg">Per Kg</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-4 flex gap-4">
+                    <div class="flex-1">
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Wastage %</label>
+                        <input type="number" id="compositeWastagePercent" placeholder="e.g. 5" value="0" min="0" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-shadow">
+                    </div>
+                    <div class="flex-1">
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Labor Cost</label>
+                        <input type="number" id="compositeLaborCost" placeholder="e.g. 500" value="0" min="0" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-shadow">
+                    </div>
+                    <div class="flex-1">
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Material Cost</label>
+                        <input type="number" id="compositeMaterialCost" placeholder="e.g. 200" value="0" min="0" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-shadow">
+                    </div>
                 </div>
 
                 <div class="mb-4">
-                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Selected Components</label>
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Selected Components</label>
+                        <div class="flex gap-2">
+                            <select id="compositeAddRatioSelect" class="px-2 py-1 border border-slate-200 rounded text-xs bg-white focus:outline-none focus:border-indigo-500" style="max-width: 150px;">
+                                <option value="">-- Select Ratio --</option>
+                            </select>
+                            <button type="button" onclick="window.addRatioToComposite()" class="px-2 py-1 bg-indigo-50 text-indigo-600 rounded text-xs font-semibold border border-indigo-100 hover:bg-indigo-100 transition">
+                                + Add Component
+                            </button>
+                        </div>
+                    </div>
                     <div id="compositeComponentsList" class="flex flex-col gap-2">
                         <!-- Populated by JS -->
                     </div>
@@ -520,6 +581,100 @@
             <div class="px-6 py-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
                 <button onclick="document.getElementById('compositeBuilderModal').classList.add('hidden')" class="px-4 py-2 text-sm font-semibold text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition">Cancel</button>
                 <button id="modalSaveProductBtn" onclick="window.saveCompositeProduct()" class="px-4 py-2 text-sm font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition flex items-center gap-2">
+                    <i class="fa-solid fa-save"></i> Save Product
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Compose Product Modal -->
+    <div id="composeProductModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-7xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-layer-group text-pink-500"></i> Compose Product
+                </h3>
+                <button onclick="document.getElementById('composeProductModal').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 transition"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="p-6 overflow-y-auto">
+                <p class="text-sm text-slate-500 mb-6">Create a composite product by combining multiple existing ratios. Define the required lengths and weights for each component.</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Product Name</label>
+                        <input type="text" id="composeProductName" placeholder="e.g. 200% Density Wig" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition-shadow">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Output Unit</label>
+                        <select id="composeOutputUnit" onchange="window.updateComposeMatrixUI()" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition-shadow">
+                            <option value="pc">Per Piece (pc)</option>
+                            <option value="kg">Per Kg</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6 pb-6 border-b border-slate-100">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Wastage %</label>
+                        <input type="number" id="composeWastagePercent" oninput="window.updateComposeMatrixUI()" placeholder="0" value="0" min="0" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition-shadow">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Labor Cost</label>
+                        <input type="number" id="composeLaborCost" oninput="window.updateComposeMatrixUI()" placeholder="0" value="0" min="0" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition-shadow">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Material Cost</label>
+                        <input type="number" id="composeMaterialCost" oninput="window.updateComposeMatrixUI()" placeholder="0" value="0" min="0" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition-shadow">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Margin Type</label>
+                        <select id="composeMarginType" onchange="document.getElementById('composeMarginLabel').innerText = this.value === 'percent' ? 'Margin %' : 'Margin Amt'; window.updateComposeMatrixUI()" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition-shadow">
+                            <option value="percent">Percentage (%)</option>
+                            <option value="amount">Amount</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label id="composeMarginLabel" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Margin %</label>
+                        <input type="number" id="composeMarginValue" oninput="window.updateComposeMatrixUI()" placeholder="0" value="0" min="0" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition-shadow">
+                    </div>
+                </div>
+
+                <div class="mb-2">
+                    <div class="flex justify-between items-center mb-3">
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Components</label>
+                        <div class="flex gap-2">
+                            <select id="composeAddRatioSelect" class="px-3 py-1.5 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:border-pink-500 min-w-[200px]">
+                                <option value="">-- Select Ratio --</option>
+                            </select>
+                            <button type="button" onclick="window.addRatioToComposeProduct()" class="px-3 py-1.5 bg-pink-50 text-pink-600 rounded-lg text-sm font-semibold border border-pink-100 hover:bg-pink-100 transition whitespace-nowrap">
+                                + Add Component
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="border border-slate-200 rounded-xl overflow-x-auto overflow-y-auto max-h-[50vh] bg-white">
+                        <table class="w-full text-left border-collapse whitespace-nowrap min-w-full">
+                            <thead id="composeMatrixThead" class="bg-slate-50 border-b border-slate-200 sticky top-0 z-10 shadow-sm">
+                                <tr>
+                                    <th class="p-3 text-xs font-bold text-slate-500 uppercase w-32 sticky left-0 bg-slate-50 z-20">Target Length</th>
+                                    <th class="p-3 text-xs font-bold text-slate-500 uppercase text-right w-32">Total Weight</th>
+                                </tr>
+                            </thead>
+                            <tbody id="composeMatrixTbody" class="divide-y divide-slate-100">
+                                <tr>
+                                    <td colspan="2" class="p-8 text-center text-slate-400 text-sm">
+                                        No components added yet. Select a ratio above and click "Add Component".
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="px-6 py-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-3 mt-auto">
+                <button onclick="document.getElementById('composeProductModal').classList.add('hidden')" class="px-4 py-2 text-sm font-semibold text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition">Cancel</button>
+                <button id="modalSaveComposeProductBtn" onclick="window.saveComposeProduct()" class="px-4 py-2 text-sm font-semibold text-white bg-pink-600 rounded-lg hover:bg-pink-700 transition flex items-center gap-2">
                     <i class="fa-solid fa-save"></i> Save Product
                 </button>
             </div>

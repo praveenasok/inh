@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
-  <title>Price List Calculator — InstaQuote</title>
+  <title>Price List Calculator — INHsuite</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
   <!-- FontAwesome for icons -->
@@ -444,7 +444,7 @@
   <!-- Navigation Component -->
   <!-- Navigation -->
   <!-- Navigation -->
-  <script>window.navConfig = { siteTitle: 'InstaQuote - Price Lists' };</script>
+  <script>window.navConfig = { siteTitle: 'INHsuite - Price Lists' };</script>
   <script src="js/navigation-loader.js"></script>
 
   <div class="container mx-auto px-4 py-6">
@@ -2896,12 +2896,6 @@
       };
       const supportsKg = (items || []).some(i => kgKeys.some(k => i && (i[k] !== undefined) && isTruthy(i[k])));
 
-      // Layout adjustments when showing all shades: reduce image width to avoid table cropping
-      const imageColSpan = allSelected ? 6 : 7;
-      const tableColSpan = allSelected ? 6 : 5;
-      const imageMaxHClass = allSelected ? 'max-h-80' : 'max-h-96';
-      const imageWidthClass = allSelected ? 'w-11/12' : 'w-full';
-
       const lengthsList = Array.from(new Set((items || []).map(i => String(i.Length || '').trim()).filter(Boolean)))
         .sort((a, b) => (parseFloat(a) || 0) - (parseFloat(b) || 0));
 
@@ -2926,209 +2920,146 @@
         return (items || []).find(i => String(i.Length || '').trim() === targetLen && matchShade(i, shade));
       };
 
+      let isVirgin = product.toLowerCase().includes('virgin') || category.toLowerCase().includes('virgin') || priceListName.toLowerCase().includes('virgin');
+      let isRemy = product.toLowerCase().includes('remy') || category.toLowerCase().includes('remy') || priceListName.toLowerCase().includes('remy');
+      
+      let stampInfo = '';
+      if (isVirgin) {
+          stampInfo = `<img src="images/hw/bleachable.png?v=3" style="height: 80px; width: auto; max-width: 100%; object-fit: contain;" alt="Bleachable" />`;
+      } else if (isRemy) {
+          stampInfo = `<img src="images/hw/bleachable27.png?v=3" style="height: 80px; width: auto; max-width: 100%; object-fit: contain;" alt="Bleachable" />`;
+      }
+      
+      let headersHTML = `
+          <th style="width: 80px; min-width: 80px; max-width: 80px; padding: 16px 10px 16px 10px; background: #faf0e6; border-bottom: 2px solid #e2e8f0; color: #0f172a; font-weight: 800; border-right: 1px solid #e2e8f0; text-align: center; vertical-align: bottom; white-space: nowrap;">Length<br><span style="font-size: 11px; font-weight: 600; color: #475569; font-variant: normal; text-transform: none;">in inches</span></th>
+          <th style="width: 80px; min-width: 80px; max-width: 80px; padding: 16px 10px 16px 10px; background: #faf0e6; border-bottom: 2px solid #e2e8f0; color: #0f172a; font-weight: 800; border-right: 1px solid #e2e8f0; text-align: center; vertical-align: bottom; white-space: nowrap;">Length<br><span style="font-size: 11px; font-weight: 600; color: #475569; font-variant: normal; text-transform: none;">in cm</span></th>
+      `;
+      if (isMultiShade) {
+          shadesList.forEach((sh, shIdx) => {
+              const bRight = shIdx === shadesList.length - 1 ? '' : 'border-right: 1px solid #e2e8f0;';
+              headersHTML += `<th style="padding: 16px 10px 16px 10px; background: #faf0e6; border-bottom: 2px solid #e2e8f0; color: #0f172a; font-weight: 800; text-align: center; vertical-align: bottom; white-space: nowrap; ${bRight}">Price (${sh})<br><span style="font-size: 11px; font-weight: 600; color: #475569; font-variant: normal; text-transform: none;">${state.currency} /${unit.toLowerCase().includes('piece') ? 'pc' : 'kg'}</span></th>`;
+          });
+      } else {
+          headersHTML += `<th style="padding: 16px 10px 16px 10px; background: #faf0e6; border-bottom: 2px solid #e2e8f0; color: #0f172a; font-weight: 800; text-align: center; vertical-align: bottom; white-space: nowrap;">Price<br><span style="font-size: 11px; font-weight: 600; color: #475569; font-variant: normal; text-transform: none;">${state.currency} /${unit.toLowerCase().includes('piece') ? 'pc' : 'kg'}</span></th>`;
+      }
+      
+      let rowsHTML = '';
+      if (isMultiShade) {
+          lengthsList.forEach((len, idx) => {
+              const bgStr = idx % 2 === 0 ? "background: #ffffff;" : "background: #faf0e6;";
+              const cmLen = parseFloat(len) * 2.5;
+              rowsHTML += `<tr style="${bgStr}">
+                  <td style="padding: 8px 12px; border-bottom: 1px solid #f1f5f9; font-weight: 700; color: #334155; font-size: 14px; border-right: 1px solid #e2e8f0; text-align: center; white-space: nowrap;">${len}"</td>
+                  <td style="padding: 8px 12px; border-bottom: 1px solid #f1f5f9; font-weight: 700; color: #334155; font-size: 14px; border-right: 1px solid #e2e8f0; text-align: center; white-space: nowrap;">${cmLen} cm</td>`;
+              shadesList.forEach((sh, shIdx) => {
+                  const itm = findItemByLengthAndShade(len, sh);
+                  const bRight = shIdx === shadesList.length - 1 ? '' : 'border-right: 1px solid #e2e8f0;';
+                  let val = '-';
+                  if (itm) {
+                      val = `${itm.currencySymbol}${itm.calculatedPrice.toFixed(2)}`;
+                  }
+                  rowsHTML += `<td style="padding: 8px 12px; border-bottom: 1px solid #f1f5f9; text-align: center; font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; color: #0f172a; ${bRight}">${val} <span style="font-size:11px; font-weight:500; color:#64748b;">/${unit.toLowerCase().includes('piece') ? 'pc' : 'kg'}</span></td>`;
+              });
+              rowsHTML += `</tr>`;
+          });
+      } else {
+          sortedItems.forEach((item, idx) => {
+              const bgStr = idx % 2 === 0 ? "background: #ffffff;" : "background: #faf0e6;";
+              const len = item.Length || 'N/A';
+              const cmLen = len !== 'N/A' ? parseFloat(len) * 2.5 : 'N/A';
+              const val = `${item.currencySymbol}${item.calculatedPrice.toFixed(2)}`;
+              rowsHTML += `<tr style="${bgStr}">
+                  <td style="padding: 8px 12px; border-bottom: 1px solid #f1f5f9; font-weight: 700; color: #334155; font-size: 14px; border-right: 1px solid #e2e8f0; text-align: center; white-space: nowrap;">${len}"</td>
+                  <td style="padding: 8px 12px; border-bottom: 1px solid #f1f5f9; font-weight: 700; color: #334155; font-size: 14px; border-right: 1px solid #e2e8f0; text-align: center; white-space: nowrap;">${cmLen !== 'N/A' ? cmLen + ' cm' : 'N/A'}</td>
+                  <td style="padding: 8px 12px; border-bottom: 1px solid #f1f5f9; text-align: center; font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; color: #0f172a; border-right: 1px solid #e2e8f0;">${val} <span style="font-size:11px; font-weight:500; color:#64748b;">/${unit.toLowerCase().includes('piece') ? 'pc' : 'kg'}</span></td>
+              </tr>`;
+          });
+      }
+
+      let footerInfoHTML = `
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding: 0 4px; font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
+              <div><i class="fa-regular fa-calendar" style="margin-right: 4px;"></i> Generated: ${new Date().toLocaleDateString('en-IN', {day:'numeric', month:'short', year:'numeric'})}</div>
+              <div>HAIRWISE</div>
+              <div>${(function() {
+                  const __d = new Date();
+                  const __dd = String(__d.getDate()).padStart(2, '0');
+                  const __mm = String(__d.getMonth() + 1).padStart(2, '0');
+                  const __yy = String(__d.getFullYear()).slice(-2);
+                  return `${__dd}${__mm}${__yy}`;
+              })()}</div>
+          </div>
+      `;
+
+      let footerHTML = footerInfoHTML;
+      if (isVirgin || isRemy) {
+          footerHTML = `
+              <div style="margin-top: 15px; padding: 12px 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 12px; color: #475569; line-height: 1.8; text-align: left;">
+                  <div style="font-weight: 800; color: #0f172a; margin-bottom: 10px; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; display: inline-block;">Important Information</div>
+                  <table style="width: 100%; border-collapse: collapse; margin: 0; padding: 0; font-weight: 500; font-size: 12px;">
+                      <tr>
+                          <td style="width: 50%; padding: 4px 10px 4px 0; vertical-align: top; text-align: left; white-space: nowrap;"><span style="color:#6366f1; font-weight:900; margin-right:6px;">•</span>Shipping Charges Extra</td>
+                          <td style="width: 50%; padding: 4px 10px 4px 0; vertical-align: top; text-align: left; white-space: nowrap;"><span style="color:#6366f1; font-weight:900; margin-right:6px;">•</span>Curly/Wavy Styles 10% Extra</td>
+                      </tr>
+                      <tr>
+                          <td style="width: 50%; padding: 4px 10px 4px 0; vertical-align: top; text-align: left; white-space: nowrap;"><span style="color:#6366f1; font-weight:900; margin-right:6px;">•</span>The prices are ${unit.toLowerCase().includes('piece') ? 'per piece' : 'per kilogram'}</td>
+                          <td style="width: 50%; padding: 4px 10px 4px 0; vertical-align: top; text-align: left; white-space: nowrap;"><span style="color:#6366f1; font-weight:900; margin-right:6px;">•</span>${unit.toLowerCase().includes('piece') ? '200 to 300 grams depending on length' : '1 Kilogram = 10 packets of 100 grams each'}</td>
+                      </tr>
+                      <tr>
+                          <td style="width: 50%; padding: 4px 10px 4px 0; vertical-align: top; text-align: left; white-space: nowrap;"><span style="color:#6366f1; font-weight:900; margin-right:6px;">•</span>${unit.toLowerCase().includes('piece') ? 'Minimum Order Quantity 10 pieces' : 'Minimum Order Quantity 1 kg (10 pieces)'}</td>
+                          <td style="width: 50%; padding: 4px 10px 4px 0; vertical-align: top; text-align: left; white-space: nowrap;"><span style="color:#6366f1; font-weight:900; margin-right:6px;">•</span>Bleached colors 20% Extra</td>
+                      </tr>
+                  </table>
+              </div>
+              ${footerInfoHTML}
+          `;
+      }
+      
       return `
-        <div class="product-price-list bg-white border rounded-lg shadow-lg mb-6 overflow-hidden max-w-full">
-          <!-- Main Header -->
-          <div class="main-header p-3 md:p-4 border-b" style="background-color: #e6eaeb;">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-2 md:gap-3">
-                <img src="images/logo-optimized.png" alt="Company Logo" class="h-8 w-8 md:h-12 md:w-12 object-contain" onerror="this.style.display='none'">
-                <div>
-                  <h2 class="text-sm md:text-lg font-bold text-gray-800">${companyName}</h2>
-                </div>
-              </div>
-              <div class="flex items-center gap-2 md:gap-3">
-                <img src="images/madewithbadge.png" alt="Made With Badge" class="h-12 w-auto md:h-16 object-contain" onerror="this.style.display='none'">
-                <div class="text-right">
-                  <div class="text-lg md:text-2xl font-bold text-gray-800">${SUPPORTED_CURRENCIES[state.currency]?.symbol || state.currency}</div>
-                  <div class="text-xs md:text-sm text-gray-600">${state.currency}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Category Images Sub-Header -->
-          <div class="category-sub-header p-2 md:p-3 border-b bg-gray-100">
-            <div class="flex items-center justify-center">
-              <img src="${getCategoryImage(category)}" alt="${category}" class="h-12 md:h-16 object-contain" onerror="this.style.display='none'">
-            </div>
-          </div>
-          
-          <!-- Price List Details Sub-Header -->
-          <div class="details-sub-header p-3 md:p-4 border-b bg-gray-50">
-            <div class="text-center">
-              <h3 class="text-lg md:text-xl font-bold text-gray-800 mb-2 break-words">${product.toUpperCase()} | ${density.toUpperCase()} | ${String(shadeLabel).toUpperCase()}</h3>
-              <p class="text-xs md:text-sm text-gray-600">Currency: ${state.currency} | Factor: ${state.factor} | ${unit}</p>
-            </div>
-            
-          </div>
-          
-          <!-- Length-Price-Image Layout -->
-          <div class="length-price-container p-2 md:p-4">
-            <!-- Mobile Layout: unified multi-shade table with horizontal scroll -->
-            <div class="block md:hidden">
-              <!-- Product Image (Mobile) -->
-              <div class="mb-4">
-                ${productImage ? `
-                  <div class="text-center">
-                    <img src="${productImage}" alt="${product}" 
-                         class="w-full max-h-48 object-contain rounded border shadow-sm" 
-                         crossorigin="anonymous" referrerpolicy="no-referrer" 
-                         onerror="this.style.display='none'">
-                    <p class="text-base text-gray-800 mt-2 font-semibold">${product}</p>
+          <div style="overflow-x: auto; width: 100%; padding: 15px 5px; -webkit-overflow-scrolling: touch;" class="product-price-list mb-6 max-w-full">
+              <div class="preview-card-inner" style="position: relative; background: rgba(79, 70, 229, 0.10); padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; margin: 0 auto; min-width: 700px; width: max-content; color: #334155; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);">
+                  
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; width: 100%;">
+                      <img src="images/hw/hwstraightlogo.png" style="height: 45px;" />
+                      <div style="text-align: right; font-size: 10px; color: #94a3b8; font-weight: 800; letter-spacing: 1px;">
+                          NEW DELHI <span style="margin: 0 6px; color: #cbd5e1;">|</span> NEW JERSEY <span style="margin: 0 6px; color: #cbd5e1;">|</span> FLORIDA
+                      </div>
                   </div>
-                ` : `
-                  <div class="w-full h-32 bg-gray-200 rounded flex items-center justify-center">
-                    <span class="text-gray-500 text-sm">No Image</span>
+                  
+                  <div style="width: 100%; max-width: 1100px; margin: 0 auto 12px auto; display: flex; justify-content: center; align-items: stretch; gap: 0; box-shadow: 0 15px 25px -5px rgba(0,0,0,0.1); border-radius: 16px; overflow: hidden; border: 2px solid #e2e8f0; background: white;">
+                      
+                      <div style="flex-grow: 1;">
+                          <div style="padding: 16px 10px; background: #faf0e6; border-bottom: 2px solid #e2e8f0; color: #0f172a; font-weight: 800; text-align: center; vertical-align: bottom;">
+                              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; width: 100%;">
+                                  <img src="images/hw/100percent.png?v=3" style="height: 80px; width: auto; max-width: 100%; object-fit: contain;" alt="100% Authentic Human Hair" />
+                                  ${stampInfo}
+                              </div>
+                              <h3 style="font-size: 16px; font-weight: 800; text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                                  ${product.toUpperCase()} | ${density.toUpperCase()} | ${String(shadeLabel).toUpperCase()}
+                                  <span style="color: #16a34a;">(${state.currency || 'INR'})</span>
+                              </h3>
+                          </div>
+                          
+                          <table style="width: 100%; border-collapse: separate; border-spacing: 0; text-align: left; font-size: 14px; background: transparent;">
+                              <thead>
+                                  <tr>
+                                      ${headersHTML}
+                                  </tr>
+                              </thead>
+                              <tbody>
+                                  ${rowsHTML}
+                              </tbody>
+                          </table>
+                      </div>
+                      ${productImage ? `<div style="flex: 0 0 250px; display: flex; align-items: stretch; justify-content: center; padding: 0; background: #ffffff; border-left: 2px solid #e2e8f0;">
+                          <img src="${productImage}" style="width: 100%; height: 100%; max-height: none; object-fit: contain;" onerror="this.style.display='none'">
+                      </div>` : ''}
                   </div>
-                `}
-              </div>
-
-              <div class="overflow-x-auto">
-                ${isMultiShade ? `
-                <table class="min-w-full border-collapse border border-gray-300">
-                  <thead>
-                    <tr class="bg-gray-100">
-                      <th class="border border-gray-300 px-2 py-1 text-xs font-semibold text-gray-700">Lengths</th>
-                      ${shadesList.map(sh => `
-                        <th class="border border-gray-300 px-2 py-1 text-xs font-semibold text-gray-700">${sh}</th>
-                      `).join('')}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    ${lengthsList.map((len, idx) => `
-                      <tr class="${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}">
-                        <td class="border border-gray-300 px-2 py-1 text-center text-xs font-medium text-gray-800">${len}"</td>
-                        ${shadesList.map(sh => {
-        const itm = findItemByLengthAndShade(len, sh);
-        const val = itm ? `${itm.currencySymbol}${itm.calculatedPrice.toFixed(2)}` : '-';
-        return `<td class=\"border border-gray-300 px-2 py-1 text-center text-xs font-semibold\" style=\"color: #081249;\">${val}</td>`;
-      }).join('')}
-                      </tr>
-                    `).join('')}
-                  </tbody>
-                </table>
-                ` : `
-                <table class="w-full border-collapse border border-gray-300">
-                  <thead>
-                    <tr class="bg-gray-100">
-                      <th class="border border-gray-300 px-2 py-1 text-xs font-semibold text-gray-700">Lengths</th>
-                      <th class="border border-gray-300 px-2 py-1 text-xs font-semibold text-gray-700">Prices (${state.currency})</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    ${sortedItems.map((item, index) => `
-                      <tr class="${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}">
-                        <td class="border border-gray-300 px-2 py-1 text-center text-xs font-medium text-gray-800">${item.Length || 'N/A'}"</td>
-                        <td class="border border-gray-300 px-2 py-1 text-center text-xs font-semibold" style="color: #081249;">${item.currencySymbol}${item.calculatedPrice.toFixed(2)}</td>
-                      </tr>
-                    `).join('')}
-                  </tbody>
-                </table>
-                `}
-              </div>
-            </div>
-
-            <!-- Desktop Layout: unified multi-shade table and product image -->
-            <div class="hidden md:grid grid-cols-12 gap-4">
-              <div class="col-span-${imageColSpan} image-section flex items-center justify-center">
-                ${productImage ? `
-                  <div class="text-center w-full">
-                    <img src="${productImage}" alt="${product}" 
-                         class="${imageWidthClass} ${imageMaxHClass} object-contain rounded border shadow-sm" 
-                         crossorigin="anonymous" referrerpolicy="no-referrer" 
-                         onerror="this.style.display='none'">
-                  </div>
-                ` : `
-                  <div class="w-full h-64 bg-gray-200 rounded flex items-center justify-center">
-                    <span class="text-gray-500 text-lg">No Image</span>
-                  </div>
-                `}
-              </div>
-              <div class="col-span-${tableColSpan}">
-                ${isMultiShade ? `
-                <div class="overflow-x-auto">
-                  <table class="min-w-full border-collapse border border-gray-300">
-                    <thead>
-                      <tr class="bg-gray-100">
-                        <th class="border border-gray-300 px-2 py-2 text-sm font-semibold text-gray-700">Lengths</th>
-                        ${shadesList.map(sh => `
-                          <th class="border border-gray-300 px-2 py-2 text-sm font-semibold text-gray-700">${sh}</th>
-                        `).join('')}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      ${lengthsList.map((len, idx) => `
-                        <tr class="${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}">
-                          <td class="border border-gray-300 px-2 py-2 text-center text-sm font-medium text-gray-800">${len}"</td>
-                          ${shadesList.map(sh => {
-        const itm = findItemByLengthAndShade(len, sh);
-        const val = itm ? `${itm.currencySymbol}${itm.calculatedPrice.toFixed(2)}` : '-';
-        return `<td class=\"border border-gray-300 px-2 py-2 text-center text-sm font-semibold\" style=\"color: #081249;\">${val}</td>`;
-      }).join('')}
-                        </tr>
-                      `).join('')}
-                    </tbody>
-                  </table>
-                </div>
-                ` : `
-                <div class="overflow-x-auto">
-                  <table class="min-w-full border-collapse border border-gray-300">
-                    <thead>
-                      <tr class="bg-gray-100">
-                        <th class="border border-gray-300 px-2 py-2 text-sm font-semibold text-gray-700">Lengths</th>
-                        <th class="border border-gray-300 px-2 py-2 text-sm font-semibold text-gray-700">Prices (${state.currency})</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      ${sortedItems.map((item, index) => `
-                        <tr class="${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}">
-                          <td class="border border-gray-300 px-2 py-2 text-center text-sm font-medium text-gray-800">${item.Length || 'N/A'}"</td>
-                          <td class="border border-gray-300 px-2 py-2 text-center text-sm font-semibold" style="color: #081249;">${item.currencySymbol}${item.calculatedPrice.toFixed(2)}</td>
-                        </tr>
-                      `).join('')}
-                    </tbody>
-                  </table>
-                </div>
-                `}
-              </div>
-            </div>
-            
-              <!-- Footer Information -->
-              <div class="mt-6 p-3 bg-gray-100 rounded">
-                <!-- Category and Standard Weight on same row -->
-                <div class="flex justify-between items-center text-sm text-gray-600">
-                  <div><strong>Category:</strong> ${category}</div>
-                  ${items.length > 0 && items[0]['Standard Weight'] ? `
-                    <div class="text-right"><strong>Standard Weight:</strong> ${items[0]['Standard Weight']} grams</div>
-                  ` : ''}
-                </div>
-                
-                ${priceListName === 'INDIA25' ? `
-                  <div class="mt-3 text-xs text-gray-600">
-                    <div class="text-center">
-                      <div class="font-medium">WZ 81/1A Guru Nanak Nagar, New Delhi 110018, India</div>
-                    </div>
-                    <div class="text-center mt-1">
-                      <div class="font-medium">+91 9871171978</div>
-                    </div>
-                  </div>
-                ` : ''}
-                
-                <div class="mt-3 flex justify-between items-center text-xs text-gray-500">
-                  <div class="flex gap-4">
-                    <span>Generated: ${new Date().toLocaleDateString()}</span>
-                    <span>Valid Till: ${new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toLocaleDateString()}</span>
-                  </div>
-                  <div class="text-right">
-                    ${state.salesman ? `<span>Sales Rep: ${state.salesman}</span>` : ''}
-                  </div>
-                </div>
+                  ${footerHTML}
               </div>
           </div>
-        </div>
       `;
     }
+
 
     // Create individual product card with image
     function createProductCard(product) {

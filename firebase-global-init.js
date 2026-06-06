@@ -102,8 +102,7 @@ async function initializeFirebaseApp() {
             
             // Configure network settings for better reliability
             firestore.settings({
-              experimentalForceLongPolling: true, // Force long polling instead of WebSocket
-              merge: true
+              experimentalForceLongPolling: true // Force long polling instead of WebSocket
             });
             
           } catch (firestoreError) {

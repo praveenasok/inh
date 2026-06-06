@@ -60,12 +60,10 @@ if (typeof window !== 'undefined' && window.firebaseConfig) {
     if (!firebase.apps.length) {
       firebaseApp = firebase.initializeApp(firebaseConfig);
       
-      // Configure Firestore with stable settings to reduce connection errors
       const db = firebase.firestore();
       db.settings({
         experimentalForceLongPolling: true,
         useFetchStreams: false,
-        merge: true,
         ignoreUndefinedProperties: true,
         cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED
       });

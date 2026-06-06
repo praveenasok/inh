@@ -39,7 +39,6 @@ if (typeof window !== 'undefined' && window.firebaseConfig) {
       const db = firebase.firestore();
       db.settings({
         experimentalForceLongPolling: false,
-        merge: true,
         ignoreUndefinedProperties: true,
         cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED
       });

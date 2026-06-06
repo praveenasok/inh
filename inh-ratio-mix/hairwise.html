@@ -204,7 +204,7 @@
                         <div class="input-group" style="flex: unset; min-width: 350px;">
                             <div class="client-controls" style="display: flex; gap: 8px; width: 100%;">
                                 <input type="text" id="clientName" placeholder="Ratio Name (e.g. 70-30 Mix)" style="flex: 2;">
-                                <input type="text" id="clientTag" placeholder="Tag (e.g. VIP)" style="flex: 1; max-width: 100px;">
+                                <input type="text" id="clientTag" placeholder="Tags (comma separated)" style="flex: 1; max-width: 150px;">
                                 <button id="saveClientBtn" class="btn btn-icon btn-secondary" title="Save Ratio" style="padding: 6px 10px;">💾</button>
                                 <button id="deleteClientBtn" class="btn btn-icon btn-danger hidden" title="Delete Ratio" style="padding: 6px 10px;">🗑️</button>
                             </div>
@@ -445,8 +445,15 @@
                                     <label style="font-size: 11px; font-weight: 700; color: #4f46e5; text-transform: uppercase;">Discount (Amt):</label>
                                     <input type="number" id="exportDiscountAmountInput" placeholder="0" value="0" style="width: 60px; padding: 4px 6px; border: 1px solid #c7d2fe; border-radius: 6px; font-size: 13px; font-weight: 600; color: #334155; outline: none;">
                                 </div>
+                                <div style="display: flex; align-items: center; gap: 6px; margin-left: 10px; border-left: 1px solid #c7d2fe; padding-left: 15px;">
+                                    <input type="checkbox" id="exportIncludeImageToggle" checked style="cursor: pointer;">
+                                    <label for="exportIncludeImageToggle" style="font-size: 12px; font-weight: 700; color: #334155; cursor: pointer;">Include Product Images</label>
+                                </div>
                             </div>
                             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                <button id="previewCombinedImageBtn" onclick="exportSelectedRatiosToImage('preview')" style="display: inline-flex; align-items: center; gap: 7px; padding: 8px 16px; background: #6366f1; color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.2s; box-shadow: 0 2px 8px rgba(99,102,241,0.25);">
+                                    <i class="fa-solid fa-eye"></i> Generate Preview
+                                </button>
                                 <button id="exportCombinedImageBtn" onclick="exportSelectedRatiosToImage('download')" style="display: inline-flex; align-items: center; gap: 7px; padding: 8px 16px; background: #10b981; color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.2s; box-shadow: 0 2px 8px rgba(16,185,129,0.25);">
                                     <i class="fa-solid fa-image"></i> Share
                                 </button>
@@ -462,6 +469,7 @@
                             </div>
                         </div>
                     </div>
+                    <div id="multiExportPreviewContainer" style="display: none; margin-bottom: 20px;"></div>
                 </div>
 
 
@@ -523,11 +531,26 @@
                 <button onclick="document.getElementById('compositeBuilderModal').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 transition"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
             <div class="p-6 overflow-y-auto">
-                <p class="text-sm text-slate-500 mb-4">Combine multiple selected items into a single new product (e.g., Wig = Frontal + 2 Wefts).</p>
+                <p class="text-sm text-slate-500 mb-4">Combine multiple selected items into a single new product (e.g., Wig = Frontal + 2 Wefts). To determine how lengths scale, please specify the <b>Offset</b> (-/+) and <b>Weight in Grams</b> for each component relative to the final product length.</p>
                 
-                <div class="mb-4">
-                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">New Product Name</label>
-                    <input type="text" id="compositeProductName" placeholder="e.g. 200% Density Wig" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-shadow">
+                <div class="mb-4 flex gap-4">
+                    <div class="flex-1">
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">New Product Name</label>
+                        <input type="text" id="compositeProductName" placeholder="e.g. 200% Density Wig" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-shadow">
+                    </div>
+                    <div class="w-32">
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Target Length</label>
+                        <select id="compositeTargetLength" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-shadow">
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+                    <div class="w-32">
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Output Unit</label>
+                        <select id="compositeOutputUnit" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-shadow">
+                            <option value="pc">Per Piece (pc)</option>
+                            <option value="kg">Per Kg</option>
+                        </select>
+                    </div>
                 </div>
 
                 <div class="mb-4">

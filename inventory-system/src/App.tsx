@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react
 import {
   LayoutDashboard, Users, ShoppingCart, Archive, FileText,
   ClipboardList, Factory, SplitSquareVertical, PackageCheck, Package,
-  ArrowLeftRight, Search, BarChart3, Menu
+  ArrowLeftRight, Search, BarChart3, Menu, Database, QrCode
 } from 'lucide-react';
 
 import Dashboard from './pages/Dashboard';
@@ -12,15 +12,19 @@ import BOMPage from './pages/BOMPage';
 import InventoryPage from './pages/InventoryPage';
 import PurchasePage from './pages/PurchasePage';
 import SuppliersPage from './pages/SuppliersPage';
+import InhInventoryPage from './pages/InhInventoryPage';
+import QRCodePage from './pages/QRCodePage';
 
 const Sidebar = () => {
   const location = useLocation();
   const navItems = [
     { name: 'Dashboard', path: '/', icon: <LayoutDashboard size={20} /> },
+    { name: 'INHINVENTORY Spec', path: '/inhinventory', icon: <Database size={20} /> },
     { name: 'Traceability', path: '/traceability', icon: <Search size={20} /> },
     { name: 'Manufacturing Orders', path: '/raw-manufacturing-order.html', external: true, icon: <Factory size={20} /> },
     { name: 'Raw Hair Purchase', path: '/purchase', icon: <ShoppingCart size={20} /> },
     { name: 'Suppliers Master', path: '/suppliers', icon: <Users size={20} /> },
+    { name: 'QR Generator & Tracker', path: '/qr-manager', icon: <QrCode size={20} /> },
     { name: 'Spec Sheet (BOM)', path: '/bom', icon: <FileText size={20} /> },
     { name: 'Order Entry', path: '/delegated-orders.html', external: true, icon: <ClipboardList size={20} /> },
     { name: 'Inventory Manager', path: '/inventory-manager', icon: <Package size={20} /> },
@@ -107,10 +111,12 @@ export default function App() {
       <AppLayout>
         <Routes>
           <Route path="/" element={<Dashboard />} />
+          <Route path="/inhinventory" element={<InhInventoryPage />} />
           <Route path="/traceability" element={<TraceabilityScreen />} />
           <Route path="/mo" element={<MOPage />} />
           <Route path="/purchase" element={<PurchasePage />} />
           <Route path="/suppliers" element={<SuppliersPage />} />
+          <Route path="/qr-manager" element={<QRCodePage />} />
           <Route path="/bom" element={<BOMPage />} />
           <Route path="/orders" element={<PlaceholderPage title="Sales Order Entry" />} />
           <Route path="/inventory-manager" element={<InventoryPage />} />

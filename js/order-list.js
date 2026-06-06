@@ -106,10 +106,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 inp.value = rowObj[col] || '';
                 inp.dataset.row = rIdx;
                 inp.dataset.col = col;
+
+                // Function to style urgent cell
+                const updateUrgentStyle = (value) => {
+                    if (String(value || '').trim().toLowerCase() === 'urgent') {
+                        inp.style.backgroundColor = '#fee2e2'; // soft light red (Tailwind red-100)
+                        inp.style.color = '#b91c1c'; // dark red text (Tailwind red-700)
+                        inp.style.fontWeight = 'bold';
+                    } else {
+                        inp.style.backgroundColor = '';
+                        inp.style.color = '';
+                        inp.style.fontWeight = '';
+                    }
+                };
+                
+                updateUrgentStyle(inp.value);
                 
                 // Save logic
                 inp.addEventListener('input', (e) => {
                     const val = e.target.value;
+                    updateUrgentStyle(val);
                     if (!db.rows[rIdx]) db.rows[rIdx] = {};
                     db.rows[rIdx][col] = val;
                     
@@ -271,7 +287,7 @@ document.addEventListener('DOMContentLoaded', () => {
         var encodedUri = encodeURI(csvContent);
         var link = document.createElement("a");
         link.setAttribute("href", encodedUri);
-        link.setAttribute("download", "InstaQuote_Orders.csv");
+        link.setAttribute("download", "INHsuite_Orders.csv");
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);

@@ -36,7 +36,7 @@
         Maker…</span></div>
   </div>
   <!-- Navigation -->
-  <script>window.navConfig = { siteTitle: 'InstaQuote - Login' };</script>
+  <script>window.navConfig = { siteTitle: 'INHsuite - Login' };</script>
   <script src="js/navigation-loader.js"></script>
   <main class="px-6 pb-16 flex justify-center">
     <div class="mx-auto w-full max-w-md">
@@ -93,7 +93,33 @@
   <footer class="px-6 pb-10 text-center text-xs text-slate-600">Need help? Email support@indiannaturalhair.com</footer>
 
   <script>
-    function redirectToQuote() { try { var c = document.getElementById('login-card'); if (c) c.style.display = 'none'; var o = document.getElementById('redirecting-overlay'); if (o) o.style.display = 'flex'; } catch (_) { } if (!__redirecting) { __redirecting = true; window.location.replace('/quotemaker.html'); } }
+    function redirectToQuote() {
+      let redirectTarget = '/quotemaker.html';
+      try {
+        const email = localStorage.getItem('SESSION_EMAIL');
+        if (email && email.toLowerCase() === 'hnnworks@gmail.com') {
+          redirectTarget = '/delegated-orders.html';
+        }
+      } catch (_) {}
+
+      try {
+        var c = document.getElementById('login-card');
+        if (c) c.style.display = 'none';
+        var o = document.getElementById('redirecting-overlay');
+        if (o) {
+          o.style.display = 'flex';
+          if (redirectTarget.includes('delegated')) {
+            var textSpan = o.querySelector('span:last-child');
+            if (textSpan) textSpan.textContent = 'Loading Delegated Orders…';
+          }
+        }
+      } catch (_) { }
+
+      if (!__redirecting) {
+        __redirecting = true;
+        window.location.replace(redirectTarget);
+      }
+    }
     // Prevent rapid double navigations that cause visible flicker
     let __redirecting = false;
     function delay(ms) { return new Promise(res => setTimeout(res, ms)); }
@@ -166,6 +192,33 @@
 
     document.addEventListener('DOMContentLoaded', async () => {
       try { await initializeFirebaseApp(); } catch (_) { }
+      
+      // Listen to Auth State changes for auto-redirection if already authenticated
+      if (window.firebase && firebase.auth) {
+        firebase.auth().onAuthStateChanged(async (user) => {
+          if (user) {
+            console.log('[login] Firebase AuthStateChanged: user is logged in', user.email);
+            try {
+              const jl = sessionStorage.getItem('justLoggedOut');
+              if (jl === '1') {
+                // User just logged out, do not auto-login and bounce-back
+                return;
+              }
+            } catch (_) {}
+            
+            try {
+              localStorage.setItem('SESSION_AUTH', '1');
+              localStorage.setItem('SESSION_EMAIL', user.email || '');
+              localStorage.setItem('SESSION_UID', user.uid || '');
+            } catch (_) {}
+            
+            redirectToQuote();
+          } else {
+            console.log('[login] Firebase AuthStateChanged: no user session');
+          }
+        });
+      }
+
       await checkSession();
       try { document.documentElement.classList.remove('pre-init'); } catch (_) { }
 

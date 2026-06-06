@@ -21,12 +21,15 @@ document.addEventListener('DOMContentLoaded', () => {
         currentClientName: "",
         matrix: {},
         prices: { ...DEFAULT_PRICES },
+        marginType: 'percent',
         marginPercent: 30, // Default to 30
+        marginAmount: 0,
         wastagePercent: 10, // Default to 10
         machineCharge: 2500, // Default charge
         machineChargeName: 'MR/Wash Charge', // Default name
         currency: 'INR',
         exchangeRate: 1,
+        roundingFactor: 50,
         customPricesEnabled: false,
         customPrices: {},
         individualMargins: {},
@@ -61,6 +64,74 @@ document.addEventListener('DOMContentLoaded', () => {
         return name.replace(/Hairwise\s*/gi, '').trim();
     };
 
+    const AVAILABLE_PRODUCT_IMAGES = [
+        "Bulk Double Drawn.png",
+        "Bulk Single Drawn.png",
+        "Bulk Super Double Drawn.png",
+        "Bun.png",
+        "Butterfly Weft.png",
+        "ClipOn Set.png",
+        "Clutch Bun.png",
+        "Clutch Ponytail.png",
+        "Flatclip Ponytail.png",
+        "Frontline Patch.png",
+        "Genius Weft.png",
+        "Seamless Clip On.png",
+        "Tape.png",
+        "Tip.png",
+        "Weft Double Drawn.png",
+        "Weft Single Drawn.png",
+        "Weft Super Double Drawn.png",
+        "Wig Closure.png",
+        "Wig Fringe.png",
+        "Wig Frontal.png",
+        "highlights.png"
+    ];
+
+    window.getProductImageHTML = function(name, height = '120px') {
+        if (!name) return '';
+        
+        const words = name.trim().split(/\s+/);
+        const searchWords = words.length >= 3 ? words.slice(2) : words;
+        const searchString = searchWords.join(' ').toLowerCase().replace(/[^a-z0-9\s]/g, '');
+        
+        let bestMatch = null;
+        let highestScore = 0;
+
+        AVAILABLE_PRODUCT_IMAGES.forEach(img => {
+            const cleanImgName = img.replace(/\.png$/i, '').toLowerCase().replace(/[^a-z0-9\s]/g, '');
+            let score = 0;
+            
+            if (searchString.includes(cleanImgName)) {
+                score += 100;
+            } else if (cleanImgName.includes(searchString)) {
+                score += 50;
+            }
+            
+            const imgWords = cleanImgName.split(/\s+/);
+            imgWords.forEach(w => {
+                if (w.length > 1 && searchString.includes(w)) {
+                    score += 10;
+                }
+            });
+            
+            const fullStr = name.toLowerCase().replace(/[^a-z0-9\s]/g, '');
+            if (fullStr.includes(cleanImgName)) {
+                score += 5;
+            }
+
+            if (score > 0 && score > highestScore) {
+                highestScore = score;
+                bestMatch = img;
+            }
+        });
+
+        if (bestMatch) {
+            return `<img src="../images/Products/${bestMatch}?v=9" style="height: ${height}; object-fit: contain;" />`;
+        }
+        return '';
+    };
+
     // --- DOM Elements ---
     // Tabs
     const tabButtons = document.querySelectorAll('button.nav-tab');
@@ -80,14 +151,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const resetMixerBtn = document.getElementById('resetMixerBtn');
 
-    const wastageInput = document.getElementById('wastageInput');
-    const marginInput = document.getElementById('marginInput');
-
     const machineRemyInput = document.getElementById('machineRemyInput');
     const machineChargeNameInput = document.getElementById('machineChargeNameInput');
+    const marginInput = document.getElementById('marginInput');
+    const marginTypeSelect = document.getElementById('marginTypeSelect');
+    const marginInputLabel = document.getElementById('marginInputLabel');
+    const wastageInput = document.getElementById('wastageInput');
     const machineRowLabel = document.getElementById('machineRowLabel');
     const currencySelect = document.getElementById('currencySelect');
     const exchangeRateInput = document.getElementById('exchangeRateInput');
+    const roundingFactorInput = document.getElementById('roundingFactorInput');
     const accentColorInput = document.getElementById('accentColorInput');
     const currencyCodeDisplay = document.getElementById('currencyCodeDisplay');
     const downloadBtn = document.getElementById('downloadBtn');
@@ -286,8 +359,29 @@ document.addEventListener('DOMContentLoaded', () => {
         saveAppState();
     });
 
+    if (marginTypeSelect) {
+        marginTypeSelect.addEventListener('change', (e) => {
+            appState.marginType = e.target.value;
+            if (marginInputLabel) {
+                marginInputLabel.innerText = appState.marginType === 'percent' ? 'Margin %' : 'Margin Amt';
+            }
+            if (appState.marginType === 'amount') {
+                marginInput.value = appState.marginAmount || 0;
+            } else {
+                marginInput.value = appState.marginPercent || 0;
+            }
+            clearCustomPrices();
+            calculateAll();
+            saveAppState();
+        });
+    }
+
     marginInput.addEventListener('input', (e) => {
-        appState.marginPercent = parseFloat(e.target.value) || 0;
+        if (appState.marginType === 'amount') {
+            appState.marginAmount = parseFloat(e.target.value) || 0;
+        } else {
+            appState.marginPercent = parseFloat(e.target.value) || 0;
+        }
         clearCustomPrices();
         calculateAll();
         saveAppState();
@@ -344,6 +438,16 @@ document.addEventListener('DOMContentLoaded', () => {
         calculateAll();
         saveAppState();
     });
+
+    if (roundingFactorInput) {
+        roundingFactorInput.addEventListener('input', (e) => {
+            appState.roundingFactor = e.target.value === '' ? '' : parseFloat(e.target.value);
+            clearCustomPrices();
+            updateRoundingLabel();
+            calculateAll();
+            saveAppState();
+        });
+    }
 
     // Download
     downloadBtn.addEventListener('click', () => exportPriceList('download'));
@@ -546,15 +650,21 @@ document.addEventListener('DOMContentLoaded', () => {
         // Group clients by tag
         const groupedClients = {};
         clients.forEach(c => {
-            let tag = (c.tag && c.tag.trim() !== '') ? c.tag.trim().toUpperCase() : 'UNTAGGED';
-            if (window.location.pathname.includes('hairwise.html')) {
-                const supId = c.raw_supplier_id || c.supplierId || null;
-                const sup = (db.suppliers || []).find(s => s.id === supId);
-                const ht = sup ? (sup.hairType || 'Regular') : 'Regular';
-                tag = `${ht} - ${tag}`;
-            }
-            if (!groupedClients[tag]) groupedClients[tag] = [];
-            groupedClients[tag].push(c);
+            let tagStr = (c.tag && c.tag.trim() !== '') ? c.tag.toUpperCase() : 'UNTAGGED';
+            let tags = tagStr.split(',').map(t => t.trim()).filter(t => t);
+            if (tags.length === 0) tags = ['UNTAGGED'];
+
+            tags.forEach(t => {
+                let tag = t;
+                if (window.location.pathname.includes('hairwise.html')) {
+                    const supId = c.raw_supplier_id || c.supplierId || null;
+                    const sup = (db.suppliers || []).find(s => s.id === supId);
+                    const ht = sup ? (sup.hairType || 'Regular') : 'Regular';
+                    tag = `${ht} - ${tag}`;
+                }
+                if (!groupedClients[tag]) groupedClients[tag] = [];
+                groupedClients[tag].push(c);
+            });
         });
 
         // Sort tags (push UNTAGGED to end, alphabetize others)
@@ -608,10 +718,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td class="p-4" data-label="Ratio Name / Client">
                         <div class="font-bold text-slate-800">
                             ${client.name}
-                            ${client.tag ? '<span class="px-2 py-0.5 ml-2 bg-indigo-100 text-indigo-700 text-xs rounded-full uppercase tracking-wider">' + client.tag + '</span>' : ''}
+                            ${client.tag ? client.tag.split(',').map(t => '<span class="px-2 py-0.5 ml-2 bg-indigo-100 text-indigo-700 text-xs rounded-full uppercase tracking-wider">' + t.trim() + '</span>').join('') : ''}
                         </div>
                         ${window.location.pathname.includes('hairwise.html') ? '' : `<div class="text-xs text-slate-500 mt-1">
-                            Currency: ${client.currency || 'INR'} | Margin: ${client.marginPercent || 0}% | Wastage: ${client.wastagePercent || 0}% | Wash: ${client.machineCharge || 0} | Weft Wastage: ${client.weftingWastagePercent || 0}% | Weft Charge: ${client.weftingCharge || 0}
+                            Currency: ${client.currency || 'INR'} | Margin: ${client.marginType === 'amount' ? client.marginAmount : (client.marginPercent || 0) + '%'} | Wastage: ${client.wastagePercent || 0}% | Wash: ${client.machineCharge || 0} | Weft Wastage: ${client.weftingWastagePercent || 0}% | Weft Charge: ${client.weftingCharge || 0}
                             ${client.customPricesEnabled ? ' | Custom Prices Enabled' : ''}
                         </div>`}
                     </td>
@@ -636,6 +746,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             </button>
                             <div class="absolute right-0 mt-1 w-36 bg-white border border-slate-200 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all flex flex-col overflow-hidden action-dropdown">
                                 <button class="px-4 py-2.5 text-left text-sm hover:bg-slate-50 text-slate-700 transition w-full border-b border-slate-100 flex items-center gap-2" onclick="loadRatioFromTab('${client.name.replace(/'/g, "\'")}')" ><i class="fa-solid fa-pen-to-square w-4"></i> Edit</button>
+                                <button class="px-4 py-2.5 text-left text-sm hover:bg-slate-50 text-slate-700 transition w-full border-b border-slate-100 flex items-center gap-2" onclick="editTagsFromTab('${client.name.replace(/'/g, "\'")}')" ><i class="fa-solid fa-tags w-4"></i> Edit Tags</button>
                                 <button class="px-4 py-2.5 text-left text-sm hover:bg-slate-50 text-slate-700 transition w-full border-b border-slate-100 flex items-center gap-2" onclick="renameRatioFromTab('${client.name.replace(/'/g, "\'")}')" ><i class="fa-solid fa-i-cursor w-4"></i> Rename</button>
                                 <button class="px-4 py-2.5 text-left text-sm hover:bg-red-50 text-red-600 transition w-full flex items-center gap-2" onclick="deleteRatioFromTab('${client.name.replace(/'/g, "\'")}')" ><i class="fa-solid fa-trash w-4"></i> Delete</button>
                             </div>
@@ -778,8 +889,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const exportGramsInputs = document.querySelectorAll('#exportMultiGramsList .gram-val-input');
         const exportGramsArray = Array.from(exportGramsInputs).map(i => parseFloat(i.value)).filter(n => !isNaN(n) && n > 0);
         if (exportGramsArray.length === 0) exportGramsArray.push(100);
-        const isGrams = exportUnit === 'grams';
-        const isPieces = exportUnit === 'pieces';
 
         if (_selectedRatioNames.size === 0) return alert('Please select at least one ratio to export.');
 
@@ -841,12 +950,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 name: client.name,
                 tag: client.tag || '',
                 currency: targetCurrency,
+                marginType: client.marginType || 'percent',
+                marginAmount: client.marginAmount || 0,
                 marginPercent: client.marginPercent || 0,
                 discountPercent: parseFloat(document.getElementById('exportDiscountPercentInput').value) || 0,
                 discountAmount: parseFloat(document.getElementById('exportDiscountAmountInput').value) || 0,
                 wastagePercent: client.wastagePercent || 0,
                 machineCharge: client.machineCharge || 0,
-                prices
+                prices,
+                clientExportUnit: client.exportUnit || 'kg',
+                clientExportGrams: (client.exportGrams && client.exportGrams.length) ? client.exportGrams : [100],
+                outputUnit: client.outputUnit || null // For composite products
             });
         }
 
@@ -864,10 +978,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const headerRow = ['Length (")'];
         ratioResults.forEach(r => {
             const baseName = r.name + (r.tag ? ` [${r.tag}]` : '');
-            if (exportUnit === 'kg') {
+            let rExportUnit = exportUnit === 'original' ? r.clientExportUnit : exportUnit;
+            let rExportGrams = exportUnit === 'original' ? r.clientExportGrams : exportGramsArray;
+            // Composite products might have outputUnit='pc'
+            if (exportUnit === 'original' && r.outputUnit === 'pc') rExportUnit = 'pieces';
+            if (exportUnit === 'original' && r.outputUnit === 'kg') rExportUnit = 'kg';
+
+            if (rExportUnit === 'kg') {
                 headerRow.push(baseName + ' per kg');
             } else {
-                exportGramsArray.forEach(g => headerRow.push(`${baseName} per ${g}g`));
+                let isPieces = rExportUnit === 'pieces';
+                rExportGrams.forEach(g => headerRow.push(`${baseName} per ${isPieces ? '1 pc (' + g + 'g)' : g + 'g'}`));
             }
         });
         const rows = [headerRow];
@@ -875,11 +996,17 @@ document.addEventListener('DOMContentLoaded', () => {
         // Second row: metadata (currency + margin)
         const metaRow = ['Settings'];
         ratioResults.forEach(r => {
-            const meta = `${r.currency} | Margin:${r.marginPercent}% | Disc:${r.discountPercent || 0}%/-${r.discountAmount || 0} | Wastage:${r.wastagePercent}% | Wash:${r.machineCharge}`;
-            if (exportUnit === 'kg') {
+            const marginStr = r.marginType === 'amount' ? r.marginAmount : `${r.marginPercent}%`;
+            const meta = `${r.currency} | Margin:${marginStr} | Disc:${r.discountPercent || 0}%/-${r.discountAmount || 0} | Wastage:${r.wastagePercent}% | Wash:${r.machineCharge}`;
+            let rExportUnit = exportUnit === 'original' ? r.clientExportUnit : exportUnit;
+            let rExportGrams = exportUnit === 'original' ? r.clientExportGrams : exportGramsArray;
+            if (exportUnit === 'original' && r.outputUnit === 'pc') rExportUnit = 'pieces';
+            if (exportUnit === 'original' && r.outputUnit === 'kg') rExportUnit = 'kg';
+
+            if (rExportUnit === 'kg') {
                 metaRow.push(meta);
             } else {
-                exportGramsArray.forEach(g => metaRow.push(meta));
+                rExportGrams.forEach(g => metaRow.push(meta));
             }
         });
         rows.push(metaRow);
@@ -888,10 +1015,17 @@ document.addEventListener('DOMContentLoaded', () => {
             const row = [len + '"'];
             ratioResults.forEach(r => {
                 const price = r.prices[len];
-                if (exportUnit === 'kg') {
+                let rExportUnit = exportUnit === 'original' ? r.clientExportUnit : exportUnit;
+                let rExportGrams = exportUnit === 'original' ? r.clientExportGrams : exportGramsArray;
+                if (exportUnit === 'original' && r.outputUnit === 'pc') rExportUnit = 'pieces';
+                if (exportUnit === 'original' && r.outputUnit === 'kg') rExportUnit = 'kg';
+
+                if (rExportUnit === 'kg' || r.outputUnit === 'pc') {
+                    // if it's already a composite product with outputUnit 'pc', it's essentially per piece already (at whatever its total weight is).
+                    // We'll treat composite 'pc' like 'kg' for column count (1 column), but we won't divide it further. 
                     row.push(price != null && price > 0 ? price : '-');
                 } else {
-                    exportGramsArray.forEach(g => {
+                    rExportGrams.forEach(g => {
                         if (price != null && price > 0) {
                             row.push(((price / 1000) * g).toFixed(2));
                         } else {
@@ -930,8 +1064,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const exportGramsInputs = document.querySelectorAll('#exportMultiGramsList .gram-val-input');
         const exportGramsArray = Array.from(exportGramsInputs).map(i => parseFloat(i.value)).filter(n => !isNaN(n) && n > 0);
         if (exportGramsArray.length === 0) exportGramsArray.push(100);
+
         const isGrams = exportUnit === 'grams';
         const isPieces = exportUnit === 'pieces';
+        const isOriginal = exportUnit === 'original';
 
         if (_selectedRatioNames.size === 0) return alert('Please select at least one ratio to export.');
 
@@ -993,7 +1129,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 discountAmount: parseFloat(document.getElementById('exportDiscountAmountInput').value) || 0,
                 wastagePercent: client.wastagePercent || 0,
                 machineCharge: client.machineCharge || 0,
-                prices
+                prices,
+                clientExportUnit: client.exportUnit || 'kg',
+                clientExportGrams: (client.exportGrams && client.exportGrams.length) ? client.exportGrams : [100],
+                outputUnit: client.outputUnit || null
             });
         }
 
@@ -1017,6 +1156,20 @@ document.addEventListener('DOMContentLoaded', () => {
             ratioResults.some(r => r.prices[len] && r.prices[len] > 0)
         );
 
+        // Extract common first word
+        let globalFirstWord = '';
+        if (ratioResults.length > 0) {
+            const potentialFirstWord = ratioResults[0].name.trim().split(/\s+/)[0];
+            const isCommonFirstWord = ratioResults.every(r => r.name.trim().split(/\s+/)[0].toLowerCase() === potentialFirstWord.toLowerCase());
+            if (isCommonFirstWord && potentialFirstWord) {
+                globalFirstWord = potentialFirstWord.toUpperCase();
+                ratioResults.forEach(r => {
+                    r.originalName = r.name; // Save for image matching
+                    r.name = r.name.trim().split(/\s+/).slice(1).join(' ');
+                });
+            }
+        }
+
         // Find common word prefix (up to 3 words)
         let commonWords = [];
         if (ratioResults.length > 0) {
@@ -1037,47 +1190,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const commonTitle = commonWords.length > 0 ? commonWords.join(' ') : 'Combined Price List Comparison';
 
         ratioResults.forEach(r => {
-            const words = r.name.trim().split(/\s+/);
-            r.displayName = words.slice(commonWords.length).join(' ');
-            if (r.displayName.trim() === '') r.displayName = r.name;
+            r.displayName = r.name.replace(/\bINR\b/gi, '').replace(new RegExp('\\b' + r.currency + '\\b', 'gi'), '').trim();
         });
 
         // Generate HTML table for image
         const _hex = appState.accentColor || '#4f46e5';
         const _r = parseInt(_hex.slice(1,3),16), _g = parseInt(_hex.slice(3,5),16), _b = parseInt(_hex.slice(5,7),16);
         const _bg = `rgba(${_r},${_g},${_b},0.10)`;
-
-        let rowsHTML = '';
-        activeLengths.forEach((len, i) => {
-            const bgStr = i % 2 === 0 ? "background: #ffffff;" : "background: #faf0e6;";
-            const cmLen = len * 2.5;
-            rowsHTML += `<tr style="${bgStr}">
-                <td style="padding: 8px 12px; border-bottom: 1px solid #f1f5f9; font-weight: 700; color: #334155; font-size: 14px; border-right: 1px solid #e2e8f0; text-align: center;">${len}"</td>
-                <td style="padding: 8px 12px; border-bottom: 1px solid #f1f5f9; font-weight: 700; color: #334155; font-size: 14px; border-right: 1px solid #e2e8f0; text-align: center;">${cmLen} cm</td>`;
-            ratioResults.forEach(r => {
-                const rawPrice = r.prices[len];
-                if (exportUnit === 'kg') {
-                    let formattedPrice = '-';
-                    if (rawPrice && parseFloat(rawPrice) > 0) {
-                        const priceWithSymbol = formatPriceWithSymbol(parseFloat(rawPrice), r.currency);
-                        formattedPrice = `${priceWithSymbol} <span style="font-size:11px; font-weight:500; color:#64748b;">/kg</span>`;
-                    }
-                    rowsHTML += `<td style="padding: 8px 12px; border-bottom: 1px solid #f1f5f9; text-align: center; font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; color: #0f172a; border-right: 1px solid #f1f5f9;">${formattedPrice}</td>`;
-                } else {
-                    exportGramsArray.forEach(g => {
-                        let formattedPrice = '-';
-                        if (rawPrice && parseFloat(rawPrice) > 0) {
-                            let finalPrice = (parseFloat(rawPrice) / 1000) * g;
-                            const priceWithSymbol = formatPriceWithSymbol(finalPrice, r.currency);
-                            let unitSuffix = isPieces ? `/pc` : `/${g}g`;
-                            formattedPrice = `${priceWithSymbol} <span style="font-size:11px; font-weight:500; color:#64748b;">${unitSuffix}</span>`;
-                        }
-                        rowsHTML += `<td style="padding: 8px 12px; border-bottom: 1px solid #f1f5f9; text-align: center; font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; color: #0f172a; border-right: 1px solid #f1f5f9;">${formattedPrice}</td>`;
-                    });
-                }
-            });
-            rowsHTML += `</tr>`;
-        });
 
         const isBleachable = selectedNames.every(name => {
             const c = (db.clients || []).find(cl => cl.name === name);
@@ -1095,24 +1214,13 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         `;
 
-        let footerHTML = `<div style="text-align: center; color: #cbd5e1; font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 1px; margin-top: 15px;">Generated by Ratio Mixer</div>`;
-        const isVirgin = commonTitle.toLowerCase().includes('virgin') || ratioResults.some(r => r.name.toLowerCase().includes('virgin'));
-        const isRemy = commonTitle.toLowerCase().includes('remy') || ratioResults.some(r => r.name.toLowerCase().includes('remy'));
-        if (isVirgin || isRemy) {
-            const bleachableTo = isVirgin ? '#613/60' : '#22/27';
-            footerHTML = `
-                <div style="margin-top: 15px; padding: 12px 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 12px; color: #475569; line-height: 1.8; text-align: left;">
-                    <div style="font-weight: 800; color: #0f172a; margin-bottom: 10px; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; display: inline-block;">Important Information</div>
-                    <ul style="list-style-type: none; padding: 0; margin: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 20px; font-weight: 500;">
-                        <li><span style="color:#6366f1; font-weight:900; margin-right:6px;">•</span>Shipping Charges Extra</li>
-                        <li><span style="color:#6366f1; font-weight:900; margin-right:6px;">•</span>Curly/Wavy Styles 10% Extra</li>
-                        <li><span style="color:#6366f1; font-weight:900; margin-right:6px;">•</span>The prices are per ${isPieces ? 'piece' : (isGrams ? `${exportGramsArray.join(', ')} grams` : 'kilogram')}</li>
-                        <li><span style="color:#6366f1; font-weight:900; margin-right:6px;">•</span>1 Kilogram = 10 packets of 100 grams each</li>
-                        <li><span style="color:#6366f1; font-weight:900; margin-right:6px;">•</span>Minimum Order Quantity 1 kg (10 pieces)</li>
-                        <li><span style="color:#6366f1; font-weight:900; margin-right:6px;">•</span>Bleached colors 20% Extra</li>
-                    </ul>
+        let footerInfoHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding: 0 4px;">
+                <div style="font-size: 11px; color: #64748b; font-weight: 500;">
+                    <i class="fa-regular fa-calendar" style="margin-right: 4px;"></i> Generated: ${new Date().toLocaleDateString('en-IN', {day:'numeric', month:'short', year:'numeric'})}
                 </div>
-                <div style="text-align: right; font-size: 10px; color: #94a3b8; margin-top: 6px; font-weight: 600; padding-right: 4px;">
+                ${globalFirstWord ? `<div style="font-size: 11px; color: #64748b; font-weight: 700; letter-spacing: 0.5px;">${globalFirstWord}</div>` : ''}
+                <div style="font-size: 12px; color: #94a3b8; font-weight: 700;">
                     ${(function() {
                         const __d = new Date();
                         const __dd = String(__d.getDate()).padStart(2, '0');
@@ -1130,72 +1238,300 @@ document.addEventListener('DOMContentLoaded', () => {
                         return `${__dd}${__mm}${__yy}/${_discStr}`;
                     })()}
                 </div>
+            </div>
+        `;
+
+        let footerHTML = footerInfoHTML;
+        const isVirgin = commonTitle.toLowerCase().includes('virgin') || ratioResults.some(r => r.name.toLowerCase().includes('virgin'));
+        const isRemy = commonTitle.toLowerCase().includes('remy') || ratioResults.some(r => r.name.toLowerCase().includes('remy'));
+        if (isVirgin || isRemy) {
+            const bleachableTo = isVirgin ? '#613/60' : '#22/27';
+            footerHTML = `
+                <div style="margin-top: 15px; padding: 12px 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 12px; color: #475569; line-height: 1.8; text-align: left;">
+                    <div style="font-weight: 800; color: #0f172a; margin-bottom: 10px; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; display: inline-block;">Important Information</div>
+                    <table style="width: 100%; border-collapse: collapse; margin: 0; padding: 0; font-weight: 500; font-size: 12px;">
+                        <tr>
+                            <td style="width: 50%; padding: 4px 10px 4px 0; vertical-align: top; text-align: left; white-space: nowrap;"><span style="color:#6366f1; font-weight:900; margin-right:6px;">•</span>Shipping Charges Extra</td>
+                            <td style="width: 50%; padding: 4px 10px 4px 0; vertical-align: top; text-align: left; white-space: nowrap;"><span style="color:#6366f1; font-weight:900; margin-right:6px;">•</span>Curly/Wavy Styles 10% Extra</td>
+                        </tr>
+                        <tr>
+                            <td style="width: 50%; padding: 4px 10px 4px 0; vertical-align: top; text-align: left; white-space: nowrap;"><span style="color:#6366f1; font-weight:900; margin-right:6px;">•</span>The prices are per ${isOriginal ? 'original unit' : (isPieces ? 'piece' : (isGrams ? `${exportGramsArray.join(', ')} grams` : 'kilogram'))}</td>
+                            <td style="width: 50%; padding: 4px 10px 4px 0; vertical-align: top; text-align: left; white-space: nowrap;"><span style="color:#6366f1; font-weight:900; margin-right:6px;">•</span>${isPieces || (isOriginal && ratioResults.some(r => r.outputUnit === 'pc')) ? '200 to 300 grams depending on length' : '1 Kilogram = 10 packets of 100 grams each'}</td>
+                        </tr>
+                        <tr>
+                            <td style="width: 50%; padding: 4px 10px 4px 0; vertical-align: top; text-align: left; white-space: nowrap;"><span style="color:#6366f1; font-weight:900; margin-right:6px;">•</span>${isPieces || (isOriginal && ratioResults.some(r => r.outputUnit === 'pc')) ? 'Minimum Order Quantity 10 pieces' : 'Minimum Order Quantity 1 kg (10 pieces)'}</td>
+                            <td style="width: 50%; padding: 4px 10px 4px 0; vertical-align: top; text-align: left; white-space: nowrap;"><span style="color:#6366f1; font-weight:900; margin-right:6px;">•</span>Bleached colors 20% Extra</td>
+                        </tr>
+                    </table>
+                </div>
+                ${footerInfoHTML}
             `;
         }
 
+        const includeImagesEl = document.getElementById('exportIncludeImageToggle');
+        const includeImages = includeImagesEl ? includeImagesEl.checked : true;
+        
+        let containerContentHTML = '';
+        if (includeImages) {
+            containerContentHTML = `
+                <div style="width: max-content; min-width: 100%; max-width: none; margin: 0 auto 12px auto; display: flex; justify-content: center; align-items: stretch; gap: 20px;">
+                    ${ratioResults.map(r => {
+                        let rowsHTML = '';
+                        activeLengths.forEach((len, i) => {
+                            const bgStr = i % 2 === 0 ? "background: #ffffff;" : "background: #faf0e6;";
+                            const cmLen = len * 2.5;
+                            const rawPrice = r.prices[len];
+                            
+                            rowsHTML += `<tr style="${bgStr}">
+                                <td style="padding: 8px 8px; border-bottom: 1px solid #f1f5f9; font-weight: 700; color: #334155; font-size: 14px; border-right: 1px solid #e2e8f0; text-align: center; white-space: nowrap;">${len}"</td>
+                                <td style="padding: 8px 8px; border-bottom: 1px solid #f1f5f9; font-weight: 700; color: #334155; font-size: 14px; border-right: 1px solid #e2e8f0; text-align: center; white-space: nowrap;">${cmLen} cm</td>`;
+                            
+                            let rExportUnit = exportUnit === 'original' ? r.clientExportUnit : exportUnit;
+                            let rExportGrams = exportUnit === 'original' ? r.clientExportGrams : exportGramsArray;
+                            if (exportUnit === 'original' && r.outputUnit === 'pc') rExportUnit = 'pieces';
+                            if (exportUnit === 'original' && r.outputUnit === 'kg') rExportUnit = 'kg';
+
+                            if (rExportUnit === 'kg' || r.outputUnit === 'pc') {
+                                let formattedPrice = '-';
+                                if (rawPrice && parseFloat(rawPrice) > 0) {
+                                    const priceWithSymbol = formatPriceWithSymbol(parseFloat(rawPrice), r.currency);
+                                    let suffix = r.outputUnit === 'pc' ? '/pc' : '/kg';
+                                    formattedPrice = `${priceWithSymbol} <span style="font-size:11px; font-weight:500; color:#64748b;">${suffix}</span>`;
+                                }
+                                rowsHTML += `<td style="padding: 8px 12px; border-bottom: 1px solid #f1f5f9; text-align: center; font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; color: #0f172a;">${formattedPrice}</td>`;
+                            } else {
+                                let isPieces = rExportUnit === 'pieces';
+                                rExportGrams.forEach((g, gIdx) => {
+                                    let formattedPrice = '-';
+                                    if (rawPrice && parseFloat(rawPrice) > 0) {
+                                        let finalPrice = (parseFloat(rawPrice) / 1000) * g;
+                                        const priceWithSymbol = formatPriceWithSymbol(finalPrice, r.currency);
+                                        let unitSuffix = isPieces ? `/pc` : `/${g}g`;
+                                        formattedPrice = `${priceWithSymbol} <span style="font-size:11px; font-weight:500; color:#64748b;">${unitSuffix}</span>`;
+                                    }
+                                    const bRight = gIdx === rExportGrams.length - 1 ? '' : 'border-right: 1px solid #f1f5f9;';
+                                    rowsHTML += `<td style="padding: 8px 12px; border-bottom: 1px solid #f1f5f9; text-align: center; font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; color: #0f172a; ${bRight}">${formattedPrice}</td>`;
+                                });
+                            }
+                            rowsHTML += `</tr>`;
+                        });
+                        
+                        let isRVirgin = r.name.toLowerCase().includes('virgin');
+                        let isRRemy = r.name.toLowerCase().includes('remy');
+                        if (r.bundleComponents && r.bundleComponents.length > 1) {
+                            isRVirgin = false;
+                            isRRemy = false;
+                            const secondC = r.bundleComponents[1];
+                            const cname = (typeof secondC === 'string' ? secondC : (secondC.name || '')).toLowerCase();
+                            if (cname.includes('virgin')) isRVirgin = true;
+                            if (cname.includes('remy')) isRRemy = true;
+                        }
+                        let stampInfo = '';
+                        if (isRVirgin) {
+                            stampInfo = `<img src="../images/hw/bleachable.png?v=3" style="height: 120px; width: auto; max-width: 100%; object-fit: contain;" alt="Bleachable" />`;
+                        } else if (isRRemy) {
+                            stampInfo = `<img src="../images/hw/bleachable27.png?v=3" style="height: 120px; width: auto; max-width: 100%; object-fit: contain;" alt="Bleachable" />`;
+                        }
+                        
+                        let rExportUnit = exportUnit === 'original' ? r.clientExportUnit : exportUnit;
+                        let rExportGrams = exportUnit === 'original' ? r.clientExportGrams : exportGramsArray;
+                        if (exportUnit === 'original' && r.outputUnit === 'pc') rExportUnit = 'pieces';
+                        if (exportUnit === 'original' && r.outputUnit === 'kg') rExportUnit = 'kg';
+
+                        let priceHeaders = '';
+                        if (rExportUnit === 'kg' || r.outputUnit === 'pc') {
+                            let suffix = r.outputUnit === 'pc' ? '/pc' : '/kg';
+                            priceHeaders = `<th style="padding: 16px 10px 16px 10px; background: #faf0e6; border-bottom: 2px solid #e2e8f0; color: #0f172a; font-weight: 800; text-align: center; vertical-align: bottom; white-space: nowrap;">Price<br><span style="font-size: 11px; font-weight: 600; color: #475569; font-variant: normal; text-transform: none;">${r.currency} ${suffix}</span></th>`;
+                        } else {
+                            let isPieces = rExportUnit === 'pieces';
+                            priceHeaders = rExportGrams.map((g, gIdx) => {
+                                const bRight = gIdx === rExportGrams.length - 1 ? '' : 'border-right: 1px solid #e2e8f0;';
+                                return `<th style="padding: 16px 10px 16px 10px; background: #faf0e6; border-bottom: 2px solid #e2e8f0; color: #0f172a; font-weight: 800; text-align: center; vertical-align: bottom; white-space: nowrap; ${bRight}">Price<br><span style="font-size: 11px; font-weight: 600; color: #475569; font-variant: normal; text-transform: none;">${r.currency} (${isPieces ? `1 pc - ${g}g` : `${g}g`})</span></th>`;
+                            }).join('');
+                        }
+                        
+                        let numPriceCols = (rExportUnit === 'kg' || r.outputUnit === 'pc') ? 1 : rExportGrams.length;
+                        const imgHTML = window.getProductImageHTML(r.originalName || r.name, 'auto');
+                        
+                        return `
+                        <div style="display: flex; flex-direction: column; box-shadow: 0 15px 25px -5px rgba(0,0,0,0.1); border-radius: 16px; overflow: hidden; border: 2px solid #e2e8f0; background: white; width: max-content;">
+                            <div style="padding: 16px 10px; background: #faf0e6; border-bottom: 2px solid #e2e8f0; color: #0f172a; font-weight: 800; text-align: center; vertical-align: bottom;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; width: 100%;">
+                                    <img src="../images/hw/100percent.png?v=3" style="height: 120px; width: auto; max-width: 100%; object-fit: contain;" alt="100% Authentic Human Hair" />
+                                    ${stampInfo}
+                                </div>
+                                <div style="font-size: 16px; font-weight: 800; text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                                    ${renderNameWithLogo(r.displayName, '14px')}
+                                    <span style="color: #16a34a;">(${({'USD':'$','EUR':'€','GBP':'£','INR':'₹'})[r.currency] || r.currency})</span>
+                                </div>
+                            </div>
+                            <div style="display: flex; justify-content: center; align-items: stretch; flex-grow: 1;">
+                                <div style="flex-grow: 1;">
+                                    <table style="width: 100%; border-collapse: separate; border-spacing: 0; text-align: left; font-size: 14px; background: transparent;">
+                                        <thead>
+                                            <tr>
+                                                <th style="width: 80px; min-width: 80px; max-width: 80px; padding: 16px 10px 16px 10px; background: #faf0e6; border-bottom: 2px solid #e2e8f0; color: #0f172a; font-weight: 800; border-right: 1px solid #e2e8f0; text-align: center; vertical-align: bottom; white-space: nowrap;">Length<br><span style="font-size: 11px; font-weight: 600; color: #475569; font-variant: normal; text-transform: none;">in inches</span></th>
+                                                <th style="width: 80px; min-width: 80px; max-width: 80px; padding: 16px 10px 16px 10px; background: #faf0e6; border-bottom: 2px solid #e2e8f0; color: #0f172a; font-weight: 800; border-right: 1px solid #e2e8f0; text-align: center; vertical-align: bottom; white-space: nowrap;">Length<br><span style="font-size: 11px; font-weight: 600; color: #475569; font-variant: normal; text-transform: none;">in cm</span></th>
+                                                ${priceHeaders}
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${rowsHTML}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                ${imgHTML ? `<div style="flex: 0 0 250px; display: flex; align-items: stretch; justify-content: center; padding: 0; background: #ffffff; border-left: 2px solid #e2e8f0;">
+                                    ${imgHTML.replace(/style="[^"]*"/, 'style="width: 100%; height: 100%; max-height: none; object-fit: contain;"')}
+                                </div>` : ''}
+                            </div>
+                        </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+        } else {
+            let singleTableRows = '';
+            activeLengths.forEach((len, i) => {
+                const bgStr = i % 2 === 0 ? "background: #ffffff;" : "background: #faf0e6;";
+                const cmLen = len * 2.5;
+                singleTableRows += `<tr style="${bgStr}">
+                    <td style="padding: 8px 12px; border-bottom: 1px solid #f1f5f9; font-weight: 700; color: #334155; font-size: 14px; border-right: 1px solid #e2e8f0; text-align: center; white-space: nowrap;">${len}"</td>
+                    <td style="padding: 8px 12px; border-bottom: 1px solid #f1f5f9; font-weight: 700; color: #334155; font-size: 14px; border-right: 1px solid #e2e8f0; text-align: center; white-space: nowrap;">${cmLen} cm</td>`;
+                
+                ratioResults.forEach(r => {
+                    const rawPrice = r.prices[len];
+                    let rExportUnit = exportUnit === 'original' ? r.clientExportUnit : exportUnit;
+                    let rExportGrams = exportUnit === 'original' ? r.clientExportGrams : exportGramsArray;
+                    if (exportUnit === 'original' && r.outputUnit === 'pc') rExportUnit = 'pieces';
+                    if (exportUnit === 'original' && r.outputUnit === 'kg') rExportUnit = 'kg';
+
+                    if (rExportUnit === 'kg' || r.outputUnit === 'pc') {
+                        let formattedPrice = '-';
+                        if (rawPrice && parseFloat(rawPrice) > 0) {
+                            const priceWithSymbol = formatPriceWithSymbol(parseFloat(rawPrice), r.currency);
+                            let suffix = r.outputUnit === 'pc' ? '/pc' : '/kg';
+                            formattedPrice = `${priceWithSymbol} <span style="font-size:11px; font-weight:500; color:#64748b;">${suffix}</span>`;
+                        }
+                        singleTableRows += `<td style="padding: 8px 12px; border-bottom: 1px solid #f1f5f9; text-align: center; font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; color: #0f172a; border-right: 1px solid #e2e8f0;">${formattedPrice}</td>`;
+                    } else {
+                        let isPieces = rExportUnit === 'pieces';
+                        rExportGrams.forEach(g => {
+                            let formattedPrice = '-';
+                            if (rawPrice && parseFloat(rawPrice) > 0) {
+                                let finalPrice = (parseFloat(rawPrice) / 1000) * g;
+                                const priceWithSymbol = formatPriceWithSymbol(finalPrice, r.currency);
+                                let unitSuffix = isPieces ? `/pc` : `/${g}g`;
+                                formattedPrice = `${priceWithSymbol} <span style="font-size:11px; font-weight:500; color:#64748b;">${unitSuffix}</span>`;
+                            }
+                            singleTableRows += `<td style="padding: 8px 12px; border-bottom: 1px solid #f1f5f9; text-align: center; font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; color: #0f172a; border-right: 1px solid #e2e8f0;">${formattedPrice}</td>`;
+                        });
+                    }
+                });
+                singleTableRows += `</tr>`;
+            });
+            
+            containerContentHTML = `
+                <div style="display: flex; justify-content: center; align-items: stretch; box-shadow: 0 15px 25px -5px rgba(0,0,0,0.1); border-radius: 16px; overflow: hidden; border: 2px solid #e2e8f0; background: white; width: max-content; margin: 0 auto; margin-bottom: 12px;">
+                    <table style="width: 100%; border-collapse: separate; border-spacing: 0; text-align: left; font-size: 14px; background: transparent;">
+                        <thead>
+                            <tr>
+                                <th colspan="2" rowspan="2" style="padding: 16px 10px; background: #faf0e6; border-bottom: 2px solid #e2e8f0; border-right: 1px solid #e2e8f0; color: #0f172a; font-weight: 800; text-align: center; vertical-align: middle; text-transform: uppercase;">
+                                    Finished<br>Length
+                                </th>
+                                ${ratioResults.map(r => {
+                                    let rExportUnit = exportUnit === 'original' ? r.clientExportUnit : exportUnit;
+                                    let rExportGrams = exportUnit === 'original' ? r.clientExportGrams : exportGramsArray;
+                                    if (exportUnit === 'original' && r.outputUnit === 'pc') rExportUnit = 'pieces';
+                                    if (exportUnit === 'original' && r.outputUnit === 'kg') rExportUnit = 'kg';
+                                    let numPriceCols = (rExportUnit === 'kg' || r.outputUnit === 'pc') ? 1 : rExportGrams.length;
+                                    let isRVirgin = r.name.toLowerCase().includes('virgin');
+                                    let isRRemy = r.name.toLowerCase().includes('remy');
+                                    if (r.bundleComponents && r.bundleComponents.length > 1) {
+                                        isRVirgin = false;
+                                        isRRemy = false;
+                                        const secondC = r.bundleComponents[1];
+                                        const cname = (typeof secondC === 'string' ? secondC : (secondC.name || '')).toLowerCase();
+                                        if (cname.includes('virgin')) isRVirgin = true;
+                                        if (cname.includes('remy')) isRRemy = true;
+                                    }
+                                    let stampInfo = '';
+                                    if (isRVirgin) {
+                                        stampInfo = `<img src="../images/hw/bleachable.png?v=3" style="height: 80px; width: auto; max-width: 100%; object-fit: contain;" alt="Bleachable" />`;
+                                    } else if (isRRemy) {
+                                        stampInfo = `<img src="../images/hw/bleachable27.png?v=3" style="height: 80px; width: auto; max-width: 100%; object-fit: contain;" alt="Bleachable" />`;
+                                    }
+                                    return `<th colspan="${numPriceCols}" style="padding: 16px 10px; background: #faf0e6; border-bottom: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; color: #0f172a; font-weight: 800; text-align: center; vertical-align: bottom;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; width: 100%;">
+                                            <img src="../images/hw/100percent.png?v=3" style="height: 80px; width: auto; max-width: 100%; object-fit: contain;" alt="100% Authentic Human Hair" />
+                                            ${stampInfo}
+                                        </div>
+                                        <div style="font-size: 16px; font-weight: 800; text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                                            ${renderNameWithLogo(r.displayName, '14px')}
+                                            <span style="color: #16a34a;">(${({'USD':'$','EUR':'€','GBP':'£','INR':'₹'})[r.currency] || r.currency})</span>
+                                        </div>
+                                    </th>`;
+                                }).join('')}
+                            </tr>
+                            <tr>
+                                ${ratioResults.map(r => {
+                                    let rExportUnit = exportUnit === 'original' ? r.clientExportUnit : exportUnit;
+                                    let rExportGrams = exportUnit === 'original' ? r.clientExportGrams : exportGramsArray;
+                                    if (exportUnit === 'original' && r.outputUnit === 'pc') rExportUnit = 'pieces';
+                                    if (exportUnit === 'original' && r.outputUnit === 'kg') rExportUnit = 'kg';
+
+                                    if (rExportUnit === 'kg' || r.outputUnit === 'pc') {
+                                        let suffix = r.outputUnit === 'pc' ? '/pc' : '/kg';
+                                        return `<th style="padding: 16px 10px; background: #faf0e6; border-bottom: 2px solid #e2e8f0; border-right: 1px solid #e2e8f0; color: #0f172a; font-weight: 800; text-align: center; vertical-align: bottom; white-space: nowrap;">Price<br><span style="font-size: 11px; font-weight: 600; color: #475569; font-variant: normal; text-transform: none;">${r.currency} ${suffix}</span></th>`;
+                                    } else {
+                                        let isPieces = rExportUnit === 'pieces';
+                                        return rExportGrams.map((g, gIdx) => {
+                                            return `<th style="padding: 16px 10px; background: #faf0e6; border-bottom: 2px solid #e2e8f0; border-right: 1px solid #e2e8f0; color: #0f172a; font-weight: 800; text-align: center; vertical-align: bottom; white-space: nowrap;">Price<br><span style="font-size: 11px; font-weight: 600; color: #475569; font-variant: normal; text-transform: none;">${r.currency} (${isPieces ? `1 pc - ${g}g` : `${g}g`})</span></th>`;
+                                        }).join('');
+                                    }
+                                }).join('')}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${singleTableRows}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+        
         const displayHTML = `
             <div id="export-combined-preview" style="position: relative; background: ${_bg}; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; min-width: ${300 + ratioResults.length * 150}px; width: max-content; color: #334155; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);">
                 ${imagesHTML}
-                <div style="text-align: center; margin-bottom: 12px;">
-                    <h2 style="color: #0f172a; font-size: 26px; font-weight: 700; margin: 0 0 4px 0; letter-spacing: -0.5px;">${renderNameWithLogo(commonTitle, '22px')}</h2>
-                    <div style="font-size: 13px; color: #64748b; font-weight: 500;">
-                        <span style="display:inline-block;"><i class="fa-regular fa-calendar" style="margin-right: 4px;"></i> Generated: ${new Date().toLocaleDateString('en-IN', {day:'numeric', month:'short', year:'numeric'})}</span>
-                    </div>
-                </div>
-                
-                <table style="width: 100%; border-collapse: separate; border-spacing: 0; margin-bottom: 12px; text-align: left; font-size: 14px; background: white; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0;">
-                    <thead>
-                        <tr>
-                            <th colspan="2" style="background: #faf0e6; border-right: 1px solid #e2e8f0; border-bottom: none; text-align: center; padding-top: 16px; padding-bottom: 12px;">
-                                <div style="display: flex; justify-content: center;">
-                                    <img src="../images/hw/100percent.png?v=2" style="height: 100px; width: 100px; object-fit: contain;" alt="100% Authentic Human Hair" />
-                                </div>
-                            </th>
-                            ${ratioResults.map(r => {
-                                const isRVirgin = r.name.toLowerCase().includes('virgin');
-                                const isRRemy = r.name.toLowerCase().includes('remy');
-                                let bleachableInfo = '';
-                                if (isRVirgin) {
-                                    bleachableInfo = `<div style="margin-bottom: 12px; display: flex; justify-content: center;"><img src="../images/hw/bleachable.png" style="height: 100px; width: 100px; object-fit: contain;" alt="Bleachable" /></div>`;
-                                } else if (isRRemy) {
-                                    bleachableInfo = `<div style="margin-bottom: 12px; display: flex; justify-content: center;"><img src="../images/hw/bleachable27.png" style="height: 100px; width: 100px; object-fit: contain;" alt="Bleachable" /></div>`;
-                                }
 
-                                if (exportUnit === 'kg') {
-                                    return `
-                                    <th rowspan="2" style="padding: 16px 10px; background: #faf0e6; border-bottom: 2px solid #e2e8f0; color: #0f172a; font-weight: 800; text-align: center; border-right: 1px solid #e2e8f0; vertical-align: bottom;">
-                                        ${bleachableInfo}
-                                        <div style="font-size: 14px; margin-bottom: 4px; text-transform: uppercase;">${renderNameWithLogo(r.displayName, '12px')}</div>
-                                        <div style="font-size: 11px; font-weight: 600; color: #475569;">${r.currency}</div>
-                                    </th>
-                                    `;
-                                } else {
-                                    return exportGramsArray.map(g => `
-                                    <th rowspan="2" style="padding: 16px 10px; background: #faf0e6; border-bottom: 2px solid #e2e8f0; color: #0f172a; font-weight: 800; text-align: center; border-right: 1px solid #e2e8f0; vertical-align: bottom;">
-                                        ${bleachableInfo}
-                                        <div style="font-size: 14px; margin-bottom: 4px; text-transform: uppercase;">${renderNameWithLogo(r.displayName, '12px')}</div>
-                                        <div style="font-size: 11px; font-weight: 600; color: #475569;">${r.currency} (${isPieces ? `1 pc - ${g}g` : `${g}g`})</div>
-                                    </th>
-                                    `).join('');
-                                }
-                            }).join('')}
-                        </tr>
-                        <tr>
-                            <th style="width: 90px; min-width: 90px; max-width: 90px; padding: 0 14px 16px 14px; background: #faf0e6; border-bottom: 2px solid #e2e8f0; color: #0f172a; font-weight: 800; border-right: 1px solid #e2e8f0; text-align: center; vertical-align: bottom;">
-                                Length<br><span style="font-size: 11px; font-weight: 600; color: #475569; font-variant: normal; text-transform: none;">in inches</span>
-                            </th>
-                            <th style="width: 90px; min-width: 90px; max-width: 90px; padding: 0 14px 16px 14px; background: #faf0e6; border-bottom: 2px solid #e2e8f0; color: #0f172a; font-weight: 800; border-right: 1px solid #e2e8f0; text-align: center; vertical-align: bottom;">
-                                Length<br><span style="font-size: 11px; font-weight: 600; color: #475569; font-variant: normal; text-transform: none;">in cm</span>
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${rowsHTML}
-                    </tbody>
-                </table>
+                
+                ${containerContentHTML}
+                
                 ${footerHTML}
             </div>
         `;
+
+        if (mode === 'preview') {
+            const previewContainer = document.getElementById('multiExportPreviewContainer');
+            if (previewContainer) {
+                previewContainer.innerHTML = `
+                    <div style="background: #f8fafc; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; overflow-x: auto; margin-top: 15px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <h3 style="font-size: 16px; font-weight: 700; color: #1e293b;">Preview Comparison</h3>
+                            <button onclick="document.getElementById('multiExportPreviewContainer').style.display='none'" style="background: none; border: none; font-size: 20px; cursor: pointer; color: #94a3b8; transition: color 0.2s;" onmouseover="this.style.color='#f43f5e'" onmouseout="this.style.color='#94a3b8'"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
+                        <div style="margin: 0 auto; width: max-content; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border-radius: 12px; overflow: hidden;">
+                            ${displayHTML}
+                        </div>
+                        <div style="text-align: center; margin-top: 20px; display: flex; justify-content: center; gap: 10px;">
+                            <button onclick="exportSelectedRatiosToImage('download')" style="display: inline-flex; align-items: center; gap: 7px; padding: 10px 20px; background: #10b981; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; box-shadow: 0 2px 8px rgba(16,185,129,0.25);"><i class="fa-solid fa-download"></i> Share / Download</button>
+                            <button onclick="exportSelectedRatiosToImage('copy')" style="display: inline-flex; align-items: center; gap: 7px; padding: 10px 20px; background: #eab308; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; box-shadow: 0 2px 8px rgba(234,179,8,0.25);"><i class="fa-solid fa-copy"></i> Copy to Clipboard</button>
+                        </div>
+                    </div>
+                `;
+                previewContainer.style.display = 'block';
+            }
+            return;
+        }
 
         // Temporarily append to body to render and capture
         const tempContainer = document.createElement('div');
@@ -1273,8 +1609,45 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.loadRatioFromTab = function (clientName) {
         if (!clientName) return;
+        const pl = (db.clients || []).find(c => c.name === clientName);
+        if (pl && pl.tag === 'Composite') {
+            window.openComposeProductModalForEdit(clientName);
+            return;
+        }
         switchTab('mixer');
         loadRatioConfig(clientName);
+    };
+
+    window.editTagsFromTab = function (clientName) {
+        if (!clientName) return;
+        const client = (db.clients || []).find(c => c.name === clientName);
+        if (!client) return;
+
+        const currentTags = client.tag || '';
+        const newTags = prompt(`Enter tags for "${clientName}" (comma separated):`, currentTags);
+        
+        if (newTags === null) return;
+        
+        client.tag = newTags.trim();
+
+        try {
+            saveDB();
+            try {
+                const safeName = client.name.replace(/[^a-z0-9_\-\. ]/gi, '_');
+                fetch('/api/save-client', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(client)
+                }).catch(e => console.warn("Could not save to local server", e));
+            } catch(e){}
+            
+            _showExportSuccess(`Tags updated for "${client.name}"`);
+            if (typeof renderSavedRatios === 'function') renderSavedRatios();
+            refreshRatioDropdown();
+        } catch (e) {
+            console.error("Failed to update tags:", e);
+            alert("Error updating tags.");
+        }
     };
 
     window.renameRatioFromTab = function (oldName) {
@@ -1411,8 +1784,8 @@ document.addEventListener('DOMContentLoaded', () => {
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; width: 100%;">
                 <img src="../images/hw/hwstraightlogo.png" style="height: 45px;" />
                 <div style="display: flex; gap: 15px; align-items: center;">
-                    <img src="../images/hw/100percent.png?v=2" style="height: 100px; border-radius: 8px;" />
-                    ${isRatioBleachable ? `<img src="../images/hw/bleachable.png" style="height: 100px; border-radius: 8px;" />` : ''}
+                    <img src="../images/hw/100percent.png?v=3" style="height: 100px; border-radius: 8px;" />
+                    ${isRatioBleachable ? `<img src="../images/hw/bleachable.png?v=3" style="height: 100px; border-radius: 8px;" />` : ''}
                 </div>
             </div>
         `;
@@ -1516,7 +1889,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </td>
                 <td class="p-4 text-sm text-slate-600">
                     Currency: ${pl.currency || 'INR'} <br>
-                    Margin: ${pl.marginPercent || 0}% 
+                    Margin: ${pl.marginType === 'amount' ? pl.marginAmount : (pl.marginPercent || 0) + '%'} 
                 </td>
                 <td class="p-4 text-right space-x-2">
                     <button class="px-3 py-1.5 bg-green-50 text-green-600 hover:bg-green-100 font-medium rounded text-sm transition" onclick="sharePriceListFromTab('${pl.name}')"><i class="fa-solid fa-image"></i> Share</button>
@@ -1535,9 +1908,97 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
 
+    let compositeComponentCounter = 0;
+    
+    window.createCompositeComponentHTML = function(name) {
+        compositeComponentCounter++;
+        let availableLengths = new Set();
+        const client = (db.clients || []).find(c => c.name === name);
+        if (!client) return '';
+        
+        if (client.matrix) {
+            Object.keys(client.matrix).forEach(l => {
+                const col = client.matrix[l];
+                if (col && Object.values(col).some(v => v > 0)) {
+                    availableLengths.add(Number(l));
+                }
+            });
+        }
+        if (client.customPricesEnabled && client.customPrices) {
+            Object.keys(client.customPrices).forEach(l => {
+                if (client.customPrices[l] > 0) {
+                    availableLengths.add(Number(l));
+                }
+            });
+        }
+        availableLengths = Array.from(availableLengths).sort((a, b) => a - b);
+
+        let optionsHTML = '';
+        if (availableLengths.length === 0) {
+            optionsHTML = '<option value="">N/A</option>';
+        } else {
+            availableLengths.forEach(len => {
+                optionsHTML += `<option value="${len}">${len}"</option>`;
+            });
+        }
+
+        let defaultWeight = 100;
+        if (client && client.exportGrams && client.exportGrams.length > 0) {
+            defaultWeight = client.exportGrams[0];
+        }
+
+        return `
+            <div class="flex flex-col gap-3 p-4 border border-slate-200 rounded-lg bg-white relative" data-ratio-name="${name.replace(/"/g, '&quot;')}" id="composite-component-${compositeComponentCounter}">
+                <div class="flex justify-between items-start">
+                    <span class="text-sm font-bold text-slate-700">${name}</span>
+                    <button type="button" onclick="window.removeCompositeComponent(${compositeComponentCounter})" class="text-slate-400 hover:text-red-500 transition" title="Remove Component">
+                        <i class="fa-solid fa-trash-can text-sm"></i>
+                    </button>
+                </div>
+                <div class="flex items-center justify-between gap-4">
+                    <div class="flex items-center gap-2">
+                        <label class="text-[10px] font-bold text-slate-500 uppercase" title="Length of this component used in the prototype">Length:</label>
+                        <select class="composite-absolute-length w-20 px-2 py-1.5 border border-slate-300 rounded text-sm outline-none bg-white">
+                            ${optionsHTML}
+                        </select>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label class="text-[10px] font-bold text-slate-500 uppercase" title="Total weight used in the product">Weight (grams):</label>
+                        <input type="number" class="composite-weight w-20 px-2 py-1.5 border border-slate-300 rounded text-sm focus:outline-none focus:border-indigo-500" value="${defaultWeight}" min="0" step="5">
+                    </div>
+                </div>
+            </div>
+        `;
+    };
+
+    window.addRatioToComposite = function() {
+        const select = document.getElementById('compositeAddRatioSelect');
+        const selectedName = select.value;
+        if (!selectedName) return alert('Please select a ratio to add.');
+        
+        const listDiv = document.getElementById('compositeComponentsList');
+        const itemHTML = window.createCompositeComponentHTML(selectedName);
+        if (itemHTML) {
+            listDiv.insertAdjacentHTML('beforeend', itemHTML);
+        }
+    };
+
+    window.removeCompositeComponent = function(id) {
+        const el = document.getElementById('composite-component-' + id);
+        if (el) el.remove();
+    };
+
     window.openCompositeBuilderModal = function() {
-        if (_selectedRatioNames.size < 2) {
-            return alert('Please select at least two ratios to build a composite product.');
+        if (_selectedRatioNames.size < 1) {
+            return alert('Please select at least one ratio to start building a composite product.');
+        }
+
+        const targetLengthSelect = document.getElementById('compositeTargetLength');
+        if (targetLengthSelect) {
+            targetLengthSelect.innerHTML = '';
+            ALL_FINISHED_LENGTHS.forEach(len => {
+                targetLengthSelect.innerHTML += `<option value="${len}" ${len === 20 ? 'selected' : ''}>${len}"</option>`;
+            });
         }
 
         const listDiv = document.getElementById('compositeComponentsList');
@@ -1545,40 +2006,46 @@ document.addEventListener('DOMContentLoaded', () => {
 
         listDiv.innerHTML = '';
         _selectedRatioNames.forEach(name => {
-            listDiv.innerHTML += `
-                <div class="flex flex-col gap-3 p-4 border border-slate-200 rounded-lg bg-white" data-ratio-name="${name.replace(/"/g, '&quot;')}">
-                    <span class="text-sm font-bold text-slate-700">${name}</span>
-                    <div class="flex items-center justify-between gap-4">
-                        <div class="flex items-center gap-2">
-                            <label class="text-[10px] font-bold text-slate-500 uppercase">Length Offset:</label>
-                            <div class="flex">
-                                <select class="composite-offset-dir w-10 px-1 py-1.5 border border-r-0 border-slate-300 rounded-l text-sm outline-none bg-white">
-                                    <option value="-">-</option>
-                                    <option value="+">+</option>
-                                </select>
-                                <select class="composite-offset-val w-14 px-1 py-1.5 border border-slate-300 rounded-r text-sm outline-none bg-white">
-                                    <option value="0" selected>0"</option>
-                                    <option value="1">1"</option>
-                                    <option value="2">2"</option>
-                                    <option value="3">3"</option>
-                                    <option value="4">4"</option>
-                                    <option value="5">5"</option>
-                                    <option value="6">6"</option>
-                                    <option value="7">7"</option>
-                                    <option value="8">8"</option>
-                                    <option value="9">9"</option>
-                                    <option value="10">10"</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <label class="text-[10px] font-bold text-slate-500 uppercase">Qty:</label>
-                            <input type="number" class="composite-qty w-16 px-2 py-1.5 border border-slate-300 rounded text-sm focus:outline-none focus:border-indigo-500" value="1" min="0" step="0.1">
-                        </div>
-                    </div>
-                </div>
-            `;
+            const itemHTML = window.createCompositeComponentHTML(name);
+            if (itemHTML) listDiv.innerHTML += itemHTML;
         });
+
+        // Populate dropdown
+        const addRatioSelect = document.getElementById('compositeAddRatioSelect');
+        if (addRatioSelect) {
+            addRatioSelect.innerHTML = '<option value="">-- Select Ratio --</option>';
+            
+            const ratios = (db.clients || []).filter(c => !c.isBundle);
+            const groupedRatios = {};
+            
+            ratios.forEach(c => {
+                const tagStr = (c.tag && c.tag.trim() !== '') ? c.tag : 'Other';
+                let tags = tagStr.split(',').map(t => t.trim()).filter(t => t);
+                if (tags.length === 0) tags = ['Other'];
+                
+                tags.forEach(tag => {
+                    if (!groupedRatios[tag]) {
+                        groupedRatios[tag] = [];
+                    }
+                    groupedRatios[tag].push(c);
+                });
+            });
+            
+            const sortedTags = Object.keys(groupedRatios).sort((a, b) => {
+                if (a === 'Other') return 1;
+                if (b === 'Other') return -1;
+                return a.localeCompare(b);
+            });
+            
+            sortedTags.forEach(tag => {
+                let groupHTML = `<optgroup label="${tag}">`;
+                groupedRatios[tag].sort((a, b) => a.name.localeCompare(b.name)).forEach(c => {
+                    groupHTML += `<option value="${c.name.replace(/"/g, '&quot;')}">${c.name}</option>`;
+                });
+                groupHTML += `</optgroup>`;
+                addRatioSelect.innerHTML += groupHTML;
+            });
+        }
 
         document.getElementById('compositeProductName').value = '';
         document.getElementById('compositeBuilderModal').classList.remove('hidden');
@@ -1592,25 +2059,32 @@ document.addEventListener('DOMContentLoaded', () => {
             return alert('A saved ratio/product with this name already exists.');
         }
 
+        const targetLength = parseInt(document.getElementById('compositeTargetLength').value) || 20;
+        const outputUnit = document.getElementById('compositeOutputUnit') ? document.getElementById('compositeOutputUnit').value : 'kg';
+
         const listDiv = document.getElementById('compositeComponentsList');
         const rows = listDiv.querySelectorAll('[data-ratio-name]');
         
         const components = [];
         rows.forEach(row => {
             const name = row.getAttribute('data-ratio-name');
-            const qty = parseFloat(row.querySelector('.composite-qty').value) || 1;
-            const offsetDir = row.querySelector('.composite-offset-dir').value;
-            const offsetVal = parseInt(row.querySelector('.composite-offset-val').value) || 0;
-            const finalOffset = offsetDir === '-' ? -offsetVal : offsetVal;
-            components.push({ name, qty, offset: finalOffset });
+            const weightGrams = parseFloat(row.querySelector('.composite-weight').value) || 0;
+            const absoluteLen = parseInt(row.querySelector('.composite-absolute-length').value) || 0;
+            const offset = absoluteLen - targetLength;
+            components.push({ name, weightGrams, offset });
         });
 
         const savedState = JSON.parse(JSON.stringify(appState));
         const customPrices = {};
         let success = true;
 
+        const productWastagePercent = parseFloat(document.getElementById('compositeWastagePercent').value) || 0;
+        const productLaborCost = parseFloat(document.getElementById('compositeLaborCost').value) || 0;
+        const productMaterialCost = parseFloat(document.getElementById('compositeMaterialCost').value) || 0;
+
         try {
             ALL_FINISHED_LENGTHS.forEach(len => { customPrices[len] = 0; });
+            const invalidLengths = new Set();
             
             // For each component, calculate prices per length and multiply by qty
             for (const comp of components) {
@@ -1631,33 +2105,56 @@ document.addEventListener('DOMContentLoaded', () => {
                     appState.currentSupplierId = client.supplierId;
                 }
 
+                let validTargetLengths = [];
+                ALL_FINISHED_LENGTHS.forEach(l => {
+                    if (appState.customPricesEnabled && appState.customPrices[l] > 0) {
+                        validTargetLengths.push(l);
+                    } else {
+                        let p = calculateColumn(l);
+                        if (p && p > 0 && !isNaN(p)) validTargetLengths.push(l);
+                    }
+                });
+                
+                let minValid = validTargetLengths.length > 0 ? Math.min(...validTargetLengths) : 8;
+                let maxValid = validTargetLengths.length > 0 ? Math.max(...validTargetLengths) : 32;
+
                 ALL_FINISHED_LENGTHS.forEach(len => {
                     let displayPrice = 0;
                     let targetLen = len + comp.offset;
-                    // Cap the target length to the available array boundaries, or ignore if out of bounds?
-                    // Typically, if you need a 6" component for a 10" wig (offset -4), but minimum is 8", we must check.
-                    // Let's use the exact target length. If it's < 8, maybe default to 8? Or just assume it has no price.
-                    if (targetLen < 8) targetLen = 8; // Assuming 8 is minimum
-                    if (targetLen > 40) targetLen = 40; // Assuming 40 is max
-                    
-                    // But ALL_FINISHED_LENGTHS is typically even numbers. If offset makes it odd, we must round up or down?
-                    // Let's round to nearest even number if needed, since ALL_FINISHED_LENGTHS is [8,10,12...40].
-                    if (targetLen % 2 !== 0) targetLen += 1;
+                    targetLen = Math.max(minValid, Math.min(maxValid, targetLen));
                     
                     if (appState.customPricesEnabled && appState.customPrices[targetLen] > 0) {
                         displayPrice = appState.customPrices[targetLen];
                     } else {
                         displayPrice = calculateColumn(targetLen);
                     }
-                    if (displayPrice && displayPrice > 0) {
-                        customPrices[len] += (displayPrice * comp.qty);
+                    if (displayPrice && displayPrice > 0 && !isNaN(displayPrice)) {
+                        customPrices[len] += (displayPrice * (comp.weightGrams / 1000));
+                    } else {
+                        invalidLengths.add(len);
                     }
                 });
             }
             
             // Round all final prices
+            let totalWeightGrams = components.reduce((sum, comp) => sum + comp.weightGrams, 0);
+            if (totalWeightGrams <= 0) totalWeightGrams = 1; // Prevent division by zero
+
             ALL_FINISHED_LENGTHS.forEach(len => { 
-                if (customPrices[len] > 0) customPrices[len] = Math.round(customPrices[len]);
+                if (invalidLengths.has(len)) {
+                    customPrices[len] = 0;
+                } else if (customPrices[len] > 0) {
+                    if (outputUnit === 'kg') {
+                        customPrices[len] = customPrices[len] * (1000 / totalWeightGrams);
+                    }
+                    
+                    if (productWastagePercent > 0) {
+                        customPrices[len] += customPrices[len] * (productWastagePercent / 100);
+                    }
+                    
+                    customPrices[len] += productLaborCost + productMaterialCost;
+                    customPrices[len] = Math.round(customPrices[len]);
+                }
             });
 
         } catch(e) {
@@ -1669,20 +2166,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!success) return alert("Error calculating composite prices.");
 
+        Object.keys(customPrices).forEach(k => {
+            if (isNaN(customPrices[k]) || customPrices[k] === null) customPrices[k] = 0;
+        });
+
         const newClient = {
             name: nameInput,
             tag: 'Composite',
             currency: 'INR',
             exchangeRate: 1,
             marginPercent: 0, 
-            wastagePercent: 0,
-            machineCharge: 0,
+            wastagePercent: productWastagePercent,
+            machineCharge: productLaborCost,
+            materialCost: productMaterialCost,
             matrix: {},
             customPricesEnabled: true,
             customPrices: customPrices,
             supplierId: '',
             isBundle: true,
-            bundleComponents: components
+            bundleComponents: components,
+            outputUnit: outputUnit
         };
 
         db.clients = db.clients || [];
@@ -1690,17 +2193,479 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             document.getElementById('modalSaveProductBtn').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
-            const docRef = window.firebaseDoc(window.firebaseDb, "users", auth.currentUser.uid);
-            await window.firebaseUpdateDoc(docRef, { clients: db.clients });
+            
+            db.clients = JSON.parse(JSON.stringify(db.clients, (key, value) => {
+                if (typeof value === 'number' && (!isFinite(value) || isNaN(value))) return 0;
+                return value;
+            }));
+
+            saveDB();
             document.getElementById('compositeBuilderModal').classList.add('hidden');
             renderSavedRatios();
             if (typeof renderSavedPriceLists === 'function') renderSavedPriceLists();
             alert('Composite Product saved successfully!');
         } catch (e) {
             console.error('Save error', e);
+            db.clients = db.clients.filter(c => c !== newClient);
             alert('Error saving to cloud. Please try again.');
         } finally {
             document.getElementById('modalSaveProductBtn').innerHTML = '<i class="fa-solid fa-save"></i> Save Product';
+        }
+    };
+
+        // ----- COMPOSE PRODUCT FEATURE -----
+    window.COMPOSE_TARGET_LENGTHS = [8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34];
+    window.composeComponents = []; // Array of component objects: { id, name }
+    window.composeMatrixData = {}; // { [targetLen]: { [ratioName]: { len, weight } } }
+
+    window.openComposeProductModal = function() {
+        if (_selectedRatioNames.length < 1) return alert('Please select at least one ratio to compose a product.');
+
+        window.editingCompositeProduct = null;
+        window.composeComponents = [];
+        window.composeMatrixData = {};
+        window.composeFinalPrices = {};
+
+        // Reset fields
+        document.getElementById('composeProductName').value = '';
+        document.getElementById('composeWastagePercent').value = '0';
+        document.getElementById('composeLaborCost').value = '0';
+        document.getElementById('composeMaterialCost').value = '0';
+        document.getElementById('composeOutputUnit').value = 'kg';
+        if (document.getElementById('composeMarginType')) document.getElementById('composeMarginType').value = 'percent';
+        if (document.getElementById('composeMarginValue')) document.getElementById('composeMarginValue').value = '0';
+        if (document.getElementById('composeMarginLabel')) document.getElementById('composeMarginLabel').innerText = 'Margin %';
+
+        // Populate selected components
+        _selectedRatioNames.forEach(name => {
+            window.addRatioToComposeProduct(name);
+        });
+
+        // Populate dropdown with tags
+        const addRatioSelect = document.getElementById('composeAddRatioSelect');
+        if (addRatioSelect) {
+            addRatioSelect.innerHTML = '<option value="">-- Select Ratio --</option>';
+            const ratios = (db.clients || []).filter(c => !c.isBundle);
+            const groupedRatios = {};
+            
+            ratios.forEach(c => {
+                const tagStr = (c.tag && c.tag.trim() !== '') ? c.tag : 'Other';
+                let tags = tagStr.split(',').map(t => t.trim()).filter(t => t);
+                if (tags.length === 0) tags = ['Other'];
+                
+                tags.forEach(tag => {
+                    if (!groupedRatios[tag]) groupedRatios[tag] = [];
+                    groupedRatios[tag].push(c);
+                });
+            });
+            
+            const sortedTags = Object.keys(groupedRatios).sort((a, b) => {
+                if (a === 'Other') return 1;
+                if (b === 'Other') return -1;
+                return a.localeCompare(b);
+            });
+            
+            sortedTags.forEach(tag => {
+                let groupHTML = `<optgroup label="${tag}">`;
+                groupedRatios[tag].sort((a, b) => a.name.localeCompare(b.name)).forEach(c => {
+                    groupHTML += `<option value="${c.name.replace(/"/g, '&quot;')}">${c.name}</option>`;
+                });
+                groupHTML += `</optgroup>`;
+                addRatioSelect.innerHTML += groupHTML;
+            });
+        }
+
+        document.getElementById('composeProductModal').classList.remove('hidden');
+    };
+
+    window.openComposeProductModalForEdit = function(clientName) {
+        const client = (db.clients || []).find(c => c.name === clientName);
+        if (!client || client.tag !== 'Composite') return;
+
+        window.editingCompositeProduct = clientName;
+
+        window.composeComponents = (client.bundleComponents || []).map(c => ({ id: c.id || c.name, name: c.name }));
+        window.composeMatrixData = client.composeMatrix ? JSON.parse(JSON.stringify(client.composeMatrix)) : {};
+        window.composeFinalPrices = client.composeOverrides ? JSON.parse(JSON.stringify(client.composeOverrides)) : {};
+
+        document.getElementById('composeProductName').value = client.name || '';
+        document.getElementById('composeWastagePercent').value = client.wastagePercent || '0';
+        document.getElementById('composeLaborCost').value = client.machineCharge || '0';
+        document.getElementById('composeMaterialCost').value = client.materialCost || '0';
+        document.getElementById('composeOutputUnit').value = client.outputUnit || 'kg';
+        if (document.getElementById('composeMarginType')) document.getElementById('composeMarginType').value = client.marginType || 'percent';
+        if (document.getElementById('composeMarginValue')) document.getElementById('composeMarginValue').value = client.marginType === 'amount' ? (client.marginAmount || 0) : (client.marginPercent || 0);
+        if (document.getElementById('composeMarginLabel')) document.getElementById('composeMarginLabel').innerText = client.marginType === 'amount' ? 'Margin Amt' : 'Margin %';
+
+        // Populate dropdown with tags
+        const addRatioSelect = document.getElementById('composeAddRatioSelect');
+        if (addRatioSelect) {
+            addRatioSelect.innerHTML = '<option value="">-- Select Ratio --</option>';
+            const ratios = (db.clients || []).filter(c => !c.isBundle);
+            const groupedRatios = {};
+            
+            ratios.forEach(c => {
+                const tag = c.tag ? c.tag.trim() : 'Other';
+                if (!groupedRatios[tag]) groupedRatios[tag] = [];
+                groupedRatios[tag].push(c);
+            });
+            
+            const sortedTags = Object.keys(groupedRatios).sort((a, b) => {
+                if (a === 'Other') return 1;
+                if (b === 'Other') return -1;
+                return a.localeCompare(b);
+            });
+            
+            sortedTags.forEach(tag => {
+                let groupHTML = `<optgroup label="${tag}">`;
+                groupedRatios[tag].sort((a, b) => a.name.localeCompare(b.name)).forEach(c => {
+                    groupHTML += `<option value="${c.name.replace(/"/g, '&quot;')}">${c.name}</option>`;
+                });
+                groupHTML += `</optgroup>`;
+                addRatioSelect.innerHTML += groupHTML;
+            });
+        }
+
+        renderComposeMatrix();
+        document.getElementById('composeProductModal').classList.remove('hidden');
+    };
+
+
+    window.addRatioToComposeProduct = function(ratioNameOverride) {
+        const select = document.getElementById('composeAddRatioSelect');
+        const ratioName = ratioNameOverride || (select ? select.value : '');
+        if (!ratioName) return alert('Please select a ratio to add.');
+
+        const compId = ratioNameOverride ? ratioName : (ratioName + '_' + Date.now() + '_' + Math.floor(Math.random() * 1000));
+        window.composeComponents.push({ id: compId, name: ratioName });
+        
+        // Initialize defaults for this new component
+        let defaultWeight = 100;
+        const client = (db.clients || []).find(c => c.name === ratioName);
+        if (client && client.exportGrams && client.exportGrams.length > 0) {
+            defaultWeight = client.exportGrams[0];
+        }
+        
+        window.COMPOSE_TARGET_LENGTHS.forEach(tLen => {
+            if (!window.composeMatrixData[tLen]) window.composeMatrixData[tLen] = {};
+            window.composeMatrixData[tLen][compId] = { len: tLen, weight: defaultWeight };
+        });
+
+        if (!ratioNameOverride && select) select.value = '';
+        window.renderComposeMatrix();
+    };
+
+    window.removeComposeComponent = function(compId) {
+        window.composeComponents = window.composeComponents.filter(c => c.id !== compId);
+        window.COMPOSE_TARGET_LENGTHS.forEach(tLen => {
+            if (window.composeMatrixData[tLen]) {
+                delete window.composeMatrixData[tLen][compId];
+            }
+        });
+        window.renderComposeMatrix();
+    };
+
+    window.updateComposeMatrixValue = function(tLen, ratioName, field, value) {
+        if (!window.composeMatrixData[tLen]) return;
+        if (!window.composeMatrixData[tLen][ratioName]) return;
+        window.composeMatrixData[tLen][ratioName][field] = parseFloat(value) || 0;
+        if (window.updateComposeMatrixUI) {
+            window.updateComposeMatrixUI();
+        }
+    };
+
+    window.calculateComposePrices = function() {
+        const prices = {};
+        const outputUnit = document.getElementById('composeOutputUnit') ? document.getElementById('composeOutputUnit').value : 'kg';
+        const productWastagePercent = parseFloat(document.getElementById('composeWastagePercent').value) || 0;
+        const productLaborCost = parseFloat(document.getElementById('composeLaborCost').value) || 0;
+        const productMaterialCost = parseFloat(document.getElementById('composeMaterialCost').value) || 0;
+        
+        const savedState = JSON.parse(JSON.stringify(appState));
+        try {
+            const clientConfigs = {};
+            window.composeComponents.forEach(comp => {
+                const client = (db.clients || []).find(c => c.name === comp.name);
+                if (client) clientConfigs[comp.id] = client;
+            });
+
+            window.COMPOSE_TARGET_LENGTHS.forEach(tLen => {
+                let rowPrice = 0;
+                let rowWeight = 0;
+                let isValidLength = true;
+
+                window.composeComponents.forEach(comp => {
+                    const data = window.composeMatrixData[tLen]?.[comp.id];
+                    if (!data || data.weight <= 0) return;
+                    
+                    rowWeight += data.weight;
+                    const client = clientConfigs[comp.id];
+                    if (!client) { isValidLength = false; return; }
+
+                    appState.matrix = JSON.parse(JSON.stringify(client.matrix || {}));
+                    appState.marginPercent = client.marginPercent !== undefined ? client.marginPercent : 30;
+                    appState.wastagePercent = client.wastagePercent !== undefined ? client.wastagePercent : 10;
+                    appState.machineCharge = client.machineCharge !== undefined ? client.machineCharge : 2500;
+                    appState.exchangeRate = client.exchangeRate || 1;
+                    appState.customPricesEnabled = client.customPricesEnabled || false;
+                    appState.customPrices = JSON.parse(JSON.stringify(client.customPrices || {}));
+
+                    if (client.supplierId && db.suppliers.find(s => s.id === client.supplierId)) {
+                        const sup = db.suppliers.find(s => s.id === client.supplierId);
+                        appState.prices = { ...(sup.prices || {}) };
+                        appState.currentSupplierId = client.supplierId;
+                    }
+
+                    let displayPrice = 0;
+                    if (appState.customPricesEnabled && appState.customPrices[data.len] > 0) {
+                        displayPrice = appState.customPrices[data.len];
+                    } else {
+                        displayPrice = calculateColumn(data.len);
+                    }
+
+                    if (displayPrice && displayPrice > 0 && !isNaN(displayPrice)) {
+                        rowPrice += (displayPrice * (data.weight / 1000));
+                    } else {
+                        isValidLength = false;
+                    }
+                });
+
+                if (isValidLength && rowWeight > 0) {
+                    if (outputUnit === 'kg') {
+                        rowPrice = rowPrice * (1000 / rowWeight);
+                    }
+                    if (productWastagePercent > 0) {
+                        rowPrice += rowPrice * (productWastagePercent / 100);
+                    }
+                    rowPrice += productLaborCost + productMaterialCost;
+                    
+                    const marginType = document.getElementById('composeMarginType') ? document.getElementById('composeMarginType').value : 'percent';
+                    const marginValue = parseFloat(document.getElementById('composeMarginValue') ? document.getElementById('composeMarginValue').value : 0) || 0;
+                    if (marginType === 'amount') {
+                        rowPrice += marginValue;
+                    } else {
+                        rowPrice += rowPrice * (marginValue / 100);
+                    }
+
+                    prices[tLen] = Math.round(rowPrice);
+                } else {
+                    prices[tLen] = 0;
+                }
+            });
+        } catch(e) {
+            console.error("Price calc error", e);
+        } finally {
+            Object.assign(appState, savedState);
+        }
+        return prices;
+    };
+
+    window.updateComposeFinalPrice = function(tLen, val) {
+        if (!window.composeFinalPrices) window.composeFinalPrices = {};
+        const parsed = parseFloat(val);
+        if (isNaN(parsed) || val.trim() === '') {
+            window.composeFinalPrices[tLen] = null;
+        } else {
+            window.composeFinalPrices[tLen] = parsed;
+        }
+    };
+
+    window.renderComposeMatrix = function() {
+        const thead = document.getElementById('composeMatrixThead');
+        const tbody = document.getElementById('composeMatrixTbody');
+        if (!thead || !tbody) return;
+
+        if (window.composeComponents.length === 0) {
+            thead.innerHTML = `
+                <tr>
+                    <th class="p-3 text-xs font-bold text-slate-500 uppercase w-32 sticky left-0 bg-slate-50 z-20">Target Length</th>
+                    <th class="p-3 text-xs font-bold text-slate-500 uppercase text-right w-32">Total Weight</th>
+                </tr>
+            `;
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="2" class="p-8 text-center text-slate-400 text-sm">
+                        No components added yet. Select a ratio above and click "Add Component".
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        // Build thead
+        let theadHTML = `<tr><th class="p-3 text-xs font-bold text-slate-500 uppercase w-32 sticky left-0 bg-slate-50 z-20 border-r border-slate-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">Target Length</th>`;
+        window.composeComponents.forEach(comp => {
+            theadHTML += `
+                <th class="p-3 text-xs font-bold text-slate-500 uppercase min-w-[180px] border-r border-slate-200">
+                    <div class="flex justify-between items-center">
+                        <span>${comp.name}</span>
+                        <button type="button" onclick="window.removeComposeComponent('${comp.id.replace(/'/g, "\\\\'")}')" class="text-slate-400 hover:text-red-500 transition p-1 rounded hover:bg-red-50 ml-2">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                </th>
+            `;
+        });
+        theadHTML += `<th class="p-3 text-xs font-bold text-slate-500 uppercase text-right w-24 border-r border-slate-200">Total Weight</th>`;
+        theadHTML += `<th class="p-3 text-xs font-bold text-slate-500 uppercase text-right w-24 border-r border-slate-200">Calc Price</th>`;
+        theadHTML += `<th class="p-3 text-xs font-bold text-slate-500 uppercase text-right w-32 bg-slate-50 sticky right-0 shadow-[-2px_0_5px_-2px_rgba(0,0,0,0.1)]">Final Price</th></tr>`;
+        thead.innerHTML = theadHTML;
+
+        const calculatedPrices = window.calculateComposePrices ? window.calculateComposePrices() : {};
+
+        // Build tbody
+        let tbodyHTML = '';
+        window.COMPOSE_TARGET_LENGTHS.forEach(tLen => {
+            let rowHTML = `<tr class="hover:bg-slate-50 transition border-b border-slate-100 last:border-0">`;
+            rowHTML += `<td class="p-3 font-bold text-slate-800 text-sm sticky left-0 bg-white z-10 border-r border-slate-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)] group-hover:bg-slate-50">${tLen}"</td>`;
+            
+            let rowWeight = 0;
+            
+            window.composeComponents.forEach(comp => {
+                const data = window.composeMatrixData[tLen]?.[comp.id] || { len: tLen, weight: 0 };
+                rowWeight += data.weight;
+                
+                // Length select
+                let selectHTML = `<select onchange="window.updateComposeMatrixValue(${tLen}, '${comp.id.replace(/'/g, "\\\\'")}', 'len', this.value)" class="w-20 px-2 py-1.5 border border-slate-200 rounded text-sm focus:outline-none focus:border-pink-500 mr-2">`;
+                ALL_FINISHED_LENGTHS.forEach(l => {
+                    selectHTML += `<option value="${l}" ${l === data.len ? 'selected' : ''}>${l}"</option>`;
+                });
+                selectHTML += `</select>`;
+                
+                // Weight input
+                let weightInput = `<div class="relative flex-1"><input type="number" oninput="window.updateComposeMatrixValue(${tLen}, '${comp.id.replace(/'/g, "\\\\'")}', 'weight', this.value)" class="w-full px-2 py-1.5 border border-slate-200 rounded text-sm focus:outline-none focus:border-pink-500 pr-6" value="${data.weight}" min="0"><span class="absolute right-2 top-1.5 text-slate-400 text-xs">g</span></div>`;
+                
+                rowHTML += `<td class="p-2 border-r border-slate-200"><div class="flex items-center">${selectHTML}${weightInput}</div></td>`;
+            });
+            
+            rowHTML += `<td class="p-3 font-bold text-slate-700 text-right border-r border-slate-200" id="compose-row-weight-${tLen}">${rowWeight} g</td>`;
+            
+            const calcPrice = calculatedPrices[tLen] || 0;
+            rowHTML += `<td class="p-3 font-bold text-slate-500 text-right border-r border-slate-200" id="compose-row-calcprice-${tLen}">${calcPrice}</td>`;
+            
+            const finalVal = window.composeFinalPrices?.[tLen];
+            const finalInput = `<input type="number" oninput="window.updateComposeFinalPrice(${tLen}, this.value)" class="w-full px-2 py-1.5 border border-slate-200 rounded text-sm focus:outline-none focus:border-pink-500 text-right" value="${finalVal != null ? finalVal : ''}" placeholder="${calcPrice}">`;
+            rowHTML += `<td class="p-2 sticky right-0 bg-white shadow-[-2px_0_5px_-2px_rgba(0,0,0,0.05)] group-hover:bg-slate-50">${finalInput}</td>`;
+            
+            rowHTML += `</tr>`;
+            tbodyHTML += rowHTML;
+        });
+        
+        tbody.innerHTML = tbodyHTML;
+    };
+
+    window.updateComposeMatrixUI = function() {
+        const calculatedPrices = window.calculateComposePrices ? window.calculateComposePrices() : {};
+        window.COMPOSE_TARGET_LENGTHS.forEach(tLen => {
+            let rowWeight = 0;
+            window.composeComponents.forEach(comp => {
+                rowWeight += window.composeMatrixData[tLen]?.[comp.id]?.weight || 0;
+            });
+            const weightCell = document.getElementById(`compose-row-weight-${tLen}`);
+            if (weightCell) weightCell.textContent = rowWeight + ' g';
+            
+            const calcPriceCell = document.getElementById(`compose-row-calcprice-${tLen}`);
+            const calcPrice = calculatedPrices[tLen] || 0;
+            if (calcPriceCell) calcPriceCell.textContent = calcPrice;
+            
+            const finalInput = document.querySelector(`input[oninput="window.updateComposeFinalPrice(${tLen}, this.value)"]`);
+            if (finalInput && finalInput.value === '') {
+                finalInput.placeholder = calcPrice;
+            }
+        });
+    };
+
+    window.saveComposeProduct = async function() {
+        const nameInput = document.getElementById('composeProductName').value.trim();
+        if (!nameInput) return alert('Please enter a product name.');
+        
+        if (window.editingCompositeProduct !== nameInput && (db.clients || []).find(c => c.name.toLowerCase() === nameInput.toLowerCase())) {
+            return alert('A saved ratio/product with this name already exists.');
+        }
+
+        const outputUnit = document.getElementById('composeOutputUnit') ? document.getElementById('composeOutputUnit').value : 'kg';
+        const productWastagePercent = parseFloat(document.getElementById('composeWastagePercent').value) || 0;
+        const productLaborCost = parseFloat(document.getElementById('composeLaborCost').value) || 0;
+        const productMaterialCost = parseFloat(document.getElementById('composeMaterialCost').value) || 0;
+
+        if (window.composeComponents.length === 0) return alert('Please add at least one component.');
+
+        let customPrices = {};
+        ALL_FINISHED_LENGTHS.forEach(len => customPrices[len] = 0);
+        
+        const calculatedPrices = window.calculateComposePrices();
+        
+        window.COMPOSE_TARGET_LENGTHS.forEach(tLen => {
+            if (window.composeFinalPrices && window.composeFinalPrices[tLen] != null) {
+                customPrices[tLen] = window.composeFinalPrices[tLen];
+            } else {
+                customPrices[tLen] = calculatedPrices[tLen] || 0;
+            }
+        });
+
+        Object.keys(customPrices).forEach(k => {
+            if (isNaN(customPrices[k]) || customPrices[k] === null) customPrices[k] = 0;
+        });
+
+        // Save legacy bundleComponents structure for UI reference if needed
+        const legacyComponents = window.composeComponents.map(comp => ({ id: comp.id, name: comp.name, offset: 0, weightGrams: 0 }));
+
+        const marginType = document.getElementById('composeMarginType') ? document.getElementById('composeMarginType').value : 'percent';
+        const marginValue = parseFloat(document.getElementById('composeMarginValue') ? document.getElementById('composeMarginValue').value : 0) || 0;
+
+        const newClient = {
+            name: nameInput,
+            tag: 'Composite',
+            currency: 'INR',
+            exchangeRate: 1,
+            marginType: marginType,
+            marginAmount: marginType === 'amount' ? marginValue : 0,
+            marginPercent: marginType === 'percent' ? marginValue : 0, 
+            wastagePercent: productWastagePercent,
+            machineCharge: productLaborCost,
+            materialCost: productMaterialCost,
+            matrix: {},
+            customPricesEnabled: true,
+            customPrices: customPrices,
+            composeOverrides: window.composeFinalPrices ? JSON.parse(JSON.stringify(window.composeFinalPrices)) : {},
+            supplierId: '',
+            isBundle: true,
+            bundleComponents: legacyComponents,
+            composeMatrix: JSON.parse(JSON.stringify(window.composeMatrixData)),
+            outputUnit: outputUnit
+        };
+
+        db.clients = db.clients || [];
+        if (window.editingCompositeProduct) {
+            const index = db.clients.findIndex(c => c.name === window.editingCompositeProduct);
+            if (index !== -1) {
+                db.clients[index] = newClient;
+            } else {
+                db.clients.push(newClient);
+            }
+        } else {
+            db.clients.push(newClient);
+        }
+
+        try {
+            document.getElementById('modalSaveComposeProductBtn').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
+            
+            db.clients = JSON.parse(JSON.stringify(db.clients, (key, value) => {
+                if (typeof value === 'number' && (!isFinite(value) || isNaN(value))) return 0;
+                return value;
+            }));
+
+            saveDB();
+            document.getElementById('composeProductModal').classList.add('hidden');
+            renderSavedRatios();
+            if (typeof renderSavedPriceLists === 'function') renderSavedPriceLists();
+            alert('Composed Product saved successfully!');
+        } catch (e) {
+            console.error('Save error', e);
+            db.clients = db.clients.filter(c => c !== newClient);
+            alert('Error saving to cloud. Please try again.');
+        } finally {
+            document.getElementById('modalSaveComposeProductBtn').innerHTML = '<i class="fa-solid fa-save"></i> Save Product';
         }
     };
 
@@ -1740,100 +2705,126 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 displayPrice = calculateColumn(idx);
             }
+            if (pl && pl.tag === 'Composite' && displayPrice <= 0) return '';
+            
             if (displayPrice > 0 || (displayPrice === 0 && appState.customPricesEnabled && appState.customPrices[idx] !== undefined && appState.customPrices[idx] !== '')) {
-                const bgStr = validItemCount % 2 === 0 ? "background: #ffffff;" : "background: #f8fafc;";
+                const bgStr = validItemCount % 2 === 0 ? "background: #ffffff;" : "background: #faf0e6;";
+                const cmLen = len * 2.5;
                 validItemCount++;
                 return `
                     <tr style="${bgStr}">
-                        <td style="padding: 10px 14px; border-bottom: 1px solid #f1f5f9; font-weight: 700; color: #334155; font-size: 16px; border-right: 1px solid #e2e8f0;">${len}"</td>
-                        <td style="padding: 10px 14px; border-bottom: 1px solid #f1f5f9; text-align: right; font-size: 17px; font-weight: 700; font-variant-numeric: tabular-nums; color: #0f172a;">${formatPriceWithSymbol(displayPrice, appState.currency || 'INR')}</td>
+                        <td style="padding: 8px 12px; border-bottom: 1px solid #f1f5f9; font-weight: 700; color: #334155; font-size: 14px; border-right: 1px solid #e2e8f0; text-align: center; white-space: nowrap;">${len}"</td>
+                        <td style="padding: 8px 12px; border-bottom: 1px solid #f1f5f9; font-weight: 700; color: #334155; font-size: 14px; border-right: 1px solid #e2e8f0; text-align: center; white-space: nowrap;">${cmLen} cm</td>
+                        <td style="padding: 8px 12px; border-bottom: 1px solid #f1f5f9; text-align: center; font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; color: #0f172a; border-right: 1px solid #e2e8f0;">${formatPriceWithSymbol(displayPrice, appState.currency || 'INR')} <span style="font-size:11px; font-weight:500; color:#64748b;">/${pl.outputUnit === 'pc' ? 'pc' : 'kg'}</span></td>
                     </tr>
                 `;
             }
             return '';
         }).join('');
 
-        const isSharedBleachable = _sharedHairType === 'Bleachable';
-        let imagesHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; width: 100%;">
-                <img src="../images/hw/hwstraightlogo.png" style="height: 45px;" />
-                <div style="display: flex; gap: 15px; align-items: center;">
-                    <img src="../images/hw/100percent.png?v=2" style="height: 100px; border-radius: 8px;" />
-                    ${isSharedBleachable ? `<img src="../images/hw/bleachable.png" style="height: 100px; border-radius: 8px;" />` : ''}
-                </div>
+        let isVirgin = clientName.toLowerCase().includes('virgin');
+        let isRemy = clientName.toLowerCase().includes('remy');
+        if (pl.bundleComponents && pl.bundleComponents.length > 1) {
+            isVirgin = false;
+            isRemy = false;
+            const secondC = pl.bundleComponents[1];
+            const cname = (typeof secondC === 'string' ? secondC : (secondC.name || '')).toLowerCase();
+            if (cname.includes('virgin')) isVirgin = true;
+            if (cname.includes('remy')) isRemy = true;
+        }
+        let stampInfo = '';
+        if (isVirgin) {
+            stampInfo = `<img src="../images/hw/bleachable.png?v=3" style="height: 80px; width: auto; max-width: 100%; object-fit: contain;" alt="Bleachable" />`;
+        } else if (isRemy) {
+            stampInfo = `<img src="../images/hw/bleachable27.png?v=3" style="height: 80px; width: auto; max-width: 100%; object-fit: contain;" alt="Bleachable" />`;
+        }
+
+        const imgHTML = window.getProductImageHTML(clientName, 'auto');
+
+        let footerHTML = `
+            <div style="margin-top: 15px; padding: 12px 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 12px; color: #475569; line-height: 1.8; text-align: left;">
+                <div style="font-weight: 800; color: #0f172a; margin-bottom: 10px; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; display: inline-block;">Important Information</div>
+                <table style="width: 100%; border-collapse: collapse; margin: 0; padding: 0; font-weight: 500; font-size: 12px;">
+                    <tr>
+                        <td style="width: 50%; padding: 4px 10px 4px 0; vertical-align: top; text-align: left; white-space: nowrap;"><span style="color:#6366f1; font-weight:900; margin-right:6px;">•</span>Shipping Charges Extra</td>
+                        <td style="width: 50%; padding: 4px 10px 4px 0; vertical-align: top; text-align: left; white-space: nowrap;"><span style="color:#6366f1; font-weight:900; margin-right:6px;">•</span>Curly/Wavy Styles 10% Extra</td>
+                    </tr>
+                    <tr>
+                        <td style="width: 50%; padding: 4px 10px 4px 0; vertical-align: top; text-align: left; white-space: nowrap;"><span style="color:#6366f1; font-weight:900; margin-right:6px;">•</span>The prices are per ${pl.outputUnit === 'pc' ? 'piece' : 'kilogram'}</td>
+                        <td style="width: 50%; padding: 4px 10px 4px 0; vertical-align: top; text-align: left; white-space: nowrap;"><span style="color:#6366f1; font-weight:900; margin-right:6px;">•</span>${pl.outputUnit === 'pc' ? '200 to 300 grams depending on length' : '1 Kilogram = 10 packets of 100 grams each'}</td>
+                    </tr>
+                    <tr>
+                        <td style="width: 50%; padding: 4px 10px 4px 0; vertical-align: top; text-align: left; white-space: nowrap;"><span style="color:#6366f1; font-weight:900; margin-right:6px;">•</span>${pl.outputUnit === 'pc' ? 'Minimum Order Quantity 10 pieces' : 'Minimum Order Quantity 1 kg (10 pieces)'}</td>
+                        <td style="width: 50%; padding: 4px 10px 4px 0; vertical-align: top; text-align: left; white-space: nowrap;"><span style="color:#6366f1; font-weight:900; margin-right:6px;">•</span>Bleached colors 20% Extra</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding: 0 4px; font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
+                <div><i class="fa-regular fa-calendar" style="margin-right: 4px;"></i> Generated: ${new Date().toLocaleDateString('en-IN', {day:'numeric', month:'short', year:'numeric'})}</div>
+                <div>HAIRWISE</div>
+                <div>${(function() {
+                    const __d = new Date();
+                    const __dd = String(__d.getDate()).padStart(2, '0');
+                    const __mm = String(__d.getMonth() + 1).padStart(2, '0');
+                    const __yy = String(__d.getFullYear()).slice(-2);
+                    let _discVal = 0;
+                    const inputEl = document.getElementById('exportDiscountPercentInput');
+                    if (inputEl && inputEl.value) {
+                        _discVal = parseFloat(inputEl.value) || 0;
+                    } else if (typeof appState !== 'undefined' && appState.discountPercent) {
+                        _discVal = appState.discountPercent;
+                    }
+                    _discVal = Math.round(_discVal);
+                    const _discStr = _discVal < 0 ? '-' + String(Math.abs(_discVal)).padStart(3, '0') : String(Math.abs(_discVal)).padStart(3, '0');
+                    return `${__dd}${__mm}${__yy}/${_discStr}`;
+                })()}</div>
             </div>
         `;
-
-        let footerHTML = `<div style="text-align: center; color: #cbd5e1; font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 1px; margin-top: 15px;">Generated by Ratio Mixer</div>`;
-        const isVirgin = clientName.toLowerCase().includes('virgin');
-        const isRemy = clientName.toLowerCase().includes('remy');
-        if (isVirgin || isRemy) {
-            const bleachableTo = isVirgin ? '#613/60' : '#22/27';
-            footerHTML = `
-                <div style="margin-top: 15px; padding: 12px 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 12px; color: #475569; line-height: 1.8; text-align: left;">
-                    <div style="font-weight: 800; color: #0f172a; margin-bottom: 10px; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; display: inline-block;">Important Information</div>
-                    <ul style="list-style-type: none; padding: 0; margin: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 20px; font-weight: 500;">
-                        <li><span style="color:#6366f1; font-weight:900; margin-right:6px;">•</span>Shipping Charges Extra</li>
-                        <li><span style="color:#6366f1; font-weight:900; margin-right:6px;">•</span>Curly/Wavy Styles 10% Extra</li>
-                        <li><span style="color:#6366f1; font-weight:900; margin-right:6px;">•</span>The prices are per ${isPieces ? 'piece' : (isGrams ? `${exportGramsArray.join(', ')} grams` : 'kilogram')}</li>
-                        <li><span style="color:#6366f1; font-weight:900; margin-right:6px;">•</span>1 Kilogram = 10 packets of 100 grams each</li>
-                        <li><span style="color:#6366f1; font-weight:900; margin-right:6px;">•</span>Minimum Order Quantity 1 kg (10 pieces)</li>
-                        <li><span style="color:#6366f1; font-weight:900; margin-right:6px;">•</span>Bleached colors 20% Extra</li>
-                    </ul>
-                </div>
-                <div style="text-align: right; font-size: 10px; color: #94a3b8; margin-top: 6px; font-weight: 600; padding-right: 4px;">
-                    ${(function() {
-                        const __d = new Date();
-                        const __dd = String(__d.getDate()).padStart(2, '0');
-                        const __mm = String(__d.getMonth() + 1).padStart(2, '0');
-                        const __yy = String(__d.getFullYear()).slice(-2);
-                        let _discVal = 0;
-                        const inputEl = document.getElementById('exportDiscountPercentInput');
-                        if (inputEl && inputEl.value) {
-                            _discVal = parseFloat(inputEl.value) || 0;
-                        } else if (typeof appState !== 'undefined' && appState.discountPercent) {
-                            _discVal = appState.discountPercent;
-                        }
-                        _discVal = Math.round(_discVal);
-                        const _discStr = _discVal < 0 ? '-' + String(Math.abs(_discVal)).padStart(3, '0') : String(Math.abs(_discVal)).padStart(3, '0');
-                        return `${__dd}${__mm}${__yy}/${_discStr}`;
-                    })()}
-                </div>
-            `;
-        }
 
         let displayHTML = `
             <div style="overflow-x: auto; width: 100%; padding: 15px 5px; -webkit-overflow-scrolling: touch;">
                 <div id="export-preview-${clientName.replace(/[^a-zA-Z0-9]/g,'_')}" class="preview-card-inner" style="position: relative; background: ${_bg2}; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; margin: 0 auto; min-width: 700px; width: max-content; color: #334155; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);">
-                    ${imagesHTML}
-                    <div style="text-align: center; margin-bottom: 20px;">
-                        <h2 style="color: #0f172a; font-size: 26px; font-weight: 700; margin: 0 0 4px 0; letter-spacing: -0.5px;">${renderNameWithLogo(clientName, '22px')}</h2>
-                    <div style="font-size: 13px; color: #64748b; font-weight: 500;">
-                        <span style="display:inline-block; margin-right: 12px;"><i class="fa-regular fa-calendar" style="margin-right: 4px;"></i> Created: ${new Date(pl.savedAt || Date.now()).toLocaleDateString('en-IN', {day:'numeric', month:'short', year:'numeric'})}</span>
-                        <span style="display:inline-block;"><i class="fa-solid fa-share-nodes" style="margin-right: 4px;"></i> Shared: ${new Date().toLocaleDateString('en-IN', {day:'numeric', month:'short', year:'numeric'})}</span>
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; width: 100%;">
+                        <img src="../images/hw/hwstraightlogo.png" style="height: 45px;" />
+                        <div style="text-align: right; font-size: 10px; color: #94a3b8; font-weight: 800; letter-spacing: 1px;">
+                            NEW DELHI <span style="margin: 0 6px; color: #cbd5e1;">|</span> NEW JERSEY <span style="margin: 0 6px; color: #cbd5e1;">|</span> FLORIDA
+                        </div>
                     </div>
-                    <div style="margin-top: 8px;">
-                        <span style="background: ${_sharedHairBg}; color: ${_sharedHairColor}; border: 1px solid ${_sharedHairBorder}; padding: 4px 14px; border-radius: 20px; font-size: 12px; font-weight: 700;">${_sharedHairLabel}</span>
+                    
+                    <div style="width: 100%; max-width: 1100px; margin: 0 auto 12px auto; display: flex; justify-content: center; align-items: stretch; gap: 0; box-shadow: 0 15px 25px -5px rgba(0,0,0,0.1); border-radius: 16px; overflow: hidden; border: 2px solid #e2e8f0; background: white;">
+                        
+                        <div style="flex-grow: 1;">
+                            <div style="padding: 16px 10px; background: #faf0e6; border-bottom: 2px solid #e2e8f0; color: #0f172a; font-weight: 800; text-align: center; vertical-align: bottom;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; width: 100%;">
+                                    <img src="../images/hw/100percent.png?v=3" style="height: 80px; width: auto; max-width: 100%; object-fit: contain;" alt="100% Authentic Human Hair" />
+                                    ${stampInfo}
+                                </div>
+                                <div style="font-size: 16px; font-weight: 800; text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                                    ${renderNameWithLogo(clientName, '14px')}
+                                    <span style="color: #16a34a;">(${appState.currency || 'INR'})</span>
+                                </div>
+                            </div>
+                            
+                            <table style="width: 100%; border-collapse: separate; border-spacing: 0; text-align: left; font-size: 14px; background: transparent;">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 80px; min-width: 80px; max-width: 80px; padding: 16px 10px 16px 10px; background: #faf0e6; border-bottom: 2px solid #e2e8f0; color: #0f172a; font-weight: 800; border-right: 1px solid #e2e8f0; text-align: center; vertical-align: bottom; white-space: nowrap;">Length<br><span style="font-size: 11px; font-weight: 600; color: #475569; font-variant: normal; text-transform: none;">in inches</span></th>
+                                        <th style="width: 80px; min-width: 80px; max-width: 80px; padding: 16px 10px 16px 10px; background: #faf0e6; border-bottom: 2px solid #e2e8f0; color: #0f172a; font-weight: 800; border-right: 1px solid #e2e8f0; text-align: center; vertical-align: bottom; white-space: nowrap;">Length<br><span style="font-size: 11px; font-weight: 600; color: #475569; font-variant: normal; text-transform: none;">in cm</span></th>
+                                        <th style="padding: 16px 10px 16px 10px; background: #faf0e6; border-bottom: 2px solid #e2e8f0; color: #0f172a; font-weight: 800; text-align: center; vertical-align: bottom; white-space: nowrap;">Price<br><span style="font-size: 11px; font-weight: 600; color: #475569; font-variant: normal; text-transform: none;">${appState.currency || 'INR'} /${pl.outputUnit === 'pc' ? 'pc' : 'kg'}</span></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${rowsHTML}
+                                </tbody>
+                            </table>
+                        </div>
+                        ${imgHTML ? `<div style="flex: 0 0 250px; display: flex; align-items: stretch; justify-content: center; padding: 0; background: #ffffff; border-left: 2px solid #e2e8f0;">
+                            ${imgHTML.replace(/style="[^"]*"/, 'style="width: 100%; height: 100%; max-height: none; object-fit: contain;"')}
+                        </div>` : ''}
                     </div>
-                </div>
-                
-                <table style="width: 100%; border-collapse: separate; border-spacing: 0; margin-bottom: 12px; text-align: left; font-size: 14px; background: white; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0;">
-                    <thead>
-                        <tr>
-                            <th style="padding: 10px 14px; background: #0f172a; border-bottom: 2px solid #e2e8f0; color: white; font-weight: 800; width: 50%; border-right: 1px solid #334155; position: static;">Finished Length</th>
-                            <th style="padding: 10px 14px; background: #0f172a; border-bottom: 2px solid #e2e8f0; color: white; font-weight: 800; text-align: right; width: 50%; position: static;">Price / kg (${appState.currency})</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${rowsHTML}
-                    </tbody>
-                </table>
-        `;
-        
-        // Price list only — no ratio snapshot
-        
-        displayHTML += `
-                ${footerHTML}
+                    ${footerHTML}
                 </div>
             </div>
             <div style="text-align: center; margin-bottom: 15px; padding-bottom: 10px;">
@@ -2103,6 +3094,18 @@ document.addEventListener('DOMContentLoaded', () => {
         saveAppState();
     }
 
+    function updateRoundingLabel() {
+        const factor = (appState.roundingFactor !== undefined && appState.roundingFactor !== '') ? parseFloat(appState.roundingFactor) : 50;
+        const labelCell = document.querySelector('.rounded-price-row td.sticky-col-1');
+        if (labelCell) {
+            if (factor > 0) {
+                labelCell.textContent = `Rounded Total (to ${factor})`;
+            } else {
+                labelCell.textContent = 'Rounded Total';
+            }
+        }
+    }
+
     function calculateAll() {
         ACTIVE_FINISHED_LENGTHS.forEach(len => calculateColumn(len));
     }
@@ -2152,7 +3155,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // 4. Margin
             const indMargin = appState.individualMargins ? (appState.individualMargins[colIdx] || 0) : 0;
-            marginValue = currentCost * ((appState.marginPercent + indMargin) / 100);
+            if (appState.marginType === 'amount') {
+                marginValue = (appState.marginAmount || 0) + indMargin;
+            } else {
+                marginValue = currentCost * ((appState.marginPercent + indMargin) / 100);
+            }
             let baseFinal = currentCost + marginValue;
             
             // 5. Discount
@@ -2162,7 +3169,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (finalPrice < 0) finalPrice = 0;
         }
 
-        const roundedPrice = Math.round(finalPrice / 50) * 50;
+        const factor = (appState.roundingFactor !== undefined && appState.roundingFactor !== '') ? parseFloat(appState.roundingFactor) : 50;
+        const roundedPrice = (factor > 0) ? (Math.round(finalPrice / factor) * factor) : Math.round(finalPrice * 100) / 100;
 
         // Converted Price
         const rate = appState.exchangeRate || 1;
@@ -2431,6 +3439,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             if (displayPrice < 0 || (displayPrice === 0 && (!appState.customPricesEnabled || appState.customPrices[len] === undefined || appState.customPrices[len] === ''))) return '';
             
+            let isComposite = false;
+            if (appState.currentClientName && db && db.clients) {
+                const clientInfo = db.clients.find(c => c.name === appState.currentClientName);
+                if (clientInfo && clientInfo.tag === 'Composite') isComposite = true;
+            }
+            if (isComposite && displayPrice <= 0) return '';
+            
             const bgStr = idxArray % 2 === 0 ? "background: #ffffff;" : "background: #f8fafc;";
             
             let cellsHTML = '';
@@ -2457,12 +3472,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const _currentSupplier = db.suppliers.find(s => s.id === appState.currentSupplierId);
         const isBleachable = _currentSupplier && _currentSupplier.hairType === 'Bleachable';
 
+        let productImgHTML = window.getProductImageHTML(appState.currentClientName, '120px');
         let imagesHTML = `
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; width: 100%;">
                 <img src="../images/hw/hwstraightlogo.png" style="height: 55px;" />
                 <div style="display: flex; gap: 15px; align-items: center;">
-                    <img src="../images/hw/100percent.png?v=2" style="height: 120px; border-radius: 8px;" />
-                    ${isBleachable ? `<img src="../images/hw/bleachable.png" style="height: 120px; border-radius: 8px;" />` : ''}
+                    <img src="../images/hw/100percent.png?v=3" style="height: 120px; border-radius: 8px;" />
+                    ${isBleachable ? `<img src="../images/hw/bleachable.png?v=3" style="height: 120px; border-radius: 8px;" />` : ''}
                 </div>
             </div>
         `;
@@ -2478,9 +3494,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             </div>
             
-            <div style="width: 100%; display: flex; justify-content: center; align-items: flex-start;">
-                <table style="width: 100%; max-width: 1100px; border-collapse: separate; border-spacing: 0; box-shadow: 0 15px 25px -5px rgba(0,0,0,0.1); border-radius: 16px; overflow: hidden; border: 2px solid #e2e8f0; text-align: center;">
-                    <thead>
+            <div style="width: 100%; max-width: 1100px; margin: 0 auto; display: flex; justify-content: center; align-items: stretch; gap: 0; box-shadow: 0 15px 25px -5px rgba(0,0,0,0.1); border-radius: 16px; overflow: hidden; border: 2px solid #e2e8f0; background: white;">
+                <div style="flex-grow: 1;">
+                    <table style="width: 100%; border-collapse: separate; border-spacing: 0; text-align: center; background: transparent;">
+                        <thead>
                         <tr>
                             <th style="padding: 16px; background: #0f172a; border-bottom: 3px solid #e2e8f0; color: white; font-weight: 800; text-transform: uppercase; font-size: 18px; letter-spacing: 1.5px; border-right: 2px solid #334155; width: 50%; position: static;">Finished Length</th>
                             ${exportUnit === 'kg' ? `<th style="padding: 16px; background: #0f172a; border-bottom: 3px solid #e2e8f0; color: white; font-weight: 800; text-transform: uppercase; font-size: 18px; letter-spacing: 1.5px; width: 50%; position: static;">Prices per kg</th>` : exportGramsArray.map(g => `<th style="padding: 16px; background: #0f172a; border-bottom: 3px solid #e2e8f0; color: white; font-weight: 800; text-transform: uppercase; font-size: 18px; letter-spacing: 1.5px; position: static;">Prices per ${isPieces ? `1 pc (${g}g)` : `${g}g`}</th>`).join('')}
@@ -2489,7 +3506,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     <tbody>
                         ${rowsHTML}
                     </tbody>
-                </table>
+                        </tbody>
+                    </table>
+                </div>
+                ${(() => {
+                    const sideImgHTML = window.getProductImageHTML(appState.currentClientName, 'auto');
+                    if (sideImgHTML) {
+                        return `<div style="flex: 0 0 350px; display: flex; align-items: center; justify-content: center; padding: 20px; background: #faf0e6; border-left: 2px solid #e2e8f0;">
+                            ${sideImgHTML.replace('height: auto;', 'width: 100%; max-height: 80%; height: auto;')}
+                        </div>`;
+                    }
+                    return '';
+                })()}
             </div>
             </div>
             ${matrixHTML}
@@ -2655,11 +3683,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // 4. Margin
-        const marginValue = currentCost * ((client.marginPercent || 0) / 100);
+        let marginValue = 0;
+        if (client.marginType === 'amount') {
+            marginValue = client.marginAmount || 0;
+        } else {
+            marginValue = currentCost * ((client.marginPercent || 0) / 100);
+        }
         const finalPrice = currentCost + marginValue;
 
         // 5. Rounding & Currency
-        const roundedInr = Math.round(finalPrice / 50) * 50;
+        const factor = (client.roundingFactor !== undefined && client.roundingFactor !== '') ? parseFloat(client.roundingFactor) : 50;
+        const roundedInr = (factor > 0) ? (Math.round(finalPrice / factor) * factor) : Math.round(finalPrice * 100) / 100;
         const rate = client.exchangeRate || 1;
         const converted = parseFloat((roundedInr * rate)).toFixed(2);
 
@@ -2742,12 +3776,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 return sup && sup.hairType === 'Bleachable';
             });
 
+            let multiProductImgs = [];
+            selectedClients.forEach(c => {
+                const imgHTML = window.getProductImageHTML(c.name, '100px');
+                if (imgHTML && !multiProductImgs.includes(imgHTML)) {
+                    multiProductImgs.push(imgHTML);
+                }
+            });
+
             let imagesHTML = `
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; width: 100%;">
                     <img src="../images/hw/hwstraightlogo.png" style="height: 45px;" />
                     <div style="display: flex; gap: 15px; align-items: center;">
-                        <img src="../images/hw/100percent.png?v=2" style="height: 100px; border-radius: 8px;" />
-                        ${isMultiBleachable ? `<img src="../images/hw/bleachable.png" style="height: 100px; border-radius: 8px;" />` : ''}
+                        ${multiProductImgs.join('')}
+                        <img src="../images/hw/100percent.png?v=3" style="height: 100px; border-radius: 8px;" />
+                        ${isMultiBleachable ? `<img src="../images/hw/bleachable.png?v=3" style="height: 100px; border-radius: 8px;" />` : ''}
                     </div>
                 </div>
             `;
@@ -3045,7 +4088,9 @@ document.addEventListener('DOMContentLoaded', () => {
             tag,
             matrix: appState.matrix,
             currency: appState.currency || 'INR',
+            marginType: appState.marginType || 'percent',
             marginPercent: appState.marginPercent || 0,
+            marginAmount: appState.marginAmount || 0,
 
             wastagePercent: appState.wastagePercent || 0,
             machineCharge: appState.machineCharge !== undefined ? appState.machineCharge : 2500,
@@ -3053,10 +4098,13 @@ document.addEventListener('DOMContentLoaded', () => {
             weftingWastagePercent: appState.weftingWastagePercent || 0,
             weftingCharge: appState.weftingCharge || 0,
             exchangeRate: appState.exchangeRate || 1,
+            roundingFactor: appState.roundingFactor !== undefined ? appState.roundingFactor : 50,
             customPricesEnabled: appState.customPricesEnabled || false,
             customPrices: JSON.parse(JSON.stringify(appState.customPrices || {})),
             individualMargins: JSON.parse(JSON.stringify(appState.individualMargins || {})),
             supplierId: appState.currentSupplierId || null,
+            exportUnit: document.getElementById('exportUnitSelect') ? document.getElementById('exportUnitSelect').value : 'kg',
+            exportGrams: Array.from(document.querySelectorAll('#exportGramsList .gram-val-input')).map(i => parseFloat(i.value)).filter(n => !isNaN(n) && n > 0),
             created: new Date().toISOString()
         };
 
@@ -3170,6 +4218,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             // Restore Modifiers Safely
+            appState.marginType = data.marginType || 'percent';
+            appState.marginAmount = data.marginAmount || 0;
             appState.marginPercent = (data.marginPercent !== undefined && data.marginPercent !== null) ? data.marginPercent : 30;
 
             appState.wastagePercent = (data.wastagePercent !== undefined && data.wastagePercent !== null) ? data.wastagePercent : 10;
@@ -3177,6 +4227,11 @@ document.addEventListener('DOMContentLoaded', () => {
             appState.machineChargeName = data.machineChargeName || 'MR/Wash Charge';
             appState.currency = data.currency || 'INR';
             appState.exchangeRate = data.exchangeRate || 1;
+            appState.roundingFactor = data.roundingFactor !== undefined ? data.roundingFactor : 50;
+            if (roundingFactorInput) {
+                roundingFactorInput.value = appState.roundingFactor;
+            }
+            updateRoundingLabel();
             
             if (data.customPricesEnabled) {
                 appState.customPricesEnabled = data.customPricesEnabled;
@@ -3192,7 +4247,17 @@ document.addEventListener('DOMContentLoaded', () => {
             appState.individualMargins = data.individualMargins || {};
 
             // Force DOM values synchronously
-            marginInput.value = appState.marginPercent;
+            if (marginTypeSelect) {
+                marginTypeSelect.value = appState.marginType;
+                if (marginInputLabel) {
+                    marginInputLabel.innerText = appState.marginType === 'percent' ? 'Margin %' : 'Margin Amt';
+                }
+            }
+            if (appState.marginType === 'amount') {
+                marginInput.value = appState.marginAmount;
+            } else {
+                marginInput.value = appState.marginPercent;
+            }
 
             wastageInput.value = appState.wastagePercent;
             machineRemyInput.value = appState.machineCharge;
@@ -3206,11 +4271,28 @@ document.addEventListener('DOMContentLoaded', () => {
             exchangeRateInput.value = appState.exchangeRate;
             currencyCodeDisplay.textContent = appState.currency;
             
+            const exportUnitSel = document.getElementById('exportUnitSelect');
+            if (exportUnitSel) {
+                exportUnitSel.value = data.exportUnit || 'kg';
+                document.getElementById('exportGramsContainer').style.display = exportUnitSel.value === 'grams' ? 'flex' : 'none';
+                
+                if (data.exportGrams && data.exportGrams.length > 0) {
+                    const gl = document.getElementById('exportGramsList');
+                    if (gl) {
+                        gl.innerHTML = '';
+                        data.exportGrams.forEach(g => {
+                            window.addGramInputBox('exportGramsList', false);
+                            const inputs = gl.querySelectorAll('.gram-val-input');
+                            if (inputs.length > 0) inputs[inputs.length - 1].value = g;
+                        });
+                    }
+                }
+            }
             // Save custom prices first because the event listeners call clearCustomPrices()
             const savedCustomPrices = JSON.parse(JSON.stringify(appState.customPrices || {}));
             
             // Dispatch to let internal event listeners naturally bind
-            [marginInput, wastageInput, machineRemyInput, exchangeRateInput].forEach(inp => {
+            [marginInput, wastageInput, machineRemyInput, exchangeRateInput, roundingFactorInput].forEach(inp => {
                 if(inp) inp.dispatchEvent(new Event('input', { bubbles: true }));
             });
             
@@ -3292,10 +4374,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const noTagClients = [];
 
             clients.forEach(client => {
-                const tag = client.tag ? client.tag.trim() : '';
-                if (tag) {
-                    if (!groups[tag]) groups[tag] = [];
-                    groups[tag].push(client);
+                const tagStr = client.tag ? client.tag.trim() : '';
+                if (tagStr) {
+                    let tags = tagStr.split(',').map(t => t.trim()).filter(t => t);
+                    tags.forEach(tag => {
+                        if (!groups[tag]) groups[tag] = [];
+                        groups[tag].push(client);
+                    });
                 } else {
                     noTagClients.push(client);
                 }
@@ -3703,7 +4788,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 // Restore inputs
-                marginInput.value = appState.marginPercent !== undefined ? appState.marginPercent : 30;
+                if (marginTypeSelect) {
+                    marginTypeSelect.value = appState.marginType || 'percent';
+                    if (marginInputLabel) {
+                        marginInputLabel.innerText = marginTypeSelect.value === 'percent' ? 'Margin %' : 'Margin Amt';
+                    }
+                }
+                if (appState.marginType === 'amount') {
+                    marginInput.value = appState.marginAmount !== undefined ? appState.marginAmount : 0;
+                } else {
+                    marginInput.value = appState.marginPercent !== undefined ? appState.marginPercent : 30;
+                }
 
                 wastageInput.value = appState.wastagePercent !== undefined ? appState.wastagePercent : 10;
                 machineRemyInput.value = appState.machineCharge !== undefined ? appState.machineCharge : 2500;
@@ -3721,6 +4816,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     currencyCodeDisplay.textContent = appState.currency;
                 }
                 if (appState.exchangeRate) exchangeRateInput.value = appState.exchangeRate;
+                appState.roundingFactor = appState.roundingFactor !== undefined ? appState.roundingFactor : 50;
+                if (roundingFactorInput) {
+                    roundingFactorInput.value = appState.roundingFactor;
+                }
+                updateRoundingLabel();
                 if (appState.accentColor && accentColorInput) accentColorInput.value = appState.accentColor;
                 
                 if (appState.customPricesEnabled) {
@@ -3748,6 +4848,11 @@ document.addEventListener('DOMContentLoaded', () => {
             appState.discountAmount = 0;
             wastageInput.value = 10;
             appState.wastagePercent = 10;
+            if (roundingFactorInput) {
+                roundingFactorInput.value = 50;
+            }
+            appState.roundingFactor = 50;
+            updateRoundingLabel();
             refreshTableInputs();
         }
     }
