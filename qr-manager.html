@@ -8,6 +8,13 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase SDK Compat -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="firebase-global-init.js"></script>
+
     <style>
         body { font-family: 'Inter', sans-serif; }
         .mono { font-family: 'JetBrains Mono', monospace; }
@@ -322,22 +329,32 @@
         let cityChartInstance = null;
 
         // On DOM Load
-        window.addEventListener('DOMContentLoaded', () => {
+        window.addEventListener('DOMContentLoaded', async () => {
             loadLocalData();
             populateSimulatorOptions();
             toggleResourceTypeFields();
             renderQRCodesList();
+            
+            // Check if loaded with scan query parameter from mobile device scans
+            await handleUrlScanParam();
+
+            // Refresh UI
             updateAnalyticsDashboard();
+
+            // Hook up Firestore real-time listener if available
+            setupFirestoreSync();
         });
 
         // Load data from Localstorage
         function loadLocalData() {
             try {
+                const baseUrl = window.location.origin + window.location.pathname;
+
                 const qrSaved = localStorage.getItem('inv_qr_codes');
                 qrList = qrSaved ? JSON.parse(qrSaved) : [
-                    { id: 'qr-1', name: 'Raw Non-Remy 1x1 Tag', type: 'PRODUCT', targetId: 'prod-1', payload: 'PRODUCT:prod-1:Non-Remy Hairs', createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString() },
-                    { id: 'qr-2', name: 'Raw Lot Lot-RIH-002', type: 'LOT', targetId: 'RAW-20260601-RIH-002', payload: 'LOT:RAW-20260601-RIH-002:Royal Indian Hair', createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString() },
-                    { id: 'qr-3', name: 'Raw Hair Room Rack A', type: 'LOCATION', targetId: 'loc-1', payload: 'LOCATION:loc-1:Raw Hair Room', createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString() }
+                    { id: 'qr-1', name: 'Raw Non-Remy 1x1 Tag', type: 'PRODUCT', targetId: 'prod-1', payload: `${baseUrl}?scan=qr-1&name=${encodeURIComponent('Raw Non-Remy 1x1 Tag')}`, createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString() },
+                    { id: 'qr-2', name: 'Raw Lot Lot-RIH-002', type: 'LOT', targetId: 'RAW-20260601-RIH-002', payload: `${baseUrl}?scan=qr-2&name=${encodeURIComponent('Raw Lot Lot-RIH-002')}`, createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString() },
+                    { id: 'qr-3', name: 'Raw Hair Room Rack A', type: 'LOCATION', targetId: 'loc-1', payload: `${baseUrl}?scan=qr-3&name=${encodeURIComponent('Raw Hair Room Rack A')}`, createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString() }
                 ];
                 localStorage.setItem('inv_qr_codes', JSON.stringify(qrList));
 
@@ -345,6 +362,111 @@
                 scanEvents = scansSaved ? JSON.parse(scansSaved) : [];
             } catch (e) {
                 console.error("Localstorage failed to load: ", e);
+            }
+        }
+
+        // Check for scan query parameters when a user physically scans the code
+        async function handleUrlScanParam() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const scanQrId = urlParams.get('scan');
+            if (scanQrId) {
+                const qrName = urlParams.get('name') || 'Unnamed Tag';
+                
+                // Estimate platform OS and browser
+                const userAgent = navigator.userAgent;
+                let os = 'Windows';
+                if (userAgent.indexOf('iPhone') !== -1 || userAgent.indexOf('iPad') !== -1) os = 'iOS';
+                else if (userAgent.indexOf('Android') !== -1) os = 'Android';
+                else if (userAgent.indexOf('Macintosh') !== -1) os = 'macOS';
+
+                let browser = 'Chrome';
+                if (userAgent.indexOf('Safari') !== -1 && userAgent.indexOf('Chrome') === -1) browser = 'Safari';
+                else if (userAgent.indexOf('Firefox') !== -1) browser = 'Firefox';
+                else if (userAgent.indexOf('Edge') !== -1) browser = 'Edge';
+
+                // Fetch geodemographics (city/country) via a free CORS-enabled API
+                let city = 'Chennai';
+                let country = 'India';
+                try {
+                    const response = await fetch('https://ipapi.co/json/');
+                    if (response.ok) {
+                        const data = await response.json();
+                        city = data.city || 'Chennai';
+                        country = data.country_name || 'India';
+                    }
+                } catch (e) {
+                    console.warn("IP Geolocation failed, using fallbacks:", e);
+                }
+
+                const newScan = {
+                    id: `scan-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+                    qrId: scanQrId,
+                    qrName: qrName,
+                    timestamp: new Date().toISOString(),
+                    city: city,
+                    country: country,
+                    os: os,
+                    browser: browser
+                };
+
+                // Add to local storage scans list (client fallback)
+                scanEvents.unshift(newScan);
+                saveScansList();
+
+                // Save to Firestore if available
+                if (window.isFirebaseInitialized && window.isFirebaseInitialized()) {
+                    try {
+                        const db = firebase.firestore();
+                        await db.collection('inv_qr_scans').doc(newScan.id).set(newScan);
+                        console.log("Scan logged to Firestore successfully!");
+                    } catch (err) {
+                        console.error("Failed to log scan to Firestore:", err);
+                    }
+                }
+
+                // Clean the URL query string to prevent duplicate registration on refresh
+                const newUrl = window.location.origin + window.location.pathname;
+                window.history.replaceState({}, document.title, newUrl);
+
+                alert(`Scan logged successfully for tag "${qrName}"!`);
+            }
+        }
+
+        // Setup Real-time Firestore Sync for scans
+        function setupFirestoreSync() {
+            if (window.isFirebaseInitialized && window.isFirebaseInitialized()) {
+                try {
+                    const db = firebase.firestore();
+                    db.collection('inv_qr_scans').orderBy('timestamp', 'desc').onSnapshot(snapshot => {
+                        let firebaseScans = [];
+                        snapshot.forEach(doc => {
+                            firebaseScans.push(doc.data());
+                        });
+
+                        if (firebaseScans.length > 0) {
+                            // Merge local storage scans and firebase scans, keeping unique by id
+                            const allScans = [...scanEvents, ...firebaseScans];
+                            const uniqueScansMap = {};
+                            allScans.forEach(s => {
+                                uniqueScansMap[s.id] = s;
+                            });
+
+                            // Sort by timestamp descending
+                            scanEvents = Object.values(uniqueScansMap).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                            saveScansList();
+                            
+                            // Live update UI & charts
+                            updateAnalyticsDashboard();
+                            if (document.getElementById('tab-analytics').classList.contains('active')) {
+                                initAnalyticsCharts();
+                            }
+                        }
+                    }, err => {
+                        console.warn("Firestore listener failed, using local fallback only:", err);
+                    });
+                } catch (e) {
+                    console.error("Firestore setup error:", e);
+                }
             }
         }
 
@@ -458,25 +580,24 @@
 
             let payload = '';
             let targetId = '';
+            const baseUrl = window.location.origin + window.location.pathname;
+            const newId = `qr-${Date.now()}`;
 
             if (qrType === 'PRODUCT') {
                 const select = document.getElementById('productSelect');
                 if (!select.value) return alert('Please configure products first.');
-                const selectedText = select.options[select.selectedIndex].text;
-                payload = `PRODUCT:${select.value}:${selectedText}`;
                 targetId = select.value;
+                payload = `${baseUrl}?scan=${newId}&name=${encodeURIComponent(qrName)}`;
             } else if (qrType === 'LOT') {
                 const select = document.getElementById('lotSelect');
                 if (!select.value) return alert('Please create raw lots first.');
-                const selectedText = select.options[select.selectedIndex].text;
-                payload = `LOT:${select.value}:${selectedText}`;
                 targetId = select.value;
+                payload = `${baseUrl}?scan=${newId}&name=${encodeURIComponent(qrName)}`;
             } else if (qrType === 'LOCATION') {
                 const select = document.getElementById('locationSelect');
                 if (!select.value) return alert('Please create locations first.');
-                const selectedText = select.options[select.selectedIndex].text;
-                payload = `LOCATION:${select.value}:${selectedText}`;
                 targetId = select.value;
+                payload = `${baseUrl}?scan=${newId}&name=${encodeURIComponent(qrName)}`;
             } else {
                 const customVal = document.getElementById('customText').value.trim();
                 payload = customVal || 'CUSTOM:TEXT';
@@ -484,7 +605,7 @@
             }
 
             const newQR = {
-                id: `qr-${Date.now()}`,
+                id: newId,
                 name: qrName,
                 type: qrType,
                 targetId: targetId,
@@ -501,7 +622,7 @@
             
             renderQRCodesList();
             populateSimulatorOptions();
-            alert('QR code configuration created successfully!');
+            alert('QR code configuration created successfully! The QR Code is now fully scannable via mobile device camera.');
         }
 
         // Render tag cards
@@ -515,7 +636,7 @@
                     <div class="col-span-2 py-16 text-center text-slate-400 border border-dashed border-slate-200 rounded-2xl bg-slate-50/50">
                         <i class="fa-solid fa-qrcode text-4xl mb-3 text-slate-350"></i>
                         <p class="font-semibold text-sm">No QR Tags defined yet.</p>
-                        <p class="text-xs text-slate-450 mt-1">Configure tag parameters on the left to generate templates.</p>
+                        <p class="text-xs text-slate-455 mt-1">Configure tag parameters on the left to generate templates.</p>
                     </div>
                 `;
                 return;
@@ -622,7 +743,7 @@
         }
 
         // Simulate scan submission handler
-        function handleSimulateScan() {
+        async function handleSimulateScan() {
             const simQrId = document.getElementById('simQrId').value;
             const simCityIdx = Number(document.getElementById('simCity').value);
             const simPlatform = document.getElementById('simPlatform').value;
@@ -635,7 +756,7 @@
 
             const loc = CITIES[simCityIdx];
             const newScan = {
-                id: `scan-${Date.now()}`,
+                id: `scan-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
                 qrId: simQrId,
                 qrName: qr.name,
                 timestamp: new Date().toISOString(),
@@ -645,25 +766,56 @@
                 browser: simBrowser
             };
 
+            // Save locally
             scanEvents.unshift(newScan);
             saveScansList();
 
+            // Save to Firestore if available
+            if (window.isFirebaseInitialized && window.isFirebaseInitialized()) {
+                try {
+                    const db = firebase.firestore();
+                    await db.collection('inv_qr_scans').doc(newScan.id).set(newScan);
+                } catch (err) {
+                    console.error("Failed to save simulated scan to Firestore:", err);
+                }
+            }
+
             alert(`Mock Scan successfully recorded from ${loc.city} (${simPlatform}/${simBrowser})!`);
+            
+            // Re-render UI & redraw charts
             updateAnalyticsDashboard();
+            initAnalyticsCharts();
         }
 
         // Purge scan logs
-        function handleClearScans() {
+        async function handleClearScans() {
             if (confirm('Are you sure you want to purge all scan tracking analytics logs?')) {
+                const localIds = scanEvents.map(s => s.id);
                 scanEvents = [];
                 saveScansList();
+                
+                // Clear from Firestore if available
+                if (window.isFirebaseInitialized && window.isFirebaseInitialized()) {
+                    try {
+                        const db = firebase.firestore();
+                        const batch = db.batch();
+                        localIds.forEach(id => {
+                            const ref = db.collection('inv_qr_scans').doc(id);
+                            batch.delete(ref);
+                        });
+                        await batch.commit();
+                    } catch (err) {
+                        console.error("Failed to delete scans from Firestore:", err);
+                    }
+                }
+
                 updateAnalyticsDashboard();
                 initAnalyticsCharts();
             }
         }
 
         // Auto seed 60 mock logs
-        function handleAutoSeedAnalytics() {
+        async function handleAutoSeedAnalytics() {
             if (qrList.length === 0) return alert('Please generate at least one QR code to seed scanning events.');
 
             const mockScans = [];
@@ -688,8 +840,25 @@
                 });
             }
 
+            // Save locally
             scanEvents = [...mockScans, ...scanEvents];
             saveScansList();
+
+            // Batch upload to Firestore if available
+            if (window.isFirebaseInitialized && window.isFirebaseInitialized()) {
+                try {
+                    const db = firebase.firestore();
+                    const batch = db.batch();
+                    mockScans.forEach(scan => {
+                        const ref = db.collection('inv_qr_scans').doc(scan.id);
+                        batch.set(ref, scan);
+                    });
+                    await batch.commit();
+                } catch (err) {
+                    console.error("Failed to commit batch of seed scans to Firestore:", err);
+                }
+            }
+
             alert('Successfully generated 60 historical scan data points for demographics graphs!');
             updateAnalyticsDashboard();
             initAnalyticsCharts();
@@ -747,8 +916,8 @@
                         <i class="fa-solid fa-map-pin text-slate-400"></i>
                         <span>${s.city}, ${s.country}</span>
                     </td>
-                    <td class="px-4 py-3 font-mono text-slate-650">${s.os}</td>
-                    <td class="px-4 py-3 font-mono text-slate-450">${s.browser}</td>
+                    <td class="px-4 py-3 font-mono text-slate-655">${s.os}</td>
+                    <td class="px-4 py-3 font-mono text-slate-455">${s.browser}</td>
                 `;
                 tbody.appendChild(tr);
             });

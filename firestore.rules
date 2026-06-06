@@ -145,6 +145,11 @@ service cloud.firestore {
     match /ratioMixer/{document=**} {
       allow read, write: if true; // Allow public access for shared settings sync
     }
+
+    // QR Code scan tracking data
+    match /inv_qr_scans/{scanId} {
+      allow read, write: if true;
+    }
     
     // User profiles
     match /users/{userId} {
