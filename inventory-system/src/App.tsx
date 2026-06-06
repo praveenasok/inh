@@ -14,6 +14,7 @@ import PurchasePage from './pages/PurchasePage';
 import SuppliersPage from './pages/SuppliersPage';
 import InhInventoryPage from './pages/InhInventoryPage';
 import QRCodePage from './pages/QRCodePage';
+import ScanHandlerPage from './pages/ScanHandlerPage';
 
 const Sidebar = () => {
   const location = useLocation();
@@ -108,26 +109,31 @@ const PlaceholderPage = ({ title }: { title: string }) => (
 export default function App() {
   return (
     <Router>
-      <AppLayout>
-        <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/inhinventory" element={<InhInventoryPage />} />
-          <Route path="/traceability" element={<TraceabilityScreen />} />
-          <Route path="/mo" element={<MOPage />} />
-          <Route path="/purchase" element={<PurchasePage />} />
-          <Route path="/suppliers" element={<SuppliersPage />} />
-          <Route path="/qr-manager" element={<QRCodePage />} />
-          <Route path="/bom" element={<BOMPage />} />
-          <Route path="/orders" element={<PlaceholderPage title="Sales Order Entry" />} />
-          <Route path="/inventory-manager" element={<InventoryPage />} />
-          <Route path="/raw-inventory" element={<InventoryPage />} />
-          <Route path="/wip" element={<PlaceholderPage title="WIP Processing & Segregation" />} />
-          <Route path="/semi-inventory" element={<InventoryPage />} />
-          <Route path="/finished-inventory" element={<InventoryPage />} />
-          <Route path="/movements" element={<InventoryPage />} />
-          <Route path="/reports" element={<PlaceholderPage title="Analytics & Reports" />} />
-        </Routes>
-      </AppLayout>
+      <Routes>
+        <Route path="/scan/:qrId" element={<ScanHandlerPage />} />
+        <Route path="*" element={
+          <AppLayout>
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/inhinventory" element={<InhInventoryPage />} />
+              <Route path="/traceability" element={<TraceabilityScreen />} />
+              <Route path="/mo" element={<MOPage />} />
+              <Route path="/purchase" element={<PurchasePage />} />
+              <Route path="/suppliers" element={<SuppliersPage />} />
+              <Route path="/qr-manager" element={<QRCodePage />} />
+              <Route path="/bom" element={<BOMPage />} />
+              <Route path="/orders" element={<PlaceholderPage title="Sales Order Entry" />} />
+              <Route path="/inventory-manager" element={<InventoryPage />} />
+              <Route path="/raw-inventory" element={<InventoryPage />} />
+              <Route path="/wip" element={<PlaceholderPage title="WIP Processing & Segregation" />} />
+              <Route path="/semi-inventory" element={<InventoryPage />} />
+              <Route path="/finished-inventory" element={<InventoryPage />} />
+              <Route path="/movements" element={<InventoryPage />} />
+              <Route path="/reports" element={<PlaceholderPage title="Analytics & Reports" />} />
+            </Routes>
+          </AppLayout>
+        } />
+      </Routes>
     </Router>
   );
 }

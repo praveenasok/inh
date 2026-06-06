@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { QrCode, Plus, Trash2, Download, Printer, TrendingUp, MapPin, Smartphone, History, Play, Sparkles, Layers, CheckCircle } from 'lucide-react';
+import { db } from '../firebase';
+import { collection, onSnapshot, setDoc, deleteDoc, doc, addDoc, query, orderBy, serverTimestamp } from 'firebase/firestore';
 
 interface ProductType {
   id: string;
@@ -76,27 +78,30 @@ export default function QRCodePage() {
     return saved ? JSON.parse(saved) : [];
   });
 
-  const [qrList, setQrList] = useState<QRCodeItem[]>(() => {
-    const saved = localStorage.getItem('inv_qr_codes');
-    return saved ? JSON.parse(saved) : [
-      { id: 'qr-1', name: 'Raw Non-Remy 1x1 Tag', type: 'PRODUCT', targetId: 'prod-1', payload: 'PRODUCT:prod-1:Non-Remy Hairs', createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString() },
-      { id: 'qr-2', name: 'Raw Lot Lot-RIH-002', type: 'LOT', targetId: 'RAW-20260601-RIH-002', payload: 'LOT:RAW-20260601-RIH-002:Royal Indian Hair', createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString() },
-      { id: 'qr-3', name: 'Raw Hair Room Rack A', type: 'LOCATION', targetId: 'loc-1', payload: 'LOCATION:loc-1:Raw Hair Room', createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString() }
-    ];
-  });
+  const [qrList, setQrList] = useState<QRCodeItem[]>([]);
+  const [scanEvents, setScanEvents] = useState<ScanEvent[]>([]);
 
-  const [scanEvents, setScanEvents] = useState<ScanEvent[]>(() => {
-    const saved = localStorage.getItem('inv_qr_scans');
-    return saved ? JSON.parse(saved) : [];
-  });
-
+  // Fetch QR Codes from Firebase
   useEffect(() => {
-    localStorage.setItem('inv_qr_codes', JSON.stringify(qrList));
-  }, [qrList]);
+    const q = query(collection(db, 'inv_qr_codes'), orderBy('createdAt', 'desc'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const qrs: QRCodeItem[] = [];
+      snapshot.forEach(doc => qrs.push(doc.data() as QRCodeItem));
+      setQrList(qrs);
+    });
+    return () => unsubscribe();
+  }, []);
 
+  // Fetch Scans from Firebase
   useEffect(() => {
-    localStorage.setItem('inv_qr_scans', JSON.stringify(scanEvents));
-  }, [scanEvents]);
+    const q = query(collection(db, 'inv_qr_scans'), orderBy('timestamp', 'desc'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const scans: ScanEvent[] = [];
+      snapshot.forEach(doc => scans.push({ ...doc.data(), id: doc.id } as ScanEvent));
+      setScanEvents(scans);
+    });
+    return () => unsubscribe();
+  }, []);
 
   // --- Form States (Generator) ---
   const [qrName, setQrName] = useState('');
@@ -158,15 +163,19 @@ export default function QRCodePage() {
       createdAt: new Date().toISOString()
     };
 
-    setQrList(prev => [newQR, ...prev]);
-    setQrName('');
-    setCustomText('');
-    alert('QR label configuration created!');
+    setDoc(doc(db, 'inv_qr_codes', newQR.id), newQR).then(() => {
+      setQrName('');
+      setCustomText('');
+      alert('QR label configuration created!');
+    }).catch(err => {
+      console.error('Error creating QR code:', err);
+      alert('Failed to save QR code.');
+    });
   };
 
   const handleDeleteQR = (id: string) => {
     if (confirm('Are you sure you want to delete this QR configuration? Historical scan logs will still remain.')) {
-      setQrList(prev => prev.filter(q => q.id !== id));
+      deleteDoc(doc(db, 'inv_qr_codes', id)).catch(err => console.error('Error deleting QR:', err));
       if (simQrId === id) setSimQrId('');
     }
   };
@@ -178,19 +187,23 @@ export default function QRCodePage() {
     if (!qr) return;
 
     const loc = CITIES[simCityIndex];
-    const newScan: ScanEvent = {
-      id: `scan-${Date.now()}`,
+    const newScan = {
       qrId: simQrId,
       qrName: qr.name,
       timestamp: new Date().toISOString(),
       city: loc.city,
       country: loc.country,
       os: simPlatform,
-      browser: simBrowser
+      browser: simBrowser,
+      createdAt: serverTimestamp()
     };
 
-    setScanEvents(prev => [newScan, ...prev]);
-    alert(`Mock Scan successfully recorded from ${loc.city} (${simPlatform}/${simBrowser})!`);
+    addDoc(collection(db, 'inv_qr_scans'), newScan).then(() => {
+      alert(`Mock Scan successfully recorded from ${loc.city} (${simPlatform}/${simBrowser})!`);
+    }).catch(err => {
+      console.error('Error adding mock scan:', err);
+      alert('Failed to save scan event.');
+    });
   };
 
   const handleAutoSeedAnalytics = () => {
@@ -223,8 +236,8 @@ export default function QRCodePage() {
   };
 
   const handleClearScans = () => {
-    if (confirm('Are you sure you want to purge all scan tracking analytics logs?')) {
-      setScanEvents([]);
+    if (confirm('Are you sure you want to purge all scan tracking analytics logs? Note: Due to Firestore limits, this bulk delete is disabled in this UI. Please manually manage or we can add a batch delete function.')) {
+      alert('Clear functionality is disabled when connected to live Firebase. Delete logs from Firebase Console.');
     }
   };
 
@@ -444,7 +457,8 @@ export default function QRCodePage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {qrList.map(qr => {
-                const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(qr.payload)}`;
+                const liveTrackerUrl = `https://inhsuite.web.app/inventory-system/dist/index.html#/scan/${qr.id}?payload=${encodeURIComponent(qr.payload)}&name=${encodeURIComponent(qr.name)}`;
+                const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(liveTrackerUrl)}`;
                 return (
                   <div key={qr.id} className="p-4 border border-gray-200 rounded-2xl flex gap-4 hover:shadow-md transition-all group relative bg-gray-50/20">
                     {/* QR display block */}
