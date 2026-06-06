@@ -21,6 +21,7 @@
             { name: 'Ratio Mixer', icon: 'fa-balance-scale', href: '/inh-ratio-mix/index.html' },
             { name: 'Manufacturing Order', icon: 'fa-industry', href: '/raw-manufacturing-order.html' },
             { name: 'Inventory Hub', icon: 'fa-boxes-stacked', href: '/inventory-system/dist/index.html' },
+            { name: 'QR Code Tracker', icon: 'fa-qrcode', href: '/qr-manager.html' },
             {
                 name: 'SOP',
                 icon: 'fa-book',

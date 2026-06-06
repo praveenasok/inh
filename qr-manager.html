@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Tag Manager & Analytics - INHsuite</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        .tab-btn.active {
+            background-color: #ffffff;
+            color: #1e293b;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        }
+    </style>
+</head>
+<body class="bg-[#f8fafc] min-h-screen text-slate-900">
+    <script>window.navConfig = { siteTitle: 'INHsuite' };</script>
+    <script src="js/navigation-loader.js"></script>
+
+    <div class="container mx-auto w-full max-w-[1600px] px-4 py-8">
+        <!-- Header -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
+            <div>
+                <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight flex items-center">
+                    <i class="fa-solid fa-qrcode text-indigo-600 mr-3"></i> QR Code Tags & Tracker
+                </h1>
+                <p class="text-slate-500 mt-2 font-medium">Generate physical inventory labels and monitor geodemographic scan metrics.</p>
+            </div>
+            
+            <!-- Tab switches -->
+            <div class="flex bg-slate-100 p-1.5 rounded-xl border border-slate-200 self-start md:self-auto shadow-inner">
+                <button onclick="switchTab('generator')" id="tab-generator" class="tab-btn active px-4 py-2 text-xs font-bold rounded-lg transition-all text-slate-500 hover:text-slate-800 flex items-center gap-1.5">
+                    <i class="fa-solid fa-qrcode text-sm"></i> Tag Generator
+                </button>
+                <button onclick="switchTab('analytics')" id="tab-analytics" class="tab-btn px-4 py-2 text-xs font-bold rounded-lg transition-all text-slate-500 hover:text-slate-800 flex items-center gap-1.5">
+                    <i class="fa-solid fa-chart-line text-sm"></i> Tracking Analytics
+                </button>
+                <button onclick="switchTab('simulator')" id="tab-simulator" class="tab-btn px-4 py-2 text-xs font-bold rounded-lg transition-all text-slate-500 hover:text-slate-800 flex items-center gap-1.5">
+                    <i class="fa-solid fa-mobile-screen-button text-sm"></i> Scan Simulator
+                </button>
+            </div>
+        </div>
+
+        <!-- ==================== TAB 1: TAG GENERATOR ==================== -->
+        <div id="panel-generator" class="tab-panel space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                <!-- Form Configuration -->
+                <div class="lg:col-span-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                    <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2 mb-6 border-b border-slate-100 pb-4">
+                        <i class="fa-solid fa-circle-plus text-slate-900"></i>
+                        <span>Configure Stock Tag</span>
+                    </h3>
+
+                    <form id="qrForm" onsubmit="handleGenerateQR(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Label Name</label>
+                            <input type="text" id="qrName" placeholder="e.g. Raw Lot Tag Lot-02" class="w-full p-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent font-semibold text-slate-700 bg-white" required>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Resource Type</label>
+                            <select id="qrType" onchange="toggleResourceTypeFields()" class="w-full p-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent font-semibold bg-white cursor-pointer">
+                                <option value="PRODUCT">Product Type Reference</option>
+                                <option value="LOT">Raw Lot Reference</option>
+                                <option value="LOCATION">Storage Location Reference</option>
+                                <option value="CUSTOM">Custom URL / Link</option>
+                            </select>
+                        </div>
+
+                        <!-- Dynamic Select Target Lists -->
+                        <div id="productSelectWrapper">
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Select Product Type</label>
+                            <select id="productSelect" class="w-full p-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none bg-white font-medium text-slate-700"></select>
+                            <div id="productSelectAlert" class="hidden text-xs text-amber-600 bg-amber-50 p-2.5 rounded-lg border border-amber-200/50 mt-1">No products configured. Setup products in the Inventory Hub first.</div>
+                        </div>
+
+                        <div id="lotSelectWrapper" class="hidden">
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Select Raw Lot</label>
+                            <select id="lotSelect" class="w-full p-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none bg-white font-medium text-slate-700"></select>
+                            <div id="lotSelectAlert" class="hidden text-xs text-amber-600 bg-amber-50 p-2.5 rounded-lg border border-amber-200/50 mt-1">No raw lots logged. Setup purchases in the Inventory Hub first.</div>
+                        </div>
+
+                        <div id="locationSelectWrapper" class="hidden">
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Select Location Room</label>
+                            <select id="locationSelect" class="w-full p-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none bg-white font-medium text-slate-700"></select>
+                            <div id="locationSelectAlert" class="hidden text-xs text-amber-600 bg-amber-50 p-2.5 rounded-lg border border-amber-200/50 mt-1">No locations logged. Setup locations in the Inventory Hub first.</div>
+                        </div>
+
+                        <div id="customTextWrapper" class="hidden">
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Custom URL or Text</label>
+                            <input type="text" id="customText" placeholder="https://indiannaturalhair.com" class="w-full p-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none font-semibold text-slate-700 bg-white">
+                        </div>
+
+                        <button type="submit" class="w-full mt-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-xl text-sm transition-all shadow-sm active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer">
+                            <i class="fa-solid fa-plus text-xs"></i>
+                            <span>Generate QR Tag</span>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Display list of tags -->
+                <div class="lg:col-span-8 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                    <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-layer-group"></i>
+                        <span>Generated QR Stock Tags (<span id="qrCount">0</span>)</span>
+                    </h3>
+
+                    <div id="qrListContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Cards injected by JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== TAB 2: TRACKING ANALYTICS ==================== -->
+        <div id="panel-analytics" class="tab-panel hidden space-y-6">
+            <!-- Summary stats row -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
+                    <div>
+                        <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">Total QR Scans</p>
+                        <h3 id="statTotalScans" class="text-3xl font-extrabold text-slate-800 mt-2">0</h3>
+                        <span class="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full mt-1.5 inline-block">Live Tracking</span>
+                    </div>
+                    <div class="p-4 rounded-xl bg-blue-50 text-blue-600">
+                        <i class="fa-solid fa-mobile-screen-button text-2xl"></i>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
+                    <div>
+                        <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">Unique Codes Scanned</p>
+                        <h3 id="statUniqueCodes" class="text-3xl font-extrabold text-slate-800 mt-2">0</h3>
+                        <span id="statActiveTagsSpan" class="text-[10px] text-slate-400 font-semibold block mt-1.5">Out of 0 active tags</span>
+                    </div>
+                    <div class="p-4 rounded-xl bg-purple-50 text-purple-600">
+                        <i class="fa-solid fa-qrcode text-2xl"></i>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
+                    <div>
+                        <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">Top Scanning City</p>
+                        <h3 id="statTopCity" class="text-xl font-extrabold text-slate-800 mt-2 truncate w-36">N/A</h3>
+                        <span id="statTopCityScans" class="text-[10px] text-slate-400 font-semibold block mt-1.5">0 scans logged</span>
+                    </div>
+                    <div class="p-4 rounded-xl bg-emerald-50 text-emerald-600">
+                        <i class="fa-solid fa-map-pin text-2xl"></i>
+                    </div>
+                </div>
+
+                <!-- Utilities seeding -->
+                <div class="bg-gradient-to-br from-amber-50 to-orange-100 p-6 rounded-2xl border border-amber-200 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <h4 class="font-extrabold text-amber-950 text-xs uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-wand-magic-sparkles text-amber-600"></i>
+                            Analytics Controls
+                        </h4>
+                        <p class="text-[10px] text-amber-800 mt-1 leading-relaxed">Seed historical scans to preview geodemographics charting.</p>
+                    </div>
+
+                    <div class="flex gap-2 mt-4">
+                        <button onclick="handleAutoSeedAnalytics()" class="flex-1 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-bold text-[9px] uppercase tracking-wider rounded-lg shadow-sm transition active:scale-95 cursor-pointer">
+                            Seed Data
+                        </button>
+                        <button onclick="handleClearScans()" class="flex-1 py-1.5 bg-white hover:bg-red-50 border border-red-200 text-red-600 font-bold text-[9px] uppercase tracking-wider rounded-lg shadow-sm transition active:scale-95 cursor-pointer">
+                            Clear Logs
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- Timeline chart -->
+                <div class="lg:col-span-8 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                    <h3 class="font-bold text-slate-800 text-base mb-6 flex items-center gap-1.5">
+                        <i class="fa-solid fa-chart-line text-blue-500"></i>
+                        <span>Scan History Timeline (Scans per Day)</span>
+                    </h3>
+                    <div class="h-64 relative">
+                        <canvas id="timelineChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- OS distribution chart -->
+                <div class="lg:col-span-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
+                    <h3 class="font-bold text-slate-800 text-base mb-6 flex items-center gap-1.5">
+                        <i class="fa-solid fa-mobile-screen text-purple-500"></i>
+                        <span>Mobile Platform / OS</span>
+                    </h3>
+                    <div class="h-44 w-full relative flex items-center justify-center flex-1">
+                        <div id="osChartFallback" class="text-xs text-slate-400 italic hidden">No scans recorded to generate OS charts.</div>
+                        <canvas id="osChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- Cities breakdown -->
+                <div class="lg:col-span-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
+                    <h3 class="font-bold text-slate-800 text-base mb-6 flex items-center gap-1.5">
+                        <i class="fa-solid fa-earth-americas text-emerald-500"></i>
+                        <span>Scan Distribution by Location</span>
+                    </h3>
+                    <div class="h-64 relative flex-1 flex items-center justify-center">
+                        <div id="cityChartFallback" class="text-xs text-slate-400 italic hidden">No scans recorded.</div>
+                        <canvas id="cityChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Recent log feed table -->
+                <div class="lg:col-span-8 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+                    <div class="p-4 border-b border-slate-100 bg-slate-50/50">
+                        <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                            <i class="fa-solid fa-clock-rotate-left"></i>
+                            <span>Real-time Tracking Feed (Recent Scans)</span>
+                        </h3>
+                    </div>
+
+                    <div class="flex-1 overflow-x-auto min-h-[220px]">
+                        <table class="w-full text-xs text-left">
+                            <thead class="bg-slate-50 text-slate-500 uppercase font-bold border-b border-slate-100">
+                                <tr>
+                                    <th class="px-4 py-2.5">Time</th>
+                                    <th class="px-4 py-2.5">Tag Name</th>
+                                    <th class="px-4 py-2.5">Location</th>
+                                    <th class="px-4 py-2.5">Platform</th>
+                                    <th class="px-4 py-2.5">Browser</th>
+                                </tr>
+                            </thead>
+                            <tbody id="scanLogTableBody" class="divide-y divide-slate-100 font-semibold text-slate-700">
+                                <!-- Logs injected by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== TAB 3: SCAN SIMULATOR ==================== -->
+        <div id="panel-simulator" class="tab-panel hidden max-w-2xl mx-auto bg-white p-8 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+            <div class="text-center border-b border-slate-100 pb-6">
+                <i class="fa-solid fa-mobile-screen text-4xl text-blue-600 mb-3 block"></i>
+                <h3 class="text-xl font-extrabold text-slate-800">Geodemographic Scan Simulator</h3>
+                <p class="text-slate-500 text-xs mt-2 leading-relaxed">
+                    This simulator mimics direct QR code scans. Select a configured stock tag, simulate a region, platform, and browser, then click Submit to insert tracking events into the live analytics graphs.
+                </p>
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Select Target Stock Tag</label>
+                    <select id="simQrId" class="w-full p-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none bg-white font-bold text-slate-700 focus:ring-2 focus:ring-slate-900 focus:border-transparent"></select>
+                    <div id="simQrAlert" class="hidden text-xs text-red-600 bg-red-50 p-2.5 rounded-lg border border-red-200 mt-1">No QR Code tags available. Go to the Generator tab to create tags first.</div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Scan City / Location</label>
+                        <select id="simCity" class="w-full p-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none bg-white font-semibold cursor-pointer">
+                            <!-- Injected by JS -->
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Device OS Platform</label>
+                        <select id="simPlatform" class="w-full p-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none bg-white font-semibold cursor-pointer">
+                            <option value="iOS">iOS (iPhone)</option>
+                            <option value="Android">Android Mobile</option>
+                            <option value="Windows">Windows Desktop</option>
+                            <option value="macOS">macOS Laptop</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Scan Browser</label>
+                        <select id="simBrowser" class="w-full p-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none bg-white font-semibold cursor-pointer">
+                            <option value="Chrome">Chrome</option>
+                            <option value="Safari">Safari</option>
+                            <option value="Firefox">Firefox</option>
+                            <option value="Edge">Edge</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button onclick="handleSimulateScan()" id="simSubmitBtn" class="w-full mt-6 py-3 bg-slate-900 hover:bg-slate-800 disabled:bg-slate-200 disabled:text-slate-400 text-white font-bold rounded-xl text-sm transition-all shadow-sm active:scale-98 flex items-center justify-center gap-2 cursor-pointer">
+                    <i class="fa-regular fa-circle-check"></i>
+                    <span>Submit Simulated Scan Event</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Page Logic Script -->
+    <script>
+        const CITIES = [
+            { city: 'Chennai', country: 'India' },
+            { city: 'Delhi', country: 'India' },
+            { city: 'Nellore', country: 'India' },
+            { city: 'Eluru', country: 'India' },
+            { city: 'Madhavaram', country: 'India' },
+            { city: 'New York', country: 'USA' },
+            { city: 'London', country: 'UK' },
+            { city: 'Paris', country: 'France' }
+        ];
+
+        const PLATFORMS = ['iOS', 'Android', 'Windows', 'macOS'];
+        const BROWSERS = ['Chrome', 'Safari', 'Firefox', 'Edge'];
+        const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
+
+        let qrList = [];
+        let scanEvents = [];
+        
+        let timelineChartInstance = null;
+        let osChartInstance = null;
+        let cityChartInstance = null;
+
+        // On DOM Load
+        window.addEventListener('DOMContentLoaded', () => {
+            loadLocalData();
+            populateSimulatorOptions();
+            toggleResourceTypeFields();
+            renderQRCodesList();
+            updateAnalyticsDashboard();
+        });
+
+        // Load data from Localstorage
+        function loadLocalData() {
+            try {
+                const qrSaved = localStorage.getItem('inv_qr_codes');
+                qrList = qrSaved ? JSON.parse(qrSaved) : [
+                    { id: 'qr-1', name: 'Raw Non-Remy 1x1 Tag', type: 'PRODUCT', targetId: 'prod-1', payload: 'PRODUCT:prod-1:Non-Remy Hairs', createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString() },
+                    { id: 'qr-2', name: 'Raw Lot Lot-RIH-002', type: 'LOT', targetId: 'RAW-20260601-RIH-002', payload: 'LOT:RAW-20260601-RIH-002:Royal Indian Hair', createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString() },
+                    { id: 'qr-3', name: 'Raw Hair Room Rack A', type: 'LOCATION', targetId: 'loc-1', payload: 'LOCATION:loc-1:Raw Hair Room', createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString() }
+                ];
+                localStorage.setItem('inv_qr_codes', JSON.stringify(qrList));
+
+                const scansSaved = localStorage.getItem('inv_qr_scans');
+                scanEvents = scansSaved ? JSON.parse(scansSaved) : [];
+            } catch (e) {
+                console.error("Localstorage failed to load: ", e);
+            }
+        }
+
+        // Save data to Localstorage
+        function saveQRList() {
+            localStorage.setItem('inv_qr_codes', JSON.stringify(qrList));
+        }
+
+        function saveScansList() {
+            localStorage.setItem('inv_qr_scans', JSON.stringify(scanEvents));
+        }
+
+        // Toggle subtabs panel display
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
+
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+            document.getElementById(`panel-${tabName}`).classList.remove('hidden');
+
+            if (tabName === 'analytics') {
+                setTimeout(initAnalyticsCharts, 50);
+            }
+        }
+
+        // Populate dynamic select resource dropdown options
+        function toggleResourceTypeFields() {
+            const qrType = document.getElementById('qrType').value;
+            
+            // Hide all wrappers
+            document.getElementById('productSelectWrapper').classList.add('hidden');
+            document.getElementById('lotSelectWrapper').classList.add('hidden');
+            document.getElementById('locationSelectWrapper').classList.add('hidden');
+            document.getElementById('customTextWrapper').classList.add('hidden');
+
+            if (qrType === 'PRODUCT') {
+                const select = document.getElementById('productSelect');
+                select.innerHTML = '';
+                const saved = localStorage.getItem('inv_products');
+                const products = saved ? JSON.parse(saved) : [];
+                
+                if (products.length > 0) {
+                    products.forEach(p => {
+                        const opt = document.createElement('option');
+                        opt.value = p.id;
+                        opt.textContent = `${p.name} (${p.uom})`;
+                        select.appendChild(opt);
+                    });
+                    document.getElementById('productSelectAlert').classList.add('hidden');
+                    select.classList.remove('hidden');
+                } else {
+                    document.getElementById('productSelectAlert').classList.remove('hidden');
+                    select.classList.add('hidden');
+                }
+                document.getElementById('productSelectWrapper').classList.remove('hidden');
+
+            } else if (qrType === 'LOT') {
+                const select = document.getElementById('lotSelect');
+                select.innerHTML = '';
+                const saved = localStorage.getItem('inv_raw_lots');
+                const lots = saved ? JSON.parse(saved) : [];
+
+                if (lots.length > 0) {
+                    lots.forEach(l => {
+                        const opt = document.createElement('option');
+                        opt.value = l.id;
+                        opt.textContent = `${l.id} (${l.density} - ${l.grossWeightKg}kg)`;
+                        select.appendChild(opt);
+                    });
+                    document.getElementById('lotSelectAlert').classList.add('hidden');
+                    select.classList.remove('hidden');
+                } else {
+                    document.getElementById('lotSelectAlert').classList.remove('hidden');
+                    select.classList.add('hidden');
+                }
+                document.getElementById('lotSelectWrapper').classList.remove('hidden');
+
+            } else if (qrType === 'LOCATION') {
+                const select = document.getElementById('locationSelect');
+                select.innerHTML = '';
+                const saved = localStorage.getItem('inv_locations');
+                const locations = saved ? JSON.parse(saved) : [];
+
+                if (locations.length > 0) {
+                    locations.forEach(loc => {
+                        const opt = document.createElement('option');
+                        opt.value = loc.id;
+                        opt.textContent = loc.name;
+                        select.appendChild(opt);
+                    });
+                    document.getElementById('locationSelectAlert').classList.add('hidden');
+                    select.classList.remove('hidden');
+                } else {
+                    document.getElementById('locationSelectAlert').classList.remove('hidden');
+                    select.classList.add('hidden');
+                }
+                document.getElementById('locationSelectWrapper').classList.remove('hidden');
+
+            } else if (qrType === 'CUSTOM') {
+                document.getElementById('customTextWrapper').classList.remove('hidden');
+            }
+        }
+
+        // Generate QR code button handler
+        function handleGenerateQR(e) {
+            e.preventDefault();
+            const qrName = document.getElementById('qrName').value.trim();
+            const qrType = document.getElementById('qrType').value;
+            
+            if (!qrName) return alert('Please enter a label name.');
+
+            let payload = '';
+            let targetId = '';
+
+            if (qrType === 'PRODUCT') {
+                const select = document.getElementById('productSelect');
+                if (!select.value) return alert('Please configure products first.');
+                const selectedText = select.options[select.selectedIndex].text;
+                payload = `PRODUCT:${select.value}:${selectedText}`;
+                targetId = select.value;
+            } else if (qrType === 'LOT') {
+                const select = document.getElementById('lotSelect');
+                if (!select.value) return alert('Please create raw lots first.');
+                const selectedText = select.options[select.selectedIndex].text;
+                payload = `LOT:${select.value}:${selectedText}`;
+                targetId = select.value;
+            } else if (qrType === 'LOCATION') {
+                const select = document.getElementById('locationSelect');
+                if (!select.value) return alert('Please create locations first.');
+                const selectedText = select.options[select.selectedIndex].text;
+                payload = `LOCATION:${select.value}:${selectedText}`;
+                targetId = select.value;
+            } else {
+                const customVal = document.getElementById('customText').value.trim();
+                payload = customVal || 'CUSTOM:TEXT';
+                targetId = 'custom';
+            }
+
+            const newQR = {
+                id: `qr-${Date.now()}`,
+                name: qrName,
+                type: qrType,
+                targetId: targetId,
+                payload: payload,
+                createdAt: new Date().toISOString()
+            };
+
+            qrList.unshift(newQR);
+            saveQRList();
+
+            // Reset form fields
+            document.getElementById('qrName').value = '';
+            document.getElementById('customText').value = '';
+            
+            renderQRCodesList();
+            populateSimulatorOptions();
+            alert('QR code configuration created successfully!');
+        }
+
+        // Render tag cards
+        function renderQRCodesList() {
+            const container = document.getElementById('qrListContainer');
+            container.innerHTML = '';
+            document.getElementById('qrCount').textContent = qrList.length;
+
+            if (qrList.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-2 py-16 text-center text-slate-400 border border-dashed border-slate-200 rounded-2xl bg-slate-50/50">
+                        <i class="fa-solid fa-qrcode text-4xl mb-3 text-slate-350"></i>
+                        <p class="font-semibold text-sm">No QR Tags defined yet.</p>
+                        <p class="text-xs text-slate-450 mt-1">Configure tag parameters on the left to generate templates.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            qrList.forEach(qr => {
+                const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(qr.payload)}`;
+                
+                const card = document.createElement('div');
+                card.className = "p-4 border border-slate-200 rounded-2xl flex gap-4 hover:shadow-md transition-all group bg-slate-50/20 relative";
+                
+                card.innerHTML = `
+                    <div class="w-24 h-24 bg-white border border-slate-100 rounded-xl flex-shrink-0 flex items-center justify-center p-1 shadow-inner relative">
+                        <img src="${qrUrl}" alt="QR Code" class="w-full h-full object-contain">
+                    </div>
+
+                    <div class="flex-1 min-w-0 flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-start gap-2">
+                                <h4 class="font-extrabold text-slate-800 text-sm truncate leading-tight">${qr.name}</h4>
+                                <button onclick="handleDeleteQR('${qr.id}')" class="text-slate-400 hover:text-red-500 p-1 rounded hover:bg-slate-100 flex-shrink-0 transition-colors opacity-0 group-hover:opacity-100" title="Delete Label">
+                                    <i class="fa-regular fa-trash-can text-xs"></i>
+                                </button>
+                            </div>
+                            <span class="mt-1.5 inline-block px-2 py-0.5 bg-blue-50 border border-blue-100 text-blue-700 font-mono font-bold text-[9px] rounded uppercase tracking-wider">
+                                ${qr.type}
+                            </span>
+                            <p class="text-[10px] text-slate-400 mt-2 font-mono truncate leading-none" title="${qr.payload}">Payload: ${qr.payload}</p>
+                        </div>
+
+                        <div class="flex gap-2 mt-3 pt-2 border-t border-slate-100">
+                            <a href="${qrUrl}" download="${qr.name}.png" target="_blank" rel="noreferrer" class="flex-1 py-1 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-bold text-[10px] uppercase rounded-lg text-center flex items-center justify-center gap-1 shadow-sm active:scale-98">
+                                <i class="fa-solid fa-download"></i> Save
+                            </a>
+                            <button onclick="printQRCode('${qrUrl}', '${qr.name.replace(/'/g, "\\'")}', '${qr.payload.replace(/'/g, "\\'")}')" class="flex-1 py-1 bg-slate-900 hover:bg-slate-800 text-white font-bold text-[10px] uppercase rounded-lg flex items-center justify-center gap-1 shadow-sm active:scale-98 cursor-pointer">
+                                <i class="fa-solid fa-print"></i> Print
+                            </button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // Print utility
+        function printQRCode(qrUrl, name, payload) {
+            const w = window.open();
+            if (w) {
+                w.document.write(`
+                    <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:90vh; font-family:sans-serif; text-align:center;">
+                        <div style="border: 2px solid #000; border-radius: 12px; padding: 20px; max-width: 250px;">
+                            <h2 style="margin: 0 0 10px 0; font-size: 16px; font-weight: bold; text-transform: uppercase;">INH Stock Tag</h2>
+                            <img src="${qrUrl}" style="width: 150px; height: 150px;" />
+                            <p style="margin: 10px 0 0 0; font-size: 13px; font-weight: bold;">${name}</p>
+                            <p style="margin: 3px 0 0 0; font-size: 9px; font-family: monospace; color: #555;">${payload}</p>
+                        </div>
+                        <script>window.print();<\/script>
+                    </div>
+                `);
+            }
+        }
+
+        // Delete tag
+        function handleDeleteQR(id) {
+            if (confirm('Are you sure you want to delete this QR configuration? Historical scan tracking logs will still remain.')) {
+                qrList = qrList.filter(q => q.id !== id);
+                saveQRList();
+                renderQRCodesList();
+                populateSimulatorOptions();
+            }
+        }
+
+        // Populate Simulator Lists
+        function populateSimulatorOptions() {
+            const selectTag = document.getElementById('simQrId');
+            const alertTag = document.getElementById('simQrAlert');
+            const submitBtn = document.getElementById('simSubmitBtn');
+
+            selectTag.innerHTML = '';
+            if (qrList.length > 0) {
+                qrList.forEach(qr => {
+                    const opt = document.createElement('option');
+                    opt.value = qr.id;
+                    opt.textContent = `${qr.name} (${qr.type})`;
+                    selectTag.appendChild(opt);
+                });
+                alertTag.classList.add('hidden');
+                selectTag.classList.remove('hidden');
+                submitBtn.removeAttribute('disabled');
+            } else {
+                alertTag.classList.remove('hidden');
+                selectTag.classList.add('hidden');
+                submitBtn.setAttribute('disabled', 'true');
+            }
+
+            const selectCity = document.getElementById('simCity');
+            selectCity.innerHTML = '';
+            CITIES.forEach((c, idx) => {
+                const opt = document.createElement('option');
+                opt.value = idx;
+                opt.textContent = `${c.city}, ${c.country}`;
+                selectCity.appendChild(opt);
+            });
+        }
+
+        // Simulate scan submission handler
+        function handleSimulateScan() {
+            const simQrId = document.getElementById('simQrId').value;
+            const simCityIdx = Number(document.getElementById('simCity').value);
+            const simPlatform = document.getElementById('simPlatform').value;
+            const simBrowser = document.getElementById('simBrowser').value;
+
+            if (!simQrId) return alert('Please generate a QR Code first.');
+
+            const qr = qrList.find(q => q.id === simQrId);
+            if (!qr) return;
+
+            const loc = CITIES[simCityIdx];
+            const newScan = {
+                id: `scan-${Date.now()}`,
+                qrId: simQrId,
+                qrName: qr.name,
+                timestamp: new Date().toISOString(),
+                city: loc.city,
+                country: loc.country,
+                os: simPlatform,
+                browser: simBrowser
+            };
+
+            scanEvents.unshift(newScan);
+            saveScansList();
+
+            alert(`Mock Scan successfully recorded from ${loc.city} (${simPlatform}/${simBrowser})!`);
+            updateAnalyticsDashboard();
+        }
+
+        // Purge scan logs
+        function handleClearScans() {
+            if (confirm('Are you sure you want to purge all scan tracking analytics logs?')) {
+                scanEvents = [];
+                saveScansList();
+                updateAnalyticsDashboard();
+                initAnalyticsCharts();
+            }
+        }
+
+        // Auto seed 60 mock logs
+        function handleAutoSeedAnalytics() {
+            if (qrList.length === 0) return alert('Please generate at least one QR code to seed scanning events.');
+
+            const mockScans = [];
+            const now = Date.now();
+
+            for (let i = 0; i < 60; i++) {
+                const randomQR = qrList[Math.floor(Math.random() * qrList.length)];
+                const randomLoc = CITIES[Math.floor(Math.random() * CITIES.length)];
+                const randomOS = PLATFORMS[Math.floor(Math.random() * PLATFORMS.length)];
+                const randomBrowser = BROWSERS[Math.floor(Math.random() * BROWSERS.length)];
+                const randomTimeOffset = Math.floor(Math.random() * 7 * 24 * 60 * 60 * 1000); // within last 7 days
+
+                mockScans.push({
+                    id: `scan-mock-${i}-${Date.now()}`,
+                    qrId: randomQR.id,
+                    qrName: randomQR.name,
+                    timestamp: new Date(now - randomTimeOffset).toISOString(),
+                    city: randomLoc.city,
+                    country: randomLoc.country,
+                    os: randomOS,
+                    browser: randomBrowser
+                });
+            }
+
+            scanEvents = [...mockScans, ...scanEvents];
+            saveScansList();
+            alert('Successfully generated 60 historical scan data points for demographics graphs!');
+            updateAnalyticsDashboard();
+            initAnalyticsCharts();
+        }
+
+        // Update statistics and tables
+        function updateAnalyticsDashboard() {
+            document.getElementById('statTotalScans').textContent = scanEvents.length;
+            
+            const uniqueQrScanned = new Set(scanEvents.map(s => s.qrId)).size;
+            document.getElementById('statUniqueCodes').textContent = uniqueQrScanned;
+            document.getElementById('statActiveTagsSpan').textContent = `Out of ${qrList.length} total active tags`;
+
+            // Top City calculation
+            const cityMap = {};
+            scanEvents.forEach(s => {
+                cityMap[s.city] = (cityMap[s.city] || 0) + 1;
+            });
+
+            let topCity = 'N/A';
+            let topCityScans = 0;
+            Object.entries(cityMap).forEach(([city, count]) => {
+                if (count > topCityScans) {
+                    topCity = city;
+                    topCityScans = count;
+                }
+            });
+
+            document.getElementById('statTopCity').textContent = topCity;
+            document.getElementById('statTopCityScans').textContent = `${topCityScans} scans logged`;
+
+            // Render log table (limit to recent 5)
+            const tbody = document.getElementById('scanLogTableBody');
+            tbody.innerHTML = '';
+
+            if (scanEvents.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colSpan="5" class="py-12 text-center text-slate-400 italic font-medium">No scanning activities recorded.</td>
+                    </tr>
+                `;
+                return;
+            }
+
+            scanEvents.slice(0, 5).forEach(s => {
+                const date = new Date(s.timestamp);
+                const timeString = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50/50 transition-colors";
+                tr.innerHTML = `
+                    <td class="px-4 py-3 text-slate-400 font-mono">${timeString}</td>
+                    <td class="px-4 py-3 text-slate-800 font-extrabold">${s.qrName}</td>
+                    <td class="px-4 py-3 flex items-center gap-1.5 py-3.5">
+                        <i class="fa-solid fa-map-pin text-slate-400"></i>
+                        <span>${s.city}, ${s.country}</span>
+                    </td>
+                    <td class="px-4 py-3 font-mono text-slate-650">${s.os}</td>
+                    <td class="px-4 py-3 font-mono text-slate-450">${s.browser}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // ChartJS Initializers
+        function initAnalyticsCharts() {
+            // Destruct old charts
+            if (timelineChartInstance) timelineChartInstance.destroy();
+            if (osChartInstance) osChartInstance.destroy();
+            if (cityChartInstance) cityChartInstance.destroy();
+
+            // 1. Timeline Data (Last 7 Days)
+            const timelineData = getTimelineAggregates();
+            const ctxTimeline = document.getElementById('timelineChart').getContext('2d');
+            
+            // Timeline Gradient
+            const blueGradient = ctxTimeline.createLinearGradient(0, 0, 0, 250);
+            blueGradient.addColorStop(0, 'rgba(59, 130, 246, 0.4)');
+            blueGradient.addColorStop(1, 'rgba(59, 130, 246, 0)');
+
+            timelineChartInstance = new Chart(ctxTimeline, {
+                type: 'line',
+                data: {
+                    labels: timelineData.labels,
+                    datasets: [{
+                        label: 'Scans',
+                        data: timelineData.values,
+                        borderColor: '#3b82f6',
+                        borderWidth: 3,
+                        backgroundColor: blueGradient,
+                        fill: true,
+                        tension: 0.35,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#3b82f6'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { display: false } },
+                        y: { 
+                            beginAtZero: true,
+                            ticks: { precision: 0 }
+                        }
+                    }
+                }
+            });
+
+            // 2. OS Donut Chart
+            const osAggs = getOSAggregates();
+            const canvasOS = document.getElementById('osChart');
+            const fallbackOS = document.getElementById('osChartFallback');
+
+            if (osAggs.values.length === 0) {
+                canvasOS.classList.add('hidden');
+                fallbackOS.classList.remove('hidden');
+            } else {
+                canvasOS.classList.remove('hidden');
+                fallbackOS.classList.add('hidden');
+
+                const ctxOS = canvasOS.getContext('2d');
+                osChartInstance = new Chart(ctxOS, {
+                    type: 'doughnut',
+                    data: {
+                        labels: osAggs.labels,
+                        datasets: [{
+                            data: osAggs.values,
+                            backgroundColor: COLORS.slice(0, osAggs.labels.length),
+                            borderWidth: 2,
+                            borderColor: '#ffffff'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: { boxWidth: 10, font: { size: 10, weight: 'bold' } }
+                            }
+                        },
+                        cutout: '65%'
+                    }
+                });
+            }
+
+            // 3. City Bar Chart
+            const cityAggs = getCityAggregates();
+            const canvasCity = document.getElementById('cityChart');
+            const fallbackCity = document.getElementById('cityChartFallback');
+
+            if (cityAggs.values.length === 0) {
+                canvasCity.classList.add('hidden');
+                fallbackCity.classList.remove('hidden');
+            } else {
+                canvasCity.classList.remove('hidden');
+                fallbackCity.classList.add('hidden');
+
+                const ctxCity = canvasCity.getContext('2d');
+                cityChartInstance = new Chart(ctxCity, {
+                    type: 'bar',
+                    data: {
+                        labels: cityAggs.labels,
+                        datasets: [{
+                            label: 'Scans',
+                            data: cityAggs.values,
+                            backgroundColor: '#10b981',
+                            borderRadius: 6,
+                            barThickness: 14
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            x: { 
+                                grid: { display: false },
+                                ticks: { precision: 0 }
+                            },
+                            y: { grid: { display: false } }
+                        }
+                    }
+                });
+            }
+        }
+
+        // Aggregate helpers for ChartJS
+        function getTimelineAggregates() {
+            const datesMap = {};
+            const today = new Date();
+
+            for (let i = 6; i >= 0; i--) {
+                const d = new Date(today);
+                d.setDate(today.getDate() - i);
+                const label = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                datesMap[label] = 0;
+            }
+
+            scanEvents.forEach(s => {
+                try {
+                    const d = new Date(s.timestamp);
+                    const label = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                    if (datesMap[label] !== undefined) {
+                        datesMap[label]++;
+                    }
+                } catch(_) {}
+            });
+
+            return {
+                labels: Object.keys(datesMap),
+                values: Object.values(datesMap)
+            };
+        }
+
+        function getOSAggregates() {
+            const osMap = {};
+            scanEvents.forEach(s => {
+                osMap[s.os] = (osMap[s.os] || 0) + 1;
+            });
+
+            return {
+                labels: Object.keys(osMap),
+                values: Object.values(osMap)
+            };
+        }
+
+        function getCityAggregates() {
+            const cityMap = {};
+            scanEvents.forEach(s => {
+                cityMap[s.city] = (cityMap[s.city] || 0) + 1;
+            });
+
+            const sorted = Object.entries(cityMap)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5);
+
+            return {
+                labels: sorted.map(x => x[0]),
+                values: sorted.map(x => x[1])
+            };
+        }
+    </script>
+</body>
+</html>

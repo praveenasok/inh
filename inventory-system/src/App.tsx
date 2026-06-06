@@ -24,7 +24,7 @@ const Sidebar = () => {
     { name: 'Manufacturing Orders', path: '/raw-manufacturing-order.html', external: true, icon: <Factory size={20} /> },
     { name: 'Raw Hair Purchase', path: '/purchase', icon: <ShoppingCart size={20} /> },
     { name: 'Suppliers Master', path: '/suppliers', icon: <Users size={20} /> },
-    { name: 'QR Generator & Tracker', path: '/qr-manager', icon: <QrCode size={20} /> },
+    { name: 'QR Code Tracker', path: '/qr-manager.html', external: true, icon: <QrCode size={20} /> },
     { name: 'Spec Sheet (BOM)', path: '/bom', icon: <FileText size={20} /> },
     { name: 'Order Entry', path: '/delegated-orders.html', external: true, icon: <ClipboardList size={20} /> },
     { name: 'Inventory Manager', path: '/inventory-manager', icon: <Package size={20} /> },
