@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cue.ai - Plaud Transcription & Productivity Dashboard</title>
+  <!-- SEO Tags -->
+  <meta name="description" content="State-of-the-art interactive audio transcription, reminders tracking, and catch phrase analysis dashboard. Synchronized audio playback with transcripts.">
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <!-- FontAwesome for Premium Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css?v=5">
+</head>
+<body>
+
+  <!-- Background Blur Orbs -->
+  <div class="bg-orb bg-orb-1" aria-hidden="true"></div>
+  <div class="bg-orb bg-orb-2" aria-hidden="true"></div>
+  <div class="bg-orb bg-orb-3" aria-hidden="true"></div>
+
+  <!-- Root App Container -->
+  <div id="app-container">
+    
+    <!-- Top Sleek Glass Navigation -->
+    <header id="main-header">
+      <div class="logo-area">
+        <div class="logo-icon">
+          <i class="fa-solid fa-microphone-lines"></i>
+        </div>
+        <div class="logo-text">
+          <h1>CUE<span>.AI</span></h1>
+          <p>Capture. Understand. Evolve.</p>
+        </div>
+      </div>
+
+      <div class="header-stats">
+        <div class="stat-pill" id="stat-recordings-count">
+          <i class="fa-solid fa-folder-open"></i>
+          <span>21 Recordings</span>
+        </div>
+        <div class="stat-pill" id="stat-reminders-count">
+          <i class="fa-solid fa-list-check"></i>
+          <span>15 Active Reminders</span>
+        </div>
+        <div class="stat-pill active" id="stat-sync" style="transition: all 0.3s ease; padding-right: 6px; display: flex; align-items: center; gap: 8px;">
+          <div onclick="openSyncSettingsModal()" style="cursor: pointer; display: flex; align-items: center; gap: 8px;" title="View Sync Settings">
+            <i class="fa-solid fa-cloud-arrow-up" id="sync-icon"></i>
+            <span id="sync-status-text">Cloud Sync: Active</span>
+          </div>
+          <button id="btn-header-sync" onclick="triggerManualSync(event)" title="Sync Cloud Recordings Now" style="background: rgba(255, 255, 255, 0.4); border: 1px solid var(--border-light); color: var(--text-main); font-size: 0.75rem; font-family: var(--font-family); padding: 2px 8px; border-radius: 20px; cursor: pointer; display: flex; align-items: center; gap: 4px; transition: all 0.2s ease; margin-left: 4px;">
+            <i class="fa-solid fa-rotate" id="header-sync-btn-icon"></i> <span>Sync</span>
+          </button>
+        </div>
+        <div class="stat-pill active" id="stat-engine">
+          <i class="fa-solid fa-brain"></i>
+          <span>Engine: Gemini 2.5 Flash</span>
+        </div>
+      </div>
+
+      <div class="user-profile">
+        <button id="btn-toggle-sidebar" class="btn-secondary-sm" onclick="toggleRightSidebar()" title="Toggle Insights Sidebar" style="margin-right: 8px; font-size: 0.8rem; padding: 6px 12px; border-radius: 20px;">
+          <i class="fa-solid fa-columns" style="margin-right: 4px;"></i> <span>Insights</span>
+        </button>
+        <span class="user-name">Praveen Asok</span>
+        <div class="avatar">PA</div>
+      </div>
+    </header>
+
+    <!-- Main Workspace Grid -->
+    <main id="main-workspace">
+      
+      <!-- LEFT SIDEBAR: Chronological Recordings List -->
+      <aside id="sidebar-recordings" aria-label="Chronological recording files list">
+        <div class="sidebar-header">
+          <h2><i class="fa-solid fa-clock-rotate-left"></i> Timeline</h2>
+          <div class="search-bar-wrapper">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="recordings-search" placeholder="Search recordings or dates...">
+          </div>
+          <!-- Category Filter Pills -->
+          <div class="category-filter-bar" id="category-pills">
+            <button class="category-pill active" onclick="setCategoryFilter('All')">All</button>
+            <button class="category-pill" onclick="setCategoryFilter('Business')">💼 Business</button>
+            <button class="category-pill" onclick="setCategoryFilter('Technical')">🛠️ Tech</button>
+            <button class="category-pill" onclick="setCategoryFilter('Personal')">👤 Personal</button>
+            <button class="category-pill" onclick="setCategoryFilter('Logistics')">📦 Logistics</button>
+            <button class="category-pill" onclick="setCategoryFilter('Philosophy')">🧠 Philosophy</button>
+          </div>
+        </div>
+
+        <div id="timeline-list" class="timeline-container">
+          <!-- Populated by JavaScript -->
+          <div class="loading-state">
+            <i class="fa-solid fa-circle-notch fa-spin"></i> Loading timeline...
+          </div>
+        </div>
+      </aside>
+
+      <!-- CENTER WORKSPACE: Active Recording Details, Player & Transcript -->
+      <section id="content-center">
+        
+        <!-- Welcome Screen (Shown when no recording is active) -->
+        <div id="welcome-screen" class="hidden">
+          <div class="welcome-box">
+            <i class="fa-solid fa-waveform"></i>
+            <h2>Welcome to Cue.ai</h2>
+            <p>Select a voice recording from the timeline on the left to start exploring interactive transcriptions powered by the state-of-the-art <strong>Gemini 2.5 Flash</strong> engine, along with automated reminders and custom catch phrase analytics.</p>
+            <div class="welcome-features">
+              <div class="feature-item">
+                <i class="fa-solid fa-forward-fast"></i>
+                <h3>Audio Sync</h3>
+                <p>Click any transcript line or catch phrase to jump the audio player to that exact second.</p>
+              </div>
+              <div class="feature-item">
+                <i class="fa-solid fa-clipboard-check"></i>
+                <h3>Action Board</h3>
+                <p>Track actionable reminders directly extracted from your audio notes.</p>
+              </div>
+              <div class="feature-item">
+                <i class="fa-solid fa-quote-left"></i>
+                <h3>Catch Phrases</h3>
+                <p>Define and track customized phrases across your spoken logs.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Active File Workspace -->
+        <div id="active-file-workspace" class="workspace-layout">
+          
+          <!-- Top Section: Active Header & Customized Premium Audio Player -->
+          <div class="card glass" id="recording-details-card">
+            <div class="recording-meta">
+              <span class="file-date" id="active-file-date">May 24, 2026</span>
+              <h2 id="active-file-title">INH Fair Merchandising Push: Booth Display Design, SKU Lineup, and Event Operations</h2>
+              <div class="recording-meta-tags">
+                <span class="file-path-tag" id="active-file-filename"><i class="fa-regular fa-file-audio"></i> 05-24_INH_Fair_Merchandising...mp3</span>
+                <span class="category-badge-tag" id="active-file-category">💼 Business</span>
+              </div>
+            </div>
+
+            <!-- Custom Premium Audio Player -->
+            <div class="premium-audio-player">
+              <audio id="main-audio-element" src="" preload="metadata"></audio>
+
+              <!-- Waveform Visualization (Simulated / CSS Animation based) -->
+              <div class="visualizer-wrapper">
+                <div class="waveform-bars" id="waveform-visualizer">
+                  <!-- Generated bars -->
+                  <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                </div>
+              </div>
+
+              <!-- Controls Toolbar -->
+              <div class="player-controls">
+                <div class="time-readout">
+                  <span id="player-time-current">00:00</span>
+                  <span class="separator">/</span>
+                  <span id="player-time-total">00:00</span>
+                </div>
+
+                <div class="control-buttons">
+                  <button id="btn-skip-back" class="btn-icon" title="Rewind 10 seconds"><i class="fa-solid fa-backward-10"></i></button>
+                  <button id="btn-play-pause" class="btn-main" title="Play / Pause"><i class="fa-solid fa-play"></i></button>
+                  <button id="btn-skip-forward" class="btn-icon" title="Forward 10 seconds"><i class="fa-solid fa-forward-10"></i></button>
+                </div>
+
+                <div class="volume-control">
+                  <button id="btn-mute" class="btn-icon" title="Mute/Unmute"><i class="fa-solid fa-volume-high"></i></button>
+                  <input type="range" id="volume-slider" min="0" max="1" step="0.05" value="0.8">
+                </div>
+              </div>
+
+              <!-- Progress Bar -->
+              <div class="progress-bar-wrapper">
+                <div class="progress-bar-container" id="player-progress-container">
+                  <div class="progress-bar-fill" id="player-progress-fill"></div>
+                  <div class="progress-bar-handle" id="player-progress-handle"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Section: Interactive Transcript & Analytics Card -->
+          <div class="card glass flex-grow" id="transcript-card">
+            <div class="card-header border-none-header">
+              <div class="header-tabs">
+                <button class="center-tab-btn active" id="center-tab-btn-transcript" onclick="switchCenterTab('transcript')">
+                  <i class="fa-solid fa-align-left"></i> Transcript
+                </button>
+                <button class="center-tab-btn" id="center-tab-btn-calendar" onclick="switchCenterTab('calendar')">
+                  <i class="fa-solid fa-calendar-days"></i> Phrase Calendar
+                </button>
+                <button class="center-tab-btn" id="center-tab-btn-book" onclick="switchCenterTab('book')">
+                  <i class="fa-solid fa-book-open"></i> Philosophy Book
+                </button>
+                <button class="center-tab-btn" id="center-tab-btn-prompt" onclick="switchCenterTab('prompt')">
+                  <i class="fa-solid fa-wand-magic-sparkles"></i> Prompt Machine
+                </button>
+              </div>
+              <div class="header-actions" id="transcript-actions-bar" style="display: flex; align-items: center; gap: 12px;">
+                <div class="view-toggle-group" style="display: flex; background: rgba(0,0,0,0.04); border-radius: 20px; padding: 2px; border: 1px solid var(--border-light);">
+                  <button class="view-toggle-btn" id="btn-view-segmented" onclick="setTranscriptViewMode('segmented')" style="font-family:var(--font-family); font-size: 0.72rem; font-weight: 600; border: none; background: var(--bg-card); color: var(--text-main); padding: 4px 12px; border-radius: 20px; cursor: pointer; transition: all 0.2s ease;">Segmented</button>
+                  <button class="view-toggle-btn" id="btn-view-continuous" onclick="setTranscriptViewMode('continuous')" style="font-family:var(--font-family); font-size: 0.72rem; font-weight: 600; border: none; background: transparent; padding: 4px 12px; border-radius: 20px; cursor: pointer; color: var(--text-muted); transition: all 0.2s ease;">Continuous</button>
+                </div>
+                <div class="search-box-sm">
+                  <i class="fa-solid fa-magnifying-glass"></i>
+                  <input type="text" id="transcript-filter" placeholder="Search transcript...">
+                </div>
+              </div>
+              <div class="header-actions hidden" id="calendar-actions-bar">
+                <div class="dropdown-wrapper">
+                  <i class="fa-solid fa-tags select-icon"></i>
+                  <select id="calendar-phrase-selector" onchange="renderCatchPhraseCalendar()">
+                    <!-- Populated dynamically -->
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tab Pane 1: Interactive Transcript -->
+            <div class="center-tab-content active" id="center-tab-content-transcript">
+              <div class="transcript-scroller" id="transcript-lines-container">
+                <!-- Rendered dynamically -->
+              </div>
+            </div>
+
+            <!-- Tab Pane 2: Catch Phrase Calendar Tracking -->
+            <div class="center-tab-content" id="center-tab-content-calendar">
+              <div class="calendar-layout-wrapper">
+                <div class="calendar-visualization">
+                  <div class="calendar-month-header">
+                    <button class="calendar-nav-btn" disabled><i class="fa-solid fa-chevron-left"></i></button>
+                    <h4>May 2026</h4>
+                    <button class="calendar-nav-btn" disabled><i class="fa-solid fa-chevron-right"></i></button>
+                  </div>
+                  <div class="calendar-weeks-grid">
+                    <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+                  </div>
+                  <div class="calendar-days-grid" id="calendar-days-grid-container">
+                    <!-- Populated dynamically -->
+                  </div>
+                </div>
+                <div class="calendar-analytics-summary">
+                  <div class="analytics-card">
+                    <h5>Spoken Occurrences</h5>
+                    <div class="analytics-stat" id="cal-stat-total-occurrences">0x</div>
+                    <p class="analytics-sub" id="cal-stat-active-days">On 0 out of 5 recording days</p>
+                  </div>
+                  <div class="occurrences-scroller">
+                    <h5>Contextual Outlines</h5>
+                    <div class="occurrences-timeline" id="cal-occurrences-timeline">
+                      <!-- Populated dynamically -->
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tab Pane 3: Philosophy Book Builder -->
+            <div class="center-tab-content" id="center-tab-content-book">
+              <div class="book-layout-wrapper">
+                <div class="chapters-sidebar-pane">
+                  <div class="panel-section-header">
+                    <h4>Dictated Chapters</h4>
+                    <p class="section-desc">Extracted drafts starting with 'Book entry' or 'Philosophy chapter'.</p>
+                  </div>
+                  <div class="chapters-list-container" id="book-chapters-list">
+                    <!-- Populated dynamically -->
+                  </div>
+                </div>
+                <div class="manuscript-preview-pane">
+                  <div class="preview-actions">
+                    <span class="preview-title-tag"><i class="fa-solid fa-feather"></i> Book Manuscript Preview</span>
+                    <div class="action-buttons-row">
+                      <button class="btn-secondary-sm" id="btn-copy-manuscript" onclick="copyManuscriptText()" title="Copy manuscript to clipboard"><i class="fa-solid fa-copy"></i> Copy Text</button>
+                      <button class="btn-primary-sm" id="btn-export-manuscript" onclick="exportManuscriptMarkdown()" title="Export book as markdown"><i class="fa-solid fa-download"></i> Export Markdown</button>
+                    </div>
+                  </div>
+                  <div class="manuscript-container" id="book-manuscript-preview">
+                    <!-- Styled manuscript content -->
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tab Pane 4: AI Prompt Machine -->
+            <div class="center-tab-content" id="center-tab-content-prompt">
+              <div class="prompt-machine-layout-wrapper" style="display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; position: relative;">
+                
+                <!-- Prompt Setup Toggles -->
+                <div class="prompt-machine-config" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; background: rgba(0,0,0,0.02); border-bottom: 1px solid var(--border-light); gap: 12px;">
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted);">Query Context:</span>
+                    <div class="prompt-scope-toggle-group" style="display: flex; background: rgba(0,0,0,0.04); border-radius: 20px; padding: 2px; border: 1px solid var(--border-light);">
+                      <button class="prompt-scope-btn active" id="btn-prompt-scope-file" onclick="setPromptScope('file')" style="font-family:var(--font-family); font-size: 0.72rem; font-weight: 600; border: none; background: transparent; padding: 4px 12px; border-radius: 20px; cursor: pointer; color: var(--text-muted); transition: all 0.2s ease;">Active Note Only</button>
+                      <button class="prompt-scope-btn" id="btn-prompt-scope-global" onclick="setPromptScope('global')" style="font-family:var(--font-family); font-size: 0.72rem; font-weight: 600; border: none; background: transparent; padding: 4px 12px; border-radius: 20px; cursor: pointer; color: var(--text-muted); transition: all 0.2s ease;">Global Brain (All Notes)</button>
+                    </div>
+                  </div>
+                  
+                  <!-- Local API Status Pill & Settings -->
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="font-size: 0.78rem; font-weight: 500; display: flex; align-items: center; gap: 6px; background: var(--accent-purple-glow); border: 1px solid rgba(79, 70, 229, 0.2); padding: 3px 10px; border-radius: 12px; color: var(--accent-purple);" id="prompt-daemon-status-badge">
+                      <i class="fa-solid fa-brain"></i>
+                      <span>Engine: Gemini 2.5 Flash</span>
+                    </div>
+                    <button id="btn-prompt-api-settings" onclick="togglePromptApiSettings(event)" style="background: transparent; border: 1px solid var(--border-light); border-radius: 20px; font-size: 0.72rem; font-weight: 600; padding: 4px 10px; cursor: pointer; display: flex; align-items: center; gap: 4px; color: var(--text-muted); font-family: var(--font-family); transition: all 0.2s ease;" title="Configure Direct Deployed API Key">
+                      <i class="fa-solid fa-key" id="api-key-settings-icon"></i> <span>API Settings</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Direct browser API Key settings panel -->
+                <div id="prompt-api-key-settings-panel" class="hidden" style="padding: 16px 20px; background: rgba(0,0,0,0.02); border-bottom: 1px solid var(--border-light); text-align: left; display: flex; flex-direction: column; gap: 8px;">
+                  <h5 style="font-size: 0.8rem; font-weight: 700; color: var(--text-main); margin: 0; display: flex; align-items: center; gap: 6px;"><i class="fa-solid fa-key" style="color:var(--accent-purple);"></i> Deployed Gemini API Configuration</h5>
+                  <p style="font-size: 0.74rem; color: var(--text-muted); line-height: 1.4; margin: 0;">
+                    To query transcripts directly from this deployed URL, please enter a <strong>Gemini API Key</strong>. 
+                    The key is saved <em>only locally</em> in your browser's private storage (localStorage) and requests go directly to Google's servers.
+                  </p>
+                  <div style="display: flex; gap: 10px; margin-top: 4px; align-items: center; flex-wrap: wrap;">
+                    <input type="password" id="prompt-local-key-input" placeholder="Enter GEMINI_API_KEY..." style="flex: 1; font-family: var(--font-mono); font-size: 0.78rem; border: 1px solid var(--border-light); border-radius: var(--radius-sm); padding: 8px 12px; outline: none; background: var(--bg-darker); color: var(--text-main); min-width: 200px;">
+                    <button onclick="saveLocalPromptApiKey()" style="background: var(--accent-purple); color: white; border: none; font-size: 0.78rem; font-weight: 600; padding: 8px 16px; border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s ease; font-family: var(--font-family);">Save Key</button>
+                    <button onclick="clearLocalPromptApiKey()" style="background: transparent; border: 1px solid rgba(239,68,68,0.25); color: hsl(0,80%,60%); font-size: 0.78rem; font-weight: 600; padding: 8px 16px; border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s ease; font-family: var(--font-family);">Clear</button>
+                  </div>
+                </div>
+
+                <!-- Chat Feed Scroller -->
+                <div class="chat-logs-container" id="chat-logs-container" style="flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 16px; min-height: 0;">
+                  
+                  <!-- AI Welcoming Message -->
+                  <div class="chat-message assistant" style="display: flex; gap: 12px; align-items: flex-start; max-width: 85%;">
+                    <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--accent-purple), var(--accent-cyan)); display: flex; align-items: center; justify-content: center; color: white; font-size: 0.8rem; flex-shrink: 0; box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                    <div style="background: var(--bg-card); border: 1px solid var(--border-light); padding: 14px 18px; border-radius: 4px 16px 16px 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); text-align: left;">
+                      <p style="font-size: 0.88rem; font-weight: 500; margin-bottom: 6px; color: var(--text-main);">Hello! I am Cue.ai's Prompting Machine.</p>
+                      <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 8px;">I can answer questions, summarize reminders, and map out outlines directly from your transcripts. Ask me anything, or try one of the suggestions below!</p>
+                    </div>
+                  </div>
+
+                  <!-- Dynamic Messages Rendered Here -->
+                </div>
+
+                <!-- Suggested Quick Prompts Grid -->
+                <div class="suggested-prompts-tray" id="suggested-prompts-tray" style="padding: 10px 20px; display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--border-light); background: rgba(0,0,0,0.01);">
+                  <span style="font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; text-align: left;">Suggested AI Prompts:</span>
+                  <div class="suggested-cards-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px; margin-top: 2px;">
+                    <div class="suggested-prompt-card" onclick="runSuggestedPrompt('Summarize all tasks and actionable reminders mentioned in this transcript.')" style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 8px 12px; font-size: 0.78rem; font-weight: 500; cursor: pointer; text-align: left; transition: all 0.2s ease;">
+                      <i class="fa-solid fa-list-check" style="color: var(--accent-emerald); margin-right: 4px;"></i> Summarize all tasks
+                    </div>
+                    <div class="suggested-prompt-card" onclick="runSuggestedPrompt('What were the primary decisions made about booth display design and fabricators?')" style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 8px 12px; font-size: 0.78rem; font-weight: 500; cursor: pointer; text-align: left; transition: all 0.2s ease;">
+                      <i class="fa-solid fa-shop" style="color: var(--accent-cyan); margin-right: 4px;"></i> Decisions on displays
+                    </div>
+                    <div class="suggested-prompt-card" onclick="runSuggestedPrompt('Identify my key recurring catch phrases, philosophies, and habits discussed.')" style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 8px 12px; font-size: 0.78rem; font-weight: 500; cursor: pointer; text-align: left; transition: all 0.2s ease;">
+                      <i class="fa-solid fa-brain" style="color: var(--accent-purple); margin-right: 4px;"></i> Catchphrase & habits
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Input Action Form -->
+                <form id="prompt-machine-input-form" onsubmit="event.preventDefault(); handleChatFormSubmit();" style="padding: 16px 20px; display: flex; gap: 12px; border-top: 1px solid var(--border-light); background: var(--bg-card); z-index: 5; backdrop-filter: blur(10px);">
+                  <div style="flex: 1; position: relative; display: flex; align-items: center;">
+                    <input type="text" id="chat-input-element" placeholder="Ask a question about your recordings... (e.g. 'What vendors did I mention?')" required style="width: 100%; border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 12px 16px; font-family: var(--font-family); font-size: 0.88rem; outline: none; transition: border-color 0.2s ease; background: var(--bg-darker); color: var(--text-main);">
+                  </div>
+                  <button type="submit" id="btn-chat-send" style="background: linear-gradient(135deg, var(--accent-purple), var(--accent-cyan)); color: white; border: none; border-radius: var(--radius-md); padding: 0 20px; font-family: var(--font-family); font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(79,70,229,0.25); transition: all 0.25s ease;">
+                    <i class="fa-solid fa-paper-plane" id="chat-send-icon"></i>
+                    <span>Send</span>
+                  </button>
+                </form>
+
+              </div>
+            </div>
+          </div>
+
+
+        </div>
+      </section>
+
+      <!-- RIGHT SIDEBAR: Actionable Reminders, Catch Phrases & Phrase Manager -->
+      <aside id="sidebar-right">
+        
+        <!-- TAB SELECTOR -->
+        <div class="tab-selector">
+          <button class="tab-btn active" id="tab-btn-file-insights" onclick="switchRightTab('file-insights')">
+            <i class="fa-solid fa-brain"></i> File Insights
+          </button>
+          <button class="tab-btn" id="tab-btn-global-reminders" onclick="switchRightTab('global-reminders')">
+            <i class="fa-solid fa-list-check"></i> Global Tasks
+          </button>
+          <button class="tab-btn" id="tab-btn-phrase-manager" onclick="switchRightTab('phrase-manager')">
+            <i class="fa-solid fa-tags"></i> Catch Phrases
+          </button>
+        </div>
+
+        <!-- TAB CONTENT 1: Active File Insights (Reminders & Catch Phrases for Selected File) -->
+        <div class="tab-content active" id="tab-content-file-insights">
+          
+          <!-- File Reminders Panel -->
+          <div class="panel-section">
+            <div class="section-title">
+              <h3><i class="fa-solid fa-bell"></i> Tasks Extracted</h3>
+              <span class="count-badge" id="file-reminders-count">0</span>
+            </div>
+            <div class="panel-list" id="file-reminders-list">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+
+          <!-- File Catch Phrases Panel -->
+          <div class="panel-section">
+            <div class="section-title">
+              <h3><i class="fa-solid fa-quote-left"></i> Spoken Catch Phrases</h3>
+              <span class="count-badge" id="file-phrases-count">0</span>
+            </div>
+            <div class="panel-list" id="file-phrases-list">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+
+        </div>
+
+        <!-- TAB CONTENT 2: Global Reminders Board -->
+        <div class="tab-content" id="tab-content-global-reminders">
+          <div class="sidebar-section-header">
+            <h3><i class="fa-solid fa-list-check"></i> Global Action Items</h3>
+            <p class="section-desc">Task list aggregated across all your audio logs.</p>
+          </div>
+          <div class="global-reminders-scroller">
+            <div class="panel-list" id="global-reminders-list">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB CONTENT 3: Custom Catch Phrase Manager -->
+        <div class="tab-content" id="tab-content-phrase-manager">
+          <div class="sidebar-section-header">
+            <h3><i class="fa-solid fa-tags"></i> Spoken Catch Phrases</h3>
+            <p class="section-desc">Define custom words or catch phrases. The dashboard will automatically scan and highlight them across your logs.</p>
+          </div>
+
+          <!-- Add Catch Phrase Form -->
+          <form id="phrase-manager-form" onsubmit="event.preventDefault(); addNewCustomPhrase();">
+            <div class="input-group">
+              <input type="text" id="new-phrase-input" placeholder="e.g. 'warehouse speed' or 'disciplined'" required>
+              <button type="submit" class="btn-primary-sm"><i class="fa-solid fa-plus"></i> Add</button>
+            </div>
+          </form>
+
+          <!-- Phrase List -->
+          <div class="custom-phrases-scroller">
+            <div class="phrase-list-container" id="custom-phrases-list-container">
+              <!-- Populated dynamically -->
+            </div>
+          </div>
+        </div>
+
+      </aside>
+
+    </main>
+  </div>
+
+  <!-- Premium Glassmorphism Sync Settings Modal -->
+  <div id="sync-settings-modal" class="modal-overlay hidden" onclick="closeSyncSettingsModal(event)">
+    <div class="modal-card glass" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-cloud-arrow-up"></i> Mobile Voice Sync Settings</h3>
+        <button class="btn-close-modal" onclick="closeSyncSettingsModal(event)"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="sync-status-banner">
+          <div class="sync-status-indicator">
+            <div class="indicator-ring">
+              <div class="indicator-dot active" id="modal-sync-indicator"></div>
+            </div>
+            <span id="modal-sync-status-label">Watcher Status: Active</span>
+          </div>
+          <p class="sync-status-path"><i class="fa-solid fa-folder-open"></i> <span id="modal-sync-path">/Users/.../Library/Mobile Documents/com~apple~CloudDocs/Recordings</span></p>
+        </div>
+
+        <div class="sync-info-section">
+          <h4><i class="fa-solid fa-circle-info"></i> How it works</h4>
+          <p>CUE.ai runs a background folder watch daemon on your Mac. It continuously monitors the folder synced from your phone. When a new voice memo is saved, it instantly copies, uploads to Gemini 2.5 Flash, transcribes, and dynamically adds the new insights directly to your dashboard.</p>
+        </div>
+
+        <div class="sync-steps-container">
+          <h4><i class="fa-solid fa-mobile-screen-button"></i> Mobile Setup (iPhone or Android)</h4>
+          <ol class="sync-steps-list">
+            <li>
+              <strong>Configure Shared Cloud Folder:</strong>
+              <p>On your phone, set up a voice recorder application (e.g. <em>Apple Voice Memos</em>, <em>Voice Recorder Pro</em>, or standard cloud app) to save or upload voice recorded files directly to a folder in your iCloud Drive, Google Drive, or Dropbox.</p>
+            </li>
+            <li>
+              <strong>Configure Path in CUE:</strong>
+              <p>Add the local path to this folder on your Mac in your CUE.ai <code>.env</code> file under the <code>CLOUD_RECORDINGS_DIR</code> key.</p>
+            </li>
+            <li>
+              <strong>Run Watch Daemon:</strong>
+              <p>Open a new terminal tab in the CUE directory and run: <code>npm run sync</code>. This launches the real-time observer daemon.</p>
+            </li>
+          </ol>
+        </div>
+
+        <!-- Connection and Actions Area -->
+        <div class="sync-connection-actions" style="margin-bottom: 20px; display: flex; flex-direction: column; gap: 16px; background: rgba(0, 0, 0, 0.02); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-light);">
+          <div class="connectivity-statuses" style="display: flex; gap: 12px; justify-content: space-between; flex-wrap: wrap;">
+            <div class="status-indicator-pill" id="daemon-connection-pill" style="font-size: 0.8rem; font-weight: 500; display: flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 12px; background: rgba(0,0,0,0.03); border: 1px solid var(--border-light);">
+              <i class="fa-solid fa-server" style="color: var(--accent-purple);"></i>
+              <span id="daemon-connection-label">Sync Daemon: Checking...</span>
+            </div>
+            <div class="status-indicator-pill" id="mac-network-pill" style="font-size: 0.8rem; font-weight: 500; display: flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 12px; background: rgba(0,0,0,0.03); border: 1px solid var(--border-light);">
+              <i class="fa-solid fa-wifi" style="color: var(--accent-cyan);"></i>
+              <span id="mac-network-label">Mac Network: Checking...</span>
+            </div>
+          </div>
+          
+          <button id="btn-modal-sync-now" class="btn-sync-now-modal" onclick="triggerManualSync(event)" style="background: linear-gradient(135deg, var(--accent-purple), var(--accent-cyan)); color: white; border: none; padding: 12px 20px; border-radius: var(--radius-md); font-family: var(--font-family); font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 15px rgba(79, 70, 229, 0.25); transition: all 0.25s ease; width: 100%;">
+            <i class="fa-solid fa-rotate" id="modal-sync-btn-icon"></i>
+            <span>Sync Cloud Folder Now</span>
+          </button>
+        </div>
+
+        <!-- Direct Online Sync Section -->
+        <div class="online-sync-section" style="margin-bottom: 20px; padding: 16px; border-radius: var(--radius-md); border: 1px dashed rgba(6, 182, 212, 0.3); background: rgba(6, 182, 212, 0.02); display: flex; flex-direction: column; gap: 12px;">
+          <h4 style="margin: 0; font-size: 0.95rem; font-weight: 600; color: var(--text-main); display: flex; align-items: center; gap: 8px;">
+            <i class="fa-solid fa-cloud-arrow-up" style="color: var(--accent-cyan);"></i> Direct Online Sync
+          </h4>
+          <p style="margin: 0; font-size: 0.8rem; line-height: 1.4; color: var(--text-muted);">
+            No local sync daemon running? Select an audio file to transcribe directly in your browser. This uses your stored <strong>Gemini API Key</strong> to transcribe and sync the audio instantly.
+          </p>
+          
+          <div id="direct-upload-dropzone" class="upload-dropzone" onclick="document.getElementById('direct-audio-upload-input').click()" style="border: 1px dashed var(--border-light); border-radius: var(--radius-sm); padding: 20px; text-align: center; cursor: pointer; transition: all 0.2s ease; background: rgba(255,255,255,0.01); display: flex; flex-direction: column; align-items: center; gap: 8px;">
+            <i class="fa-solid fa-file-audio" id="direct-upload-icon" style="font-size: 2rem; color: var(--accent-cyan); transition: transform 0.2s ease;"></i>
+            <span id="direct-upload-filename" style="font-size: 0.85rem; font-weight: 500; color: var(--text-main);">Click to Select or Drop Audio File</span>
+            <span style="font-size: 0.75rem; color: var(--text-muted);">Supports MP3, M4A, WAV, AAC</span>
+          </div>
+          <input type="file" id="direct-audio-upload-input" accept="audio/*" onchange="handleDirectAudioUpload(event)" style="display: none;">
+          
+          <!-- Progress Indicator for direct upload -->
+          <div id="direct-upload-progress-container" class="hidden" style="display: flex; flex-direction: column; gap: 6px;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.75rem;">
+              <span id="direct-upload-progress-status" style="color: var(--accent-cyan); font-weight: 600;">Processing audio...</span>
+              <span id="direct-upload-progress-percent" style="color: var(--text-muted);">0%</span>
+            </div>
+            <div style="width: 100%; height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; overflow: hidden; border: 1px solid var(--border-light);">
+              <div id="direct-upload-progress-bar" style="width: 0%; height: 100%; background: linear-gradient(90deg, var(--accent-purple), var(--accent-cyan)); transition: width 0.3s ease;"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sync-recent-log">
+          <h4><i class="fa-solid fa-clock-rotate-left"></i> Recent Synchronization History</h4>
+          <div class="sync-log-history-list" id="modal-recent-syncs-list" style="margin-top: 10px; display: flex; flex-direction: column; gap: 8px;">
+            <div class="loading-history-state" style="font-size: 0.85rem; color: var(--text-muted); text-align: center; padding: 20px 0;">
+              <i class="fa-solid fa-circle-notch fa-spin"></i> Loading sync history...
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-primary" onclick="closeSyncSettingsModal(event)">Got it</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="app.js?v=5"></script>
+</body>
+</html>

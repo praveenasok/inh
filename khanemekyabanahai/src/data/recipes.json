@@ -1,0 +1,4847 @@
+[
+  {
+    "id": "b-1",
+    "mealName": "Idli",
+    "category": "Breakfast",
+    "cuisine": "South Indian",
+    "isLight": true,
+    "isVegetarian": true,
+    "calories": 350,
+    "recipeOptions": [
+      {
+        "id": "b-1-v1",
+        "name": "Plain Rice Idli",
+        "ingredients": [
+          {
+            "name": "Idli Rice",
+            "amount": 200,
+            "unit": "g",
+            "quantity": "200 g",
+            "category": "Grains & flours"
+          },
+          {
+            "name": "Urad Dal",
+            "amount": 50,
+            "unit": "g",
+            "quantity": "50 g",
+            "category": "Lentils & pulses"
+          },
+          {
+            "name": "Fenugreek Seeds",
+            "amount": 0.5,
+            "unit": "tsp",
+            "quantity": "0.5 tsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Salt",
+            "amount": 1,
+            "unit": "tsp",
+            "quantity": "1 tsp",
+            "category": "Spices"
+          }
+        ],
+        "instructions": [
+          "Wash and soak rice and dal separately for 4-6 hours.",
+          "Grind dal to a smooth fluffy batter. Grind rice to a slightly coarse batter.",
+          "Mix both, add salt, and ferment overnight (8-10 hours).",
+          "Pour batter into greased idli plates.",
+          "Steam for 10-12 minutes on medium heat. Serve hot with chutney."
+        ]
+      },
+      {
+        "id": "b-1-v2",
+        "name": "Rava Idli",
+        "ingredients": [
+          {
+            "name": "Semolina (Rava)",
+            "amount": 200,
+            "unit": "g",
+            "quantity": "200 g",
+            "category": "Grains & flours"
+          },
+          {
+            "name": "Yogurt/Curd",
+            "amount": 100,
+            "unit": "g",
+            "quantity": "100 g",
+            "category": "Dairy"
+          },
+          {
+            "name": "Mustard Seeds",
+            "amount": 0.5,
+            "unit": "tsp",
+            "quantity": "0.5 tsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Carrot (Grated)",
+            "amount": 50,
+            "unit": "g",
+            "quantity": "50 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Cashews",
+            "amount": 10,
+            "unit": "g",
+            "quantity": "10 g",
+            "category": "Other"
+          },
+          {
+            "name": "Eno/Fruit Salt",
+            "amount": 0.5,
+            "unit": "tsp",
+            "quantity": "0.5 tsp",
+            "category": "Other"
+          }
+        ],
+        "instructions": [
+          "Roast rava on low heat for 5 mins until aromatic. Let it cool.",
+          "Temper mustard seeds, cashews, and grated carrots. Add to the rava.",
+          "Mix rava, tempering, and curd. Rest for 15 mins.",
+          "Add water to reach idli batter consistency. Stir in Eno fruit salt.",
+          "Pour into idli steamer and steam for 10-12 mins."
+        ]
+      },
+      {
+        "id": "b-1-v3",
+        "name": "Foxtail Millet Idli",
+        "ingredients": [
+          {
+            "name": "Foxtail Millet",
+            "amount": 200,
+            "unit": "g",
+            "quantity": "200 g",
+            "category": "Grains & flours"
+          },
+          {
+            "name": "Urad Dal",
+            "amount": 50,
+            "unit": "g",
+            "quantity": "50 g",
+            "category": "Lentils & pulses"
+          },
+          {
+            "name": "Salt",
+            "amount": 1,
+            "unit": "tsp",
+            "quantity": "1 tsp",
+            "category": "Spices"
+          }
+        ],
+        "instructions": [
+          "Soak millet and urad dal separately for 5-6 hours.",
+          "Grind them to a smooth batter. Mix and let ferment overnight.",
+          "Grease idli molds and pour the fermented batter.",
+          "Steam for 10-15 minutes.",
+          "Serve soft and healthy millet idlis with sambar."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "b-2",
+    "mealName": "Dosa",
+    "category": "Breakfast",
+    "cuisine": "South Indian",
+    "isLight": false,
+    "isVegetarian": true,
+    "calories": 350,
+    "recipeOptions": [
+      {
+        "id": "b-2-v1",
+        "name": "Masala Dosa",
+        "ingredients": [
+          {
+            "name": "Dosa Batter",
+            "amount": 200,
+            "unit": "g",
+            "quantity": "200 g",
+            "category": "Grains & flours"
+          },
+          {
+            "name": "Potatoes",
+            "amount": 150,
+            "unit": "g",
+            "quantity": "150 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Onions",
+            "amount": 50,
+            "unit": "g",
+            "quantity": "50 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Mustard Seeds",
+            "amount": 0.5,
+            "unit": "tsp",
+            "quantity": "0.5 tsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Turmeric",
+            "amount": 0.25,
+            "unit": "tsp",
+            "quantity": "0.25 tsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Ghee",
+            "amount": 1,
+            "unit": "tbsp",
+            "quantity": "1 tbsp",
+            "category": "Oils & condiments"
+          }
+        ],
+        "instructions": [
+          "Boil and mash the potatoes. Thinly slice onions.",
+          "Heat oil, temper mustard seeds, sautè onions, add turmeric and potatoes to make the masala.",
+          "Spread dosa batter thin and wide on a hot tawa.",
+          "Drizzle ghee along the edges. Place the potato masala in the center.",
+          "Fold and serve crispy."
+        ]
+      },
+      {
+        "id": "b-2-v2",
+        "name": "Set Dosa",
+        "ingredients": [
+          {
+            "name": "Dosa Batter",
+            "amount": 200,
+            "unit": "g",
+            "quantity": "200 g",
+            "category": "Grains & flours"
+          },
+          {
+            "name": "Poha (Flattened rice)",
+            "amount": 20,
+            "unit": "g",
+            "quantity": "20 g",
+            "category": "Grains & flours"
+          },
+          {
+            "name": "Oil",
+            "amount": 1,
+            "unit": "tbsp",
+            "quantity": "1 tbsp",
+            "category": "Oils & condiments"
+          }
+        ],
+        "instructions": [
+          "To make set dosa batter, blend soaked poha along with rice/dal before fermentation.",
+          "Pour a ladle of batter onto a hot tawa. Do NOT spread it thin; let it be thick and spongy.",
+          "Drizzle oil/ghee around the edges, cover with a lid, and cook for a minute.",
+          "Serve in a set of 2-3 with saagu or vegetable kurma."
+        ]
+      },
+      {
+        "id": "b-2-v3",
+        "name": "Ragi Dosa",
+        "ingredients": [
+          {
+            "name": "Ragi Flour",
+            "amount": 100,
+            "unit": "g",
+            "quantity": "100 g",
+            "category": "Grains & flours"
+          },
+          {
+            "name": "Rice Flour",
+            "amount": 50,
+            "unit": "g",
+            "quantity": "50 g",
+            "category": "Grains & flours"
+          },
+          {
+            "name": "Onions (Bariq chopped)",
+            "amount": 30,
+            "unit": "g",
+            "quantity": "30 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Cumin Seeds",
+            "amount": 0.5,
+            "unit": "tsp",
+            "quantity": "0.5 tsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Salt",
+            "amount": 1,
+            "unit": "tsp",
+            "quantity": "1 tsp",
+            "category": "Spices"
+          }
+        ],
+        "instructions": [
+          "Mix ragi flour, rice flour, onions, cumin, and salt.",
+          "Add plenty of water to make a thin, watery batter.",
+          "Pour the batter starting from the edges of a hot tawa towards the center (like rava dosa).",
+          "Cook until crisp on low-medium heat. Flip if needed.",
+          "Serve hot with coconut chutney."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "b-3",
+    "mealName": "Poha",
+    "category": "Breakfast",
+    "cuisine": "North Indian",
+    "isLight": true,
+    "isVegetarian": true,
+    "calories": 350,
+    "recipeOptions": [
+      {
+        "id": "b-3-v1",
+        "name": "Kanda Poha",
+        "ingredients": [
+          {
+            "name": "Thick Poha",
+            "amount": 150,
+            "unit": "g",
+            "quantity": "150 g",
+            "category": "Grains & flours"
+          },
+          {
+            "name": "Onions",
+            "amount": 50,
+            "unit": "g",
+            "quantity": "50 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Peanuts",
+            "amount": 20,
+            "unit": "g",
+            "quantity": "20 g",
+            "category": "Other"
+          },
+          {
+            "name": "Mustard Seeds",
+            "amount": 0.5,
+            "unit": "tsp",
+            "quantity": "0.5 tsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Turmeric",
+            "amount": 0.25,
+            "unit": "tsp",
+            "quantity": "0.25 tsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Lemon",
+            "amount": 0.5,
+            "unit": "piece",
+            "quantity": "0.5 piece",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Oil",
+            "amount": 1,
+            "unit": "tbsp",
+            "quantity": "1 tbsp",
+            "category": "Oils & condiments"
+          }
+        ],
+        "instructions": [
+          "Rinse poha in a colander until soft. Drain water completely.",
+          "Heat oil, roast peanuts and set aside.",
+          "Temper mustard seeds, sautè onions until translucent. Add turmeric and salt.",
+          "Gently mix in the softened poha. Cover and steam on low heat for 3 mins.",
+          "Garnish with peanuts, fresh coriander, and a squeeze of lemon."
+        ]
+      },
+      {
+        "id": "b-3-v2",
+        "name": "Indori Poha",
+        "ingredients": [
+          {
+            "name": "Thick Poha",
+            "amount": 150,
+            "unit": "g",
+            "quantity": "150 g",
+            "category": "Grains & flours"
+          },
+          {
+            "name": "Fennel Seeds (Saunf)",
+            "amount": 0.5,
+            "unit": "tsp",
+            "quantity": "0.5 tsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Sugar",
+            "amount": 0.5,
+            "unit": "tsp",
+            "quantity": "0.5 tsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Jeeravan Masala",
+            "amount": 1,
+            "unit": "tsp",
+            "quantity": "1 tsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Ratlami Sev",
+            "amount": 30,
+            "unit": "g",
+            "quantity": "30 g",
+            "category": "Other"
+          }
+        ],
+        "instructions": [
+          "Rinse poha. Add a pinch of sugar, salt, and turmeric directly to the poha and mix.",
+          "Temper mustard seeds, fennel seeds, and green chilies in hot oil.",
+          "Add poha, splash a little water, and STEAM cook covered for a soft texture.",
+          "Plate the poha, aggressively sprinkle Jeeravan Masala, onions, and Ratlami sev.",
+          "Serve immediately."
+        ]
+      },
+      {
+        "id": "b-3-v3",
+        "name": "Aloo Poha",
+        "ingredients": [
+          {
+            "name": "Thick Poha",
+            "amount": 150,
+            "unit": "g",
+            "quantity": "150 g",
+            "category": "Grains & flours"
+          },
+          {
+            "name": "Potatoes (diced small)",
+            "amount": 80,
+            "unit": "g",
+            "quantity": "80 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Mustard Seeds",
+            "amount": 0.5,
+            "unit": "tsp",
+            "quantity": "0.5 tsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Curry Leaves",
+            "amount": 10,
+            "unit": "leaves",
+            "quantity": "10 leaves",
+            "category": "Other"
+          },
+          {
+            "name": "Coriander",
+            "amount": 10,
+            "unit": "g",
+            "quantity": "10 g",
+            "category": "Vegetables"
+          }
+        ],
+        "instructions": [
+          "Rinse the poha and let it drain.",
+          "Heat oil, temper mustard seeds and curry leaves. Add diced potatoes.",
+          "Cover and cook the potatoes until soft and lightly browned.",
+          "Add turmeric, salt, and the drained poha. Mix gently.",
+          "Cook for 2 minutes and garnish with fresh coriander."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "b-4",
+    "mealName": "Upma",
+    "category": "Breakfast",
+    "cuisine": "South Indian",
+    "isLight": true,
+    "isVegetarian": true,
+    "calories": 350,
+    "recipeOptions": [
+      {
+        "id": "b-4-v1",
+        "name": "Rava Upma",
+        "ingredients": [
+          {
+            "name": "Semolina (Rava)",
+            "amount": 150,
+            "unit": "g",
+            "quantity": "150 g",
+            "category": "Grains & flours"
+          },
+          {
+            "name": "Onions",
+            "amount": 30,
+            "unit": "g",
+            "quantity": "30 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Mustard & Cumin Seeds",
+            "amount": 1,
+            "unit": "tsp",
+            "quantity": "1 tsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Urad & Chana Dal",
+            "amount": 1,
+            "unit": "tbsp",
+            "quantity": "1 tbsp",
+            "category": "Lentils & pulses"
+          },
+          {
+            "name": "Ghee",
+            "amount": 1,
+            "unit": "tbsp",
+            "quantity": "1 tbsp",
+            "category": "Oils & condiments"
+          }
+        ],
+        "instructions": [
+          "Dry roast rava until aromatic and set aside.",
+          "Heat ghee/oil, splutter mustard seeds, cumin, urad dal, and chana dal.",
+          "Sautè chopped onions, green chilies, and ginger.",
+          "Add 350ml boiling water and salt to the pan.",
+          "Slowly pour roasted rava while stirring continuously to prevent lumps. Cover and cook for 2 mins."
+        ]
+      },
+      {
+        "id": "b-4-v2",
+        "name": "Oats Upma",
+        "ingredients": [
+          {
+            "name": "Rolled Oats",
+            "amount": 150,
+            "unit": "g",
+            "quantity": "150 g",
+            "category": "Grains & flours"
+          },
+          {
+            "name": "Mixed Veg (Carrots, Peas)",
+            "amount": 50,
+            "unit": "g",
+            "quantity": "50 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Mustard Seeds",
+            "amount": 0.5,
+            "unit": "tsp",
+            "quantity": "0.5 tsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Oil",
+            "amount": 1,
+            "unit": "tbsp",
+            "quantity": "1 tbsp",
+            "category": "Oils & condiments"
+          },
+          {
+            "name": "Lemon Juice",
+            "amount": 1,
+            "unit": "tsp",
+            "quantity": "1 tsp",
+            "category": "Other"
+          }
+        ],
+        "instructions": [
+          "Dry roast the oats slightly to prevent stickiness. Keep aside.",
+          "Heat oil, temper mustard seeds, and sauté veggies until tender.",
+          "Add water (ratio 1:1.5 of oats to water) and salt. Let it boil.",
+          "Stir in the oats, cover, and cook on low heat for 3-4 mins until water absorbs.",
+          "Switch off heat, add lemon juice and fluff."
+        ]
+      },
+      {
+        "id": "b-4-v3",
+        "name": "Vermicelli (Semiya) Upma",
+        "ingredients": [
+          {
+            "name": "Vermicelli (Semiya)",
+            "amount": 150,
+            "unit": "g",
+            "quantity": "150 g",
+            "category": "Grains & flours"
+          },
+          {
+            "name": "Onions",
+            "amount": 30,
+            "unit": "g",
+            "quantity": "30 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Mustard Seeds",
+            "amount": 0.5,
+            "unit": "tsp",
+            "quantity": "0.5 tsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Urad Dal",
+            "amount": 1,
+            "unit": "tsp",
+            "quantity": "1 tsp",
+            "category": "Lentils & pulses"
+          },
+          {
+            "name": "Curry Leaves",
+            "amount": 5,
+            "unit": "leaves",
+            "quantity": "5 leaves",
+            "category": "Other"
+          }
+        ],
+        "instructions": [
+          "Roast vermicelli in a pan until golden (if not pre-roasted).",
+          "Temper mustard seeds, urad dal, and curry leaves in oil. Sautè onions.",
+          "Add water (approx 1.5 cups per cup of vermicelli) and let it come to a boil. Add salt.",
+          "Add roasted vermicelli. Turn heat to low, cover and cook until moisture is absorbed.",
+          "Fluff up and serve hot."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "b-5",
+    "mealName": "Paratha",
+    "category": "Breakfast",
+    "cuisine": "North Indian",
+    "isLight": false,
+    "isVegetarian": true,
+    "calories": 350,
+    "recipeOptions": [
+      {
+        "id": "b-5-v1",
+        "name": "Aloo Paratha",
+        "ingredients": [
+          {
+            "name": "Whole Wheat Flour",
+            "amount": 150,
+            "unit": "g",
+            "quantity": "150 g",
+            "category": "Grains & flours"
+          },
+          {
+            "name": "Potatoes",
+            "amount": 100,
+            "unit": "g",
+            "quantity": "100 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Ajwain",
+            "amount": 0.25,
+            "unit": "tsp",
+            "quantity": "0.25 tsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Garam Masala",
+            "amount": 0.5,
+            "unit": "tsp",
+            "quantity": "0.5 tsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Ghee/Butter",
+            "amount": 2,
+            "unit": "tbsp",
+            "quantity": "2 tbsp",
+            "category": "Oils & condiments"
+          }
+        ],
+        "instructions": [
+          "Knead the wheat flour with water and a pinch of salt into a soft dough. Rest 15 min.",
+          "Boil, peel, and mash potatoes. Mix with garam masala, ajwain, chopped chilies, coriander, and salt.",
+          "Pinch a ball of dough, flatten it, and stuff a portion of potato filling inside. Seal the edges.",
+          "Roll gently into a thick circle.",
+          "Cook on a hot tawa with generous ghee/butter until golden brown spots appear on both sides."
+        ]
+      },
+      {
+        "id": "b-5-v2",
+        "name": "Paneer Paratha",
+        "ingredients": [
+          {
+            "name": "Whole Wheat Flour",
+            "amount": 150,
+            "unit": "g",
+            "quantity": "150 g",
+            "category": "Grains & flours"
+          },
+          {
+            "name": "Paneer (Grated)",
+            "amount": 100,
+            "unit": "g",
+            "quantity": "100 g",
+            "category": "Dairy"
+          },
+          {
+            "name": "Coriander Leaves",
+            "amount": 10,
+            "unit": "g",
+            "quantity": "10 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Cumin Powder",
+            "amount": 0.5,
+            "unit": "tsp",
+            "quantity": "0.5 tsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Oil/Ghee",
+            "amount": 2,
+            "unit": "tbsp",
+            "quantity": "2 tbsp",
+            "category": "Oils & condiments"
+          }
+        ],
+        "instructions": [
+          "Prepare a soft wheat dough as usual.",
+          "Mix grated paneer with cumin powder, chopped coriander, green chilies, and salt for the stuffing.",
+          "Stuff the dough balls with the paneer mix and roll out carefully.",
+          "Roast on a hot tawa with oil/ghee.",
+          "Serve hot with curd and pickle."
+        ]
+      },
+      {
+        "id": "b-5-v3",
+        "name": "Gobi Paratha",
+        "ingredients": [
+          {
+            "name": "Whole Wheat Flour",
+            "amount": 150,
+            "unit": "g",
+            "quantity": "150 g",
+            "category": "Grains & flours"
+          },
+          {
+            "name": "Cauliflower (Gobi)",
+            "amount": 100,
+            "unit": "g",
+            "quantity": "100 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Amchur (Mango powder)",
+            "amount": 0.5,
+            "unit": "tsp",
+            "quantity": "0.5 tsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Turmeric",
+            "amount": 0.25,
+            "unit": "tsp",
+            "quantity": "0.25 tsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Ghee",
+            "amount": 2,
+            "unit": "tbsp",
+            "quantity": "2 tbsp",
+            "category": "Oils & condiments"
+          }
+        ],
+        "instructions": [
+          "Prepare soft dough.",
+          "Grate cauliflower finely. Squeeze out excess water if any. Mix with amchur, turmeric, chopped green chilies, and salt.",
+          "Fill dough with the gobi mixture and roll out.",
+          "Cook on a tawa using ghee until crispy on both sides.",
+          "Note: Add salt to gobi just before stuffing so it doesn't release water."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "b-6",
+    "mealName": "Chilla",
+    "category": "Breakfast",
+    "cuisine": "North Indian",
+    "isLight": true,
+    "isVegetarian": true,
+    "calories": 350,
+    "recipeOptions": [
+      {
+        "id": "b-6-v1",
+        "name": "Besan Chilla",
+        "ingredients": [
+          {
+            "name": "Besan (Gram Flour)",
+            "amount": 150,
+            "unit": "g",
+            "quantity": "150 g",
+            "category": "Grains & flours"
+          },
+          {
+            "name": "Onions & Tomatoes",
+            "amount": 50,
+            "unit": "g",
+            "quantity": "50 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Ajwain (Carom seeds)",
+            "amount": 0.5,
+            "unit": "tsp",
+            "quantity": "0.5 tsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Turmeric & Salt",
+            "amount": 1,
+            "unit": "tsp",
+            "quantity": "1 tsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Oil",
+            "amount": 1,
+            "unit": "tbsp",
+            "quantity": "1 tbsp",
+            "category": "Oils & condiments"
+          }
+        ],
+        "instructions": [
+          "Mix besan, finely chopped onions, tomatoes, ajwain, turmeric, and salt.",
+          "Gradually add water to make a smooth, pourable batter free of lumps.",
+          "Heat a tawa, pour a ladle of batter, and spread it in a circular motion.",
+          "Cook with a few drops of oil around the edges until golden on one side. Flip and cook briefly.",
+          "Serve with green chutney."
+        ]
+      },
+      {
+        "id": "b-6-v2",
+        "name": "Moong Dal Chilla",
+        "ingredients": [
+          {
+            "name": "Split Yellow Moong Dal",
+            "amount": 150,
+            "unit": "g",
+            "quantity": "150 g",
+            "category": "Lentils & pulses"
+          },
+          {
+            "name": "Ginger & Green Chili",
+            "amount": 10,
+            "unit": "g",
+            "quantity": "10 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Cumin Seeds",
+            "amount": 0.5,
+            "unit": "tsp",
+            "quantity": "0.5 tsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Paneer (optional filling)",
+            "amount": 30,
+            "unit": "g",
+            "quantity": "30 g",
+            "category": "Dairy"
+          }
+        ],
+        "instructions": [
+          "Soak moong dal for 2-3 hours.",
+          "Blend dal with ginger, green chili, and cumin seeds into a smooth batter. Add salt.",
+          "Spread batter on a hot greased tawa like a dosa.",
+          "Cook on medium heat. Optional: grate paneer over the top while cooking.",
+          "Fold and serve hot."
+        ]
+      },
+      {
+        "id": "b-6-v3",
+        "name": "Oats Chilla",
+        "ingredients": [
+          {
+            "name": "Rolled Oats",
+            "amount": 100,
+            "unit": "g",
+            "quantity": "100 g",
+            "category": "Grains & flours"
+          },
+          {
+            "name": "Besan (Gram flour)",
+            "amount": 30,
+            "unit": "g",
+            "quantity": "30 g",
+            "category": "Grains & flours"
+          },
+          {
+            "name": "Grated Carrots",
+            "amount": 30,
+            "unit": "g",
+            "quantity": "30 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Yogurt/Curd",
+            "amount": 2,
+            "unit": "tbsp",
+            "quantity": "2 tbsp",
+            "category": "Dairy"
+          }
+        ],
+        "instructions": [
+          "Grind oats into a fine powder. Mix with besan.",
+          "Add yogurt, water, grated carrots, salt, and spices to form a batter. Rest 10 minutes.",
+          "Pour and spread onto a hot non-stick pan.",
+          "Cook evenly on both sides until cooked through.",
+          "Serve with ketchup or chutney."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "b-7",
+    "mealName": "Appam",
+    "category": "Breakfast",
+    "cuisine": "South Indian",
+    "isLight": true,
+    "isVegetarian": false,
+    "calories": 450,
+    "recipeOptions": [
+      {
+        "id": "b-7-v1",
+        "name": "Appam with Veg Stew",
+        "ingredients": [
+          {
+            "name": "Appam Batter",
+            "amount": 200,
+            "unit": "g",
+            "quantity": "200 g",
+            "category": "Grains & flours"
+          },
+          {
+            "name": "Mixed Veggies (Carrot, Potato, Beans)",
+            "amount": 100,
+            "unit": "g",
+            "quantity": "100 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Coconut Milk",
+            "amount": 150,
+            "unit": "g",
+            "quantity": "150 g",
+            "category": "Dairy"
+          },
+          {
+            "name": "Cardamom & Cloves",
+            "amount": 1,
+            "unit": "tsp",
+            "quantity": "1 tsp",
+            "category": "Spices"
+          }
+        ],
+        "instructions": [
+          "Pour a ladle of appam batter into an appachatti. Swirl it to coat the sides thin, leaving a thick center.",
+          "Cover and cook for 2 mins on medium heat until edges are crisp and center is soft.",
+          "For Stew: Boil veggies with whole spices, ginger, and green chilies in thin coconut milk.",
+          "Once veggies are cooked, add thick coconut milk. Gentle simmer (do not boil hard).",
+          "Serve appams with the warm, fragrant stew."
+        ]
+      },
+      {
+        "id": "b-7-v2",
+        "name": "Appam with Chicken Stew",
+        "ingredients": [
+          {
+            "name": "Appam Batter",
+            "amount": 200,
+            "unit": "g",
+            "quantity": "200 g",
+            "category": "Grains & flours"
+          },
+          {
+            "name": "Chicken",
+            "amount": 150,
+            "unit": "g",
+            "quantity": "150 g",
+            "category": "Other"
+          },
+          {
+            "name": "Coconut Milk",
+            "amount": 150,
+            "unit": "g",
+            "quantity": "150 g",
+            "category": "Dairy"
+          },
+          {
+            "name": "Cashews & Raisins (for garnish)",
+            "amount": 10,
+            "unit": "g",
+            "quantity": "10 g",
+            "category": "Other"
+          }
+        ],
+        "instructions": [
+          "Make appams similar to the veg stew recipe.",
+          "For Chicken Stew: Sauté chicken, onions, and curry leaves with whole spices.",
+          "Add water/thin coconut milk and cook chicken till tender.",
+          "Finish with thick coconut milk, a pinch of pepper, and fry cashews & raisins for garnish.",
+          "Dunk appams into the rich gravy."
+        ]
+      },
+      {
+        "id": "b-7-v3",
+        "name": "Appam with Egg Roast",
+        "ingredients": [
+          {
+            "name": "Appam Batter",
+            "amount": 200,
+            "unit": "g",
+            "quantity": "200 g",
+            "category": "Grains & flours"
+          },
+          {
+            "name": "Eggs",
+            "amount": 2,
+            "unit": "piece",
+            "quantity": "2 piece",
+            "category": "Other"
+          },
+          {
+            "name": "Onions (Thinly sliced)",
+            "amount": 100,
+            "unit": "g",
+            "quantity": "100 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Tomatoes",
+            "amount": 50,
+            "unit": "g",
+            "quantity": "50 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Chili & Coriander Powder",
+            "amount": 1.5,
+            "unit": "tsp",
+            "quantity": "1.5 tsp",
+            "category": "Spices"
+          }
+        ],
+        "instructions": [
+          "Make fluffy lacy appams.",
+          "Boil, peel, and slit the eggs.",
+          "Heat oil, deeply caramelize the sliced onions. Add ginger-garlic paste and tomatoes.",
+          "Add spice powders, cook until oil separates. Toss the boiled eggs into the masala.",
+          "Serve spicy egg roast with the mildly sweet appams."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "b-8",
+    "mealName": "Pongal",
+    "category": "Breakfast",
+    "cuisine": "South Indian",
+    "isLight": false,
+    "isVegetarian": true,
+    "calories": 350,
+    "recipeOptions": [
+      {
+        "id": "b-8-v1",
+        "name": "Ven Pongal",
+        "ingredients": [
+          {
+            "name": "Raw Rice",
+            "amount": 100,
+            "unit": "g",
+            "quantity": "100 g",
+            "category": "Grains & flours"
+          },
+          {
+            "name": "Moong Dal",
+            "amount": 50,
+            "unit": "g",
+            "quantity": "50 g",
+            "category": "Lentils & pulses"
+          },
+          {
+            "name": "Ghee",
+            "amount": 2,
+            "unit": "tbsp",
+            "quantity": "2 tbsp",
+            "category": "Oils & condiments"
+          },
+          {
+            "name": "Black Peppercorns",
+            "amount": 1,
+            "unit": "tsp",
+            "quantity": "1 tsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Cumin Seeds",
+            "amount": 1,
+            "unit": "tsp",
+            "quantity": "1 tsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Cashews",
+            "amount": 15,
+            "unit": "g",
+            "quantity": "15 g",
+            "category": "Other"
+          }
+        ],
+        "instructions": [
+          "Dry roast moong dal lightly, wash with rice.",
+          "Pressure cook rice and dal with water (1:4 ratio) and salt for 4 whistles until mushy.",
+          "In a small pan, heat ghee, slightly crush peppercorns & cumin, and temper with curry leaves and cashews.",
+          "Pour tempering over the mashed rice/dal, mix well.",
+          "Serve hot with coconut chutney and sambar."
+        ]
+      },
+      {
+        "id": "b-8-v2",
+        "name": "Sweet/Sakkarai Pongal",
+        "ingredients": [
+          {
+            "name": "Raw Rice",
+            "amount": 100,
+            "unit": "g",
+            "quantity": "100 g",
+            "category": "Grains & flours"
+          },
+          {
+            "name": "Moong Dal",
+            "amount": 30,
+            "unit": "g",
+            "quantity": "30 g",
+            "category": "Lentils & pulses"
+          },
+          {
+            "name": "Jaggery",
+            "amount": 100,
+            "unit": "g",
+            "quantity": "100 g",
+            "category": "Other"
+          },
+          {
+            "name": "Ghee",
+            "amount": 3,
+            "unit": "tbsp",
+            "quantity": "3 tbsp",
+            "category": "Oils & condiments"
+          },
+          {
+            "name": "Cardamom Powder",
+            "amount": 0.5,
+            "unit": "tsp",
+            "quantity": "0.5 tsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Cashews & Raisins",
+            "amount": 15,
+            "unit": "g",
+            "quantity": "15 g",
+            "category": "Other"
+          }
+        ],
+        "instructions": [
+          "Cook rice and lightly roasted dal till extremely soft.",
+          "Melt jaggery with a little water, strain it for impurities, and add to the cooked rice-dal mix.",
+          "Cook together for 5 mins so the flavors merge.",
+          "Fry cashews and raisins in generous ghee, add to pongal along with cardamom.",
+          "Mix well and serve as a sweet treat."
+        ]
+      },
+      {
+        "id": "b-8-v3",
+        "name": "Millet Pongal",
+        "ingredients": [
+          {
+            "name": "Foxtail/Kodo Millet",
+            "amount": 100,
+            "unit": "g",
+            "quantity": "100 g",
+            "category": "Grains & flours"
+          },
+          {
+            "name": "Moong Dal",
+            "amount": 50,
+            "unit": "g",
+            "quantity": "50 g",
+            "category": "Lentils & pulses"
+          },
+          {
+            "name": "Ghee",
+            "amount": 1.5,
+            "unit": "tbsp",
+            "quantity": "1.5 tbsp",
+            "category": "Oils & condiments"
+          },
+          {
+            "name": "Peppercorns & Cumin",
+            "amount": 1.5,
+            "unit": "tsp",
+            "quantity": "1.5 tsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Curry Leaves",
+            "amount": 5,
+            "unit": "leaves",
+            "quantity": "5 leaves",
+            "category": "Other"
+          }
+        ],
+        "instructions": [
+          "Replace rice with washed millets. Lightly roast dal.",
+          "Pressure cook the millet and dal with salt and water until softly mashed.",
+          "Heat ghee, do the standard cumin, pepper, cashew, and curry leaf tempering.",
+          "Mix tempering into the mushy millets.",
+          "A highly nutritious alternative to regular pongal."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "b-9",
+    "mealName": "Puttu",
+    "category": "Breakfast",
+    "cuisine": "South Indian",
+    "isLight": false,
+    "isVegetarian": true,
+    "calories": 350,
+    "recipeOptions": [
+      {
+        "id": "b-9-v1",
+        "name": "Rice Puttu with Kadala",
+        "ingredients": [
+          {
+            "name": "Roasted Rice Flour",
+            "amount": 150,
+            "unit": "g",
+            "quantity": "150 g",
+            "category": "Grains & flours"
+          },
+          {
+            "name": "Grated Coconut",
+            "amount": 50,
+            "unit": "g",
+            "quantity": "50 g",
+            "category": "Other"
+          },
+          {
+            "name": "Black Chickpeas (Kadala)",
+            "amount": 100,
+            "unit": "g",
+            "quantity": "100 g",
+            "category": "Lentils & pulses"
+          },
+          {
+            "name": "Coconut Oil",
+            "amount": 1,
+            "unit": "tbsp",
+            "quantity": "1 tbsp",
+            "category": "Oils & condiments"
+          },
+          {
+            "name": "Kerala Garam Masala",
+            "amount": 1,
+            "unit": "tsp",
+            "quantity": "1 tsp",
+            "category": "Spices"
+          }
+        ],
+        "instructions": [
+          "For Puttu: Sprinkle water on rice flour and salt, rub until it's crumbly but holds shape when pressed. Rest 15 min.",
+          "Layer puttu maker with grated coconut and the damp flour. Steam for 5-7 mins until steam escapes top.",
+          "For Kadala Curry: Pressure cook soaked chickpeas.",
+          "Roast grated coconut with spices, blend to a paste, cook with chickpeas and onions until gravy thickens.",
+          "Serve the crumbly puttu mashed with the spicy kadala curry."
+        ]
+      },
+      {
+        "id": "b-9-v2",
+        "name": "Ragi Puttu",
+        "ingredients": [
+          {
+            "name": "Ragi Flour",
+            "amount": 150,
+            "unit": "g",
+            "quantity": "150 g",
+            "category": "Grains & flours"
+          },
+          {
+            "name": "Grated Coconut",
+            "amount": 50,
+            "unit": "g",
+            "quantity": "50 g",
+            "category": "Other"
+          },
+          {
+            "name": "Bananas",
+            "amount": 2,
+            "unit": "piece",
+            "quantity": "2 piece",
+            "category": "Other"
+          },
+          {
+            "name": "Sugar/Jaggery",
+            "amount": 2,
+            "unit": "tbsp",
+            "quantity": "2 tbsp",
+            "category": "Other"
+          }
+        ],
+        "instructions": [
+          "Sprinkle warm water & salt over ragi flour to get a damp, crumbly texture without lumps.",
+          "Fill the puttu cylinder with alternating layers of coconut and ragi flour.",
+          "Steam for 5-7 minutes.",
+          "Serve with ripe bananas and a sprinkle of sugar, mashed together with hands."
+        ]
+      },
+      {
+        "id": "b-9-v3",
+        "name": "Wheat Puttu",
+        "ingredients": [
+          {
+            "name": "Wheat Flour (Coarse)",
+            "amount": 150,
+            "unit": "g",
+            "quantity": "150 g",
+            "category": "Grains & flours"
+          },
+          {
+            "name": "Grated Coconut",
+            "amount": 50,
+            "unit": "g",
+            "quantity": "50 g",
+            "category": "Other"
+          },
+          {
+            "name": "Green Gram (Cherupayar)",
+            "amount": 100,
+            "unit": "g",
+            "quantity": "100 g",
+            "category": "Lentils & pulses"
+          },
+          {
+            "name": "Pappadam",
+            "amount": 2,
+            "unit": "piece",
+            "quantity": "2 piece",
+            "category": "Other"
+          }
+        ],
+        "instructions": [
+          "Dampen wheat flour with salt water to a crumbly consistency. Steam with alternating coconut layers.",
+          "Pressure cook whole green gram with salt and a pinch of turmeric.",
+          "Top the steamed wheat puttu with green gram, a bit of extra grated coconut if desired.",
+          "Serve with crunchy pappadams."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "b-10",
+    "mealName": "Sandwich",
+    "category": "Breakfast",
+    "cuisine": "Indian",
+    "isLight": true,
+    "isVegetarian": true,
+    "calories": 350,
+    "recipeOptions": [
+      {
+        "id": "b-10-v1",
+        "name": "Bombay Veg Sandwich",
+        "ingredients": [
+          {
+            "name": "Sandwich Bread",
+            "amount": 4,
+            "unit": "slices",
+            "quantity": "4 slices",
+            "category": "Grains & flours"
+          },
+          {
+            "name": "Green Chutney",
+            "amount": 2,
+            "unit": "tbsp",
+            "quantity": "2 tbsp",
+            "category": "Oils & condiments"
+          },
+          {
+            "name": "Boiled Potato, Cucumber, Tomato, Onion",
+            "amount": 100,
+            "unit": "g",
+            "quantity": "100 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Butter",
+            "amount": 1,
+            "unit": "tbsp",
+            "quantity": "1 tbsp",
+            "category": "Dairy"
+          },
+          {
+            "name": "Chaat Masala",
+            "amount": 1,
+            "unit": "tsp",
+            "quantity": "1 tsp",
+            "category": "Spices"
+          }
+        ],
+        "instructions": [
+          "Butter the bread slices and spread a generous layer of green coriander-mint chutney.",
+          "Thinly slice the boiled potatoes, cucumbers, tomatoes, and onions.",
+          "Layer the veggies inside the bread, heavily sprinkling chaat masala between layers.",
+          "Close the sandwich, cut edges if preferred, and serve fresh. (Optional: grill it)."
+        ]
+      },
+      {
+        "id": "b-10-v2",
+        "name": "Paneer Tikka Sandwich",
+        "ingredients": [
+          {
+            "name": "Sandwich Bread",
+            "amount": 4,
+            "unit": "slices",
+            "quantity": "4 slices",
+            "category": "Grains & flours"
+          },
+          {
+            "name": "Paneer cubes",
+            "amount": 80,
+            "unit": "g",
+            "quantity": "80 g",
+            "category": "Dairy"
+          },
+          {
+            "name": "Tikka Masala",
+            "amount": 1,
+            "unit": "tsp",
+            "quantity": "1 tsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Capsicum & Onion",
+            "amount": 30,
+            "unit": "g",
+            "quantity": "30 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Cheese Slice",
+            "amount": 1,
+            "unit": "piece",
+            "quantity": "1 piece",
+            "category": "Dairy"
+          }
+        ],
+        "instructions": [
+          "Sautè paneer cubes, chopped capsicum, and onions with tikka masala and a little oil until cooked.",
+          "Place the mixture on bread slices, optionally place a cheese slice.",
+          "Grill/toast in a sandwich maker or tawa until bread is golden and crisp.",
+          "Serve hot with ketchup."
+        ]
+      },
+      {
+        "id": "b-10-v3",
+        "name": "Curd/Yogurt Sandwich",
+        "ingredients": [
+          {
+            "name": "Sandwich Bread",
+            "amount": 4,
+            "unit": "slices",
+            "quantity": "4 slices",
+            "category": "Grains & flours"
+          },
+          {
+            "name": "Hung Curd",
+            "amount": 100,
+            "unit": "g",
+            "quantity": "100 g",
+            "category": "Dairy"
+          },
+          {
+            "name": "Carrot & Capsicum (finely chopped)",
+            "amount": 50,
+            "unit": "g",
+            "quantity": "50 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Black Pepper",
+            "amount": 0.5,
+            "unit": "tsp",
+            "quantity": "0.5 tsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Butter",
+            "amount": 1,
+            "unit": "tbsp",
+            "quantity": "1 tbsp",
+            "category": "Dairy"
+          }
+        ],
+        "instructions": [
+          "Mix hung thick curd with finely chopped veggies, salt, and black pepper to form a creamy spread.",
+          "Spread the mixture evenly on bread slices.",
+          "Toast the sandwich on a hot tawa with a little butter until crisp.",
+          "The inside will remain creamy while the outside is crispy."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "l-1",
+    "mealName": "Rajma Chawal",
+    "category": "Lunch",
+    "cuisine": "North Indian",
+    "isLight": false,
+    "isVegetarian": true,
+    "calories": 350,
+    "recipeOptions": [
+      {
+        "id": "l-1-v1",
+        "name": "Punjabi Rajma Masala",
+        "ingredients": [
+          {
+            "name": "Rajma (Red Kidney Beans)",
+            "amount": 150,
+            "unit": "g",
+            "quantity": "150 g",
+            "category": "Lentils & pulses"
+          },
+          {
+            "name": "Basmati Rice",
+            "amount": 150,
+            "unit": "g",
+            "quantity": "150 g",
+            "category": "Grains & flours"
+          },
+          {
+            "name": "Onions & Tomatoes",
+            "amount": 100,
+            "unit": "g",
+            "quantity": "100 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Ginger Garlic Paste",
+            "amount": 1,
+            "unit": "tbsp",
+            "quantity": "1 tbsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Garam Masala",
+            "amount": 1,
+            "unit": "tsp",
+            "quantity": "1 tsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Oil/Ghee",
+            "amount": 2,
+            "unit": "tbsp",
+            "quantity": "2 tbsp",
+            "category": "Oils & condiments"
+          }
+        ],
+        "instructions": [
+          "Soak Rajma overnight. Pressure cook until very soft (about 6-8 whistles).",
+          "Sautè finely chopped onions until deep golden brown. Add ginger-garlic paste and tomato purèe.",
+          "Add coriander powder, chili powder, and turmeric. Cook until oil separates.",
+          "Add the soft rajma along with its water. Simmer for 15 minutes. Finish with garam masala and coriander.",
+          "Cook basmati rice fluffy. Serve hot rajma over rice."
+        ]
+      },
+      {
+        "id": "l-1-v2",
+        "name": "Jammu Rajma (No Onion/Garlic)",
+        "ingredients": [
+          {
+            "name": "Jammu Rajma (Small Red)",
+            "amount": 150,
+            "unit": "g",
+            "quantity": "150 g",
+            "category": "Lentils & pulses"
+          },
+          {
+            "name": "Rice",
+            "amount": 150,
+            "unit": "g",
+            "quantity": "150 g",
+            "category": "Grains & flours"
+          },
+          {
+            "name": "Yogurt/Curd",
+            "amount": 50,
+            "unit": "g",
+            "quantity": "50 g",
+            "category": "Dairy"
+          },
+          {
+            "name": "Tomatoes (Purèed)",
+            "amount": 80,
+            "unit": "g",
+            "quantity": "80 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Heeng (Asafoetida)",
+            "amount": 0.5,
+            "unit": "tsp",
+            "quantity": "0.5 tsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Mustard Oil",
+            "amount": 2,
+            "unit": "tbsp",
+            "quantity": "2 tbsp",
+            "category": "Oils & condiments"
+          }
+        ],
+        "instructions": [
+          "Soak rajma and pressure cook until tender.",
+          "Heat mustard oil to smoking point, lower heat, add cumin, heeng, and dry red chilies.",
+          "Pour in tomato purèe and whisked yogurt. Stir vigorously to prevent curdling.",
+          "Add cooked rajma and simmer gently. The sauce will be rich and tangy.",
+          "Serve with plain boiled rice."
+        ]
+      },
+      {
+        "id": "l-1-v3",
+        "name": "Low-oil Rajma Pulao",
+        "ingredients": [
+          {
+            "name": "Rajma (Boiled)",
+            "amount": 150,
+            "unit": "g",
+            "quantity": "150 g",
+            "category": "Lentils & pulses"
+          },
+          {
+            "name": "Basmati Rice (Soaked)",
+            "amount": 150,
+            "unit": "g",
+            "quantity": "150 g",
+            "category": "Grains & flours"
+          },
+          {
+            "name": "Whole Spices (Cardamom, Cloves)",
+            "amount": 2,
+            "unit": "g",
+            "quantity": "2 g",
+            "category": "Spices"
+          },
+          {
+            "name": "Onion (Sliced)",
+            "amount": 50,
+            "unit": "g",
+            "quantity": "50 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Mint Leaves",
+            "amount": 10,
+            "unit": "g",
+            "quantity": "10 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Ghee",
+            "amount": 1,
+            "unit": "tbsp",
+            "quantity": "1 tbsp",
+            "category": "Oils & condiments"
+          }
+        ],
+        "instructions": [
+          "In a pressure cooker, heat a little ghee, temper whole spices and saute onions until golden.",
+          "Add a little ginger-garlic paste, then toss in the pre-boiled rajma, mint leaves, and soaked rice.",
+          "Add water (1.5 cups per cup of rice) and salt. Mix gently.",
+          "Pressure cook for 2 whistles on medium heat. Fluff and serve with raita."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "l-2",
+    "mealName": "Sambar Rice",
+    "category": "Lunch",
+    "cuisine": "South Indian",
+    "isLight": false,
+    "isVegetarian": true,
+    "calories": 350,
+    "recipeOptions": [
+      {
+        "id": "l-2-v1",
+        "name": "Madras Sambar",
+        "ingredients": [
+          {
+            "name": "Toor Dal",
+            "amount": 100,
+            "unit": "g",
+            "quantity": "100 g",
+            "category": "Lentils & pulses"
+          },
+          {
+            "name": "Mixed Vegetables (Drumstick, Pumpkin)",
+            "amount": 150,
+            "unit": "g",
+            "quantity": "150 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Tamarind Extract",
+            "amount": 2,
+            "unit": "tbsp",
+            "quantity": "2 tbsp",
+            "category": "Oils & condiments"
+          },
+          {
+            "name": "Sambar Powder",
+            "amount": 2,
+            "unit": "tbsp",
+            "quantity": "2 tbsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Mustard & Fenugreek",
+            "amount": 1,
+            "unit": "tsp",
+            "quantity": "1 tsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Sesame Oil",
+            "amount": 1,
+            "unit": "tbsp",
+            "quantity": "1 tbsp",
+            "category": "Oils & condiments"
+          }
+        ],
+        "instructions": [
+          "Pressure cook toor dal with a pinch of turmeric until completely mashed.",
+          "Boil chopped vegetables in a pot with tamarind extract, sambar powder, and salt. Cook until tender.",
+          "Add the mashed dal to the boiling vegetables. Adjust water for consistency.",
+          "Temper mustard seeds, fenugreek, dry red chilies, and curry leaves in hot sesame oil.",
+          "Pour tempering into sambar, garnish with coriander. Serve with steamed rice."
+        ]
+      },
+      {
+        "id": "l-2-v2",
+        "name": "Udupi Sambar",
+        "ingredients": [
+          {
+            "name": "Toor Dal",
+            "amount": 100,
+            "unit": "g",
+            "quantity": "100 g",
+            "category": "Lentils & pulses"
+          },
+          {
+            "name": "Mixed Vegetables",
+            "amount": 150,
+            "unit": "g",
+            "quantity": "150 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Fresh Coconut (Grated)",
+            "amount": 50,
+            "unit": "g",
+            "quantity": "50 g",
+            "category": "Other"
+          },
+          {
+            "name": "Byadagi Chilies",
+            "amount": 4,
+            "unit": "piece",
+            "quantity": "4 piece",
+            "category": "Spices"
+          },
+          {
+            "name": "Jaggery",
+            "amount": 1,
+            "unit": "tbsp",
+            "quantity": "1 tbsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Coriander Seeds & Chana Dal",
+            "amount": 1,
+            "unit": "tbsp",
+            "quantity": "1 tbsp",
+            "category": "Spices"
+          }
+        ],
+        "instructions": [
+          "Dry roast coriander seeds, chana dal, urad dal, and byadagi chilies. Blend to a paste with fresh grated coconut.",
+          "Cook toor dal till slightly mushy. Boil vegetables in tamarind water and salt.",
+          "Once veggies are cooked, add the fresh coconut spice paste and jaggery. Bring to a rapid boil.",
+          "Mix in the mashed dal to thicken. Temper with mustard and curry leaves in coconut oil.",
+          "Serve the slightly sweet and spicy sambar with hot rice."
+        ]
+      },
+      {
+        "id": "l-2-v3",
+        "name": "Kerala Sambar (Varutharacha)",
+        "ingredients": [
+          {
+            "name": "Toor Dal",
+            "amount": 100,
+            "unit": "g",
+            "quantity": "100 g",
+            "category": "Lentils & pulses"
+          },
+          {
+            "name": "Mixed Vegetables (Ash Gourd, Banana, Carrot)",
+            "amount": 150,
+            "unit": "g",
+            "quantity": "150 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Grated Coconut",
+            "amount": 50,
+            "unit": "g",
+            "quantity": "50 g",
+            "category": "Other"
+          },
+          {
+            "name": "Small Onions (Shallots)",
+            "amount": 50,
+            "unit": "g",
+            "quantity": "50 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Coriander Powder & Red Chili Powder",
+            "amount": 2,
+            "unit": "tbsp",
+            "quantity": "2 tbsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Coconut Oil",
+            "amount": 2,
+            "unit": "tbsp",
+            "quantity": "2 tbsp",
+            "category": "Oils & condiments"
+          }
+        ],
+        "instructions": [
+          "Roast grated coconut with shallots and curry leaves till deep brown. Add dry spice powders and blend into a very smooth, dark paste.",
+          "Boil mixed vegetables with tamarind and salt. Stir in softly cooked toor dal.",
+          "Add the roasted coconut paste (Varutharacha) to the pot. Stir well and simmer until thick.",
+          "Temper mustard seeds and dry chilies in coconut oil. Pour over sambar.",
+          "Serve with Kerala Matta rice."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "l-3",
+    "mealName": "Dal Makhani",
+    "category": "Lunch",
+    "cuisine": "North Indian",
+    "isLight": false,
+    "isVegetarian": true,
+    "calories": 350,
+    "recipeOptions": [
+      {
+        "id": "l-3-v1",
+        "name": "Dhaba Style Dal Makhani",
+        "ingredients": [
+          {
+            "name": "Whole Black Urad Dal",
+            "amount": 100,
+            "unit": "g",
+            "quantity": "100 g",
+            "category": "Lentils & pulses"
+          },
+          {
+            "name": "Rajma",
+            "amount": 20,
+            "unit": "g",
+            "quantity": "20 g",
+            "category": "Lentils & pulses"
+          },
+          {
+            "name": "Heavy Cream",
+            "amount": 30,
+            "unit": "ml",
+            "quantity": "30 ml",
+            "category": "Dairy"
+          },
+          {
+            "name": "Butter",
+            "amount": 30,
+            "unit": "g",
+            "quantity": "30 g",
+            "category": "Dairy"
+          },
+          {
+            "name": "Tomato Purèe",
+            "amount": 100,
+            "unit": "g",
+            "quantity": "100 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Kasoori Methi",
+            "amount": 1,
+            "unit": "tsp",
+            "quantity": "1 tsp",
+            "category": "Spices"
+          }
+        ],
+        "instructions": [
+          "Soak urad dal and rajma overnight. Pressure cook them patiently (approx 8-10 whistles) with salt until butter-soft.",
+          "In a heavy-bottomed pan, add butter and sautè ginger-garlic paste loudly. Whisk in tomato purèe and chili powder.",
+          "Cook the masala down until fat rises. Add the mashed dal with its murky water.",
+          "Simmer aggressively on very low heat for at least an hour, stirring frequently and adding water as needed.",
+          "Finish with heavy cream, kasoori methi, a large dollop of butter, and serve with jeera rice."
+        ]
+      },
+      {
+        "id": "l-3-v2",
+        "name": "Quick Restaurant Dal Makhani",
+        "ingredients": [
+          {
+            "name": "Whole Black Urad Dal",
+            "amount": 100,
+            "unit": "g",
+            "quantity": "100 g",
+            "category": "Lentils & pulses"
+          },
+          {
+            "name": "Butter",
+            "amount": 25,
+            "unit": "g",
+            "quantity": "25 g",
+            "category": "Dairy"
+          },
+          {
+            "name": "Onion & Tomato Paste",
+            "amount": 80,
+            "unit": "g",
+            "quantity": "80 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Cream",
+            "amount": 20,
+            "unit": "ml",
+            "quantity": "20 ml",
+            "category": "Dairy"
+          },
+          {
+            "name": "Garam Masala",
+            "amount": 1,
+            "unit": "tsp",
+            "quantity": "1 tsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Jeera Rice (Pre-cooked)",
+            "amount": 200,
+            "unit": "g",
+            "quantity": "200 g",
+            "category": "Grains & flours"
+          }
+        ],
+        "instructions": [
+          "Pressure cook soaked dal with salt and a pinch of baking soda to speed up cooking (just 4-5 whistles needed).",
+          "Sautè the onion tomato paste in butter, add spice powders, and cook until thick.",
+          "Toss in cooked dal, mash roughly with the back of a ladle. Simmer for 15-20 mins.",
+          "Stir in cream just before serving.",
+          "Serve over hot jeera rice."
+        ]
+      },
+      {
+        "id": "l-3-v3",
+        "name": "Vegan/Homestyle Black Dal",
+        "ingredients": [
+          {
+            "name": "Whole Black Urad Dal",
+            "amount": 100,
+            "unit": "g",
+            "quantity": "100 g",
+            "category": "Lentils & pulses"
+          },
+          {
+            "name": "Oil",
+            "amount": 1,
+            "unit": "tbsp",
+            "quantity": "1 tbsp",
+            "category": "Oils & condiments"
+          },
+          {
+            "name": "Garlic (Finely Chopped)",
+            "amount": 10,
+            "unit": "g",
+            "quantity": "10 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Onion (Finely Chopped)",
+            "amount": 30,
+            "unit": "g",
+            "quantity": "30 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Cumin Seeds",
+            "amount": 1,
+            "unit": "tsp",
+            "quantity": "1 tsp",
+            "category": "Spices"
+          }
+        ],
+        "instructions": [
+          "Boil the soaked dal gently until done, without over-mashing.",
+          "Heat oil in a pan, add cumin and heavily brown the chopped garlic. Then sautè chopped onions.",
+          "Add a pinch of turmeric and chili powder.",
+          "Pour the cooked dal into the tempering. Simmer for 10 minutes.",
+          "Serve simple and comforting dal over plain rice, skipping the heavy cream completely."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "l-4",
+    "mealName": "Palak Paneer",
+    "category": "Lunch",
+    "cuisine": "North Indian",
+    "isLight": false,
+    "isVegetarian": true,
+    "calories": 350,
+    "recipeOptions": [
+      {
+        "id": "l-4-v1",
+        "name": "Creamy Palak Paneer",
+        "ingredients": [
+          {
+            "name": "Spinach (Palak) Leaves",
+            "amount": 250,
+            "unit": "g",
+            "quantity": "250 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Paneer Cubes",
+            "amount": 150,
+            "unit": "g",
+            "quantity": "150 g",
+            "category": "Dairy"
+          },
+          {
+            "name": "Onion (Finely Chopped)",
+            "amount": 50,
+            "unit": "g",
+            "quantity": "50 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Garlic (Crushed)",
+            "amount": 10,
+            "unit": "g",
+            "quantity": "10 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Fresh Cream",
+            "amount": 2,
+            "unit": "tbsp",
+            "quantity": "2 tbsp",
+            "category": "Dairy"
+          },
+          {
+            "name": "Roti/Chapati",
+            "amount": 2,
+            "unit": "piece",
+            "quantity": "2 piece",
+            "category": "Grains & flours"
+          }
+        ],
+        "instructions": [
+          "Blanch spinach leaves in boiling water for 2 mins, immediately plunge into ice water to retain green color.",
+          "Blend spinach with a green chili into a smooth purèe.",
+          "Heat oil, sautè crushed garlic and chopped onions until translucent. Stir in coriander powder and a pinch of turmeric.",
+          "Pour the spinach purèe, add salt and simmer gently for 5 mins.",
+          "Add paneer cubes and a dash of fresh cream. Let paneer warm through without boiling heavily.",
+          "Serve with soft chapatis."
+        ]
+      },
+      {
+        "id": "l-4-v2",
+        "name": "Dhaba Palak Paneer",
+        "ingredients": [
+          {
+            "name": "Spinach (Palak) Leaves",
+            "amount": 250,
+            "unit": "g",
+            "quantity": "250 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Paneer Cubes",
+            "amount": 150,
+            "unit": "g",
+            "quantity": "150 g",
+            "category": "Dairy"
+          },
+          {
+            "name": "Tomatoes (Chopped)",
+            "amount": 50,
+            "unit": "g",
+            "quantity": "50 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Dry Red Chili",
+            "amount": 2,
+            "unit": "piece",
+            "quantity": "2 piece",
+            "category": "Spices"
+          },
+          {
+            "name": "Garam Masala",
+            "amount": 1,
+            "unit": "tsp",
+            "quantity": "1 tsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Ghee",
+            "amount": 1.5,
+            "unit": "tbsp",
+            "quantity": "1.5 tbsp",
+            "category": "Oils & condiments"
+          }
+        ],
+        "instructions": [
+          "Finely chop a portion of the raw spinach and boil the rest; roughly blend the boiled spinach.",
+          "Lightly pan-fry the paneer cubes until slightly golden and keep them soaked in warm water.",
+          "Heat ghee, dry red chilies, cumin. Add onions and tomatoes to make a coarse, rustic masala base.",
+          "Mix in chopped spinach, cook until it wilts, then pour the blended spinach.",
+          "Fold in the soft paneer cubes and let simmer tightly covered. Flavor with strong garam masala.",
+          "Serve robustly on rice or naan."
+        ]
+      },
+      {
+        "id": "l-4-v3",
+        "name": "Vegan Palak Tofu",
+        "ingredients": [
+          {
+            "name": "Spinach Leaves",
+            "amount": 250,
+            "unit": "g",
+            "quantity": "250 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Firm Tofu",
+            "amount": 150,
+            "unit": "g",
+            "quantity": "150 g",
+            "category": "Other"
+          },
+          {
+            "name": "Olive/Canola Oil",
+            "amount": 1,
+            "unit": "tbsp",
+            "quantity": "1 tbsp",
+            "category": "Oils & condiments"
+          },
+          {
+            "name": "Onion & Garlic Paste",
+            "amount": 50,
+            "unit": "g",
+            "quantity": "50 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Cashew Paste",
+            "amount": 2,
+            "unit": "tbsp",
+            "quantity": "2 tbsp",
+            "category": "Other"
+          },
+          {
+            "name": "Lemon Juice",
+            "amount": 1,
+            "unit": "tsp",
+            "quantity": "1 tsp",
+            "category": "Vegetables"
+          }
+        ],
+        "instructions": [
+          "Press the tofu block to remove excess water. Cut into cubes. Optionally air-fry the tofu cubes for better texture.",
+          "Blanch and purèe the spinach as usual.",
+          "In oil, fry the onion and garlic paste until golden, avoid butter/ghee entirely.",
+          "Combine spinach purèe, add cashew paste for a creamy thick texture, salt and lemon to cut the bitterness.",
+          "Toss in tofu and let the gravy heat the cubes through. Enjoy with rice."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "l-5",
+    "mealName": "Avial Meal",
+    "category": "Lunch",
+    "cuisine": "South Indian",
+    "isLight": true,
+    "isVegetarian": true,
+    "calories": 350,
+    "recipeOptions": [
+      {
+        "id": "l-5-v1",
+        "name": "Traditional Kerala Avial",
+        "ingredients": [
+          {
+            "name": "Mixed Veg (Plantain, Yam, Carrot, Beans, Drumstick, Ash Gourd)",
+            "amount": 250,
+            "unit": "g",
+            "quantity": "250 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Grated Coconut",
+            "amount": 100,
+            "unit": "g",
+            "quantity": "100 g",
+            "category": "Other"
+          },
+          {
+            "name": "Green Chilies & Cumin",
+            "amount": 1.5,
+            "unit": "tsp",
+            "quantity": "1.5 tsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Sour Curd/Yogurt",
+            "amount": 50,
+            "unit": "g",
+            "quantity": "50 g",
+            "category": "Dairy"
+          },
+          {
+            "name": "Coconut Oil",
+            "amount": 1.5,
+            "unit": "tbsp",
+            "quantity": "1.5 tbsp",
+            "category": "Oils & condiments"
+          },
+          {
+            "name": "Matta Rice",
+            "amount": 150,
+            "unit": "g",
+            "quantity": "150 g",
+            "category": "Grains & flours"
+          }
+        ],
+        "instructions": [
+          "Cut all vegetables uniformly into 2-inch batons.",
+          "Cook them lightly in a pot with a pinch of turmeric, salt, and half a cup of water until barely tender but firm.",
+          "Coarsely crush grated coconut with green chilies, cumin, and small shallot without adding water.",
+          "Mix the crushed coconut over the cooked vegetables.",
+          "Stir in sour curd (or raw mango earlier) and quickly turn off heat.",
+          "Drizzle raw coconut oil and curry leaves on top, keep covered till served with matta rice."
+        ]
+      },
+      {
+        "id": "l-5-v2",
+        "name": "Tamil-Style Avial",
+        "ingredients": [
+          {
+            "name": "Mixed Vegetables (including Brinjal, Potatoes)",
+            "amount": 250,
+            "unit": "g",
+            "quantity": "250 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Grated Coconut",
+            "amount": 80,
+            "unit": "g",
+            "quantity": "80 g",
+            "category": "Other"
+          },
+          {
+            "name": "Cumin, Chilies & Rice Flour (a pinch)",
+            "amount": 2,
+            "unit": "tsp",
+            "quantity": "2 tsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Tamarind Extract (mild)",
+            "amount": 1,
+            "unit": "tbsp",
+            "quantity": "1 tbsp",
+            "category": "Oils & condiments"
+          },
+          {
+            "name": "Coconut Oil",
+            "amount": 1,
+            "unit": "tbsp",
+            "quantity": "1 tbsp",
+            "category": "Oils & condiments"
+          }
+        ],
+        "instructions": [
+          "Dice vegetables in cubes or short batons. Boil with turmeric and salt.",
+          "Instead of curd, use a very mild tamarind extract for sourness.",
+          "Grind coconut, green chilies, and cumin into a slightly smoother paste. Stir in a tiny bit of rice flour to bind.",
+          "Add to vegetables, boil gently for 2 minutes to thicken.",
+          "Finish with curry leaves and coconut oil. This pairs perfectly with Adai (lentil crepe) or steamed rice."
+        ]
+      },
+      {
+        "id": "l-5-v3",
+        "name": "Mixed Veg Morkootu",
+        "ingredients": [
+          {
+            "name": "Ash Gourd & Carrots",
+            "amount": 200,
+            "unit": "g",
+            "quantity": "200 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Yogurt/Curd",
+            "amount": 150,
+            "unit": "g",
+            "quantity": "150 g",
+            "category": "Dairy"
+          },
+          {
+            "name": "Grated Coconut",
+            "amount": 50,
+            "unit": "g",
+            "quantity": "50 g",
+            "category": "Other"
+          },
+          {
+            "name": "Toor Dal (Cooked)",
+            "amount": 30,
+            "unit": "g",
+            "quantity": "30 g",
+            "category": "Lentils & pulses"
+          },
+          {
+            "name": "Mustard & Cumin Seeds",
+            "amount": 1,
+            "unit": "tsp",
+            "quantity": "1 tsp",
+            "category": "Spices"
+          }
+        ],
+        "instructions": [
+          "Cook the ash gourd and carrots with turmeric and salt.",
+          "Grind coconut and cumin seeds entirely smooth, unlike rough crushed avial mix.",
+          "Stir cooked toor dal to thicken, whisked curd, and the coconut paste with the boiled veggies.",
+          "Bring just to a gentle simmer (do not boil, it will split).",
+          "Temper mustard seeds in oil and pour over morkootu. Serve gently over white rice."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "l-6",
+    "mealName": "Biryani",
+    "category": "Lunch",
+    "cuisine": "Indian",
+    "isLight": false,
+    "isVegetarian": false,
+    "calories": 450,
+    "recipeOptions": [
+      {
+        "id": "l-6-v1",
+        "name": "Hyderabadi Chicken Dum Biryani",
+        "ingredients": [
+          {
+            "name": "Chicken",
+            "amount": 200,
+            "unit": "g",
+            "quantity": "200 g",
+            "category": "Other"
+          },
+          {
+            "name": "Basmati Rice",
+            "amount": 150,
+            "unit": "g",
+            "quantity": "150 g",
+            "category": "Grains & flours"
+          },
+          {
+            "name": "Yogurt/Curd",
+            "amount": 50,
+            "unit": "g",
+            "quantity": "50 g",
+            "category": "Dairy"
+          },
+          {
+            "name": "Fried Onions (Birista)",
+            "amount": 50,
+            "unit": "g",
+            "quantity": "50 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Biryani Masala & Whole Spices",
+            "amount": 1.5,
+            "unit": "tbsp",
+            "quantity": "1.5 tbsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Ghee/Oil",
+            "amount": 2,
+            "unit": "tbsp",
+            "quantity": "2 tbsp",
+            "category": "Oils & condiments"
+          },
+          {
+            "name": "Mint & Coriander",
+            "amount": 20,
+            "unit": "g",
+            "quantity": "20 g",
+            "category": "Vegetables"
+          }
+        ],
+        "instructions": [
+          "Marinate chicken with yogurt, biryani masala, ginger-garlic paste, half of the fried onions, mint, coriander, and oil for 2+ hours.",
+          "Par-boil basmati rice with whole spices (cardamom, cinnamon, cloves, bay leaf) until 70% cooked. Drain water completely.",
+          "Layer the raw marinated chicken at the bottom of a heavy pot. Pile the half-cooked rice on top.",
+          "Sprinkle saffron milk, remaining fried onions, and ghee on the top rice layer.",
+          "Seal the pot with dough/foil (Dum) and cook on low heat for 35-40 mins.",
+          "Rest for 10 minutes, open, and gently mix from the bottom. Serve hot with raita."
+        ]
+      },
+      {
+        "id": "l-6-v2",
+        "name": "Thalassery Chicken Biryani",
+        "ingredients": [
+          {
+            "name": "Chicken",
+            "amount": 200,
+            "unit": "g",
+            "quantity": "200 g",
+            "category": "Other"
+          },
+          {
+            "name": "Kaima/Jeerakasala Rice",
+            "amount": 150,
+            "unit": "g",
+            "quantity": "150 g",
+            "category": "Grains & flours"
+          },
+          {
+            "name": "Onions (Thinly sliced)",
+            "amount": 100,
+            "unit": "g",
+            "quantity": "100 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Tomatoes",
+            "amount": 50,
+            "unit": "g",
+            "quantity": "50 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Garam Masala (Malabar)",
+            "amount": 1,
+            "unit": "tsp",
+            "quantity": "1 tsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Cashews & Raisins",
+            "amount": 15,
+            "unit": "g",
+            "quantity": "15 g",
+            "category": "Other"
+          },
+          {
+            "name": "Ghee",
+            "amount": 2,
+            "unit": "tbsp",
+            "quantity": "2 tbsp",
+            "category": "Oils & condiments"
+          }
+        ],
+        "instructions": [
+          "Slowly fry plenty of onions until deeply caramelized to make the masala base. Add tomatoes to cook thoroughly into a thick paste (no raw masala taste).",
+          "Cook chicken gently in this thick, semi-dry onion-tomato gravy with Malabar spices.",
+          "Wash short-grain Kaima rice. Gently fry rice in ghee, then cook it till done.",
+          "Layer cooked rice and cooked chicken masala alternately in a pan.",
+          "Garnish generously with fried onions, ghee roasted cashews, and sultana raisins. Dum for 10-15 mins."
+        ]
+      },
+      {
+        "id": "l-6-v3",
+        "name": "Veg Dum Biryani (Vegetarian)",
+        "ingredients": [
+          {
+            "name": "Mixed Veg (Cauliflower, Beans, Carrot, Potato)",
+            "amount": 200,
+            "unit": "g",
+            "quantity": "200 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Paneer Cubes",
+            "amount": 50,
+            "unit": "g",
+            "quantity": "50 g",
+            "category": "Dairy"
+          },
+          {
+            "name": "Basmati Rice",
+            "amount": 150,
+            "unit": "g",
+            "quantity": "150 g",
+            "category": "Grains & flours"
+          },
+          {
+            "name": "Yogurt",
+            "amount": 50,
+            "unit": "g",
+            "quantity": "50 g",
+            "category": "Dairy"
+          },
+          {
+            "name": "Biryani Masala",
+            "amount": 1,
+            "unit": "tbsp",
+            "quantity": "1 tbsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Saffron & Milk",
+            "amount": 1,
+            "unit": "tbsp",
+            "quantity": "1 tbsp",
+            "category": "Other"
+          }
+        ],
+        "instructions": [
+          "Steam/blanch vegetables lightly. Marinate them and paneer cubes in thick yogurt and biryani spices.",
+          "Cook rice separately with whole spices until 80% done. Drain well.",
+          "Lightly cook the veg marinade in a heavy pot until fat shows at the edges.",
+          "Layer the cooked vegetables and par-cooked rice. Apply saffron milk.",
+          "Cover and Dum cook for 20 mins. The delicate veggies will not overcook if done properly."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "l-7",
+    "mealName": "Chole Bhature",
+    "category": "Lunch",
+    "cuisine": "North Indian",
+    "isLight": false,
+    "isVegetarian": true,
+    "calories": 350,
+    "recipeOptions": [
+      {
+        "id": "l-7-v1",
+        "name": "Amritsari Chole with Bhature",
+        "ingredients": [
+          {
+            "name": "Kabuli Chana (Chickpeas)",
+            "amount": 150,
+            "unit": "g",
+            "quantity": "150 g",
+            "category": "Lentils & pulses"
+          },
+          {
+            "name": "Tea Bags",
+            "amount": 2,
+            "unit": "piece",
+            "quantity": "2 piece",
+            "category": "Other"
+          },
+          {
+            "name": "Chole Masala",
+            "amount": 1.5,
+            "unit": "tbsp",
+            "quantity": "1.5 tbsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Onions & Tomatoes",
+            "amount": 100,
+            "unit": "g",
+            "quantity": "100 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Maida (All-purpose flour for Bhatura)",
+            "amount": 150,
+            "unit": "g",
+            "quantity": "150 g",
+            "category": "Grains & flours"
+          },
+          {
+            "name": "Yogurt & Baking Soda (for dough)",
+            "amount": 1,
+            "unit": "tbsp",
+            "quantity": "1 tbsp",
+            "category": "Dairy"
+          }
+        ],
+        "instructions": [
+          "Soak chickpeas overnight. Pressure cook them along with tea bags and a pinch of baking soda till perfectly dark and soft.",
+          "Sautè onion paste till brown, add tomato purèe and Chole Masala. Mix cooked chickpeas with splash of cooking water.",
+          "Simmer chole till gravy clings to beans.",
+          "For Bhatura: Knead maida with yogurt, soda, salt, and water. Rest for 2 hours.",
+          "Roll out into ovals and deep fry in hot oil until fully puffed up.",
+          "Serve spicy chole with hot fluffy bhaturas."
+        ]
+      },
+      {
+        "id": "l-7-v2",
+        "name": "Pindi Chole (Dry/Semi-dry)",
+        "ingredients": [
+          {
+            "name": "White Chickpeas",
+            "amount": 150,
+            "unit": "g",
+            "quantity": "150 g",
+            "category": "Lentils & pulses"
+          },
+          {
+            "name": "Anardana (Pomegranate Seeds powder)",
+            "amount": 1,
+            "unit": "tsp",
+            "quantity": "1 tsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Dry Spices (Coriander, Cumin, Amchur)",
+            "amount": 1.5,
+            "unit": "tbsp",
+            "quantity": "1.5 tbsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Ginger Juliennes",
+            "amount": 10,
+            "unit": "g",
+            "quantity": "10 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Ghee",
+            "amount": 1.5,
+            "unit": "tbsp",
+            "quantity": "1.5 tbsp",
+            "category": "Oils & condiments"
+          }
+        ],
+        "instructions": [
+          "Boil chickpeas till soft (with tea for color). Discard excess water entirely.",
+          "In a large iron kadhai, add chickpeas. Sprinkle all dry spice powders heavily including Anardana over them.",
+          "Heat a large chunk of ghee in a ladle, fry chopped ginger, green chilies, and whole spices until sizzling.",
+          "Pour the scorching hot ghee directly over the dry spices on the chickpeas. Mix thoroughly.",
+          "Cook together for 5 mins for a robust, dry dark chole. Serve with puri or naan."
+        ]
+      },
+      {
+        "id": "l-7-v3",
+        "name": "Street Style Chole Rice (Chawal)",
+        "ingredients": [
+          {
+            "name": "White Chickpeas",
+            "amount": 100,
+            "unit": "g",
+            "quantity": "100 g",
+            "category": "Lentils & pulses"
+          },
+          {
+            "name": "Rice",
+            "amount": 150,
+            "unit": "g",
+            "quantity": "150 g",
+            "category": "Grains & flours"
+          },
+          {
+            "name": "Onion, Tomato, Green Chili paste",
+            "amount": 80,
+            "unit": "g",
+            "quantity": "80 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Chana Masala",
+            "amount": 1,
+            "unit": "tbsp",
+            "quantity": "1 tbsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Oil",
+            "amount": 1,
+            "unit": "tbsp",
+            "quantity": "1 tbsp",
+            "category": "Oils & condiments"
+          }
+        ],
+        "instructions": [
+          "Cook chickpeas until soft.",
+          "Heat oil, lightly scramble the onion-tomato paste, adding chana masala early to steep the flavors.",
+          "Mix boiled chickpeas along with large amounts of cooking liquid. Boil aggressively so the grave thickens into a soupy consistency.",
+          "Cook basic plain white rice.",
+          "Pour soupy, spicy chole over a massive plate of rice. Serve with raw onion rings and green chutney."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "l-8",
+    "mealName": "Kadhi Pakora",
+    "category": "Lunch",
+    "cuisine": "North Indian",
+    "isLight": false,
+    "isVegetarian": true,
+    "calories": 350,
+    "recipeOptions": [
+      {
+        "id": "l-8-v1",
+        "name": "Punjabi Kadhi Pakora",
+        "ingredients": [
+          {
+            "name": "Sour Yogurt/Curd",
+            "amount": 200,
+            "unit": "g",
+            "quantity": "200 g",
+            "category": "Dairy"
+          },
+          {
+            "name": "Besan (Gram Flour)",
+            "amount": 60,
+            "unit": "g",
+            "quantity": "60 g",
+            "category": "Grains & flours"
+          },
+          {
+            "name": "Onion & Potatoes (for Pakora)",
+            "amount": 80,
+            "unit": "g",
+            "quantity": "80 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Mustard & Fenugreek Seeds",
+            "amount": 1,
+            "unit": "tsp",
+            "quantity": "1 tsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Oil (for deep frying)",
+            "amount": 100,
+            "unit": "ml",
+            "quantity": "100 ml",
+            "category": "Oils & condiments"
+          },
+          {
+            "name": "Steamed Rice",
+            "amount": 150,
+            "unit": "g",
+            "quantity": "150 g",
+            "category": "Grains & flours"
+          }
+        ],
+        "instructions": [
+          "Whisk very sour yogurt and roughly 30g of besan with 4 cups water. Ensure no lumps.",
+          "Temper mustard, fenugreek, and cumin in oil, pour in yogurt mixture. Bring to a rapid boil, stirring constantly, then simmer for 40 mins.",
+          "Make a thick batter with remainder besan, sliced onions/potatoes, spices, and a speck of baking soda.",
+          "Deep fry small irregular clumps of batter to make crispy pakoras.",
+          "Drop pakoras into boiling kadhi right before serving. Serve over steaming white rice."
+        ]
+      },
+      {
+        "id": "l-8-v2",
+        "name": "Gujarati Kadhi (Sweet & Sour)",
+        "ingredients": [
+          {
+            "name": "Yogurt/Curd",
+            "amount": 150,
+            "unit": "g",
+            "quantity": "150 g",
+            "category": "Dairy"
+          },
+          {
+            "name": "Besan (Gram Flour)",
+            "amount": 15,
+            "unit": "g",
+            "quantity": "15 g",
+            "category": "Grains & flours"
+          },
+          {
+            "name": "Jaggery/Sugar",
+            "amount": 1.5,
+            "unit": "tbsp",
+            "quantity": "1.5 tbsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Ghee",
+            "amount": 1,
+            "unit": "tbsp",
+            "quantity": "1 tbsp",
+            "category": "Oils & condiments"
+          },
+          {
+            "name": "Curry Leaves & Mustard",
+            "amount": 5,
+            "unit": "g",
+            "quantity": "5 g",
+            "category": "Spices"
+          },
+          {
+            "name": "Cinnamon & Cloves",
+            "amount": 1,
+            "unit": "g",
+            "quantity": "1 g",
+            "category": "Spices"
+          }
+        ],
+        "instructions": [
+          "Mix yogurt, very little besan (for a thin consistency), water, jaggery, and salt.",
+          "In a pan, heat ghee, temper with mustard, cumin, dried red chili, curry leaves, cinnamon, and cloves.",
+          "Pour in yogurt mixture slowly while stirring continuously to avoid splitting.",
+          "Gently boil it for 10-15 minutes to take off the raw besan edge.",
+          "Serve distinctly sweet, thin, white kadhi alongside khichdi or hot rice."
+        ]
+      },
+      {
+        "id": "l-8-v3",
+        "name": "Sindhi Kadhi",
+        "ingredients": [
+          {
+            "name": "Besan (Gram Flour)",
+            "amount": 40,
+            "unit": "g",
+            "quantity": "40 g",
+            "category": "Grains & flours"
+          },
+          {
+            "name": "Mixed Veg (Okra, Drumstick, Cluster Beans, Potato)",
+            "amount": 150,
+            "unit": "g",
+            "quantity": "150 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Tamarind Pulp",
+            "amount": 2,
+            "unit": "tbsp",
+            "quantity": "2 tbsp",
+            "category": "Oils & condiments"
+          },
+          {
+            "name": "Turmeric & Coriander powder",
+            "amount": 1.5,
+            "unit": "tsp",
+            "quantity": "1.5 tsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Oil",
+            "amount": 1.5,
+            "unit": "tbsp",
+            "quantity": "1.5 tbsp",
+            "category": "Oils & condiments"
+          }
+        ],
+        "instructions": [
+          "Unlike Punjabi kadhi, do not use yogurt. Instead, roast besan slowly in oil until dark reddish-brown and nutty.",
+          "Add plenty of water rapidly to the roasted besan to create a brown soup. Keep it lump-free.",
+          "Add vegetables simultaneously (lightly fry okra beforehand) along with dry spices.",
+          "Boil for 30 minutes until vegetables are cooked and the soup thickens nicely.",
+          "Add tamarind pulp at the end for pure tanginess. Serve hot with rice."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "l-9",
+    "mealName": "Pulissery Meal",
+    "category": "Lunch",
+    "cuisine": "South Indian",
+    "isLight": true,
+    "isVegetarian": true,
+    "calories": 350,
+    "recipeOptions": [
+      {
+        "id": "l-9-v1",
+        "name": "Moru Curry (Tempered Buttermilk)",
+        "ingredients": [
+          {
+            "name": "Yogurt/Buttermilk",
+            "amount": 150,
+            "unit": "ml",
+            "quantity": "150 ml",
+            "category": "Dairy"
+          },
+          {
+            "name": "Ginger, Green Chili, Shallots",
+            "amount": 20,
+            "unit": "g",
+            "quantity": "20 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Coconut Oil",
+            "amount": 1,
+            "unit": "tbsp",
+            "quantity": "1 tbsp",
+            "category": "Oils & condiments"
+          },
+          {
+            "name": "Mustard & Fenugreek Seeds",
+            "amount": 1,
+            "unit": "tsp",
+            "quantity": "1 tsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Curry Leaves",
+            "amount": 5,
+            "unit": "leaves",
+            "quantity": "5 leaves",
+            "category": "Other"
+          },
+          {
+            "name": "Rice",
+            "amount": 150,
+            "unit": "g",
+            "quantity": "150 g",
+            "category": "Grains & flours"
+          }
+        ],
+        "instructions": [
+          "Chop ginger, green chili, and shallots finely.",
+          "Whisk yogurt/buttermilk with a pinch of turmeric and salt. Keep it smooth.",
+          "Heat coconut oil, splutter mustard, fenugreek, dry red chili, and curry leaves.",
+          "Sautè ginger, green chilies, and shallots momentarily until aromatic.",
+          "Lower the heat completely. Pour tempered oil mix over whisked yogurt (do NOT boil). Serve with rice."
+        ]
+      },
+      {
+        "id": "l-9-v2",
+        "name": "Manga Pulissery (Ripe Mango Curry)",
+        "ingredients": [
+          {
+            "name": "Ripe Mangoes",
+            "amount": 2,
+            "unit": "piece",
+            "quantity": "2 piece",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Grated Coconut",
+            "amount": 50,
+            "unit": "g",
+            "quantity": "50 g",
+            "category": "Other"
+          },
+          {
+            "name": "Sour Yogurt/Curd",
+            "amount": 100,
+            "unit": "g",
+            "quantity": "100 g",
+            "category": "Dairy"
+          },
+          {
+            "name": "Jaggery (Optional)",
+            "amount": 1,
+            "unit": "tsp",
+            "quantity": "1 tsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Cumin Seeds & Green Chili",
+            "amount": 1,
+            "unit": "tsp",
+            "quantity": "1 tsp",
+            "category": "Spices"
+          }
+        ],
+        "instructions": [
+          "Peel and cook ripe mango chunks with turmeric and very little water until soft.",
+          "Grind fresh coconut, cumin, and green chili to a super fine paste.",
+          "Add coconut paste to the cooked mangoes and cook down firmly until thick.",
+          "Lower heat completely and gently mix in beaten sour yogurt. Heat until it starts to steam but don't boil.",
+          "Temper mustard seeds in coconut oil and pour over top."
+        ]
+      },
+      {
+        "id": "l-9-v3",
+        "name": "Kurukku Kalan",
+        "ingredients": [
+          {
+            "name": "Yam (Chena) / Raw Banana",
+            "amount": 150,
+            "unit": "g",
+            "quantity": "150 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Sour Curd",
+            "amount": 200,
+            "unit": "g",
+            "quantity": "200 g",
+            "category": "Dairy"
+          },
+          {
+            "name": "Black Pepper & Turmeric",
+            "amount": 1.5,
+            "unit": "tsp",
+            "quantity": "1.5 tsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Grated Coconut",
+            "amount": 50,
+            "unit": "g",
+            "quantity": "50 g",
+            "category": "Other"
+          },
+          {
+            "name": "Cumin Seeds",
+            "amount": 0.5,
+            "unit": "tsp",
+            "quantity": "0.5 tsp",
+            "category": "Spices"
+          }
+        ],
+        "instructions": [
+          "Chop yam/raw banana into small chunks. Cook them thoroughly with lots of black pepper and turmeric.",
+          "Pour slightly sour yogurt into the pot and vigorously boil it down continuously. This needs to dramatically reduce (Kurukku).",
+          "While reducing, blend coconut and cumin into a dense paste.",
+          "Once the yogurt mixture is thick, dark yellow and coating the vegetables, add the coconut paste and gently simmer.",
+          "Finish with coconut oil tempering. Serve alongside a sadhya feast."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "l-10",
+    "mealName": "Fish Curry Rice",
+    "category": "Lunch",
+    "cuisine": "South Indian",
+    "isLight": false,
+    "isVegetarian": false,
+    "calories": 450,
+    "recipeOptions": [
+      {
+        "id": "l-10-v1",
+        "name": "Kerala Meen Curry (Coconut Tamarind)",
+        "ingredients": [
+          {
+            "name": "Fish (Kingfish/Seer Fish)",
+            "amount": 200,
+            "unit": "g",
+            "quantity": "200 g",
+            "category": "Other"
+          },
+          {
+            "name": "Kudampuli (Gambooge)",
+            "amount": 2,
+            "unit": "piece",
+            "quantity": "2 piece",
+            "category": "Spices"
+          },
+          {
+            "name": "Shallots & Ginger Garlic",
+            "amount": 50,
+            "unit": "g",
+            "quantity": "50 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Red Chili Powder & Coriander powder",
+            "amount": 2,
+            "unit": "tbsp",
+            "quantity": "2 tbsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Coconut Oil",
+            "amount": 1.5,
+            "unit": "tbsp",
+            "quantity": "1.5 tbsp",
+            "category": "Oils & condiments"
+          },
+          {
+            "name": "Matta Rice",
+            "amount": 150,
+            "unit": "g",
+            "quantity": "150 g",
+            "category": "Grains & flours"
+          }
+        ],
+        "instructions": [
+          "Soak kudampuli in warm water. Clean and cut fish.",
+          "Sautè sliced shallots, ginger, garlic, and curry leaves heavily in coconut oil in a clay meen chatti.",
+          "Lower flame, add loads of red chili powder, coriander, and turmeric powder. Roast until oil separates.",
+          "Pour in kudampuli with its water. Add salt and let it boil into a red roaring gravy.",
+          "Drop the fish pieces, swirl the pot, cover, and gently cook for 10-15 mins. Serve hot over matta rice."
+        ]
+      },
+      {
+        "id": "l-10-v2",
+        "name": "Goan Fish Curry",
+        "ingredients": [
+          {
+            "name": "Prawns/Pomfret",
+            "amount": 200,
+            "unit": "g",
+            "quantity": "200 g",
+            "category": "Other"
+          },
+          {
+            "name": "Fresh Grated Coconut",
+            "amount": 100,
+            "unit": "g",
+            "quantity": "100 g",
+            "category": "Other"
+          },
+          {
+            "name": "Kashmiri Dry Chilies",
+            "amount": 6,
+            "unit": "piece",
+            "quantity": "6 piece",
+            "category": "Spices"
+          },
+          {
+            "name": "Tamarind & Garlic",
+            "amount": 15,
+            "unit": "g",
+            "quantity": "15 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Coriander Seeds & Cumin",
+            "amount": 1.5,
+            "unit": "tbsp",
+            "quantity": "1.5 tbsp",
+            "category": "Spices"
+          }
+        ],
+        "instructions": [
+          "Blend fresh coconut, pre-soaked Kashmiri chilies, coriander seeds, cumin, garlic, and tamarind into an incredibly smooth, fine, deep-red paste.",
+          "Pour this paste into a pan. Adjust the gravy thickness with minor water addition.",
+          "Bring the gravy to a simmer, add a diced onion and slit green chilies if desired.",
+          "Toss the cleaned seafood into the gravy. Let it poach gently for 5-8 minutes.",
+          "Serve the slightly sweet/tangy bright red coconut curry with steamed white rice."
+        ]
+      },
+      {
+        "id": "l-10-v3",
+        "name": "Mangalorean Fish Curry (Pulimunchi)",
+        "ingredients": [
+          {
+            "name": "Mackerel or Sardines",
+            "amount": 200,
+            "unit": "g",
+            "quantity": "200 g",
+            "category": "Other"
+          },
+          {
+            "name": "Byadagi Red Chilies",
+            "amount": 5,
+            "unit": "piece",
+            "quantity": "5 piece",
+            "category": "Spices"
+          },
+          {
+            "name": "Tamarind Extract",
+            "amount": 2,
+            "unit": "tbsp",
+            "quantity": "2 tbsp",
+            "category": "Oils & condiments"
+          },
+          {
+            "name": "Coriander Seeds, Mustard, Cumin, Pepper",
+            "amount": 2,
+            "unit": "tbsp",
+            "quantity": "2 tbsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Garlic & Onion",
+            "amount": 30,
+            "unit": "g",
+            "quantity": "30 g",
+            "category": "Vegetables"
+          }
+        ],
+        "instructions": [
+          "Dry roast byadagi chilies and dry spices individually until deeply fragrant.",
+          "Blend the roasted spices, garlic, onion, and tamarind to a thick, dark spice paste without coconut.",
+          "Heat a pan, lightly toast a small amount of onion, then pour the dark spice paste and boil fiercely.",
+          "Slide the fish pieces. Pulimunchi translates to \"sour and chili\". Adjust tamarind/chili to bite the palate. Cook for 8-10 mins.",
+          "Serve famously with boiled red rice or neer dosa."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "d-1",
+    "mealName": "Soup & Toast",
+    "category": "Dinner",
+    "cuisine": "Indian",
+    "isLight": true,
+    "isVegetarian": true,
+    "calories": 350,
+    "recipeOptions": [
+      {
+        "id": "d-1-v1",
+        "name": "Creamy Tomato Soup",
+        "ingredients": [
+          {
+            "name": "Tomatoes (Ripe red)",
+            "amount": 250,
+            "unit": "g",
+            "quantity": "250 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Bread/Toast",
+            "amount": 2,
+            "unit": "slices",
+            "quantity": "2 slices",
+            "category": "Grains & flours"
+          },
+          {
+            "name": "Garlic & Onion (chopped)",
+            "amount": 30,
+            "unit": "g",
+            "quantity": "30 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Bay Leaf & Peppercorns",
+            "amount": 1,
+            "unit": "tsp",
+            "quantity": "1 tsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Butter",
+            "amount": 1,
+            "unit": "tbsp",
+            "quantity": "1 tbsp",
+            "category": "Dairy"
+          },
+          {
+            "name": "Cream",
+            "amount": 1,
+            "unit": "tbsp",
+            "quantity": "1 tbsp",
+            "category": "Dairy"
+          }
+        ],
+        "instructions": [
+          "In a pan, melt butter. Sauté chopped garlic, onion, and a bay leaf.",
+          "Add roughly chopped tomatoes, a pinch of salt and sugar, and whole peppercorns.",
+          "Cook until tomatoes break down entirely. Add water and simmer for 10 minutes.",
+          "Discard bay leaf, blend smooth, and strain the soup for a silky texture.",
+          "Warm the soup, add a splash of cream and fresh pepper. Serve with crisp garlic toast."
+        ]
+      },
+      {
+        "id": "d-1-v2",
+        "name": "Sweet Corn Veg Soup",
+        "ingredients": [
+          {
+            "name": "Sweet Corn Kernels",
+            "amount": 100,
+            "unit": "g",
+            "quantity": "100 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Mixed Veg (Carrot, Beans, Cabbage)",
+            "amount": 50,
+            "unit": "g",
+            "quantity": "50 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Corn Starch (dissolved in water)",
+            "amount": 1,
+            "unit": "tbsp",
+            "quantity": "1 tbsp",
+            "category": "Other"
+          },
+          {
+            "name": "Black Pepper & Salt",
+            "amount": 0.5,
+            "unit": "tsp",
+            "quantity": "0.5 tsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Bread/Toast",
+            "amount": 2,
+            "unit": "slices",
+            "quantity": "2 slices",
+            "category": "Grains & flours"
+          }
+        ],
+        "instructions": [
+          "Blend half the sweet corn into a smooth paste.",
+          "Boil 3 cups of water/stock in a pot. Add the corn paste, whole corn kernels, and finely diced veggies.",
+          "Simmer until veggies are tender but crunchy (about 5-7 mins).",
+          "Stir in the corn starch slurry continuously until the soup thickens nicely.",
+          "Season with pepper, salt, and maybe a dash of soy sauce. Serve piping hot."
+        ]
+      },
+      {
+        "id": "d-1-v3",
+        "name": "Mushroom Clear Soup",
+        "ingredients": [
+          {
+            "name": "Button Mushrooms (sliced)",
+            "amount": 150,
+            "unit": "g",
+            "quantity": "150 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Garlic & Celery/Coriander stems",
+            "amount": 20,
+            "unit": "g",
+            "quantity": "20 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Olive Oil/Butter",
+            "amount": 1,
+            "unit": "tbsp",
+            "quantity": "1 tbsp",
+            "category": "Oils & condiments"
+          },
+          {
+            "name": "Black Pepper",
+            "amount": 1,
+            "unit": "tsp",
+            "quantity": "1 tsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Lemon Juice",
+            "amount": 1,
+            "unit": "tsp",
+            "quantity": "1 tsp",
+            "category": "Other"
+          },
+          {
+            "name": "Bread/Toast",
+            "amount": 2,
+            "unit": "slices",
+            "quantity": "2 slices",
+            "category": "Grains & flours"
+          }
+        ],
+        "instructions": [
+          "In a pot, gently sauté crushed garlic, celery stems, and sliced mushrooms until the mushrooms shrink.",
+          "Pour in 3-4 cups of water/vegetable stock. Let it simmer gently on low heat for 15-20 minutes.",
+          "Season heavily with freshly ground black pepper and salt.",
+          "Turn off heat, stir in a dash of lemon juice and fresh coriander leaves.",
+          "A very light, comforting dinner paired well with toasted brown bread."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "d-2",
+    "mealName": "Khichdi",
+    "category": "Dinner",
+    "cuisine": "North Indian",
+    "isLight": true,
+    "isVegetarian": true,
+    "calories": 350,
+    "recipeOptions": [
+      {
+        "id": "d-2-v1",
+        "name": "Moong Dal Khichdi",
+        "ingredients": [
+          {
+            "name": "Yellow Moong Dal",
+            "amount": 50,
+            "unit": "g",
+            "quantity": "50 g",
+            "category": "Lentils & pulses"
+          },
+          {
+            "name": "Rice",
+            "amount": 50,
+            "unit": "g",
+            "quantity": "50 g",
+            "category": "Grains & flours"
+          },
+          {
+            "name": "Ghee",
+            "amount": 1.5,
+            "unit": "tbsp",
+            "quantity": "1.5 tbsp",
+            "category": "Oils & condiments"
+          },
+          {
+            "name": "Cumin Seeds & Heeng",
+            "amount": 0.5,
+            "unit": "tsp",
+            "quantity": "0.5 tsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Turmeric",
+            "amount": 0.25,
+            "unit": "tsp",
+            "quantity": "0.25 tsp",
+            "category": "Spices"
+          }
+        ],
+        "instructions": [
+          "Wash rice and dal together. You can lightly dry roast the dal for better flavor.",
+          "Add them to a pressure cooker with 3.5 to 4 times the water, a pinch of turmeric, and salt.",
+          "Pressure cook for 3-4 whistles until very soft and mushy.",
+          "In a small pan, heat ghee, splutter cumin seeds, heeng, and optionally a dry red chili.",
+          "Pour the tempering over the hot mushy khichdi. Mix and serve immediately."
+        ]
+      },
+      {
+        "id": "d-2-v2",
+        "name": "Masala Veg Khichdi",
+        "ingredients": [
+          {
+            "name": "Rice & Dal Mix (Moong/Toor)",
+            "amount": 100,
+            "unit": "g",
+            "quantity": "100 g",
+            "category": "Grains & flours"
+          },
+          {
+            "name": "Mixed Vegetables (Peas, Carrots, Potatoes)",
+            "amount": 100,
+            "unit": "g",
+            "quantity": "100 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Onion & Tomato",
+            "amount": 80,
+            "unit": "g",
+            "quantity": "80 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Ghee",
+            "amount": 2,
+            "unit": "tbsp",
+            "quantity": "2 tbsp",
+            "category": "Oils & condiments"
+          },
+          {
+            "name": "Garam Masala",
+            "amount": 0.5,
+            "unit": "tsp",
+            "quantity": "0.5 tsp",
+            "category": "Spices"
+          }
+        ],
+        "instructions": [
+          "Heat ghee in a pressure cooker. Temper cumin, cloves, and bay leaf.",
+          "Saute sliced onions, ginger-garlic paste, and tomatoes until soft.",
+          "Add turmeric, red chili powder, chopped vegetables, and the washed rice-dal mix.",
+          "Add water (approx 3.5 cups), salt, and pressure cook until mushy.",
+          "Finish with a sprinkle of garam masala and fresh coriander. Great for slightly heavier winter dinners."
+        ]
+      },
+      {
+        "id": "d-2-v3",
+        "name": "Bajra Khichdi (Millet)",
+        "ingredients": [
+          {
+            "name": "Pearl Millet (Bajra)",
+            "amount": 50,
+            "unit": "g",
+            "quantity": "50 g",
+            "category": "Grains & flours"
+          },
+          {
+            "name": "Yellow Moong Dal",
+            "amount": 50,
+            "unit": "g",
+            "quantity": "50 g",
+            "category": "Lentils & pulses"
+          },
+          {
+            "name": "Ghee",
+            "amount": 1.5,
+            "unit": "tbsp",
+            "quantity": "1.5 tbsp",
+            "category": "Oils & condiments"
+          },
+          {
+            "name": "Cumin Seeds & Peppercorns",
+            "amount": 1,
+            "unit": "tsp",
+            "quantity": "1 tsp",
+            "category": "Spices"
+          }
+        ],
+        "instructions": [
+          "Lightly pulse/crush the Bajra in a blender to remove the husk. Winnow or wash to remove floating husk bits.",
+          "Soak the bajra for hours, then pressure cook it alone first for 4 whistles.",
+          "Add the washed moong dal to the cooked bajra, add water and salt, and pressure cook again for 2 more whistles.",
+          "Heat lavish ghee in a pan, toss in crushed pepper and cumin seeds. Pour over the starchy, thick khichdi.",
+          "Extremely warming and nutritious."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "d-3",
+    "mealName": "Curd Rice",
+    "category": "Dinner",
+    "cuisine": "South Indian",
+    "isLight": true,
+    "isVegetarian": true,
+    "calories": 350,
+    "recipeOptions": [
+      {
+        "id": "d-3-v1",
+        "name": "Temple Style Curd Rice",
+        "ingredients": [
+          {
+            "name": "Raw Rice",
+            "amount": 100,
+            "unit": "g",
+            "quantity": "100 g",
+            "category": "Grains & flours"
+          },
+          {
+            "name": "Milk",
+            "amount": 50,
+            "unit": "ml",
+            "quantity": "50 ml",
+            "category": "Dairy"
+          },
+          {
+            "name": "Fresh Curd/Yogurt",
+            "amount": 150,
+            "unit": "g",
+            "quantity": "150 g",
+            "category": "Dairy"
+          },
+          {
+            "name": "Mustard & Urad Dal",
+            "amount": 1,
+            "unit": "tsp",
+            "quantity": "1 tsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Curry Leaves, Ginger, Green Chili",
+            "amount": 10,
+            "unit": "g",
+            "quantity": "10 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Oil",
+            "amount": 1,
+            "unit": "tbsp",
+            "quantity": "1 tbsp",
+            "category": "Oils & condiments"
+          }
+        ],
+        "instructions": [
+          "Cook rice with extra water until very mushy. Mash it further while it is hot.",
+          "Let the rice cool completely. Stir in milk (prevents excessive souring) and large amounts of fresh curd.",
+          "In a pan, heat oil, temper mustard seeds, urad dal, finely chopped ginger, green chilies, and curry leaves.",
+          "Pour the tempering over the curd rice. Add salt and mix thoroughly.",
+          "Serve with pickle or roasted papad. Eaten chilled or room temperature."
+        ]
+      },
+      {
+        "id": "d-3-v2",
+        "name": "Pomegranate & Grape Curd Rice",
+        "ingredients": [
+          {
+            "name": "Cooked Mushy Rice",
+            "amount": 150,
+            "unit": "g",
+            "quantity": "150 g",
+            "category": "Grains & flours"
+          },
+          {
+            "name": "Fresh Curd/Yogurt",
+            "amount": 150,
+            "unit": "g",
+            "quantity": "150 g",
+            "category": "Dairy"
+          },
+          {
+            "name": "Pomegranate Arils",
+            "amount": 30,
+            "unit": "g",
+            "quantity": "30 g",
+            "category": "Other"
+          },
+          {
+            "name": "Black/Green Grapes (chopped)",
+            "amount": 30,
+            "unit": "g",
+            "quantity": "30 g",
+            "category": "Other"
+          },
+          {
+            "name": "Cashews (broken)",
+            "amount": 10,
+            "unit": "g",
+            "quantity": "10 g",
+            "category": "Other"
+          },
+          {
+            "name": "Mustard Seeds, Chili",
+            "amount": 1,
+            "unit": "tsp",
+            "quantity": "1 tsp",
+            "category": "Spices"
+          }
+        ],
+        "instructions": [
+          "Take cooled, over-cooked, mashed rice. Whip in the fresh curd till remarkably creamy.",
+          "Gently fold in fresh ruby red pomegranate arils and chopped sweet grapes.",
+          "Fry broken cashews in oil, along with mustard seeds and curry leaves.",
+          "Mix the tempering into the yogurt rice.",
+          "A delightfully sweet, savory, and cooling light dinner."
+        ]
+      },
+      {
+        "id": "d-3-v3",
+        "name": "Tadka Curd Rice (Bagala Bath)",
+        "ingredients": [
+          {
+            "name": "Pre-cooked Rice",
+            "amount": 150,
+            "unit": "g",
+            "quantity": "150 g",
+            "category": "Grains & flours"
+          },
+          {
+            "name": "Curd/Yogurt",
+            "amount": 150,
+            "unit": "g",
+            "quantity": "150 g",
+            "category": "Dairy"
+          },
+          {
+            "name": "Grated Carrot & Cucumber",
+            "amount": 40,
+            "unit": "g",
+            "quantity": "40 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Coriander Leaves",
+            "amount": 10,
+            "unit": "g",
+            "quantity": "10 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Mustard & Cumin Seeds",
+            "amount": 1,
+            "unit": "tsp",
+            "quantity": "1 tsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Oil/Ghee",
+            "amount": 1,
+            "unit": "tbsp",
+            "quantity": "1 tbsp",
+            "category": "Oils & condiments"
+          }
+        ],
+        "instructions": [
+          "Mix cool rice and yogurt aggressively with salt.",
+          "Toss in raw grated carrots, cucumber pieces, and vibrant minced coriander.",
+          "Heat oil/ghee to smoking point. Drop in mustard, cumin, and dried red chilies for a smoky, sharp tadka.",
+          "Turn off the heat, pour tadka over the curd rice just prior to serving.",
+          "Provides maximum crunch inside a cool bath."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "d-4",
+    "mealName": "Light Roti Sabzi",
+    "category": "Dinner",
+    "cuisine": "North Indian",
+    "isLight": true,
+    "isVegetarian": true,
+    "calories": 350,
+    "recipeOptions": [
+      {
+        "id": "d-4-v1",
+        "name": "Roti with Bhindi (Okra)",
+        "ingredients": [
+          {
+            "name": "Whole Wheat Flour (for Rotis)",
+            "amount": 100,
+            "unit": "g",
+            "quantity": "100 g",
+            "category": "Grains & flours"
+          },
+          {
+            "name": "Bhindi (Okra) chopped",
+            "amount": 200,
+            "unit": "g",
+            "quantity": "200 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Onion (sliced)",
+            "amount": 50,
+            "unit": "g",
+            "quantity": "50 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Amchur (Mango Powder)",
+            "amount": 0.5,
+            "unit": "tsp",
+            "quantity": "0.5 tsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Coriander Powder & Turmeric",
+            "amount": 1.5,
+            "unit": "tsp",
+            "quantity": "1.5 tsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Oil",
+            "amount": 1.5,
+            "unit": "tbsp",
+            "quantity": "1.5 tbsp",
+            "category": "Oils & condiments"
+          }
+        ],
+        "instructions": [
+          "Knead dough, make 2-3 thin, soft rotis/phulkas.",
+          "Wash and dry okra completely before chopping to prevent slime.",
+          "Heat oil, sauté sliced onions until pink.",
+          "Add okra, a pinch of turmeric, and cook uncovered on medium flame till okra softens.",
+          "Add coriander powder, salt, and amchur right at the end (adding salt early draws moisture). Toss and serve."
+        ]
+      },
+      {
+        "id": "d-4-v2",
+        "name": "Roti with Lauki (Bottle Gourd)",
+        "ingredients": [
+          {
+            "name": "Whole Wheat Flour",
+            "amount": 100,
+            "unit": "g",
+            "quantity": "100 g",
+            "category": "Grains & flours"
+          },
+          {
+            "name": "Lauki (Bottle Gourd) diced",
+            "amount": 200,
+            "unit": "g",
+            "quantity": "200 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Tomato (chopped)",
+            "amount": 50,
+            "unit": "g",
+            "quantity": "50 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Cumin Seeds",
+            "amount": 0.5,
+            "unit": "tsp",
+            "quantity": "0.5 tsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Turmeric & Coriander powder",
+            "amount": 1,
+            "unit": "tsp",
+            "quantity": "1 tsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Oil/Ghee",
+            "amount": 1,
+            "unit": "tbsp",
+            "quantity": "1 tbsp",
+            "category": "Oils & condiments"
+          }
+        ],
+        "instructions": [
+          "Make soft rotis.",
+          "Heat a small pressure cooker. Add oil, temper cumin seeds.",
+          "Saute chopped tomato until mushy. Add simple spices – turmeric, coriander, a pinch of chili.",
+          "Toss in diced lauki, add very little water (lauki has high moisture).",
+          "Pressure cook for 2 whistles. Garnish with coriander. Very light for digestion."
+        ]
+      },
+      {
+        "id": "d-4-v3",
+        "name": "Roti with Tinda (Apple Gourd)",
+        "ingredients": [
+          {
+            "name": "Whole Wheat Flour",
+            "amount": 100,
+            "unit": "g",
+            "quantity": "100 g",
+            "category": "Grains & flours"
+          },
+          {
+            "name": "Tinda (peeled & chopped)",
+            "amount": 200,
+            "unit": "g",
+            "quantity": "200 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Onion & Tomato",
+            "amount": 80,
+            "unit": "g",
+            "quantity": "80 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Garam Masala",
+            "amount": 0.25,
+            "unit": "tsp",
+            "quantity": "0.25 tsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Oil",
+            "amount": 1,
+            "unit": "tbsp",
+            "quantity": "1 tbsp",
+            "category": "Oils & condiments"
+          }
+        ],
+        "instructions": [
+          "Make basic phulkas.",
+          "In a pan/cooker, temper with cumin seeds. Gently sauté finely chopped onion and tomatoes.",
+          "Add chopped tinda, turmeric, chili powder, and salt.",
+          "Cook uncovered if pan, or 1 whistle if cooker, till tender but not completely dissolved.",
+          "An unassuming, incredibly light and cooling vegetable dish perfect for evening."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "d-5",
+    "mealName": "Dalia",
+    "category": "Dinner",
+    "cuisine": "North Indian",
+    "isLight": true,
+    "isVegetarian": true,
+    "calories": 350,
+    "recipeOptions": [
+      {
+        "id": "d-5-v1",
+        "name": "Masala Veg Dalia",
+        "ingredients": [
+          {
+            "name": "Broken Wheat (Dalia)",
+            "amount": 70,
+            "unit": "g",
+            "quantity": "70 g",
+            "category": "Grains & flours"
+          },
+          {
+            "name": "Moong Dal",
+            "amount": 30,
+            "unit": "g",
+            "quantity": "30 g",
+            "category": "Lentils & pulses"
+          },
+          {
+            "name": "Mixed Chopped Vegetables",
+            "amount": 100,
+            "unit": "g",
+            "quantity": "100 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Onion, Tomato, Ginger",
+            "amount": 50,
+            "unit": "g",
+            "quantity": "50 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Turmeric, Cumin",
+            "amount": 1,
+            "unit": "tsp",
+            "quantity": "1 tsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Ghee",
+            "amount": 1,
+            "unit": "tbsp",
+            "quantity": "1 tbsp",
+            "category": "Oils & condiments"
+          }
+        ],
+        "instructions": [
+          "Dry roast Dalia on low flame till golden brown and aromatic. Wash Moong dal.",
+          "In a pressure cooker, heat heavily scented ghee, add cumin, ginger, onions, and sauté.",
+          "Toss in tomatoes, turmeric, mixed vegetables, dalia, and dal.",
+          "Add roughly 3.5 cups of water and salt.",
+          "Pressure cook for 3-4 whistles. Best enjoyed with a spoon of yogurt."
+        ]
+      },
+      {
+        "id": "d-5-v2",
+        "name": "Sweet Milk Dalia",
+        "ingredients": [
+          {
+            "name": "Broken Wheat (Dalia)",
+            "amount": 70,
+            "unit": "g",
+            "quantity": "70 g",
+            "category": "Grains & flours"
+          },
+          {
+            "name": "Milk",
+            "amount": 300,
+            "unit": "ml",
+            "quantity": "300 ml",
+            "category": "Dairy"
+          },
+          {
+            "name": "Sugar/Jaggery",
+            "amount": 2,
+            "unit": "tbsp",
+            "quantity": "2 tbsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Cardamom Powder",
+            "amount": 0.25,
+            "unit": "tsp",
+            "quantity": "0.25 tsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Almonds & Raisins",
+            "amount": 10,
+            "unit": "g",
+            "quantity": "10 g",
+            "category": "Other"
+          },
+          {
+            "name": "Ghee",
+            "amount": 0.5,
+            "unit": "tbsp",
+            "quantity": "0.5 tbsp",
+            "category": "Oils & condiments"
+          }
+        ],
+        "instructions": [
+          "Roast dalia in a little ghee till perfectly nutty.",
+          "Add a little water and pressure cook for 1-2 whistles just to soften it dramatically.",
+          "Open the cooker, pour in the warm milk, and simmer the soft dalia in the milk until thick (kheer-like).",
+          "Sweeten with sugar/jaggery, flavor with cardamom, and toss in sliced almonds.",
+          "Serve warm or chilled as a very soothing dinner dessert meal."
+        ]
+      },
+      {
+        "id": "d-5-v3",
+        "name": "Simple Namkeen Dalia (Pulao style)",
+        "ingredients": [
+          {
+            "name": "Broken Wheat (Dalia)",
+            "amount": 100,
+            "unit": "g",
+            "quantity": "100 g",
+            "category": "Grains & flours"
+          },
+          {
+            "name": "Green Peas & Carrots",
+            "amount": 100,
+            "unit": "g",
+            "quantity": "100 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Mustard & Cumin Seeds",
+            "amount": 1,
+            "unit": "tsp",
+            "quantity": "1 tsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Oil",
+            "amount": 1,
+            "unit": "tbsp",
+            "quantity": "1 tbsp",
+            "category": "Oils & condiments"
+          },
+          {
+            "name": "Green Chilies & Lemon",
+            "amount": 10,
+            "unit": "g",
+            "quantity": "10 g",
+            "category": "Vegetables"
+          }
+        ],
+        "instructions": [
+          "Dry roast the dalia. Keep it aside.",
+          "In a wide pan, temper mustard, cumin, green chilies. Sauté peas and carrots briefly.",
+          "Add 2.5 cups of boiling water and salt. Tip the roasted dalia in.",
+          "Cover with a lid and cook purely on slow heat until all water is elegantly absorbed and grains separate.",
+          "Fluff up, squirt lemon juice, and serve dry like an upma/pulao."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "d-6",
+    "mealName": "Dosa & Chutney",
+    "category": "Dinner",
+    "cuisine": "South Indian",
+    "isLight": true,
+    "isVegetarian": true,
+    "calories": 350,
+    "recipeOptions": [
+      {
+        "id": "d-6-v1",
+        "name": "Plain Rice Dosa",
+        "ingredients": [
+          {
+            "name": "Dosa Batter",
+            "amount": 200,
+            "unit": "g",
+            "quantity": "200 g",
+            "category": "Grains & flours"
+          },
+          {
+            "name": "Fresh Coriander / Mint",
+            "amount": 10,
+            "unit": "g",
+            "quantity": "10 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Oil",
+            "amount": 1,
+            "unit": "tbsp",
+            "quantity": "1 tbsp",
+            "category": "Oils & condiments"
+          },
+          {
+            "name": "Grated Coconut (for chutney)",
+            "amount": 50,
+            "unit": "g",
+            "quantity": "50 g",
+            "category": "Other"
+          },
+          {
+            "name": "Roasted Chana Dal & Tamarind",
+            "amount": 1,
+            "unit": "tbsp",
+            "quantity": "1 tbsp",
+            "category": "Spices"
+          }
+        ],
+        "instructions": [
+          "Prepare hot, thin, crisp dosas without heavy masala filling.",
+          "For Chutney: Grind coconut, roasted chana dal, green chilies, tamarind, salt, and water.",
+          "Quick temper the chutney with mustard seeds and curry leaves in oil.",
+          "Serve 2-3 crispy plain dosas folded immediately off the tawa.",
+          "A delightfully light alternative to heavy rice."
+        ]
+      },
+      {
+        "id": "d-6-v2",
+        "name": "Neer Dosa",
+        "ingredients": [
+          {
+            "name": "Raw Rice",
+            "amount": 150,
+            "unit": "g",
+            "quantity": "150 g",
+            "category": "Grains & flours"
+          },
+          {
+            "name": "Fresh Coconut (Grated)",
+            "amount": 30,
+            "unit": "g",
+            "quantity": "30 g",
+            "category": "Other"
+          },
+          {
+            "name": "Salt",
+            "amount": 1,
+            "unit": "tsp",
+            "quantity": "1 tsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Coconut Oil (for greasing)",
+            "amount": 1,
+            "unit": "tbsp",
+            "quantity": "1 tbsp",
+            "category": "Oils & condiments"
+          }
+        ],
+        "instructions": [
+          "Soak raw rice for 4 hours. Grind to an extremely fine, smooth paste with grated coconut.",
+          "Dilute the batter substantially with water to make a milky, watery consistency.",
+          "Heat a cast-iron pan. Splash/pour the watery batter over it rapidly - do not spread with a ladle.",
+          "Cover and cook for 1-2 minutes. Do NOT flip the dosa. Fold into quarters and serve.",
+          "Pairs well with any light coconut-based gravy or jaggery-coconut mix."
+        ]
+      },
+      {
+        "id": "d-6-v3",
+        "name": "Wheat (Godhumai) Dosa",
+        "ingredients": [
+          {
+            "name": "Whole Wheat Flour",
+            "amount": 100,
+            "unit": "g",
+            "quantity": "100 g",
+            "category": "Grains & flours"
+          },
+          {
+            "name": "Rice Flour (for crispiness)",
+            "amount": 20,
+            "unit": "g",
+            "quantity": "20 g",
+            "category": "Grains & flours"
+          },
+          {
+            "name": "Cumin, Black Pepper, Fine Onion",
+            "amount": 2,
+            "unit": "tbsp",
+            "quantity": "2 tbsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Salt",
+            "amount": 1,
+            "unit": "tsp",
+            "quantity": "1 tsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Oil",
+            "amount": 1,
+            "unit": "tbsp",
+            "quantity": "1 tbsp",
+            "category": "Oils & condiments"
+          }
+        ],
+        "instructions": [
+          "Whisk wheat flour, rice flour, cumin, lightly crushed pepper, chopped onions, salt, and lots of water.",
+          "Rest for 10 minutes. The batter should flow like thin buttermilk.",
+          "Pour the batter starting from the outer edges to the center of a smoking hot tawa.",
+          "Drizzle oil. Cook on medium flame until edges detach and crisp. Flip if needed.",
+          "Instant, zero-fermentation dosa."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "d-7",
+    "mealName": "Idiyappam",
+    "category": "Dinner",
+    "cuisine": "South Indian",
+    "isLight": true,
+    "isVegetarian": true,
+    "calories": 350,
+    "recipeOptions": [
+      {
+        "id": "d-7-v1",
+        "name": "Idiyappam with Sweet Coconut Milk",
+        "ingredients": [
+          {
+            "name": "Roasted Rice Flour",
+            "amount": 150,
+            "unit": "g",
+            "quantity": "150 g",
+            "category": "Grains & flours"
+          },
+          {
+            "name": "Coconut Milk",
+            "amount": 200,
+            "unit": "ml",
+            "quantity": "200 ml",
+            "category": "Dairy"
+          },
+          {
+            "name": "Jaggery/Sugar",
+            "amount": 2,
+            "unit": "tbsp",
+            "quantity": "2 tbsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Cardamom Powder",
+            "amount": 0.25,
+            "unit": "tsp",
+            "quantity": "0.25 tsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Salt & Water",
+            "amount": 0,
+            "unit": "g",
+            "quantity": "g",
+            "category": "Other"
+          }
+        ],
+        "instructions": [
+          "Boil water with a pinch of salt and oil. Swiftly stir the boiled water into the rice flour.",
+          "Knead using a spoon (then hands when warm) into a smooth dough.",
+          "Press the dough through a sev press (idiyappam maker) onto greased steamer plates.",
+          "Steam for 5-7 minutes.",
+          "Sweeten thick coconut milk with jaggery and cardamom. Dunk warm idiyappams entirely into it."
+        ]
+      },
+      {
+        "id": "d-7-v2",
+        "name": "Idiyappam with Veg Stew",
+        "ingredients": [
+          {
+            "name": "Roasted Rice Flour",
+            "amount": 150,
+            "unit": "g",
+            "quantity": "150 g",
+            "category": "Grains & flours"
+          },
+          {
+            "name": "Mixed Veggies (Carrot, Potato)",
+            "amount": 100,
+            "unit": "g",
+            "quantity": "100 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Coconut Milk",
+            "amount": 150,
+            "unit": "ml",
+            "quantity": "150 ml",
+            "category": "Dairy"
+          },
+          {
+            "name": "Cloves, Cardamom",
+            "amount": 1,
+            "unit": "g",
+            "quantity": "1 g",
+            "category": "Spices"
+          },
+          {
+            "name": "Coconut Oil",
+            "amount": 1,
+            "unit": "tbsp",
+            "quantity": "1 tbsp",
+            "category": "Oils & condiments"
+          }
+        ],
+        "instructions": [
+          "Similarly prepare, press, and steam the idiyappam.",
+          "Prepare a light, white, coconut-milk based stew as done for appams: gently boil veggies with spices, finish with thick coconut milk.",
+          "The savory, intensely spiced, but very light stew acts as a perfect blanket over fragile rice strings."
+        ]
+      },
+      {
+        "id": "d-7-v3",
+        "name": "Lemon Sevai (Lemon Idiyappam)",
+        "ingredients": [
+          {
+            "name": "Roasted Rice Flour (or pre-made sevai)",
+            "amount": 150,
+            "unit": "g",
+            "quantity": "150 g",
+            "category": "Grains & flours"
+          },
+          {
+            "name": "Lemon Juice",
+            "amount": 1.5,
+            "unit": "tbsp",
+            "quantity": "1.5 tbsp",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Peanuts & Cashews",
+            "amount": 20,
+            "unit": "g",
+            "quantity": "20 g",
+            "category": "Other"
+          },
+          {
+            "name": "Mustard & Cumin Seeds, Turmeric",
+            "amount": 1,
+            "unit": "tsp",
+            "quantity": "1 tsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Oil",
+            "amount": 1,
+            "unit": "tbsp",
+            "quantity": "1 tbsp",
+            "category": "Oils & condiments"
+          }
+        ],
+        "instructions": [
+          "Make basic idiyappam, lightly steam them, and once cooled, pull the strands apart gently.",
+          "Heat oil, comprehensively roast peanuts, fenugreek, dry red chilies, mustard, curry leaves, and a large pinch of turmeric.",
+          "Take off heat. Pour lemon juice into the tempering.",
+          "Toss the separated rice strings into the bright yellow tadka.",
+          "A tangy, crunchy, ultra-light and quick dinner."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "d-8",
+    "mealName": "Moong Chilla",
+    "category": "Dinner",
+    "cuisine": "North Indian",
+    "isLight": true,
+    "isVegetarian": true,
+    "calories": 350,
+    "recipeOptions": [
+      {
+        "id": "d-8-v1",
+        "name": "Paneer Stuffed Moong Dal Chilla",
+        "ingredients": [
+          {
+            "name": "Green/Yellow Moong Dal",
+            "amount": 150,
+            "unit": "g",
+            "quantity": "150 g",
+            "category": "Lentils & pulses"
+          },
+          {
+            "name": "Paneer Grated",
+            "amount": 80,
+            "unit": "g",
+            "quantity": "80 g",
+            "category": "Dairy"
+          },
+          {
+            "name": "Green Chili & Ginger",
+            "amount": 10,
+            "unit": "g",
+            "quantity": "10 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Salt & Cumin",
+            "amount": 1,
+            "unit": "tsp",
+            "quantity": "1 tsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Oil",
+            "amount": 1,
+            "unit": "tbsp",
+            "quantity": "1 tbsp",
+            "category": "Oils & condiments"
+          }
+        ],
+        "instructions": [
+          "Soak moong dal. Blend it with green chilies, ginger, salt, and minimal water to a medium-thick batter.",
+          "Mix grated paneer with chopped coriander and mild species.",
+          "Spread batter firmly on a hot tawa in concentric circles.",
+          "Cook till the bottom crisps, add handfuls of the paneer stuffing across the center.",
+          "Fold tightly like a crepe and slice. Serve hot."
+        ]
+      },
+      {
+        "id": "d-8-v2",
+        "name": "Plain Crispy Moong Chilla",
+        "ingredients": [
+          {
+            "name": "Sprouted Moong Beans",
+            "amount": 150,
+            "unit": "g",
+            "quantity": "150 g",
+            "category": "Lentils & pulses"
+          },
+          {
+            "name": "Onion & Tomato (finely diced)",
+            "amount": 50,
+            "unit": "g",
+            "quantity": "50 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Coriander Leaves",
+            "amount": 10,
+            "unit": "g",
+            "quantity": "10 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Spices (Jeera, Salt, Chat Masala)",
+            "amount": 1.5,
+            "unit": "tsp",
+            "quantity": "1.5 tsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Oil",
+            "amount": 1,
+            "unit": "tbsp",
+            "quantity": "1 tbsp",
+            "category": "Oils & condiments"
+          }
+        ],
+        "instructions": [
+          "For a higher protein variant, blend sprouted moong beans into a batter.",
+          "Spread the chilla wide on the tawa.",
+          "Sprinkle heavily the raw diced onions, tomatoes, and chaat masala directly onto the wet batter facing up.",
+          "Gently press the veggies down with a spatula. Flip quickly to slightly toast the vegetables.",
+          "Serve with mint chutney. No heavy stuffing required."
+        ]
+      },
+      {
+        "id": "d-8-v3",
+        "name": "Oats & Moong Mixed Chilla",
+        "ingredients": [
+          {
+            "name": "Yellow Moong Dal",
+            "amount": 80,
+            "unit": "g",
+            "quantity": "80 g",
+            "category": "Lentils & pulses"
+          },
+          {
+            "name": "Rolled Oats",
+            "amount": 50,
+            "unit": "g",
+            "quantity": "50 g",
+            "category": "Grains & flours"
+          },
+          {
+            "name": "Spinach Leaves",
+            "amount": 30,
+            "unit": "g",
+            "quantity": "30 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Garlic & Ginger",
+            "amount": 10,
+            "unit": "g",
+            "quantity": "10 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Yogurt/Curd",
+            "amount": 1,
+            "unit": "tbsp",
+            "quantity": "1 tbsp",
+            "category": "Dairy"
+          }
+        ],
+        "instructions": [
+          "Soak dal. Dry blend oats into flour. Optionally, blanche spinach briefly.",
+          "In a blender, thoroughly combine all ingredients: dal, oat flour, spinach, garlic, ginger, and yogurt to make a vibrant green batter.",
+          "Pour on hot tawa and spread it out medium-thick (oats make it slightly gummy if spread too thin).",
+          "Cook evenly on both sides.",
+          "A fiber and protein rich option that skips heavy grains completely."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "d-9",
+    "mealName": "Chicken Roast",
+    "category": "Dinner",
+    "cuisine": "Indian",
+    "isLight": false,
+    "isVegetarian": false,
+    "calories": 450,
+    "recipeOptions": [
+      {
+        "id": "d-9-v1",
+        "name": "Kerala Chicken Roast (Nadan Kozhi Roast)",
+        "ingredients": [
+          {
+            "name": "Chicken pieces",
+            "amount": 250,
+            "unit": "g",
+            "quantity": "250 g",
+            "category": "Other"
+          },
+          {
+            "name": "Onions (Thinly sliced)",
+            "amount": 150,
+            "unit": "g",
+            "quantity": "150 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Tomatoes",
+            "amount": 80,
+            "unit": "g",
+            "quantity": "80 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Ginger Garlic, Green Chilies, Curry Leaves",
+            "amount": 40,
+            "unit": "g",
+            "quantity": "40 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Garam Masala, Chili, Coriander, Turmeric",
+            "amount": 2,
+            "unit": "tbsp",
+            "quantity": "2 tbsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Coconut Oil",
+            "amount": 2,
+            "unit": "tbsp",
+            "quantity": "2 tbsp",
+            "category": "Oils & condiments"
+          }
+        ],
+        "instructions": [
+          "Marinate chicken lightly in a pinch of chili and turmeric. Optionally, shallow fry it lightly first.",
+          "In intense heat with coconut oil, aggressively caramelize sliced onions, ginger-garlic paste, and loads of curry leaves.",
+          "Add spice powders, wait for oil to release, add tomatoes and cook to mush.",
+          "Add marinated/fried chicken, lower the heat, and mix the heavy thick onion masala all over it.",
+          "Roast continuously until it is dark, sticky, and completely dry. Serve with Appam or Parotta."
+        ]
+      },
+      {
+        "id": "d-9-v2",
+        "name": "Punjabi Dry Chicken (Chicken Sukha)",
+        "ingredients": [
+          {
+            "name": "Chicken",
+            "amount": 250,
+            "unit": "g",
+            "quantity": "250 g",
+            "category": "Other"
+          },
+          {
+            "name": "Yogurt",
+            "amount": 2,
+            "unit": "tbsp",
+            "quantity": "2 tbsp",
+            "category": "Dairy"
+          },
+          {
+            "name": "Whole Spices",
+            "amount": 1,
+            "unit": "tbsp",
+            "quantity": "1 tbsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Meat Masala / Garam Masala",
+            "amount": 1,
+            "unit": "tbsp",
+            "quantity": "1 tbsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Lemon Juice",
+            "amount": 1,
+            "unit": "tbsp",
+            "quantity": "1 tbsp",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Oil/Ghee",
+            "amount": 1.5,
+            "unit": "tbsp",
+            "quantity": "1.5 tbsp",
+            "category": "Oils & condiments"
+          }
+        ],
+        "instructions": [
+          "Marinate chicken in yogurt and meat masala. Leave for 1 hour.",
+          "Splutter whole spices in oil, sauté roughly chopped onions until lightly pink.",
+          "Tip in the chicken and its marinade. Cook entirely on medium heat without adding raw water.",
+          "The chicken will release water. Stir and cook until the liquid entirely dries up and forms a concentrated dry masala coating.",
+          "Finish with lemon juice and a scattering of fresh coriander."
+        ]
+      },
+      {
+        "id": "d-9-v3",
+        "name": "Chicken Tikka Dry",
+        "ingredients": [
+          {
+            "name": "Boneless Chicken chunks",
+            "amount": 200,
+            "unit": "g",
+            "quantity": "200 g",
+            "category": "Other"
+          },
+          {
+            "name": "Hung Curd",
+            "amount": 2,
+            "unit": "tbsp",
+            "quantity": "2 tbsp",
+            "category": "Dairy"
+          },
+          {
+            "name": "Kashmiri Chili & Tandoori Masala",
+            "amount": 1,
+            "unit": "tbsp",
+            "quantity": "1 tbsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Mustard Oil",
+            "amount": 1,
+            "unit": "tbsp",
+            "quantity": "1 tbsp",
+            "category": "Oils & condiments"
+          },
+          {
+            "name": "Capsicum & Onion cubes",
+            "amount": 50,
+            "unit": "g",
+            "quantity": "50 g",
+            "category": "Vegetables"
+          }
+        ],
+        "instructions": [
+          "Whisk hung curd, smoked mustard oil, kashmiri chili powder, ginger-garlic paste into a thick vivid red marinade.",
+          "Toss chicken chunks and veggies into it. Marinate for hours.",
+          "Skewer and grill them in an oven, or sear aggressively in a dry hot pan or air-fryer until nicely charred.",
+          "No gravy, no mess. Serve sizzling with green mint chutney and raw onion rings."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "d-10",
+    "mealName": "Paneer Tikka",
+    "category": "Dinner",
+    "cuisine": "North Indian",
+    "isLight": false,
+    "isVegetarian": true,
+    "calories": 350,
+    "recipeOptions": [
+      {
+        "id": "d-10-v1",
+        "name": "Tandoori Paneer Tikka (Red)",
+        "ingredients": [
+          {
+            "name": "Paneer (cubed)",
+            "amount": 200,
+            "unit": "g",
+            "quantity": "200 g",
+            "category": "Dairy"
+          },
+          {
+            "name": "Hung Curd",
+            "amount": 2,
+            "unit": "tbsp",
+            "quantity": "2 tbsp",
+            "category": "Dairy"
+          },
+          {
+            "name": "Kashmiri Red Chili & Tikka Masala",
+            "amount": 1.5,
+            "unit": "tbsp",
+            "quantity": "1.5 tbsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Roasted Besan (Gram flour)",
+            "amount": 1,
+            "unit": "tbsp",
+            "quantity": "1 tbsp",
+            "category": "Grains & flours"
+          },
+          {
+            "name": "Mustard Oil",
+            "amount": 1,
+            "unit": "tbsp",
+            "quantity": "1 tbsp",
+            "category": "Oils & condiments"
+          },
+          {
+            "name": "Capsicum & Onion petals",
+            "amount": 50,
+            "unit": "g",
+            "quantity": "50 g",
+            "category": "Vegetables"
+          }
+        ],
+        "instructions": [
+          "Mix hung curd, aggressively hot mustard oil, kashmiri chili powder, roasted besan (binds the marinade), and tikka masala.",
+          "Gently coat thick paneer cubes, onion petals, and capsicum squares.",
+          "Grill on skewers inside a hot oven (200°C) or on a tawa until charred on edges.",
+          "Serve with lemon wedges and mint-coriander yogurt chutney."
+        ]
+      },
+      {
+        "id": "d-10-v2",
+        "name": "Hariyali (Green) Paneer Tikka",
+        "ingredients": [
+          {
+            "name": "Paneer (cubed)",
+            "amount": 200,
+            "unit": "g",
+            "quantity": "200 g",
+            "category": "Dairy"
+          },
+          {
+            "name": "Mint & Coriander Leaves",
+            "amount": 50,
+            "unit": "g",
+            "quantity": "50 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Green Chilies & Ginger",
+            "amount": 10,
+            "unit": "g",
+            "quantity": "10 g",
+            "category": "Vegetables"
+          },
+          {
+            "name": "Hung Curd",
+            "amount": 2,
+            "unit": "tbsp",
+            "quantity": "2 tbsp",
+            "category": "Dairy"
+          },
+          {
+            "name": "Chaat Masala",
+            "amount": 1,
+            "unit": "tsp",
+            "quantity": "1 tsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Oil",
+            "amount": 1,
+            "unit": "tbsp",
+            "quantity": "1 tbsp",
+            "category": "Oils & condiments"
+          }
+        ],
+        "instructions": [
+          "Blend thick, vibrant green mint and coriander leaves, along with garlic, ginger, and green chilies into a paste.",
+          "Whip the green paste directly into the hung curd with chaat masala and salt.",
+          "Coat paneer generously. Ensure the marinade isn't watery.",
+          "Pan-fry/grill until beautifully charred. The mint gives a vastly different, fresh profile compared to the heavy red tikka."
+        ]
+      },
+      {
+        "id": "d-10-v3",
+        "name": "Malai (Cream) Paneer Tikka",
+        "ingredients": [
+          {
+            "name": "Paneer (cubed)",
+            "amount": 200,
+            "unit": "g",
+            "quantity": "200 g",
+            "category": "Dairy"
+          },
+          {
+            "name": "Heavy Fresh Cream/Malai",
+            "amount": 3,
+            "unit": "tbsp",
+            "quantity": "3 tbsp",
+            "category": "Dairy"
+          },
+          {
+            "name": "Cream Cheese/Hung Curd",
+            "amount": 1,
+            "unit": "tbsp",
+            "quantity": "1 tbsp",
+            "category": "Dairy"
+          },
+          {
+            "name": "Cardamom Powder & White Pepper",
+            "amount": 1,
+            "unit": "tsp",
+            "quantity": "1 tsp",
+            "category": "Spices"
+          },
+          {
+            "name": "Cashew Paste",
+            "amount": 1,
+            "unit": "tbsp",
+            "quantity": "1 tbsp",
+            "category": "Other"
+          },
+          {
+            "name": "Butter",
+            "amount": 1,
+            "unit": "tbsp",
+            "quantity": "1 tbsp",
+            "category": "Dairy"
+          }
+        ],
+        "instructions": [
+          "Prepare a luxurious, completely white marinade by whisking heavy cream, cream cheese, cashew paste, cardamom, and subtle white pepper.",
+          "Fold paneer cubes softly through the rich marinade. Cover intimately in film, rest.",
+          "Grill or bake exceptionally carefully, as cream burns quickly. Baste with butter.",
+          "The result is intensely creamy, mild, and melts in the mouth - brilliant for young kids."
+        ]
+      }
+    ]
+  }
+]

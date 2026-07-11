@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      rel="preload"
+      href="/_next/static/media/e4af272ccee01ff0-s.p.woff2"
+      as="font"
+      crossorigin=""
+      type="font/woff2"
+    />
+    <link
+      rel="stylesheet"
+      href="/_next/static/css/c9598c9cd067f868.css"
+      data-precedence="next"
+    />
+    <link
+      rel="preload"
+      as="script"
+      fetchpriority="low"
+      href="/_next/static/chunks/webpack-cadef5c035ac3dc9.js"
+    />
+    <script
+      src="/_next/static/chunks/fd9d1056-22085f2df76d85eb.js"
+      async=""
+    ></script>
+    <script
+      src="/_next/static/chunks/117-c762f313c2626695.js"
+      async=""
+    ></script>
+    <script
+      src="/_next/static/chunks/main-app-7c5377bcb2ab39b1.js"
+      async=""
+    ></script>
+    <script
+      src="/_next/static/chunks/2f0b94e8-9c64879cd69ff48b.js"
+      async=""
+    ></script>
+    <script
+      src="/_next/static/chunks/164f4fb6-8febed4adc3496e4.js"
+      async=""
+    ></script>
+    <script
+      src="/_next/static/chunks/199-4ed4bfb57209a35d.js"
+      async=""
+    ></script>
+    <script
+      src="/_next/static/chunks/app/mealplan/page-847600c0c1c81aa3.js"
+      async=""
+    ></script>
+    <title>tap log</title>
+    <meta name="description" content="simple fast back tap log tracker" />
+    <link rel="icon" href="/favicon.ico" type="image/x-icon" sizes="16x16" />
+    <meta name="next-size-adjust" />
+    <script
+      src="/_next/static/chunks/polyfills-42372ed130431b0a.js"
+      nomodule=""
+    ></script>
+  </head>
+  <body
+    class="__className_f367f3 bg-neutral-50 text-neutral-900 dark:bg-black dark:text-neutral-100 antialiased"
+  >
+    <div
+      class="min-h-screen bg-gradient-to-br from-gray-50 to-teal-50/50 text-gray-900 font-sans p-4 md:p-8"
+    >
+      <header
+        class="flex flex-col md:flex-row justify-between items-center mb-10 pb-4 border-b"
+      >
+        <div class="flex items-center gap-4">
+          <a
+            class="p-2.5 bg-white border border-gray-200 rounded-full shadow-sm hover:scale-105 transition-all text-gray-500 hover:text-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-500/50"
+            href="/dashboard"
+            ><svg
+              class="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2.5"
+                d="M10 19l-7-7m0 0l7-7m-7 7h18"
+              ></path></svg
+          ></a>
+          <h1 class="text-4xl font-extrabold tracking-tight text-teal-800">
+            MealPlan
+          </h1>
+        </div>
+        <div class="mt-4 md:mt-0 space-x-4">
+          <button
+            class="px-5 py-2 rounded-full bg-teal-100 text-teal-700 font-semibold hover:bg-teal-200 transition"
+          >
+            Shopping List</button
+          ><button
+            class="px-5 py-2 rounded-full bg-teal-600 text-white font-semibold shadow-md hover:bg-teal-700 transition"
+            disabled=""
+          >
+            Save Week (<!-- -->0<!-- -->/7)
+          </button>
+        </div>
+      </header>
+      <div class="flex flex-col gap-10">
+        <div class="w-full">
+          <div
+            class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4"
+          >
+            <h2 class="text-2xl font-bold text-gray-800">
+              Select Meals for Week
+              <!-- -->1
+            </h2>
+            <div
+              class="flex flex-wrap items-center gap-4 bg-white/70 backdrop-blur-md p-2 rounded-2xl border border-white shadow-sm"
+            >
+              <label
+                class="flex items-center space-x-2 text-sm font-semibold px-3 py-1 cursor-pointer hover:bg-gray-50 rounded-lg"
+                ><input
+                  type="checkbox"
+                  class="rounded w-4 h-4 text-teal-600 focus:ring-teal-500"
+                /><span>Vegetarian Only</span></label
+              ><label
+                class="flex items-center space-x-2 text-sm font-semibold px-3 py-1 cursor-pointer hover:bg-gray-50 rounded-lg"
+                ><input
+                  type="checkbox"
+                  class="rounded w-4 h-4 text-teal-600 focus:ring-teal-500"
+                /><span>Light Dinner Only</span></label
+              ><button
+                class="ml-2 px-4 py-1.5 bg-gray-100 text-teal-700 rounded-lg text-sm font-bold shadow-sm hover:bg-gray-200 transition"
+              >
+                Regenerate Options
+              </button>
+            </div>
+          </div>
+          <div
+            class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+          ></div>
+        </div>
+      </div>
+      <div
+        class="absolute left-[9999px] top-[9999px] w-[800px] bg-white pointer-events-none"
+      >
+        <div class="w-full font-sans">
+          <div
+            class="pdf-export-block bg-white text-center pb-8 border-b-4 border-teal-600 mb-6 p-10"
+          >
+            <h1 class="text-5xl font-extrabold text-teal-800 tracking-tight">
+              MealPlan
+            </h1>
+            <p class="text-lg text-gray-500 font-medium mt-2">
+              Your Weekly Meal Plan, Recipes &amp; Shopping List
+            </p>
+          </div>
+          <div class="px-10 pb-10 space-y-8">
+            <div>
+              <h2
+                class="pdf-export-block bg-white text-3xl font-bold text-gray-800 pb-6 flex items-center gap-3 w-full"
+              >
+                <span class="bg-teal-100 text-teal-800 px-3 py-1 rounded-lg"
+                  >1</span
+                >Meal Plan
+              </h2>
+            </div>
+            <div>
+              <h2
+                class="pdf-export-block bg-white text-3xl font-bold text-gray-800 pb-6 flex items-center gap-3 w-full"
+              >
+                <span class="bg-teal-100 text-teal-800 px-3 py-1 rounded-lg"
+                  >2</span
+                >Shopping List
+              </h2>
+              <div class="pdf-export-block bg-white w-full pb-6">
+                <div
+                  class="bg-teal-50 rounded-2xl p-6 border border-teal-100"
+                ></div>
+              </div>
+            </div>
+            <div>
+              <h2
+                class="pdf-export-block bg-white text-3xl font-bold text-gray-800 pb-6 flex items-center gap-3 w-full"
+              >
+                <span class="bg-teal-100 text-teal-800 px-3 py-1 rounded-lg"
+                  >3</span
+                >Recipes &amp; Alternatives
+              </h2>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script
+      src="/_next/static/chunks/webpack-cadef5c035ac3dc9.js"
+      async=""
+    ></script>
+    <script>
+      (self.__next_f = self.__next_f || []).push([0]);
+      self.__next_f.push([2, null]);
+    </script>
+    <script>
+      self.__next_f.push([
+        1,
+        '1:HL["/_next/static/media/e4af272ccee01ff0-s.p.woff2","font",{"crossOrigin":"","type":"font/woff2"}]\n2:HL["/_next/static/css/c9598c9cd067f868.css","style"]\n',
+      ]);
+    </script>
+    <script>
+      self.__next_f.push([
+        1,
+        '3:I[12846,[],""]\n5:I[19107,[],"ClientPageRoot"]\n6:I[8177,["125","static/chunks/2f0b94e8-9c64879cd69ff48b.js","505","static/chunks/164f4fb6-8febed4adc3496e4.js","199","static/chunks/199-4ed4bfb57209a35d.js","466","static/chunks/app/mealplan/page-847600c0c1c81aa3.js"],"default",1]\n7:I[4707,[],""]\n8:I[36423,[],""]\na:I[61060,[],""]\nb:[]\n',
+      ]);
+    </script>
+    <script>
+      self.__next_f.push([
+        1,
+        '0:["$","$L3",null,{"buildId":"MUhGsnWeJBHPEEHDMd7bs","assetPrefix":"","urlParts":["","mealplan"],"initialTree":["",{"children":["mealplan",{"children":["__PAGE__",{}]}]},"$undefined","$undefined",true],"initialSeedData":["",{"children":["mealplan",{"children":["__PAGE__",{},[["$L4",["$","$L5",null,{"props":{"params":{},"searchParams":{}},"Component":"$6"}],null],null],null]},[null,["$","$L7",null,{"parallelRouterKey":"children","segmentPath":["children","mealplan","children"],"error":"$undefined","errorStyles":"$undefined","errorScripts":"$undefined","template":["$","$L8",null,{}],"templateStyles":"$undefined","templateScripts":"$undefined","notFound":"$undefined","notFoundStyles":"$undefined"}]],null]},[[[["$","link","0",{"rel":"stylesheet","href":"/_next/static/css/c9598c9cd067f868.css","precedence":"next","crossOrigin":"$undefined"}]],["$","html",null,{"lang":"en","children":["$","body",null,{"className":"__className_f367f3 bg-neutral-50 text-neutral-900 dark:bg-black dark:text-neutral-100 antialiased","children":["$","$L7",null,{"parallelRouterKey":"children","segmentPath":["children"],"error":"$undefined","errorStyles":"$undefined","errorScripts":"$undefined","template":["$","$L8",null,{}],"templateStyles":"$undefined","templateScripts":"$undefined","notFound":[["$","title",null,{"children":"404: This page could not be found."}],["$","div",null,{"style":{"fontFamily":"system-ui,\\"Segoe UI\\",Roboto,Helvetica,Arial,sans-serif,\\"Apple Color Emoji\\",\\"Segoe UI Emoji\\"","height":"100vh","textAlign":"center","display":"flex","flexDirection":"column","alignItems":"center","justifyContent":"center"},"children":["$","div",null,{"children":[["$","style",null,{"dangerouslySetInnerHTML":{"__html":"body{color:#000;background:#fff;margin:0}.next-error-h1{border-right:1px solid rgba(0,0,0,.3)}@media (prefers-color-scheme:dark){body{color:#fff;background:#000}.next-error-h1{border-right:1px solid rgba(255,255,255,.3)}}"}}],["$","h1",null,{"className":"next-error-h1","style":{"display":"inline-block","margin":"0 20px 0 0","padding":"0 23px 0 0","fontSize":24,"fontWeight":500,"verticalAlign":"top","lineHeight":"49px"},"children":"404"}],["$","div",null,{"style":{"display":"inline-block"},"children":["$","h2",null,{"style":{"fontSize":14,"fontWeight":400,"lineHeight":"49px","margin":0},"children":"This page could not be found."}]}]]}]}]],"notFoundStyles":[]}]}]}]],null],null],"couldBeIntercepted":false,"initialHead":[null,"$L9"],"globalErrorComponent":"$a","missingSlots":"$Wb"}]\n',
+      ]);
+    </script>
+    <script>
+      self.__next_f.push([
+        1,
+        '9:[["$","meta","0",{"name":"viewport","content":"width=device-width, initial-scale=1"}],["$","meta","1",{"charSet":"utf-8"}],["$","title","2",{"children":"tap log"}],["$","meta","3",{"name":"description","content":"simple fast back tap log tracker"}],["$","link","4",{"rel":"icon","href":"/favicon.ico","type":"image/x-icon","sizes":"16x16"}],["$","meta","5",{"name":"next-size-adjust"}]]\n4:null\n',
+      ]);
+    </script>
+  </body>
+</html>
