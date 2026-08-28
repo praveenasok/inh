@@ -11,6 +11,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     let clientsDB = [];
     let currentActiveFinishedLengths = [];
     window.currentLoadedMoIndex = null;
+    let rawLotsDB = [];
+    let suppliersDB = [];
 
     // Utility: Live sync config inputs to picking slip header if it exists
     function syncHeaderField(inputId, headerId, defaultVal) {
@@ -66,6 +68,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         } else {
              ratioSelect.innerHTML = '<option value="">No ratios found</option>';
         }
+
+        // Fetch Raw Lots and Suppliers
+        try {
+            const rawLotsData = localStorage.getItem('rawLots');
+            if (rawLotsData) rawLotsDB = JSON.parse(rawLotsData);
+            const suppliersData = localStorage.getItem('suppliers');
+            if (suppliersData) suppliersDB = JSON.parse(suppliersData);
+        } catch(e) { console.error("Failed to parse inventory DB", e); }
+        populateRawLotsDropdown();
 
         // --- Load Past MOs Logic ---
         const loadSavedMoSelect = document.getElementById('loadSavedMoSelect');
@@ -138,6 +149,15 @@ document.addEventListener('DOMContentLoaded', async () => {
                 // Auto calculate to display results
                 calculateBtn.dispatchEvent(new Event('click'));
                 
+                // Set Raw Lot if it exists on MO
+                if (mo.sourceLotId) {
+                    const rawLotSelect = document.getElementById('rawLotSelect');
+                    if (rawLotSelect) {
+                        rawLotSelect.value = mo.sourceLotId;
+                        rawLotSelect.dispatchEvent(new Event('change'));
+                    }
+                }
+                
                 // Reset select back to default so same MO can be clicked again later if needed
                 loadSavedMoSelect.value = "";
                 
@@ -190,6 +210,71 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
+    function populateRawLotsDropdown() {
+        const rawLotSelect = document.getElementById('rawLotSelect');
+        if (!rawLotSelect) return;
+        
+        const availableLots = rawLotsDB.filter(l => l.status === 'AVAILABLE' && l.availableWeightKg > 0);
+        if (availableLots.length === 0) {
+            rawLotSelect.innerHTML = '<option value="">-- No Lots Available --</option>';
+            return;
+        }
+
+        rawLotSelect.innerHTML = '<option value="">-- No Lot Selected (Manual Entry) --</option>';
+        availableLots.forEach(lot => {
+            const supplier = suppliersDB.find(s => s.id === lot.supplierId);
+            const supplierName = supplier ? supplier.name : 'Unknown Supplier';
+            const opt = document.createElement('option');
+            opt.value = lot.id;
+            opt.textContent = `${lot.id} - ${supplierName} (${lot.availableWeightKg}kg)`;
+            rawLotSelect.appendChild(opt);
+        });
+    }
+
+    // Handle Raw Lot Selection
+    const rawLotSelect = document.getElementById('rawLotSelect');
+    if (rawLotSelect) {
+        rawLotSelect.addEventListener('change', (e) => {
+            const lotId = e.target.value;
+            const detailsPane = document.getElementById('lotDetailsPane');
+            
+            if (!lotId) {
+                detailsPane.classList.add('hidden');
+                document.getElementById('orderSupplier').readOnly = false;
+                document.getElementById('orderDate').readOnly = false;
+                return;
+            }
+
+            const lot = rawLotsDB.find(l => l.id === lotId);
+            if (!lot) return;
+
+            const supplier = suppliersDB.find(s => s.id === lot.supplierId);
+            const supplierName = supplier ? supplier.name : 'Unknown Supplier';
+
+            detailsPane.classList.remove('hidden');
+            document.getElementById('lotInfoSupplier').textContent = supplierName;
+            document.getElementById('lotInfoDate').textContent = lot.supplyDate || 'N/A';
+            document.getElementById('lotInfoWeight').textContent = `${lot.availableWeightKg} kg`;
+            
+            if (lot.details && lot.details.length > 0) {
+                const bd = lot.details.map(d => `${d.length}" (${d.weight}kg)`).join(', ');
+                document.getElementById('lotInfoBreakdown').textContent = bd;
+            } else {
+                document.getElementById('lotInfoBreakdown').textContent = 'N/A';
+            }
+
+            // Auto-fill form fields
+            document.getElementById('orderSupplier').value = supplierName;
+            document.getElementById('orderSupplier').readOnly = true;
+            document.getElementById('orderDate').value = lot.supplyDate || '';
+            document.getElementById('orderDate').readOnly = true;
+            
+            if (!document.getElementById('orderRef').value) {
+                document.getElementById('orderRef').value = lot.id;
+            }
+        });
+    }
+
     // 2. Handle Dropdown Change - Build Dynamic Inputs
     ratioSelect.addEventListener('change', (e) => {
         const clientName = e.target.value;
@@ -208,21 +293,32 @@ document.addEventListener('DOMContentLoaded', async () => {
         const client = clientsDB.find(c => c.name === clientName);
         if (!client || !client.matrix) return;
 
-        const legacyMap = [4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40];
+        const legacyMap = [8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40];
 
-        // Find which Finished Lengths have data in this matrix
-        FINISHED_LENGTHS.forEach((len, idx) => {
-            // Check if the matrix has the length key (modern) or the index key (legacy)
-            const rowData = client.matrix[len] || client.matrix[idx];
+        const isLegacy = !!(client.matrix["1"] || client.matrix["2"] || client.matrix["3"]);
+        
+        Object.keys(client.matrix).forEach(key => {
+            const rowData = client.matrix[key];
             if (rowData) {
                 const hasValue = Object.values(rowData).some(val => val > 0);
                 if (hasValue) {
-                    // Always use 'len' as the primary key reference moving forward,
-                    // but we store both for compatibility with existing DOM logic.
-                    currentActiveFinishedLengths.push({ length: len, idx: len, legacyIdx: idx });
+                    let len;
+                    if (isLegacy) {
+                        const idx = parseInt(key);
+                        len = legacyMap[idx];
+                    } else {
+                        len = parseInt(key);
+                    }
+                    
+                    if (len !== undefined && !isNaN(len)) {
+                        currentActiveFinishedLengths.push({ length: len, idx: key, legacyIdx: isLegacy ? parseInt(key) : null });
+                    }
                 }
             }
         });
+
+        // Sort ascending by length
+        currentActiveFinishedLengths.sort((a, b) => a.length - b.length);
 
         if (currentActiveFinishedLengths.length === 0) {
             dynamicInputsContainer.innerHTML = '<p class="text-sm text-slate-500 italic py-2">This ratio matrix is empty.</p>';
@@ -354,6 +450,22 @@ document.addEventListener('DOMContentLoaded', async () => {
         const orderSupplier = document.getElementById('orderSupplier').value.trim() || 'N/A';
         const orderRef = document.getElementById('orderRef').value.trim() || 'N/A';
         const orderHairType = document.getElementById('orderHairType').value || 'Normal';
+        
+        let sourceLotId = null;
+        const rawLotSelect = document.getElementById('rawLotSelect');
+        if (rawLotSelect && rawLotSelect.value) {
+            sourceLotId = rawLotSelect.value;
+            const lot = rawLotsDB.find(l => l.id === sourceLotId);
+            if (lot) {
+                // Ensure we don't calculate more totalRawRequiredKilos than available in this lot (with a small epsilon for floating point)
+                if (totalRawRequiredKilos > lot.availableWeightKg + 0.01) {
+                    alert(`WARNING: The required raw material (${totalRawRequiredKilos.toLocaleString()} kg) exceeds the selected lot's available weight (${lot.availableWeightKg} kg). Please adjust the target output or select a different lot.`);
+                    resultsContainer.innerHTML = '';
+                    outputSummary.classList.add('hidden');
+                    return;
+                }
+            }
+        }
 
         let resultsHTML = `
             <div id="mo-export-container" class="bg-white p-4 border-2 border-slate-100 rounded-xl max-w-3xl mx-auto space-y-4">
@@ -520,6 +632,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     orderSupplier: document.getElementById('orderSupplier').value.trim() || 'N/A',
                     orderRef: document.getElementById('orderRef').value.trim() || 'N/A',
                     orderHairType: document.getElementById('orderHairType').value || 'Normal',
+                    sourceLotId: document.getElementById('rawLotSelect') ? document.getElementById('rawLotSelect').value : null,
                     clientName,
                     totalOutputKilos,
                     totalRawRequiredKilos,
@@ -527,6 +640,24 @@ document.addEventListener('DOMContentLoaded', async () => {
                     rawRequirements,
                     savedAt: new Date().toISOString()
                 };
+
+                // Deduct from Lot Inventory if a lot is selected and this is a NEW MO (or re-adjust if updating, but for simplicity we assume we deduct once on new)
+                if (moData.sourceLotId && window.currentLoadedMoIndex === null) {
+                    let updatedLots = [...rawLotsDB];
+                    const lotIdx = updatedLots.findIndex(l => l.id === moData.sourceLotId);
+                    if (lotIdx !== -1) {
+                        const lot = updatedLots[lotIdx];
+                        const newWt = Math.max(0, lot.availableWeightKg - moData.totalRawRequiredKilos);
+                        updatedLots[lotIdx] = {
+                            ...lot,
+                            availableWeightKg: newWt,
+                            status: newWt <= 0 ? 'DEPLETED' : 'AVAILABLE'
+                        };
+                        localStorage.setItem('rawLots', JSON.stringify(updatedLots));
+                        rawLotsDB = updatedLots; // update memory
+                        if (typeof populateRawLotsDropdown === 'function') populateRawLotsDropdown();
+                    }
+                }
 
                 let savedMOs = [];
                 try {

@@ -14,7 +14,8 @@
         "**/node_modules/**",
         "backup_*/**",
         "oldfiles/**",
-        "quotemaker/**"
+        "quotemaker/**",
+        "venv/**"
       ],
       "headers": [
         {

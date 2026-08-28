@@ -195,9 +195,9 @@ class FirebaseDatabase {
     try {
         const transformedProducts = products.map(product => this.transformProductData(product));
         
-        const batch = writeBatch(this.db);
+        const batch = this.db.batch();
         transformedProducts.forEach((product, index) => {
-            const docRef = doc(this.db, 'products', `product_${index}`);
+            const docRef = this.db.collection('products').doc(`product_${index}`);
             batch.set(docRef, product);
         });
         
@@ -325,7 +325,7 @@ class FirebaseDatabase {
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         };
         
-        const docRef = await addDoc(collection(this.db, 'orders'), processedOrderData);
+        const docRef = await this.db.collection('orders').add(processedOrderData);
         
         if (window.googleSheetsIntegration && window.googleSheetsIntegration.isConfigured()) {
             try {
@@ -357,7 +357,7 @@ class FirebaseDatabase {
         });
         
         try {
-            await deleteDoc(doc(this.db, 'quotes', quoteId));
+            await this.db.collection('quotes').doc(quoteId).delete();
         } catch (deleteError) {
         }
         
@@ -811,6 +811,30 @@ class FirebaseDatabase {
   // Alias for compatibility
   async getSalespeople() {
     return this.getSalesmen();
+  }
+
+  // --- Payroll: Departments ---
+  async getDepartments() {
+    if (!this.isAvailable()) return [];
+    try {
+      const doc = await this.db.collection('config').doc('departments').get();
+      return doc.exists ? doc.data().list || [] : [];
+    } catch (error) {
+      console.error('[firebaseDB] getDepartments failed:', error);
+      return [];
+    }
+  }
+
+  async saveDepartments(departmentsList) {
+    if (!this.isAvailable()) throw new Error('Firebase not available');
+    try {
+      await this.db.collection('config').doc('departments').set({
+        list: departmentsList,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    } catch (error) {
+      throw error;
+    }
   }
 
   async getCategories(filters = {}) {
@@ -1546,6 +1570,199 @@ class FirebaseDatabase {
   // Check if real-time sync is active
   isRealTimeSyncActive() {
     return !!(this.productsUnsubscribe || this.salesmenUnsubscribe);
+  }
+  // --- Payroll: Employees ---
+  async saveEmployee(employeeData) {
+    if (!this.isAvailable()) throw new Error('Firebase not available');
+    try {
+      const processedData = {
+        ...employeeData,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+      const docRef = await this.db.collection('employees').add(processedData);
+      return { id: docRef.id, ...employeeData };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async getEmployees(filters = {}) {
+    if (!this.isAvailable()) return [];
+    try {
+      let query = this.db.collection('employees');
+      if (filters.status) {
+        query = query.where('status', '==', filters.status);
+      }
+      query = query.orderBy('createdAt', 'desc');
+      const snapshot = await query.get();
+      const employees = [];
+      snapshot.forEach(doc => employees.push({ id: doc.id, ...doc.data() }));
+      return employees;
+    } catch (error) {
+      console.error('[firebaseDB] getEmployees failed:', error);
+      return [];
+    }
+  }
+
+  async updateEmployee(employeeId, employeeData) {
+    if (!this.isAvailable()) throw new Error('Firebase not available');
+    try {
+      await this.db.collection('employees').doc(employeeId).update({
+        ...employeeData,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      return { id: employeeId, ...employeeData };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async deleteEmployee(employeeId) {
+    if (!this.isAvailable()) throw new Error('Firebase not available');
+    try {
+      await this.db.collection('employees').doc(employeeId).delete();
+      return true;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // --- Payroll: Salary ---
+  async saveSalaryRecord(salaryData) {
+    if (!this.isAvailable()) throw new Error('Firebase not available');
+    try {
+      const processedData = {
+        ...salaryData,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+      const docRef = await this.db.collection('salary_records').add(processedData);
+      return { id: docRef.id, ...salaryData };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async getSalaryRecords(employeeId, filters = {}) {
+    if (!this.isAvailable()) return [];
+    try {
+      let query = this.db.collection('salary_records');
+      if (employeeId) {
+        query = query.where('employeeId', '==', employeeId);
+      }
+      query = query.orderBy('paymentDate', 'desc');
+      const snapshot = await query.get();
+      const records = [];
+      snapshot.forEach(doc => records.push({ id: doc.id, ...doc.data() }));
+      return records;
+    } catch (error) {
+      console.error('[firebaseDB] getSalaryRecords failed:', error);
+      return [];
+    }
+  }
+
+  // --- Payroll: Attendance ---
+  async saveAttendance(attendanceData) {
+    if (!this.isAvailable()) throw new Error('Firebase not available');
+    try {
+      const processedData = {
+        ...attendanceData,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+      // We could use add() or if we want only one record per employee per date, we can set() with a custom ID
+      const docId = attendanceData.employeeId + '_' + attendanceData.date;
+      await this.db.collection('attendance').doc(docId).set(processedData);
+      return { id: docId, ...attendanceData };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async getAttendance(employeeId, filters = {}) {
+    if (!this.isAvailable()) return [];
+    try {
+      let query = this.db.collection('attendance');
+      if (employeeId) {
+        query = query.where('employeeId', '==', employeeId);
+      }
+      if (filters.date) {
+        query = query.where('date', '==', filters.date);
+      }
+      if (filters.month) {
+        // Simple way to filter by month string if stored as YYYY-MM
+        query = query.where('month', '==', filters.month);
+      }
+      // Removed orderBy to prevent composite index errors when querying by month
+      const snapshot = await query.get();
+      const records = [];
+      snapshot.forEach(doc => records.push({ id: doc.id, ...doc.data() }));
+      return records;
+    } catch (error) {
+      console.error('[firebaseDB] getAttendance failed:', error);
+      return [];
+    }
+  }
+
+  // --- Workspace Data ---
+  async saveWorkspaceData(data) {
+    if (!this.isAvailable()) throw new Error('Firebase not available');
+    try {
+      const processedData = {
+        ...data,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+      await this.db.collection('workspace_data').doc('global_workspace').set(processedData, { merge: true });
+      return true;
+    } catch (error) {
+      console.error('[firebaseDB] saveWorkspaceData failed:', error);
+      throw error;
+    }
+  }
+
+  async getWorkspaceData() {
+    if (!this.isAvailable()) return null;
+    try {
+      const doc = await this.db.collection('workspace_data').doc('global_workspace').get();
+      if (doc.exists) {
+        return doc.data();
+      }
+      return null;
+    } catch (error) {
+      console.error('[firebaseDB] getWorkspaceData failed:', error);
+      return null;
+    }
+  }
+
+  // --- Jobwork Billing Data ---
+  async saveJobworkData(data) {
+    if (!this.isAvailable()) throw new Error('Firebase not available');
+    try {
+      const processedData = {
+        ...data,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+      await this.db.collection('jobwork_data').doc('global_jobwork').set(processedData, { merge: true });
+      return true;
+    } catch (error) {
+      console.error('[firebaseDB] saveJobworkData failed:', error);
+      throw error;
+    }
+  }
+
+  async getJobworkData() {
+    if (!this.isAvailable()) return null;
+    try {
+      const doc = await this.db.collection('jobwork_data').doc('global_jobwork').get();
+      if (doc.exists) {
+        return doc.data();
+      }
+      return null;
+    } catch (error) {
+      console.error('[firebaseDB] getJobworkData failed:', error);
+      return null;
+    }
   }
 }
 

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { db } from '../firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { CheckCircle, MapPin, Smartphone, Activity } from 'lucide-react';
+import { MapPin, Smartphone, Activity, Globe, FileText, MessageCircle } from 'lucide-react';
 
 export default function ScanHandlerPage() {
   const { qrId } = useParams();
@@ -47,17 +47,22 @@ export default function ScanHandlerPage() {
           createdAt: serverTimestamp()
         };
 
-        // Log to Firebase
-        await addDoc(collection(db, 'inv_qr_scans'), scanData);
+        // Update UI instantly for blazing fast load times
         setStatus('success');
+
+        // Log to Firebase in the background (fire and forget)
+        addDoc(collection(db, 'inv_qr_scans'), scanData).catch(err => {
+          console.error('Background log error:', err);
+        });
+
       } catch (err) {
-        console.error('Error logging scan:', err);
+        console.error('Error in scan prep:', err);
         setStatus('error');
       }
     }
 
     logScan();
-  }, [qrId, qrName]);
+  }, [qrId, qrName, payload]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-6">
@@ -73,7 +78,7 @@ export default function ScanHandlerPage() {
 
         {status === 'success' && (
           <div className="flex flex-col items-center space-y-4 animate-in fade-in zoom-in duration-500">
-            <CheckCircle className="text-emerald-500 w-20 h-20 mx-auto" />
+            <img src="/images/logo.png" alt="INH Logo" className="h-24 mx-auto object-contain mb-2" />
             <h2 className="text-2xl font-black text-gray-900 tracking-tight">Scan Registered!</h2>
             <div className="bg-emerald-50 text-emerald-800 p-4 rounded-xl w-full text-sm font-semibold border border-emerald-100 shadow-sm text-left">
               <p className="mb-2 uppercase text-xs tracking-widest text-emerald-600 font-bold">Tag Information</p>
@@ -93,8 +98,32 @@ export default function ScanHandlerPage() {
               </div>
             </div>
 
-            <p className="text-xs text-gray-400 mt-6 max-w-xs leading-relaxed font-medium">
-              This physical scan has been instantly synced to the main dashboard's Tracking Feed via Firebase. You may close this tab.
+            <div className="w-full flex flex-col gap-4 mt-8">
+              <a 
+                href={(payload.startsWith('http://') || payload.startsWith('https://')) ? payload : 'https://indiannaturalhair.com'} 
+                className="flex items-center justify-center gap-3 w-full bg-slate-900 text-white py-4 rounded-2xl text-lg font-bold hover:bg-slate-800 transition shadow-md"
+              >
+                <Globe size={22} /> Go to Website
+              </a>
+              <a 
+                href="/CATALOG.pdf" 
+                download 
+                className="flex items-center justify-center gap-3 w-full bg-blue-500 text-white py-4 rounded-2xl text-lg font-bold hover:bg-blue-600 transition shadow-md"
+              >
+                <FileText size={22} /> Product Catalog
+              </a>
+              <a 
+                href="https://wa.me/?text=Hello%20Indian%20Natural%20Hair!" 
+                target="_blank" 
+                rel="noreferrer"
+                className="flex items-center justify-center gap-3 w-full bg-emerald-500 text-white py-4 rounded-2xl text-lg font-bold hover:bg-emerald-600 transition shadow-md"
+              >
+                <MessageCircle size={22} /> WhatsApp Chat
+              </a>
+            </div>
+
+            <p className="text-xs text-gray-400 mt-4 max-w-xs leading-relaxed font-medium">
+              This physical scan has been instantly synced to the main dashboard's Tracking Feed.
             </p>
           </div>
         )}

@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payroll Dashboard - INHsuite</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
+    <!-- App Configuration -->
+    <script src="../firebase-config.js"></script>
+    <script src="../firebase-global-init.js"></script>
+    <script src="../firebase-database.js?v=2"></script>
+    <link rel="stylesheet" href="../unified-button-system.css">
+    <style>
+        .tab-btn.active {
+            border-color: #3b82f6; /* blue-500 */
+            color: #2563eb; /* blue-600 */
+        }
+        .tab-btn:not(.active) {
+            border-color: transparent;
+            color: #6b7280; /* gray-500 */
+        }
+        .tab-btn:not(.active):hover {
+            color: #374151; /* gray-700 */
+            border-color: #d1d5db; /* gray-300 */
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Sticky Columns & Header Positions */
+        .col-sl-no { left: 0; min-width: 50px; max-width: 50px; text-align: center; }
+        .col-emp-id { left: 50px; min-width: 120px; max-width: 120px; }
+        .col-emp-name { left: 170px; min-width: 180px; max-width: 180px; }
+
+        /* Attendance Grid Styles */
+        .attendance-grid-wrapper th, .attendance-grid-wrapper td {
+            border: 1px solid #d1d5db;
+        }
+        .attendance-grid-wrapper th.sticky-col, .attendance-grid-wrapper td.sticky-col {
+            position: sticky;
+            background-color: #f3f4f6; /* gray-100 */
+            z-index: 10;
+        }
+        .attendance-grid-wrapper thead th.sticky-col {
+            background-color: #e5e7eb; /* gray-200 */
+            z-index: 30; /* above other sticky cols and normal header */
+        }
+
+        /* Salary Table Sticky Columns Styles */
+        #tab-content-salary .sticky-col {
+            position: sticky;
+            background-color: #ffffff; /* Solid background to prevent overlap */
+            z-index: 10;
+        }
+        #tab-content-salary thead th.sticky-col {
+            background-color: #f9fafb !important; /* bg-gray-50 */
+            z-index: 30;
+        }
+        #tab-content-salary tr:hover td.sticky-col {
+            background-color: #f3f4f6 !important; /* hover:bg-gray-100 */
+        }
+        
+        .status-badge {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+            border: none;
+            outline: none;
+            font-weight: 600;
+            text-align: center;
+            padding: 4px;
+            cursor: pointer;
+            background-color: transparent;
+        }
+        .status-badge-P { background-color: #ffedd5; color: #9a3412; } /* Orange/Beige */
+        .status-badge-A { background-color: #991b1b; color: #ffffff; } /* Dark Red */
+        .status-badge-WO { background-color: #e5e7eb; color: #4b5563; } /* Gray */
+        .status-badge-HD { background-color: #fef08a; color: #854d0e; } /* Yellow */
+        .status-badge-L { background-color: #bfdbfe; color: #1e3a8a; } /* Blue */
+        .status-badge-H { background-color: #f0fdf4; color: #16a34a; } /* Light Green */
+        .status-badge-CO { background-color: #fdf2f8; color: #db2777; } /* Pink */
+        
+        .day-col { min-width: 40px; max-width: 40px; text-align: center; padding: 0 !important; height: 32px; }
+        .sunday-col { background-color: #e5e7eb !important; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 min-h-screen">
+    <!-- Navigation will be injected here -->
+    <script src="../js/navigation-loader.js"></script>
+
+    <div class="w-full max-w-[98%] mx-auto px-2 sm:px-4 py-8">
+        
+        <div class="mb-4">
+            <h1 class="text-3xl font-bold text-gray-900">Payroll System</h1>
+        </div>
+
+        <!-- Tabs Navigation -->
+        <div class="border-b border-gray-200 mb-6">
+            <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                <button onclick="switchTab('employees')" id="tab-btn-employees" class="tab-btn active whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200">
+                    <i class="fas fa-users mr-2"></i>Employee Details
+                </button>
+                <button onclick="switchTab('salary')" id="tab-btn-salary" class="tab-btn whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200">
+                    <i class="fas fa-money-bill-wave mr-2"></i>Salary Details
+                </button>
+                <button onclick="switchTab('attendance')" id="tab-btn-attendance" class="tab-btn whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200">
+                    <i class="fas fa-calendar-check mr-2"></i>Attendance
+                </button>
+                <button onclick="switchTab('holidays')" id="tab-btn-holidays" class="tab-btn whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200">
+                    <i class="fas fa-umbrella-beach mr-2"></i>Holidays
+                </button>
+                <button onclick="switchTab('leaves')" id="tab-btn-leaves" class="tab-btn whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200">
+                    <i class="fas fa-plane-departure mr-2"></i>Leave Planning
+                </button>
+            </nav>
+        </div>
+
+        <!-- ==================== EMPLOYEES TAB ==================== -->
+        <div id="tab-content-employees" class="tab-content active">
+            <div class="mb-6 flex justify-between items-center">
+                <div class="flex items-center gap-4">
+                    <h2 class="text-xl font-semibold text-gray-800">Manage Employees</h2>
+                    <label class="inline-flex items-center cursor-pointer bg-white px-3 py-1.5 rounded-lg border border-gray-200 shadow-sm text-sm">
+                        <input type="checkbox" id="showInactiveToggle" onchange="window.payrollApp && window.payrollApp.toggleInactiveEmployees()" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                        <span class="ml-2 text-gray-700 font-medium">Show Inactive Employees</span>
+                    </label>
+                </div>
+                <button onclick="window.payrollApp.openAddEmployeeModal()" class="btn-primary">
+                    <i class="fas fa-plus mr-2"></i>Add Employee
+                </button>
+            </div>
+
+            <!-- Search & Filter Bar -->
+            <div class="mb-6 bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex flex-col sm:flex-row gap-4 items-center justify-between">
+                <div class="relative w-full sm:max-w-md">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
+                        <i class="fas fa-search text-sm"></i>
+                    </span>
+                    <input type="text" id="employeeSearchInput" placeholder="Search by name, job profile, or department..." oninput="window.payrollApp && window.payrollApp.filterEmployees()" class="pl-10 pr-4 py-2 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border text-sm bg-white">
+                </div>
+                <div class="w-full sm:w-auto">
+                    <select id="employeeDeptFilter" onchange="window.payrollApp && window.payrollApp.filterEmployees()" class="rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border text-sm bg-white w-full sm:w-auto">
+                        <option value="">All Departments</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Employee List - Desktop Table View -->
+            <div class="hidden md:block bg-white rounded-lg shadow overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Emp ID</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Job Profile</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Joining Date</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Salary</th>
+                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="employeeTableBody" class="bg-white divide-y divide-gray-200">
+                            <!-- Employee rows will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Employee List - Mobile Cards View -->
+            <div class="block md:hidden space-y-4" id="employeeMobileCards">
+                <!-- Mobile cards will be populated here -->
+            </div>
+        </div>
+
+        <!-- ==================== SALARY TAB ==================== -->
+        <div id="tab-content-salary" class="tab-content">
+            <div class="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 flex-grow">
+                    <h2 class="text-xl font-semibold text-gray-800">Monthly Salary Records</h2>
+                    <div class="flex gap-4 sm:ml-4 sm:border-l sm:pl-4 border-gray-300">
+                        <div class="flex flex-col">
+                            <div class="text-xs text-gray-500 font-semibold uppercase">Total Amount to be paid</div>
+                            <div class="text-sm font-bold text-gray-800" id="headerTotalAmount">₹0.00</div>
+                        </div>
+                        <div class="flex flex-col">
+                            <div class="text-xs text-gray-500 font-semibold uppercase">(Deductions + Advance)</div>
+                            <div class="text-sm font-bold text-red-600" id="headerDeductionsAdvance">₹0.00</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex flex-wrap items-center justify-between w-full sm:w-auto gap-3">
+                    <div id="salaryStatusMsg" class="text-sm text-green-600 font-medium transition-opacity duration-300 opacity-0"></div>
+                    <div class="flex items-center gap-3 bg-white p-2 rounded-lg shadow-sm border border-gray-200 w-full sm:w-auto justify-between sm:justify-start">
+                        <button id="btn-sync-deductions" onclick="window.payrollApp.resetAllDeductions()" class="flex items-center px-3 py-1.5 bg-yellow-50 text-yellow-600 hover:bg-yellow-100 rounded-md text-sm font-medium transition-colors border border-yellow-200" title="Sync manual deductions with attendance auto-calculations">
+                            <i class="fas fa-sync-alt mr-1.5"></i> Sync Deductions
+                        </button>
+                        <div class="h-5 w-px bg-gray-300 hidden sm:block"></div>
+                        <button onclick="window.payrollApp.exportMonthlySalary()" class="flex items-center px-3 py-1.5 bg-gray-50 text-gray-700 hover:bg-gray-100 rounded-md text-sm font-medium transition-colors border border-gray-200">
+                            <i class="fas fa-file-export mr-1.5"></i> CSV
+                        </button>
+                        <button onclick="window.payrollApp.exportMonthlySalaryPDF()" class="flex items-center px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-md text-sm font-medium transition-colors border border-blue-200">
+                            <i class="fas fa-file-pdf mr-1.5"></i> PDF
+                        </button>
+                        <input type="month" id="salaryMonth" class="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-1 border text-sm" onchange="window.payrollApp && window.payrollApp.loadSalaryGrid()">
+                        <button onclick="window.payrollApp && window.payrollApp.saveAllSalaries()" class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 text-sm font-medium transition-colors">
+                            <i class="fas fa-save mr-1"></i> Save
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Salary Grid Table - Desktop View -->
+            <div class="hidden md:block bg-white rounded-lg shadow overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="sticky-col col-sl-no px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sl. No.</th>
+                                <th scope="col" class="sticky-col col-emp-id px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Emp ID</th>
+                                <th scope="col" class="sticky-col col-emp-name px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Base Salary</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount To Be Paid</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount Paid</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Advance</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Deductions</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Att. Bonus</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Other Bonus</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody id="salaryGridBody" class="bg-white divide-y divide-gray-200">
+                            <!-- Salary rows will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Salary List - Mobile Cards View -->
+            <div class="block md:hidden space-y-4" id="salaryMobileCards">
+                <!-- Mobile salary cards will be populated here -->
+            </div>
+        </div>
+
+        <!-- ==================== ATTENDANCE TAB ==================== -->
+        <div id="tab-content-attendance" class="tab-content">
+            <div class="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <h2 class="text-xl font-semibold text-gray-800">Monthly Attendance</h2>
+                <div class="flex items-center gap-3 bg-white p-2 rounded-lg shadow-sm border border-gray-200 w-full sm:w-auto justify-between sm:justify-start">
+                    <select id="attendanceMonth" class="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-1 border text-sm" onchange="window.payrollApp && window.payrollApp.loadAttendanceForMonth()">
+                        <option value="01">January</option>
+                        <option value="02">February</option>
+                        <option value="03">March</option>
+                        <option value="04">April</option>
+                        <option value="05">May</option>
+                        <option value="06">June</option>
+                        <option value="07">July</option>
+                        <option value="08">August</option>
+                        <option value="09">September</option>
+                        <option value="10">October</option>
+                        <option value="11">November</option>
+                        <option value="12">December</option>
+                    </select>
+                    <select id="attendanceYear" class="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-1 border text-sm" onchange="window.payrollApp && window.payrollApp.loadAttendanceForMonth()">
+                        <!-- Will be populated dynamically -->
+                    </select>
+                    <div id="attendanceSelectedPeriod" class="text-sm font-medium text-gray-700 bg-gray-100 px-3 py-1 rounded"></div>
+                </div>
+            </div>
+            
+            <div id="attendanceStatusMsg" class="mb-4 text-sm text-blue-600 transition-opacity duration-300"></div>
+
+            <!-- Attendance Grid - Desktop View -->
+            <div class="hidden md:block bg-white rounded-lg shadow overflow-hidden relative">
+                <div class="overflow-auto attendance-grid-wrapper h-full w-full">
+                    <table class="min-w-full divide-y divide-gray-300 border-collapse bg-white" id="attendanceGridTable">
+                        <thead class="bg-gray-200 sticky top-0 z-20" id="attendanceGridHead">
+                            <!-- Populated dynamically via JS -->
+                        </thead>
+                        <tbody id="attendanceGridBody" class="bg-white divide-y divide-gray-200">
+                            <!-- Populated dynamically via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Attendance Mobile Date Picker -->
+            <div class="block md:hidden mb-4 bg-white p-3 rounded-lg shadow-sm border border-gray-200">
+                <label class="block text-xs font-semibold text-gray-500 mb-1">Select Attendance Date</label>
+                <input type="date" id="attendanceMobileDate" class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border text-sm bg-white" onchange="window.payrollApp && window.payrollApp.changeMobileAttendanceDate()">
+            </div>
+
+            <!-- Attendance List - Mobile Cards View -->
+            <div class="block md:hidden space-y-4" id="attendanceMobileCards">
+                <!-- Mobile attendance cards will be populated here -->
+            </div>
+        </div>
+
+        <!-- ==================== HOLIDAYS TAB ==================== -->
+        <div id="tab-content-holidays" class="tab-content">
+            <div class="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <h2 class="text-xl font-semibold text-gray-800">Manage Official Paid Holidays</h2>
+                <div class="flex items-center gap-3 bg-white p-2 rounded-lg shadow-sm border border-gray-200 w-full sm:w-auto justify-end">
+                    <button onclick="window.payrollApp.openAddHolidayModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-1 text-sm font-semibold shadow-sm">
+                        <i class="fas fa-plus"></i> Add Holiday
+                    </button>
+                </div>
+            </div>
+
+            <div id="holidayStatusMsg" class="mb-4 text-sm text-blue-600 transition-opacity duration-300 opacity-0 font-medium"></div>
+
+            <!-- Holidays List Table - Desktop View -->
+            <div class="hidden md:block bg-white rounded-xl shadow border border-gray-100 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Sl. No.</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Date</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Occasion / Name</th>
+                                <th scope="col" class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="holidaysTableBody" class="bg-white divide-y divide-gray-200">
+                            <!-- Holidays will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Holidays List - Mobile Cards View -->
+            <div class="block md:hidden space-y-4" id="holidaysMobileCards">
+                <!-- Mobile holiday cards will be populated here -->
+            </div>
+
+            <!-- Employees' Chosen Holidays Segment -->
+            <div class="mt-12 mb-6 border-t pt-8 border-gray-100">
+                <h3 class="text-lg font-bold text-gray-800"><i class="fas fa-user-clock mr-2 text-indigo-600"></i>Employees' Chosen Holidays (Other than Official Holidays)</h3>
+                <p class="text-xs text-gray-500 mt-1">Grouped by holiday date, listing employees who have selected each holiday of choice.</p>
+            </div>
+
+            <!-- Chosen Holidays Table - Desktop View -->
+            <div class="hidden md:block bg-white rounded-xl shadow border border-gray-100 overflow-hidden mb-10">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Date</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Occasion / Name</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Employees</th>
+                            </tr>
+                        </thead>
+                        <tbody id="chosenHolidaysTableBody" class="bg-white divide-y divide-gray-200">
+                            <!-- Chosen holidays grouped by date will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Chosen Holidays List - Mobile Cards View -->
+            <div class="block md:hidden space-y-4 mb-10" id="chosenHolidaysMobileCards">
+                <!-- Mobile chosen holidays will be populated here -->
+            </div>
+        </div>
+
+        <!-- ==================== LEAVE PLANNING TAB ==================== -->
+        <div id="tab-content-leaves" class="tab-content">
+            <div class="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <h2 class="text-xl font-semibold text-gray-800">Advance Leave Planning</h2>
+                <div class="flex items-center gap-3 bg-white p-2 rounded-lg shadow-sm border border-gray-200 w-full sm:w-auto justify-end">
+                    <button onclick="window.payrollApp.openLeavePlanModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-1 text-sm font-semibold shadow-sm">
+                        <i class="fas fa-plus"></i> Plan Leave
+                    </button>
+                </div>
+            </div>
+
+            <div id="leavePlanStatusMsg" class="mb-4 text-sm text-blue-600 transition-opacity duration-300 opacity-0 font-medium"></div>
+
+            <!-- Active Employees for Leave Planning - Grid/Table -->
+            <div class="mb-8">
+                <h3 class="text-lg font-bold text-gray-800 mb-4"><i class="fas fa-users text-blue-600 mr-2"></i>Active Employees</h3>
+                
+                <!-- Desktop Employees Table -->
+                <div class="hidden md:block bg-white rounded-xl shadow border border-gray-100 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Emp ID</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Name</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Job Profile & Dept</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Active/Upcoming Planned Leaves</th>
+                                    <th scope="col" class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="leavesEmployeesTableBody" class="bg-white divide-y divide-gray-200">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Mobile Employees List -->
+                <div class="block md:hidden space-y-4" id="leavesEmployeesMobileCards">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+
+            <!-- Existing Leave Plans List -->
+            <div>
+                <h3 class="text-lg font-bold text-gray-800 mb-4"><i class="fas fa-plane-departure text-indigo-600 mr-2"></i>All Planned Leaves</h3>
+                
+                <!-- Desktop Leave Plans Table -->
+                <div class="hidden md:block bg-white rounded-xl shadow border border-gray-100 overflow-hidden mb-10">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Sl. No.</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Employee</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Start Date</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">End Date</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Days</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Remarks</th>
+                                    <th scope="col" class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="leavePlansTableBody" class="bg-white divide-y divide-gray-200">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Mobile Leave Plans List -->
+                <div class="block md:hidden space-y-4 mb-10" id="leavePlansMobileCards">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ==================== MODALS ==================== -->
+
+    <!-- Add/Edit Employee Modal -->
+    <div id="employeeModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-10 mx-auto p-5 border w-full max-w-4xl shadow-lg rounded-md bg-white mb-20">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-medium text-gray-900" id="modalTitle">Add New Employee</h3>
+                <button onclick="closeEmployeeModal()" class="text-gray-400 hover:text-gray-500">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="employeeForm" onsubmit="handleEmployeeSubmit(event)">
+                <input type="hidden" id="employeeId">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Personal Details -->
+                    <div class="col-span-2 flex items-center justify-between border-b pb-2">
+                        <h4 class="font-semibold text-gray-700">Personal Details</h4>
+                        <div id="existingPhoto" class="h-12 w-12 rounded-full overflow-hidden border border-gray-300 shadow-sm"></div>
+                    </div>
+                    <div class="col-span-2">
+                        <label class="block text-sm font-medium text-gray-700">Profile Picture</label>
+                        <div class="mt-1 flex flex-wrap gap-2 items-center">
+                            <label class="cursor-pointer bg-blue-50 text-blue-700 py-1.5 px-3 rounded text-sm font-semibold hover:bg-blue-100 flex items-center gap-1 border border-blue-200">
+                                <i class="fas fa-image"></i> Gallery
+                                <input type="file" id="profilePicture" accept="image/*" class="hidden" onchange="document.getElementById('profilePicName').innerText = this.files[0] ? this.files[0].name : ''; document.getElementById('profilePictureCamera').value = '';">
+                            </label>
+                            <label class="cursor-pointer bg-green-50 text-green-700 py-1.5 px-3 rounded text-sm font-semibold hover:bg-green-100 flex items-center gap-1 border border-green-200">
+                                <i class="fas fa-camera"></i> Camera
+                                <input type="file" id="profilePictureCamera" accept="image/*" capture="environment" class="hidden" onchange="document.getElementById('profilePicName').innerText = this.files[0] ? this.files[0].name : ''; document.getElementById('profilePicture').value = '';">
+                            </label>
+                            <span id="profilePicName" class="text-xs text-gray-500 font-medium ml-2"></span>
+                        </div>
+                        <div id="profilePicUploadProgress" class="text-sm text-blue-600 mt-2 hidden">Uploading photo...</div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">First Name</label>
+                        <input type="text" id="firstName" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Last Name</label>
+                        <input type="text" id="lastName" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Short Name</label>
+                        <input type="text" id="shortName" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Contact Number</label>
+                        <input type="text" id="contactNumber" placeholder="e.g. +91 9876543210" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Emergency Number</label>
+                        <input type="text" id="emergencyNumber" placeholder="e.g. +91 9999999999" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Email ID</label>
+                        <input type="email" id="emailId" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
+                    </div>
+
+                    <!-- Family Details -->
+                    <div class="col-span-2 mt-4"><h4 class="font-semibold text-gray-700 border-b pb-2">Family Details</h4></div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Spouse Name</label>
+                        <input type="text" id="spouseName" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Parents Names</label>
+                        <input type="text" id="parentsNames" placeholder="Father & Mother" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
+                    </div>
+
+                    <!-- Address Details -->
+                    <div class="col-span-2 mt-4"><h4 class="font-semibold text-gray-700 border-b pb-2">Address</h4></div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Permanent Address</label>
+                        <textarea id="permanentAddress" rows="3" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Correspondence Address</label>
+                        <textarea id="correspondenceAddress" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border"></textarea>
+                        <div class="mt-1">
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" id="sameAsPermanent" onchange="copyAddress()" class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                                <span class="ml-2 text-sm text-gray-600">Same as Permanent</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Employment Details -->
+                    <div class="col-span-2 mt-4"><h4 class="font-semibold text-gray-700 border-b pb-2">Employment Details</h4></div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Job Profile</label>
+                        <input type="text" id="jobProfile" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Joining Date</label>
+                        <input type="date" id="joiningDate" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Base Salary</label>
+                        <input type="number" id="baseSalary" step="0.01" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Status</label>
+                        <select id="status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border" onchange="window.toggleSeparationSection()">
+                            <option value="Active">Active</option>
+                            <option value="Inactive">Inactive</option>
+                        </select>
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-center">
+                            <label class="block text-sm font-medium text-gray-700">Department</label>
+                            <button type="button" onclick="openManageDepartmentsModal()" class="text-xs text-blue-600 hover:text-blue-800 font-semibold flex items-center gap-1 transition-colors">
+                                <i class="fas fa-cog"></i> Manage
+                            </button>
+                        </div>
+                        <select id="department" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border bg-white">
+                            <option value="">Select Department</option>
+                        </select>
+                    </div>
+
+                    <!-- Stop Employment / Separation Details -->
+                    <div id="separationSection" class="col-span-2 hidden bg-red-50 p-4 rounded-md border border-red-200 mt-2">
+                        <h4 class="font-semibold text-red-800 border-b border-red-200 pb-2 mb-3">Stop Employment / Separation Details</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Separation Type</label>
+                                <select id="separationType" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border bg-white">
+                                    <option value="">Select Option</option>
+                                    <option value="Resigned">Resign</option>
+                                    <option value="Terminated">Termination</option>
+                                    <option value="Long Leave">Long Leave</option>
+                                    <option value="No Information">No Information</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">End Date</label>
+                                <input type="date" id="endDate" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border bg-white">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Due Amount (till end date)</label>
+                                <input type="number" step="0.01" id="dueAmount" placeholder="e.g. 15000" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border bg-white">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bank & UPI Payment Details -->
+                    <div class="col-span-2 mt-4"><h4 class="font-semibold text-gray-700 border-b pb-2">Bank & UPI Payment Details</h4></div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">A/c Holder Name</label>
+                        <input type="text" id="bankAccountName" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">A/c Number</label>
+                        <input type="text" id="bankAccountNumber" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Bank Name</label>
+                        <input type="text" id="bankName" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">IFSC Code</label>
+                        <input type="text" id="bankIfscCode" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border bg-white">
+                    </div>
+                    <div class="col-span-2">
+                        <label class="block text-sm font-medium text-gray-700">Bank Address</label>
+                        <input type="text" id="bankAddress" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">UPI ID</label>
+                        <input type="text" id="upiId" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">UPI QR Code Image</label>
+                        <div class="mt-1 flex flex-wrap gap-2 items-center">
+                            <label class="cursor-pointer bg-blue-50 text-blue-700 py-1.5 px-3 rounded text-sm font-semibold hover:bg-blue-100 flex items-center gap-1 border border-blue-200">
+                                <i class="fas fa-image"></i> Gallery
+                                <input type="file" id="upiQRCode" accept="image/*" class="hidden" onchange="document.getElementById('upiQRName').innerText = this.files[0] ? this.files[0].name : ''; document.getElementById('upiQRCodeCamera').value = '';">
+                            </label>
+                            <label class="cursor-pointer bg-green-50 text-green-700 py-1.5 px-3 rounded text-sm font-semibold hover:bg-green-100 flex items-center gap-1 border border-green-200">
+                                <i class="fas fa-camera"></i> Camera
+                                <input type="file" id="upiQRCodeCamera" accept="image/*" capture="environment" class="hidden" onchange="document.getElementById('upiQRName').innerText = this.files[0] ? this.files[0].name : ''; document.getElementById('upiQRCode').value = '';">
+                            </label>
+                            <span id="upiQRName" class="text-xs text-gray-500 font-medium ml-2"></span>
+                        </div>
+                        <div id="upiQRUploadProgress" class="text-sm text-blue-600 mt-2 hidden">Uploading QR...</div>
+                        <div id="existingUPIQRCode" class="mt-2 flex flex-wrap gap-2"></div>
+                    </div>
+
+                    <!-- Holidays Segment -->
+                    <div class="col-span-2 mt-4"><h4 class="font-semibold text-gray-700 border-b pb-2">Holidays Segment</h4></div>
+                    <div class="col-span-2 bg-green-50 p-4 rounded-md border border-green-200">
+                        <h5 class="text-sm font-bold text-green-800 mb-3"><i class="fas fa-calendar-alt mr-1.5"></i>Official National Holidays (Paid)</h5>
+                        <ul id="employeeModalNationalHolidaysList" class="list-disc pl-5 text-xs text-green-700 space-y-1 mb-4">
+                            <li class="text-gray-400 italic">Loading holidays...</li>
+                        </ul>
+                        
+                        <h5 class="text-sm font-bold text-green-800 mb-3"><i class="fas fa-star mr-1.5"></i>Holidays of Choice (2 Allowed)</h5>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700">Holiday 1 - Date</label>
+                                <input type="date" id="holidayChoice1Date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border bg-white text-xs">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700">Holiday 1 - Occasion</label>
+                                <input type="text" id="holidayChoice1Occasion" placeholder="e.g. Eid, Diwali" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border bg-white text-xs">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700">Holiday 2 - Date</label>
+                                <input type="date" id="holidayChoice2Date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border bg-white text-xs">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700">Holiday 2 - Occasion</label>
+                                <input type="text" id="holidayChoice2Occasion" placeholder="e.g. Birthday, Christmas" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border bg-white text-xs">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Documents -->
+                    <div class="col-span-2 mt-4"><h4 class="font-semibold text-gray-700 border-b pb-2">ID Documents</h4></div>
+                    <div class="col-span-2">
+                        <label class="block text-sm font-medium text-gray-700">Upload ID Documents (Multiple allowed)</label>
+                        <div class="mt-1 flex flex-wrap gap-2 items-center">
+                            <label class="cursor-pointer bg-blue-50 text-blue-700 py-1.5 px-3 rounded text-sm font-semibold hover:bg-blue-100 flex items-center gap-1 border border-blue-200">
+                                <i class="fas fa-file-upload"></i> Files / Gallery
+                                <input type="file" id="idDocuments" multiple accept="image/*,.pdf" class="hidden" onchange="document.getElementById('idDocsName').innerText = this.files.length > 0 ? this.files.length + ' file(s) selected' : ''; document.getElementById('idDocumentsCamera').value = '';">
+                            </label>
+                            <label class="cursor-pointer bg-green-50 text-green-700 py-1.5 px-3 rounded text-sm font-semibold hover:bg-green-100 flex items-center gap-1 border border-green-200">
+                                <i class="fas fa-camera"></i> Camera
+                                <input type="file" id="idDocumentsCamera" accept="image/*" capture="environment" class="hidden" onchange="document.getElementById('idDocsName').innerText = this.files.length > 0 ? '1 photo captured' : ''; document.getElementById('idDocuments').value = '';">
+                            </label>
+                            <span id="idDocsName" class="text-xs text-gray-500 font-medium ml-2"></span>
+                        </div>
+                        <div id="uploadProgress" class="text-sm text-blue-600 mt-2 hidden">Uploading...</div>
+                        <div id="existingDocuments" class="mt-2 flex flex-wrap gap-2"></div>
+                    </div>
+                </div>
+                
+                <div class="mt-6 flex justify-between gap-3 border-t pt-4">
+                    <button type="button" id="deleteEmployeeBtn" onclick="window.payrollApp.deleteEmployeeFromModal()" class="text-red-600 hover:text-red-800 font-medium hidden"><i class="fas fa-trash mr-1"></i> Delete Employee</button>
+                    <div class="flex gap-3">
+                        <button type="button" onclick="closeEmployeeModal()" class="btn-secondary">Cancel</button>
+                        <button type="submit" id="saveEmployeeBtn" class="btn-primary">Save Employee</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Manage Departments Modal -->
+    <div id="departmentModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50 flex items-center justify-center">
+        <div class="relative mx-auto p-6 border w-full max-w-md shadow-2xl rounded-xl bg-white m-4">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-gray-900"><i class="fas fa-building text-blue-600 mr-2"></i>Manage Departments</h3>
+                <button onclick="closeManageDepartmentsModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fas fa-times text-lg"></i>
+                </button>
+            </div>
+            
+            <!-- Add Department Form -->
+            <div class="mb-6 bg-blue-50 p-4 rounded-lg border border-blue-100">
+                <label class="block text-sm font-semibold text-blue-800 mb-2">Add New Department</label>
+                <div class="flex gap-2">
+                    <input type="text" id="newDepartmentName" placeholder="e.g. Sales, Marketing" class="flex-grow rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2.5 border text-sm bg-white">
+                    <button onclick="addDepartment()" class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg transition-colors flex items-center gap-1 text-sm shadow-sm">
+                        <i class="fas fa-plus"></i> Add
+                    </button>
+                </div>
+                <div id="deptErrorMsg" class="text-xs text-red-600 mt-1 hidden"></div>
+            </div>
+
+            <!-- List of Departments -->
+            <div>
+                <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Existing Departments</h4>
+                <div class="max-h-60 overflow-y-auto divide-y divide-gray-100 pr-1" id="manageDepartmentsList">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+            
+            <div class="mt-6 border-t pt-4 flex justify-end">
+                <button onclick="closeManageDepartmentsModal()" class="btn-secondary px-5 py-2.5 rounded-lg text-sm font-medium">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Holiday Modal -->
+    <div id="holidayModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50 flex items-center justify-center">
+        <div class="relative mx-auto p-6 border w-full max-w-md shadow-2xl rounded-xl bg-white m-4">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-gray-900" id="holidayModalTitle"><i class="fas fa-calendar-alt text-blue-600 mr-2"></i>Add Official Holiday</h3>
+                <button onclick="window.payrollApp.closeHolidayModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fas fa-times text-lg"></i>
+                </button>
+            </div>
+            <form id="holidayForm" onsubmit="window.payrollApp.handleHolidaySubmit(event)">
+                <input type="hidden" id="holidayId">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Holiday Date</label>
+                        <input type="date" id="holidayDate" required class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2.5 border text-sm bg-white font-medium">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Occasion / Name</label>
+                        <input type="text" id="holidayOccasion" required placeholder="e.g. Republic Day, Holi" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2.5 border text-sm">
+                    </div>
+                </div>
+                
+                <div class="mt-6 border-t pt-4 flex justify-end gap-3">
+                    <button type="button" onclick="window.payrollApp.closeHolidayModal()" class="btn-secondary px-5 py-2.5 rounded-lg text-sm font-medium">Cancel</button>
+                    <button type="submit" id="saveHolidayBtn" class="btn-primary px-5 py-2.5 rounded-lg text-sm font-medium">Save Holiday</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add/Edit Leave Plan Modal -->
+    <div id="leavePlanModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50 flex items-center justify-center">
+        <div class="relative mx-auto p-6 border w-full max-w-md shadow-2xl rounded-xl bg-white m-4">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-gray-900" id="leavePlanModalTitle"><i class="fas fa-plane-departure text-blue-600 mr-2"></i>Plan Employee Leave</h3>
+                <button onclick="window.payrollApp.closeLeavePlanModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fas fa-times text-lg"></i>
+                </button>
+            </div>
+            <form id="leavePlanForm" onsubmit="window.payrollApp.handleLeavePlanSubmit(event)">
+                <input type="hidden" id="leavePlanId">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Select Employee</label>
+                        <select id="leavePlanEmployeeId" required class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2.5 border text-sm bg-white font-medium">
+                            <option value="">Select Employee</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Start Date</label>
+                        <input type="date" id="leavePlanStartDate" required class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2.5 border text-sm bg-white font-medium">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">End Date</label>
+                        <input type="date" id="leavePlanEndDate" required class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2.5 border text-sm bg-white font-medium">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Remarks / Reason</label>
+                        <input type="text" id="leavePlanRemarks" placeholder="e.g. Personal Work, Sick Leave" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2.5 border text-sm">
+                    </div>
+                </div>
+                
+                <div class="mt-6 border-t pt-4 flex justify-end gap-3">
+                    <button type="button" onclick="window.payrollApp.closeLeavePlanModal()" class="btn-secondary px-5 py-2.5 rounded-lg text-sm font-medium">Cancel</button>
+                    <button type="submit" id="saveLeavePlanBtn" class="btn-primary px-5 py-2.5 rounded-lg text-sm font-semibold shadow-sm">Save Leave Plan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- Link the logic script -->
+    <script src="../js/payroll.js?v=7"></script>
+    <script>
+        function switchTab(tabName) {
+            // Update buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById('tab-btn-' + tabName).classList.add('active');
+
+            // Update content visibility
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById('tab-content-' + tabName).classList.add('active');
+
+            // Trigger initialization if window.payrollApp exists
+            if (window.payrollApp) {
+                if (tabName === 'employees') window.payrollApp.initEmployeePage();
+                if (tabName === 'salary') window.payrollApp.initSalaryPage();
+                if (tabName === 'attendance') window.payrollApp.initAttendancePage();
+                if (tabName === 'holidays') window.payrollApp.initHolidaysPage();
+                if (tabName === 'leaves') window.payrollApp.initLeavesPage();
+            }
+        }
+
+        // Initialize the first tab on load
+        document.addEventListener('DOMContentLoaded', () => {
+            switchTab('employees'); // This will trigger initEmployeePage()
+        });
+    </script>
+    <!-- Image View Modal -->
+    <div id="imagePreviewModal" class="fixed inset-0 bg-black bg-opacity-75 overflow-y-auto h-full w-full hidden z-[100] flex items-center justify-center" onclick="window.closeImagePreviewModal()">
+        <span class="absolute top-4 right-4 text-white text-4xl cursor-pointer hover:text-gray-300" onclick="window.closeImagePreviewModal()">&times;</span>
+        <img id="imagePreviewTarget" class="max-w-[90%] max-h-[90vh] object-contain rounded-lg shadow-xl" src="" onclick="event.stopPropagation()" />
+    </div>
+
+    <!-- Payment Options Modal -->
+    <div id="paymentOptionsModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50 flex items-center justify-center">
+        <div class="relative mx-auto p-6 border w-full max-w-lg shadow-2xl rounded-xl bg-white m-4">
+            <div class="flex justify-between items-center mb-4 border-b pb-3">
+                <div>
+                    <h3 class="text-lg font-bold text-gray-900" id="paymentModalEmpName">Employee Payment Options</h3>
+                    <p class="text-xs text-gray-500 font-bold" id="paymentModalEmpId">ID: -</p>
+                </div>
+                <button onclick="closePaymentOptionsModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fas fa-times text-lg"></i>
+                </button>
+            </div>
+            
+            <div class="mb-5 bg-blue-50 p-4 rounded-xl border border-blue-100 flex justify-between items-center">
+                <div>
+                    <span class="text-xs font-semibold text-blue-800 uppercase tracking-wider block">Remaining Balance</span>
+                    <span class="text-2xl font-bold text-blue-900" id="paymentModalAmount">₹0.00</span>
+                </div>
+                <i class="fas fa-wallet text-3xl text-blue-400"></i>
+            </div>
+
+            <div class="space-y-4">
+                <!-- Bank Details Card -->
+                <div id="paymentModalBankCard" class="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                    <div class="flex justify-between items-center mb-2 pb-1 border-b border-gray-200">
+                        <span class="text-sm font-bold text-gray-800"><i class="fas fa-university text-indigo-500 mr-1.5"></i>Bank Transfer Details</span>
+                        <button id="copyBankDetailsBtn" onclick="copyBankDetails()" class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1 transition-colors">
+                            <i class="fas fa-copy"></i> Copy Details
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                            <span class="text-gray-400 font-medium block">A/c Holder Name</span>
+                            <span class="font-semibold text-gray-800" id="paymentModalAccName">-</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-400 font-medium block">A/c Number</span>
+                            <span class="font-semibold text-gray-800 font-mono" id="paymentModalAccNum">-</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-400 font-medium block">Bank Name</span>
+                            <span class="font-semibold text-gray-800" id="paymentModalBankName">-</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-400 font-medium block">IFSC Code</span>
+                            <span class="font-semibold text-gray-800 font-mono" id="paymentModalIfsc">-</span>
+                        </div>
+                        <div class="col-span-2">
+                            <span class="text-gray-400 font-medium block">Bank Address</span>
+                            <span class="font-semibold text-gray-800" id="paymentModalBankAddr">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- UPI Details Card -->
+                <div id="paymentModalUpiCard" class="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                    <div class="flex justify-between items-center mb-2 pb-1 border-b border-gray-200">
+                        <span class="text-sm font-bold text-gray-800"><i class="fas fa-mobile-alt text-green-500 mr-1.5"></i>UPI Payment</span>
+                        <button id="copyUpiIdBtn" onclick="copyUpiId()" class="text-xs text-green-600 hover:text-green-800 font-semibold flex items-center gap-1 transition-colors">
+                            <i class="fas fa-copy"></i> Copy UPI ID
+                        </button>
+                    </div>
+                    <div class="space-y-3">
+                        <div class="text-xs">
+                            <span class="text-gray-400 font-medium block">UPI ID</span>
+                            <span class="font-bold text-gray-800 text-sm font-mono" id="paymentModalUpiId">-</span>
+                        </div>
+                        <div id="paymentModalQrContainer" class="flex flex-col items-center justify-center p-3 bg-white rounded-lg border border-gray-100 hidden">
+                            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Scan QR Code</span>
+                            <img id="paymentModalQrImg" class="h-40 w-40 object-contain rounded-md shadow-sm border border-gray-100 cursor-pointer hover:opacity-90" src="" alt="UPI QR Code" onclick="window.openImagePreviewModal(this.src)">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-6 flex justify-end gap-3">
+                <button onclick="closePaymentOptionsModal()" class="btn-secondary px-5 py-2 rounded-lg text-sm font-medium">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.openImagePreviewModal = function(src) {
+            document.getElementById('imagePreviewTarget').src = src;
+            document.getElementById('imagePreviewModal').classList.remove('hidden');
+        };
+        window.closeImagePreviewModal = function() {
+            document.getElementById('imagePreviewModal').classList.add('hidden');
+        };
+        window.closePaymentOptionsModal = function() {
+            document.getElementById('paymentOptionsModal').classList.add('hidden');
+        };
+        window.copyBankDetails = function() {
+            const name = document.getElementById('paymentModalAccName').innerText;
+            const num = document.getElementById('paymentModalAccNum').innerText;
+            const bank = document.getElementById('paymentModalBankName').innerText;
+            const ifsc = document.getElementById('paymentModalIfsc').innerText;
+            const addr = document.getElementById('paymentModalBankAddr').innerText;
+            
+            const text = `Bank Transfer Details:\nAccount Name: ${name}\nAccount Number: ${num}\nBank Name: ${bank}\nIFSC Code: ${ifsc}\nBank Address: ${addr}`;
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = document.getElementById('copyBankDetailsBtn');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                setTimeout(() => { btn.innerHTML = originalText; }, 2000);
+            });
+        };
+        window.copyUpiId = function() {
+            const upiId = document.getElementById('paymentModalUpiId').innerText;
+            navigator.clipboard.writeText(upiId).then(() => {
+                const btn = document.getElementById('copyUpiIdBtn');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                setTimeout(() => { btn.innerHTML = originalText; }, 2000);
+            });
+        };
+        window.toggleSeparationSection = function() {
+            const status = document.getElementById('status').value;
+            const section = document.getElementById('separationSection');
+            if (status === 'Inactive') {
+                section.classList.remove('hidden');
+            } else {
+                section.classList.add('hidden');
+                document.getElementById('separationType').value = '';
+                document.getElementById('endDate').value = '';
+                document.getElementById('dueAmount').value = '';
+            }
+        };
+    </script>
+</body>
+</html>

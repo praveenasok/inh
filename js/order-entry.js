@@ -334,7 +334,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Submit Logic
-    orderForm.addEventListener('submit', (e) => {
+    orderForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         
         const orderNum = document.getElementById('h-order-num').value.trim();
@@ -421,6 +421,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
             localStorage.setItem(DB_KEY, JSON.stringify(dbData));
             
+            // Upload to Firebase
+            if (window.firebaseDB && window.firebaseDB.initialized) {
+                for (let row of finalRowsToInject) {
+                    try {
+                        await window.firebaseDB.saveOrder(row);
+                    } catch(e) {
+                        console.error("Firebase save error:", e);
+                    }
+                }
+            }
+            
             // Show Success UI
             showSuccessModal();
 
@@ -500,7 +511,7 @@ document.addEventListener('DOMContentLoaded', () => {
     closeClientModalBtn.addEventListener('click', hideClientModal);
     cancelClientBtn.addEventListener('click', hideClientModal);
 
-    clientForm.addEventListener('submit', (e) => {
+    clientForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         
         const clientData = {
@@ -588,3 +599,73 @@ document.addEventListener('DOMContentLoaded', () => {
     renderItemRow();
 
 });
+
+    // --- FIREBASE SYNC & MIGRATION ---
+    async function syncWithFirebase() {
+        if (!window.firebaseDB) return;
+        
+        try {
+            // Wait for initialization
+            if (!window.firebaseDB.initialized) {
+                await new Promise(resolve => {
+                    const check = setInterval(() => {
+                        if (window.firebaseDB.initialized) {
+                            clearInterval(check);
+                            resolve();
+                        }
+                    }, 500);
+                    // timeout after 5 seconds
+                    setTimeout(() => { clearInterval(check); resolve(); }, 5000);
+                });
+            }
+            
+            if (!window.firebaseDB.initialized) return;
+
+            let localDb = JSON.parse(localStorage.getItem(DB_KEY));
+            let localRows = (localDb && localDb.rows) ? localDb.rows : [];
+            
+            // Fetch remote data
+            const remoteRows = await window.firebaseDB.getOrders();
+            const remoteOrderNumbers = new Set(remoteRows.map(r => r["Order Number"] || r["Quote Number"]).filter(Boolean));
+            
+            let needsLocalUpdate = false;
+            let newlyUploaded = 0;
+            
+            // Upload local rows that are missing in remote
+            for (let row of localRows) {
+                const num = row["Order Number"] || row["Quote Number"];
+                if (num && !remoteOrderNumbers.has(num)) {
+                    try {
+                        await window.firebaseDB.saveOrder(row);
+                        newlyUploaded++;
+                    } catch (e) {
+                        console.error("Migration error:", e);
+                    }
+                }
+            }
+            
+            // Now, merge remote into local
+            const allOrderNumbers = new Set(localRows.map(r => r["Order Number"] || r["Quote Number"]).filter(Boolean));
+            for (let rRow of remoteRows) {
+                const num = rRow["Order Number"] || rRow["Quote Number"];
+                if (num && !allOrderNumbers.has(num)) {
+                    localRows.push(rRow);
+                    needsLocalUpdate = true;
+                }
+            }
+            
+            if (needsLocalUpdate || newlyUploaded > 0) {
+                if (!localDb) {
+                    localDb = { columns: [], rows: [] };
+                }
+                localDb.rows = localRows;
+                localStorage.setItem(DB_KEY, JSON.stringify(localDb));
+            }
+            
+        } catch(err) {
+            console.error("Firebase sync error:", err);
+        }
+    }
+    
+    // Run sync when DOM is loaded or shortly after
+    setTimeout(syncWithFirebase, 2000);

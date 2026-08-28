@@ -15,12 +15,18 @@
         siteTitle: (window.navConfig && window.navConfig.siteTitle) || 'INHsuite',
         menuItems: [
             { name: 'Home', icon: 'fa-home', href: '/index.html' },
+            { name: 'Jobwork Billing', icon: 'fa-file-invoice-dollar', href: '/inh-jobwork.html' },
+            { name: 'Price Lookup', icon: 'fa-tags', href: '/price-lookup.html' },
+            { name: 'Price Calculator', icon: 'fa-calculator', href: '/pricelists.html' },
             { name: 'Shipping', icon: 'fa-truck', href: '/shipping-calculator/index.html' },
             { name: 'Shipping Paperwork', icon: 'fa-file-invoice', href: '/shipping-paperwork.html' },
-            { name: 'Delegated Orders', icon: 'fa-clipboard-list', href: '/delegated-orders.html' },
+            { name: 'Proforma Invoice', icon: 'fa-file-signature', href: '/proforma-invoice.html' },
+            { name: 'Production Status', icon: 'fa-clipboard-list', href: '/delegated-orders.html' },
             { name: 'Ratio Mixer', icon: 'fa-balance-scale', href: '/inh-ratio-mix/index.html' },
             { name: 'Manufacturing Order', icon: 'fa-industry', href: '/raw-manufacturing-order.html' },
             { name: 'Inventory Hub', icon: 'fa-boxes-stacked', href: '/inventory-system/dist/index.html' },
+            { name: 'New Inventory', icon: 'fa-box-open', href: '/new-inventory-system/index.html' },
+            { name: 'Hair Stock Ledger', icon: 'fa-warehouse', href: '/stocks/index.html' },
             { name: 'QR Code Tracker', icon: 'fa-qrcode', href: '/qr-manager.html' },
             {
                 name: 'SOP',
@@ -33,6 +39,11 @@
                     { name: 'Bleach Calculator', href: '/sop-bleach-calculator.html' },
                     { name: 'Cuticle Removal', href: '/sop-cuticle-removal.html' }
                 ]
+            },
+            {
+                name: 'Payroll',
+                icon: 'fa-money-check-dollar',
+                href: '/payroll/index.html'
             }
         ]
     };
@@ -87,78 +98,24 @@
             font-weight: 700;
         }
 
-        /* Desktop Menu Styles - REMOVED for Hamburger Only */
+        /* Desktop Menu Styles */
         .universal-desktop-menu {
-            display: none !important;
-        }
-
-        /* Ensure hamburger is always visible */
-        .universal-hamburger-menu {
-            display: flex !important;
-        }
-
-        .universal-nav-item-wrapper {
-            position: relative;
-            display: flex;
+            display: none; /* hidden by default on mobile */
             align-items: center;
-            height: 100%;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 0.35rem; /* Reduced gap */
+            padding: 0.35rem 0.5rem; /* Reduced padding */
+            width: 100%;
         }
 
-        .universal-menu-item {
-            display: block;
-            padding: 0.5rem 0.75rem;
-            border-radius: 0.375rem;
-            font-size: 0.9rem;
-            font-weight: 500;
-            color: white;
-            text-decoration: none;
-            transition: background-color 0.2s;
-            margin: 0 0.25rem;
-            white-space: nowrap;
+        @media (min-width: 1024px) {
+            .universal-desktop-menu {
+                display: flex; /* show on desktop */
+            }
         }
 
-        .universal-menu-item:hover {
-            background-color: rgba(30, 58, 138, 0.8);
-            color: #e5e7eb;
-        }
-
-        .universal-menu-item.active-page {
-             background-color: rgba(0, 0, 0, 0.2);
-             font-weight: 700;
-        }
-
-        /* Dropdown Styles */
-        .universal-dropdown-menu {
-            display: none;
-            position: absolute;
-            top: 100%;
-            left: 0;
-            background: #1e3a8a; 
-            min-width: 220px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            border-radius: 0 0 0.375rem 0.375rem;
-            z-index: 60;
-            padding: 0.5rem 0;
-        }
-
-        .universal-nav-item-wrapper:hover .universal-dropdown-menu {
-            display: block;
-        }
-
-        .universal-dropdown-item {
-            display: block;
-            padding: 0.75rem 1rem;
-            color: white;
-            text-decoration: none;
-            font-size: 0.95rem;
-            transition: background-color 0.2s;
-        }
-
-        .universal-dropdown-item:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-        }
-
-        /* Hamburger Menu Button */
+        /* Hamburger Menu Icon */
         .universal-hamburger-menu {
             display: flex;
             flex-direction: column;
@@ -166,6 +123,12 @@
             padding: 8px;
             border-radius: 4px;
             transition: background-color 0.3s ease;
+        }
+
+        @media (min-width: 1024px) {
+            .universal-hamburger-menu {
+                display: none !important; /* hide on desktop */
+            }
         }
 
         .universal-hamburger-menu:hover {
@@ -193,6 +156,71 @@
             transform: rotate(45deg) translate(-5px, -6px);
         }
 
+        .universal-nav-item-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+
+        .universal-menu-item {
+            display: flex;
+            align-items: center;
+            padding: 0.35rem 0.65rem; /* Reduced padding */
+            border-radius: 9999px; /* Pill shape */
+            font-size: 0.75rem; /* Reduced font size */
+            font-weight: 600;
+            color: white;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            background-color: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            white-space: nowrap;
+        }
+
+        .universal-menu-item:hover {
+            background-color: rgba(255, 255, 255, 0.25);
+            transform: translateY(-1px);
+        }
+
+        .universal-menu-item.active-page {
+             background-color: #f59e0b; /* Amber 500 */
+             color: white;
+             box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+             border-color: #f59e0b;
+        }
+
+        /* Dropdown Styles */
+        .universal-dropdown-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: #1e3a8a; 
+            min-width: 220px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border-radius: 0.5rem;
+            z-index: 60;
+            padding: 0.5rem 0;
+            margin-top: 0.25rem;
+        }
+
+        .universal-nav-item-wrapper:hover .universal-dropdown-menu {
+            display: block;
+        }
+
+        .universal-dropdown-item {
+            display: block;
+            padding: 0.75rem 1rem;
+            color: white;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .universal-dropdown-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
         /* Mobile Menu */
         .universal-mobile-menu {
             display: none;
@@ -207,6 +235,12 @@
 
         .universal-mobile-menu.active {
             display: block;
+        }
+
+        @media (min-width: 1024px) {
+            .universal-mobile-menu {
+                display: none !important;
+            }
         }
 
         .universal-mobile-sub-item {
@@ -226,10 +260,33 @@
     styleSheet.innerText = styles;
     document.head.appendChild(styleSheet);
 
+    // Helper to check access
+    function canAccessNav(itemName) {
+        // If access control function exists, use it
+        if (typeof hasAccessTo === 'function') {
+            return hasAccessTo('App: ' + itemName);
+        }
+        
+        // Otherwise, fallback to checking localStorage
+        const email = (localStorage.getItem('SESSION_EMAIL') || '').trim().toLowerCase();
+        const INH_ADMINS = ['info@indiannaturalhair.com', 'info@praveenasok.com'];
+        if (INH_ADMINS.includes(email)) return true;
+        
+        try {
+            const segments = JSON.parse(localStorage.getItem('USER_SEGMENTS') || '[]');
+            return segments.includes('App: ' + itemName);
+        } catch (e) {
+            return false;
+        }
+    }
+
     // Create Navigation HTML
     function createNavHTML() {
+        // Filter items based on access control
+        const accessibleMenuItems = navConfig.menuItems.filter(item => canAccessNav(item.name));
+
         // Desktop Menu Items
-        const desktopMenuItemsHTML = navConfig.menuItems.map(item => {
+        const desktopMenuItemsHTML = accessibleMenuItems.map(item => {
             if (item.subItems) {
                 const subItemsHTML = item.subItems.map(sub => `
                     <a href="${sub.href}" class="universal-dropdown-item">
@@ -260,7 +317,7 @@
         }).join('');
 
         // Mobile Menu Items
-        const mobileMenuItemsHTML = navConfig.menuItems.map(item => {
+        const mobileMenuItemsHTML = accessibleMenuItems.map(item => {
             const isActive = normalizedPath.endsWith(item.href) || (item.href !== '/index.html' && normalizedPath.includes(item.href));
 
             let html = `
@@ -284,20 +341,24 @@
         return `
             <div class="universal-nav">
                 <div class="universal-nav-container">
-                    <div class="universal-nav-content">
-                        <div class="universal-nav-logo-area">
-                            <img src="${navConfig.logoSrc}" alt="Logo" class="universal-nav-logo">
-                            <span class="universal-nav-title">${navConfig.siteTitle}</span>
+                    <div class="universal-nav-content" style="flex-direction: column; height: auto; align-items: stretch; padding: 0.5rem 0;">
+                        <div class="universal-nav-logo-area" style="display: flex; justify-content: space-between; align-items: center; padding: 0 1rem; margin-bottom: 0.5rem;">
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <img src="${navConfig.logoSrc}" alt="Logo" class="universal-nav-logo">
+                                <span class="universal-nav-title">${navConfig.siteTitle}</span>
+                            </div>
+                            
+                            <!-- Hamburger Menu Button -->
+                            <div class="universal-hamburger-menu" id="universalHamburger">
+                                <div class="universal-hamburger-line"></div>
+                                <div class="universal-hamburger-line"></div>
+                                <div class="universal-hamburger-line"></div>
+                            </div>
                         </div>
                         
-                        <!-- Desktop Menu (Hidden) -->
-                        <div class="universal-desktop-menu" style="display: none;"></div>
-
-                        <!-- Hamburger Menu Button -->
-                        <div class="universal-hamburger-menu" id="universalHamburger">
-                            <div class="universal-hamburger-line"></div>
-                            <div class="universal-hamburger-line"></div>
-                            <div class="universal-hamburger-line"></div>
+                        <!-- Pill Menu -->
+                        <div class="universal-desktop-menu">
+                            ${desktopMenuItemsHTML}
                         </div>
                     </div>
                 </div>

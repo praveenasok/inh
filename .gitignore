@@ -75,3 +75,37 @@ backup_*/
 
 # dataconnect generated files
 .dataconnect
+
+# Custom Temporary & Test Files
+.DS_Store
+*.py
+*.patch
+*.csv
+*.zip
+*.txt
+*.pdf
+*.jpg
+*.png
+!images/
+temp_*
+patch_*
+debug_*
+test_*
+fix_*
+check_*
+scratch/
+venv/
+stocks_source_extracted/
+build_*.js
+clean_*.js
+run_*.js
+dump_*.js
+inject_*.js
+migrate_*.js
+upload_*.js
+get_*.js
+list_*.js
+*_test.js
+*_db.js
+db_dump.json
+.git_status

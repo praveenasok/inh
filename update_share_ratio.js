@@ -52,6 +52,21 @@
 
         const imgHTML = window.getProductImageHTML(clientName, 'auto');
 
+        let companyName = '';
+        let headerLogo = '../images/hw/hwstraightlogo.png';
+        let logoHeight = '48px';
+        const upperClientName = String(clientName).toUpperCase();
+        let isUSA = false;
+        
+        if (upperClientName.includes('INHUSA')) {
+            companyName = 'INDIAN NATURAL HAIR, LLC';
+            headerLogo = '../images/hw/inhusa.png';
+            logoHeight = '90px';
+            isUSA = true;
+        }
+
+        const locationTextHtml = `NEW DELHI <span style="margin: 0 6px; color: #cbd5e1;">|</span> NEW JERSEY <span style="margin: 0 6px; color: #cbd5e1;">|</span> FLORIDA`;
+
         let footerHTML = `
             <div style="margin-top: 15px; padding: 12px 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 12px; color: #475569; line-height: 1.8; text-align: left;">
                 <div style="font-weight: 800; color: #0f172a; margin-bottom: 10px; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; display: inline-block;">Important Information</div>
@@ -67,7 +82,7 @@
             
             <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding: 0 4px; font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
                 <div><i class="fa-regular fa-calendar" style="margin-right: 4px;"></i> Generated: ${new Date().toLocaleDateString('en-IN', {day:'numeric', month:'short', year:'numeric'})}</div>
-                <div>HAIRWISE</div>
+                <div>${companyName === 'INDIAN NATURAL HAIR, LLC' ? '<span style="text-transform: none;">us@indiannaturalhair.com | indiannaturalhair.com | +1 (929) 245-0936</span>' : companyName.toUpperCase()}</div>
                 <div>${(function() {
                     const __d = new Date();
                     const __dd = String(__d.getDate()).padStart(2, '0');
@@ -91,10 +106,13 @@
             <div style="overflow-x: auto; width: 100%; padding: 15px 5px; -webkit-overflow-scrolling: touch;">
                 <div id="export-preview-${clientName.replace(/[^a-zA-Z0-9]/g,'_')}" class="preview-card-inner" style="position: relative; background: ${_bg2}; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; margin: 0 auto; min-width: 700px; width: max-content; color: #334155; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);">
                     
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; width: 100%;">
-                        <img src="../images/hw/hwstraightlogo.png" style="height: 45px;" />
-                        <div style="text-align: right; font-size: 10px; color: #94a3b8; font-weight: 800; letter-spacing: 1px;">
-                            NEW DELHI <span style="margin: 0 6px; color: #cbd5e1;">|</span> NEW JERSEY <span style="margin: 0 6px; color: #cbd5e1;">|</span> FLORIDA
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; width: 100%; border-bottom: 1px solid rgba(226, 232, 240, 0.6); padding-bottom: 12px;">
+                        <div style="display: flex; align-items: center; gap: 20px;">
+                            <img src="${headerLogo}" style="height: ${logoHeight === '90px' ? '48px' : logoHeight}; object-fit: contain;" onerror="this.src='../images/hw/hwstraightlogo.png'" />
+                            ${companyName ? `<div style="font-weight: 800; font-size: 20px; color: #1e293b; letter-spacing: 0.5px; text-transform: uppercase;">${companyName}</div>` : ''}
+                        </div>
+                        <div style="text-align: right; font-size: 10px; color: #475569; font-weight: 800; letter-spacing: 1px; display: flex; align-items: center;">
+                            ${locationTextHtml}
                         </div>
                     </div>
                     
@@ -102,13 +120,17 @@
                         
                         <div style="flex-grow: 1;">
                             <div style="padding: 16px 10px; background: #faf0e6; border-bottom: 2px solid #e2e8f0; color: #0f172a; font-weight: 800; text-align: center; vertical-align: bottom;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; width: 100%;">
-                                    <img src="../images/hw/100percent.png?v=3" style="height: 80px; width: auto; max-width: 100%; object-fit: contain;" alt="100% Authentic Human Hair" />
-                                    ${stampInfo}
-                                </div>
-                                <div style="font-size: 16px; font-weight: 800; text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                                    ${renderNameWithLogo(clientName, '14px')}
-                                    <span style="color: #16a34a;">(${appState.currency || 'INR'})</span>
+                                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                                    <div style="flex: 1; text-align: left; display: flex; align-items: center;">
+                                        <img src="../images/hw/100percent.png?v=3" style="height: 80px; width: auto; max-width: 100%; object-fit: contain;" alt="100% Authentic Human Hair" />
+                                    </div>
+                                    <div style="flex: 2; font-size: 16px; font-weight: 800; text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                                        ${renderNameWithLogo(clientName, '14px')}
+                                        <span style="color: #16a34a;">(${appState.currency || 'INR'})</span>
+                                    </div>
+                                    <div style="flex: 1; text-align: right; display: flex; justify-content: flex-end; align-items: center;">
+                                        ${stampInfo}
+                                    </div>
                                 </div>
                             </div>
                             

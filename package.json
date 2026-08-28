@@ -33,10 +33,12 @@
     "node": ">=14.0.0"
   },
   "dependencies": {
+    "@google-cloud/storage": "^7.21.0",
     "crypto": "^1.0.1",
     "firebase-admin": "^13.6.0",
     "google-spreadsheet": "^5.0.2",
     "googleapis": "^159.0.0",
-    "node-cron": "^4.2.1"
+    "node-cron": "^4.2.1",
+    "puppeteer": "^25.1.0"
   }
 }

@@ -261,9 +261,24 @@
             }
         }
     </style>
+    <!-- Firebase SDKs for Access Control -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="firebase-global-init.js"></script>
+    <script src="js/access-control.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof hasAccessTo === 'function' && !hasAccessTo('Stock Availability')) {
+                alert('You do not have permission to view Stock Availability.');
+                window.location.href = 'delegated-orders.html';
+            }
+        });
+    </script>
 </head>
 
 <body class="bg-slate-50">
+  <script src="/js/navigation-loader.js"></script>
     <div id="root"></div>
 
     <script type="text/babel">

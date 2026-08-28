@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Migrate Employee IDs</title>
+</head>
+<body>
+  <script src="/js/navigation-loader.js"></script>
+    <h1>Migrating Employee IDs...</h1>
+    <div id="output"></div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
+
+    <!-- App Scripts -->
+    <script src="../firebase-config.js"></script>
+    <script src="../firebase-global-init.js"></script>
+    <script src="../firebase-database.js"></script>
+    
+    <script>
+        window.onload = async () => {
+            const output = document.getElementById('output');
+            output.innerHTML += '<p>Waiting for Firebase...</p>';
+            
+            // Wait for DB to be available
+            let checks = 0;
+            const checkDB = setInterval(async () => {
+                if (window.firebaseDB && window.firebaseDB.isAvailable()) {
+                    clearInterval(checkDB);
+                    output.innerHTML += '<p>Firebase connected. Starting migration...</p>';
+                    await runMigration(output);
+                }
+                checks++;
+                if (checks > 20) {
+                    clearInterval(checkDB);
+                    output.innerHTML += '<p style="color:red">Failed to connect to Firebase. Check console for errors.</p>';
+                }
+            }, 500);
+        };
+
+        async function runMigration(output) {
+            try {
+                const employees = await window.firebaseDB.getEmployees();
+                if (!employees || employees.length === 0) {
+                    output.innerHTML += '<p>No employees found.</p>';
+                    return;
+                }
+
+                const seqMap = {};
+                let updatedCount = 0;
+
+                for (const emp of employees) {
+                    if (!emp.joiningDate) {
+                        output.innerHTML += `<p>Skipping ${emp.firstName} - no joining date.</p>`;
+                        continue;
+                    }
+
+                    const dateParts = emp.joiningDate.split('-');
+                    if (dateParts.length !== 3) {
+                        output.innerHTML += `<p>Skipping ${emp.firstName} - invalid date ${emp.joiningDate}.</p>`;
+                        continue;
+                    }
+
+                    const dateStr = `${dateParts[2]}${dateParts[1]}${dateParts[0]}`; // DDMMYYYY
+                    if (!seqMap[dateStr]) seqMap[dateStr] = 0;
+                    seqMap[dateStr]++;
+
+                    const empId = `INH-${dateStr}-${seqMap[dateStr]}`;
+
+                    // Update employee
+                    await window.firebaseDB.updateEmployee(emp.id, { empId: empId });
+                    output.innerHTML += `<p>Assigned ${empId} to ${emp.firstName} ${emp.lastName}</p>`;
+                    updatedCount++;
+                }
+
+                output.innerHTML += `<h2>Migration complete. Updated ${updatedCount} employees.</h2>`;
+            } catch (e) {
+                console.error(e);
+                output.innerHTML += `<p style="color:red">Error: ${e.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>

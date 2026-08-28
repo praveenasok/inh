@@ -53,7 +53,8 @@ const DEFAULT_LOCATIONS: LocationItem[] = [
   { id: 'loc-1', name: 'Raw Hair Room', description: 'Primary entry room for raw material bundles' },
   { id: 'loc-2', name: 'WIP Processing Area', description: 'Area for segregation, washing, and hackling' },
   { id: 'loc-3', name: 'Semi-Finished Room', description: 'Storage for graded bulks prior to wefting/bonding' },
-  { id: 'loc-4', name: 'Finished Goods Room', description: 'Final packaged warehouse for order fulfillment' }
+  { id: 'loc-4', name: 'Finished Goods Room', description: 'Final packaged warehouse for order fulfillment' },
+  { id: 'loc-wastage', name: 'Wastage / Weight Loss', description: 'System location for tracking material lost during transfers' }
 ];
 
 const DEFAULT_STOCK: StockItem[] = [
@@ -140,6 +141,7 @@ export default function InventoryPage() {
   const [transferFromLoc, setTransferFromLoc] = useState('');
   const [transferToLoc, setTransferToLoc] = useState('');
   const [transferQty, setTransferQty] = useState<number | ''>('');
+  const [transferWastage, setTransferWastage] = useState<number | ''>('');
   const [transferNotes, setTransferNotes] = useState('');
   const [transferError, setTransferError] = useState('');
   const [transferSuccess, setTransferSuccess] = useState(false);
@@ -294,11 +296,13 @@ export default function InventoryPage() {
     }
 
     const qty = Number(transferQty);
+    const wQty = Number(transferWastage) || 0;
     const len = Number(transferLength);
+    const totalQtyToDeduct = qty + wQty;
     const currentAvailable = getAvailableStockQty(transferProductId, len, transferFromLoc);
 
-    if (qty > currentAvailable) {
-      setTransferError(`Insufficient stock in source location. Available: ${currentAvailable}`);
+    if (totalQtyToDeduct > currentAvailable) {
+      setTransferError(`Insufficient stock in source location for Transfer + Wastage. Available: ${currentAvailable}`);
       return;
     }
 
@@ -307,7 +311,7 @@ export default function InventoryPage() {
       // 1. Deduct from source
       let temp = prev.map(s => {
         if (s.productId === transferProductId && s.length === len && s.locationId === transferFromLoc) {
-          return { ...s, quantity: Math.max(0, s.quantity - qty) };
+          return { ...s, quantity: Math.max(0, s.quantity - totalQtyToDeduct) };
         }
         return s;
       });
@@ -321,6 +325,18 @@ export default function InventoryPage() {
         temp[destIndex] = { ...temp[destIndex], quantity: temp[destIndex].quantity + qty };
       } else {
         temp.push({ productId: transferProductId, length: len, locationId: transferToLoc, quantity: qty });
+      }
+
+      // 3. Add to wastage location if there's wastage
+      if (wQty > 0) {
+        const wasteIndex = temp.findIndex(
+          s => s.productId === transferProductId && s.length === len && s.locationId === 'loc-wastage'
+        );
+        if (wasteIndex > -1) {
+          temp[wasteIndex] = { ...temp[wasteIndex], quantity: temp[wasteIndex].quantity + wQty };
+        } else {
+          temp.push({ productId: transferProductId, length: len, locationId: 'loc-wastage', quantity: wQty });
+        }
       }
 
       // Filter out zero quantities to keep ledger clean
@@ -339,10 +355,27 @@ export default function InventoryPage() {
       notes: transferNotes || 'Internal Stock Transfer'
     };
 
-    setLogs(prev => [newLog, ...prev]);
+    let logsToAdd = [newLog];
+
+    if (wQty > 0) {
+      const wasteLog: TransferLog = {
+        id: `tlog-w-${Date.now()}`,
+        timestamp: new Date().toISOString(),
+        productId: transferProductId,
+        length: len,
+        quantity: wQty,
+        fromLocationId: transferFromLoc,
+        toLocationId: 'loc-wastage',
+        notes: '[WASTAGE] ' + (transferNotes || 'Weight loss during transfer')
+      };
+      logsToAdd.push(wasteLog);
+    }
+
+    setLogs(prev => [...logsToAdd, ...prev]);
 
     // Reset Form & Trigger success state
     setTransferQty('');
+    setTransferWastage('');
     setTransferNotes('');
     setTransferSuccess(true);
     setTimeout(() => setTransferSuccess(false), 4000);
@@ -701,30 +734,52 @@ export default function InventoryPage() {
                     </div>
                   )}
 
-                  <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">5. Quantity to Transfer</label>
-                    <div className="relative">
-                      <input
-                        type="number"
-                        step="0.01"
-                        min="0.01"
-                        placeholder="0.00"
-                        value={transferQty}
-                        onChange={e => setTransferQty(e.target.value ? parseFloat(e.target.value) : '')}
-                        disabled={selectedTransferAvailableQty <= 0}
-                        className="w-full p-3 border border-gray-200 rounded-xl text-lg font-mono text-center font-bold bg-gray-50/50 focus:outline-none focus:ring-1 focus:ring-[#1A1A1A] disabled:opacity-50 disabled:cursor-not-allowed"
-                        required
-                      />
-                      {transferProductId && (
-                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400 uppercase">
-                          {products.find(p => p.id === transferProductId)?.uom}
-                        </span>
-                      )}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">5. Quantity to Transfer</label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0.01"
+                          placeholder="0.00"
+                          value={transferQty}
+                          onChange={e => setTransferQty(e.target.value ? parseFloat(e.target.value) : '')}
+                          disabled={selectedTransferAvailableQty <= 0}
+                          className="w-full p-3 border border-gray-200 rounded-xl text-lg font-mono text-center font-bold bg-gray-50/50 focus:outline-none focus:ring-1 focus:ring-[#1A1A1A] disabled:opacity-50 disabled:cursor-not-allowed"
+                          required
+                        />
+                        {transferProductId && (
+                          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400 uppercase">
+                            {products.find(p => p.id === transferProductId)?.uom}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">6. Wastage (Optional)</label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          placeholder="0.00"
+                          value={transferWastage}
+                          onChange={e => setTransferWastage(e.target.value ? parseFloat(e.target.value) : '')}
+                          disabled={selectedTransferAvailableQty <= 0}
+                          className="w-full p-3 border border-gray-200 rounded-xl text-lg font-mono text-center font-bold bg-gray-50/50 focus:outline-none focus:ring-1 focus:ring-[#1A1A1A] disabled:opacity-50 disabled:cursor-not-allowed"
+                        />
+                        {transferProductId && (
+                          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400 uppercase">
+                            {products.find(p => p.id === transferProductId)?.uom}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">6. Transfer Notes / Purpose</label>
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">7. Transfer Notes / Purpose</label>
                     <textarea
                       placeholder="e.g. Issued to segregate machine wefts..."
                       rows={2}
@@ -736,7 +791,7 @@ export default function InventoryPage() {
 
                   <button
                     type="submit"
-                    disabled={selectedTransferAvailableQty <= 0 || !transferQty || Number(transferQty) > selectedTransferAvailableQty}
+                    disabled={selectedTransferAvailableQty <= 0 || !transferQty || (Number(transferQty) + (Number(transferWastage) || 0)) > selectedTransferAvailableQty}
                     className="w-full py-3.5 bg-[#1A1A1A] hover:bg-gray-800 disabled:bg-gray-300 text-white font-semibold rounded-xl text-sm transition-all shadow-sm active:scale-95 disabled:scale-100 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
                     <ArrowLeftRight size={18} />

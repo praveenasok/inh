@@ -61,7 +61,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.renderNameWithLogo = function(name, height = '24px') {
         if (!name) return '';
-        return name.replace(/Hairwise\s*/gi, '').trim();
+        const stripped = name.replace(/Hairwise\s*/gi, '').trim();
+        return stripped || name.trim();
     };
 
     const AVAILABLE_PRODUCT_IMAGES = [
@@ -91,34 +92,44 @@ document.addEventListener('DOMContentLoaded', () => {
     window.getProductImageHTML = function(name, height = '120px') {
         if (!name) return '';
         
-        const words = name.trim().split(/\s+/);
-        const searchWords = words.length >= 3 ? words.slice(2) : words;
-        const searchString = searchWords.join(' ').toLowerCase().replace(/[^a-z0-9\s]/g, '');
+        // Normalize and extract words
+        const nameStr = name.toLowerCase().replace(/[^a-z0-9\s]/g, ' ');
+        const nameWords = nameStr.split(/\s+/).filter(w => w);
         
         let bestMatch = null;
         let highestScore = 0;
 
         AVAILABLE_PRODUCT_IMAGES.forEach(img => {
-            const cleanImgName = img.replace(/\.png$/i, '').toLowerCase().replace(/[^a-z0-9\s]/g, '');
+            const cleanImgName = img.replace(/\.png$/i, '').toLowerCase().replace(/[^a-z0-9\s]/g, ' ');
+            const imgWords = cleanImgName.split(/\s+/).filter(w => w);
             let score = 0;
             
-            if (searchString.includes(cleanImgName)) {
+            // Exact full name match inside the product name string
+            if (nameStr.includes(cleanImgName)) {
                 score += 100;
-            } else if (cleanImgName.includes(searchString)) {
-                score += 50;
             }
             
-            const imgWords = cleanImgName.split(/\s+/);
+            // Count how many image words appear in the product name
+            let wordMatches = 0;
             imgWords.forEach(w => {
-                if (w.length > 1 && searchString.includes(w)) {
-                    score += 10;
+                if (w.length > 2 || w === 'on') { // Prevent single letter matches, allow "on"
+                    if (nameWords.includes(w)) {
+                        wordMatches++;
+                        score += 10;
+                    }
                 }
             });
             
-            const fullStr = name.toLowerCase().replace(/[^a-z0-9\s]/g, '');
-            if (fullStr.includes(cleanImgName)) {
-                score += 5;
+            // Bonus if all words match
+            if (wordMatches > 0 && wordMatches === imgWords.length) {
+                score += 50; 
             }
+            
+            // Special heuristics for common patterns
+            if (img === 'Tape.png' && nameWords.includes('tape')) score += 100;
+            if (img === 'Tip.png' && (nameWords.includes('tip') || nameWords.includes('tips') || nameWords.includes('i-tip') || nameWords.includes('u-tip'))) score += 100;
+            if (img === 'ClipOn Set.png' && (nameWords.includes('clip') || nameWords.includes('clip-on'))) score += 100;
+            if (img === 'Weft Single Drawn.png' && nameWords.includes('machine') && nameWords.includes('weft') && !nameWords.includes('double')) score += 50;
 
             if (score > 0 && score > highestScore) {
                 highestScore = score;
@@ -127,7 +138,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         if (bestMatch) {
-            return `<img src="../images/Products/${bestMatch}?v=9" style="height: ${height}; object-fit: contain;" />`;
+            return `<img src="../images/Products/${bestMatch}?v=9" style="height: ${height}; object-fit: cover; object-position: top;" />`;
         }
         return '';
     };
@@ -564,7 +575,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Returning to mixer, ensure dropdown reflects current reality
                 refreshSupplierDropdowns();
                 if (appState.currentSupplierId) {
-                    supplierSelect.value = appState.currentSupplierId;
+                    supplierSelect.value = appState.currentSupplierId; if(window.supplierTomSelect) window.supplierTomSelect.sync();
                 }
             }
         } catch (e) {
@@ -603,7 +614,10 @@ document.addEventListener('DOMContentLoaded', () => {
         tbody.innerHTML = '';
         let clients = db.clients || [];
         if (window.location.pathname.includes('hairwise.html')) {
-            clients = clients.filter(c => c.tag && c.tag.toLowerCase().includes('hairwise'));
+            clients = clients.filter(c => {
+                if (!c.tag || c.tag.trim() === '') return true; // Show untagged
+                return c.tag.toLowerCase().includes('hairwise'); // Show hairwise tagged
+            });
         }
         
         // Search Filter
@@ -907,6 +921,8 @@ document.addEventListener('DOMContentLoaded', () => {
             appState.matrix = JSON.parse(JSON.stringify(client.matrix || {}));
             appState.discountPercent = parseFloat(document.getElementById('exportDiscountPercentInput').value) || 0;
             appState.discountAmount = parseFloat(document.getElementById('exportDiscountAmountInput').value) || 0;
+            const exportRoundoffVal = document.getElementById('exportRoundoffInput') ? document.getElementById('exportRoundoffInput').value : '';
+            appState.roundingFactor = client.roundingFactor !== undefined ? client.roundingFactor : 50;
             appState.marginPercent = client.marginPercent !== undefined ? client.marginPercent : 30;
 
             appState.wastagePercent = client.wastagePercent !== undefined ? client.wastagePercent : 10;
@@ -936,13 +952,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const prices = {};
             ALL_FINISHED_LENGTHS.forEach((len) => {
             const idx = len;
-                let displayPrice = 0;
-                if (appState.customPricesEnabled && appState.customPrices[idx] > 0) {
-                    let baseINR = appState.customPrices[idx] / currentRatioRate;
-                    displayPrice = Math.round(baseINR * targetRate);
-                } else {
-                    displayPrice = calculateColumn(idx);
+                let displayPrice = calculateColumn(idx);
+                
+                if (exportRoundoffVal !== '') {
+                    const factor = parseFloat(exportRoundoffVal);
+                    if (factor > 0) {
+                        displayPrice = Math.round(displayPrice / factor) * factor;
+                    }
                 }
+
                 if (displayPrice && displayPrice > 0) prices[len] = displayPrice;
             });
 
@@ -968,6 +986,22 @@ document.addEventListener('DOMContentLoaded', () => {
         Object.assign(appState, savedState);
 
         if (ratioResults.length === 0) return alert('No data could be computed for the selected ratios.');
+
+        const sortMode = document.getElementById('exportSortSelect') ? document.getElementById('exportSortSelect').value : 'drawn';
+        if (sortMode === 'drawn') {
+            ratioResults.sort((a, b) => {
+                const getRank = (name) => {
+                    const n = name.toLowerCase();
+                    if (n.includes('super double drawn')) return 3;
+                    if (n.includes('double drawn')) return 2;
+                    if (n.includes('single drawn')) return 1;
+                    return 4;
+                };
+                return getRank(a.name) - getRank(b.name);
+            });
+        } else if (sortMode === 'name') {
+            ratioResults.sort((a, b) => a.name.localeCompare(b.name));
+        }
 
         // Determine which lengths have data in at least one ratio
         const activeLengths = ALL_FINISHED_LENGTHS.filter(len =>
@@ -1082,6 +1116,8 @@ document.addEventListener('DOMContentLoaded', () => {
             appState.matrix = JSON.parse(JSON.stringify(client.matrix || {}));
             appState.discountPercent = parseFloat(document.getElementById('exportDiscountPercentInput').value) || 0;
             appState.discountAmount = parseFloat(document.getElementById('exportDiscountAmountInput').value) || 0;
+            const exportRoundoffVal = document.getElementById('exportRoundoffInput') ? document.getElementById('exportRoundoffInput').value : '';
+            appState.roundingFactor = client.roundingFactor !== undefined ? client.roundingFactor : 50;
             appState.marginPercent = client.marginPercent !== undefined ? client.marginPercent : 30;
 
             appState.wastagePercent = client.wastagePercent !== undefined ? client.wastagePercent : 10;
@@ -1110,13 +1146,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const prices = {};
             ALL_FINISHED_LENGTHS.forEach((len) => {
                 const idx = len;
-                let displayPrice = 0;
-                if (appState.customPricesEnabled && appState.customPrices[idx] > 0) {
-                    let baseINR = appState.customPrices[idx] / currentRatioRate;
-                    displayPrice = Math.round(baseINR * targetRate);
-                } else {
-                    displayPrice = calculateColumn(idx);
+                let displayPrice = calculateColumn(idx);
+
+                if (exportRoundoffVal !== '') {
+                    const factor = parseFloat(exportRoundoffVal);
+                    if (factor > 0) {
+                        displayPrice = Math.round(displayPrice / factor) * factor;
+                    }
                 }
+
                 if (displayPrice && displayPrice > 0) prices[len] = displayPrice;
             });
 
@@ -1140,17 +1178,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (ratioResults.length === 0) return alert('No data could be computed for the selected ratios.');
 
-        // Sort by drawn type
-        ratioResults.sort((a, b) => {
-            const getRank = (name) => {
-                const n = name.toLowerCase();
-                if (n.includes('super double drawn')) return 3;
-                if (n.includes('double drawn')) return 2;
-                if (n.includes('single drawn')) return 1;
-                return 4;
-            };
-            return getRank(a.name) - getRank(b.name);
-        });
+        const sortMode = document.getElementById('exportSortSelect') ? document.getElementById('exportSortSelect').value : 'drawn';
+        if (sortMode === 'drawn') {
+            ratioResults.sort((a, b) => {
+                const getRank = (name) => {
+                    const n = name.toLowerCase();
+                    if (n.includes('super double drawn')) return 3;
+                    if (n.includes('double drawn')) return 2;
+                    if (n.includes('single drawn')) return 1;
+                    return 4;
+                };
+                return getRank(a.name) - getRank(b.name);
+            });
+        } else if (sortMode === 'name') {
+            ratioResults.sort((a, b) => a.name.localeCompare(b.name));
+        }
 
         const activeLengths = ALL_FINISHED_LENGTHS.filter(len =>
             ratioResults.some(r => r.prices[len] && r.prices[len] > 0)
@@ -1205,9 +1247,32 @@ document.addEventListener('DOMContentLoaded', () => {
             return sup && sup.hairType === 'Bleachable';
         });
 
+        const hasInhusaTag = ratioResults.some(r => r.tag && r.tag.toLowerCase().includes('inhusa'));
+        const hasIndia25Tag = ratioResults.some(r => r.tag && r.tag.toUpperCase() === 'INDIA25');
+        const hasInhTag = ratioResults.some(r => r.tag && r.tag.toUpperCase().includes('INH'));
+        
+        let companyName = 'HAIRWISE';
+        let logoSrc = '../images/hw/hwstraightlogo.png';
+        
+        if (hasIndia25Tag) {
+            companyName = 'IND Natural Hair Pvt Ltd';
+            logoSrc = '../images/logo.png';
+        } else if (hasInhusaTag) {
+            companyName = 'INDIAN NATURAL HAIR, LLC';
+            logoSrc = '../images/hw/inhusa.png';
+        } else if (hasInhTag) {
+            companyName = 'Indian Natural Hair';
+            logoSrc = '../images/logo.png';
+        }
+
         let imagesHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; width: 100%;">
-                <img src="../images/hw/hwstraightlogo.png" style="height: 45px;" />
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; width: 100%; border-bottom: 1px solid rgba(226, 232, 240, 0.6); padding-bottom: 12px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <img src="${logoSrc}" style="height: 48px; object-fit: contain;" onerror="this.src='../images/hw/hwstraightlogo.png'" />
+                    <div style="font-weight: 800; font-size: 15px; color: #1e293b; letter-spacing: 0.5px; text-transform: uppercase;">
+                        ${companyName}
+                    </div>
+                </div>
                 <div style="font-size: 11px; font-weight: 700; color: #475569; letter-spacing: 1.5px; text-transform: uppercase;">
                     NEW DELHI <span style="color: #cbd5e1; margin: 0 4px;">|</span> NEW JERSEY <span style="color: #cbd5e1; margin: 0 4px;">|</span> FLORIDA
                 </div>
@@ -1219,7 +1284,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div style="font-size: 11px; color: #64748b; font-weight: 500;">
                     <i class="fa-regular fa-calendar" style="margin-right: 4px;"></i> Generated: ${new Date().toLocaleDateString('en-IN', {day:'numeric', month:'short', year:'numeric'})}
                 </div>
-                ${globalFirstWord ? `<div style="font-size: 11px; color: #64748b; font-weight: 700; letter-spacing: 0.5px;">${globalFirstWord}</div>` : ''}
+                ${companyName === 'INDIAN NATURAL HAIR, LLC' ? `<div style="font-size: 11px; color: #64748b; font-weight: 700; letter-spacing: 0.5px; text-transform: none;">us@indiannaturalhair.com | indiannaturalhair.com | +1 (929) 245-0936</div>` : (globalFirstWord ? `<div style="font-size: 11px; color: #64748b; font-weight: 700; letter-spacing: 0.5px;">${globalFirstWord}</div>` : '')}
                 <div style="font-size: 12px; color: #94a3b8; font-weight: 700;">
                     ${(function() {
                         const __d = new Date();
@@ -1256,7 +1321,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         </tr>
                         <tr>
                             <td style="width: 50%; padding: 4px 10px 4px 0; vertical-align: top; text-align: left; white-space: nowrap;"><span style="color:#6366f1; font-weight:900; margin-right:6px;">•</span>The prices are per ${isOriginal ? 'original unit' : (isPieces ? 'piece' : (isGrams ? `${exportGramsArray.join(', ')} grams` : 'kilogram'))}</td>
-                            <td style="width: 50%; padding: 4px 10px 4px 0; vertical-align: top; text-align: left; white-space: nowrap;"><span style="color:#6366f1; font-weight:900; margin-right:6px;">•</span>${isPieces || (isOriginal && ratioResults.some(r => r.outputUnit === 'pc')) ? '200 to 300 grams depending on length' : '1 Kilogram = 10 packets of 100 grams each'}</td>
+                            <td style="width: 50%; padding: 4px 10px 4px 0; vertical-align: top; text-align: left; white-space: nowrap;">${isPieces || (isOriginal && ratioResults.some(r => r.outputUnit === 'pc')) ? '' : '<span style="color:#6366f1; font-weight:900; margin-right:6px;">•</span>1 Kilogram = 10 packets of 100 grams each'}</td>
                         </tr>
                         <tr>
                             <td style="width: 50%; padding: 4px 10px 4px 0; vertical-align: top; text-align: left; white-space: nowrap;"><span style="color:#6366f1; font-weight:900; margin-right:6px;">•</span>${isPieces || (isOriginal && ratioResults.some(r => r.outputUnit === 'pc')) ? 'Minimum Order Quantity 10 pieces' : 'Minimum Order Quantity 1 kg (10 pieces)'}</td>
@@ -1356,13 +1421,17 @@ document.addEventListener('DOMContentLoaded', () => {
                         return `
                         <div style="display: flex; flex-direction: column; box-shadow: 0 15px 25px -5px rgba(0,0,0,0.1); border-radius: 16px; overflow: hidden; border: 2px solid #e2e8f0; background: white; width: max-content;">
                             <div style="padding: 16px 10px; background: #faf0e6; border-bottom: 2px solid #e2e8f0; color: #0f172a; font-weight: 800; text-align: center; vertical-align: bottom;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; width: 100%;">
-                                    <img src="../images/hw/100percent.png?v=3" style="height: 120px; width: auto; max-width: 100%; object-fit: contain;" alt="100% Authentic Human Hair" />
-                                    ${stampInfo}
-                                </div>
-                                <div style="font-size: 16px; font-weight: 800; text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                                    ${renderNameWithLogo(r.displayName, '14px')}
-                                    <span style="color: #16a34a;">(${({'USD':'$','EUR':'€','GBP':'£','INR':'₹'})[r.currency] || r.currency})</span>
+                                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                                    <div style="flex: 1; text-align: left; display: flex; align-items: center;">
+                                        <img src="../images/hw/100percent.png?v=3" style="height: 120px; width: auto; max-width: 100%; object-fit: contain;" alt="100% Authentic Human Hair" />
+                                    </div>
+                                    <div style="flex: 2; font-size: 16px; font-weight: 800; text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                                        ${renderNameWithLogo(r.displayName, '14px')}
+                                        <span style="color: #16a34a;">(${({'USD':'$','EUR':'€','GBP':'£','INR':'₹'})[r.currency] || r.currency})</span>
+                                    </div>
+                                    <div style="flex: 1; text-align: right; display: flex; justify-content: flex-end; align-items: center;">
+                                        ${stampInfo}
+                                    </div>
                                 </div>
                             </div>
                             <div style="display: flex; justify-content: center; align-items: stretch; flex-grow: 1;">
@@ -1381,7 +1450,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                     </table>
                                 </div>
                                 ${imgHTML ? `<div style="flex: 0 0 250px; display: flex; align-items: stretch; justify-content: center; padding: 0; background: #ffffff; border-left: 2px solid #e2e8f0;">
-                                    ${imgHTML.replace(/style="[^"]*"/, 'style="width: 100%; height: 100%; max-height: none; object-fit: contain;"')}
+                                    ${imgHTML.replace(/style="[^"]*"/, 'style="width: 100%; height: 100%; max-height: none; object-fit: cover; object-position: top;"')}
                                 </div>` : ''}
                             </div>
                         </div>
@@ -1461,13 +1530,17 @@ document.addEventListener('DOMContentLoaded', () => {
                                         stampInfo = `<img src="../images/hw/bleachable27.png?v=3" style="height: 80px; width: auto; max-width: 100%; object-fit: contain;" alt="Bleachable" />`;
                                     }
                                     return `<th colspan="${numPriceCols}" style="padding: 16px 10px; background: #faf0e6; border-bottom: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; color: #0f172a; font-weight: 800; text-align: center; vertical-align: bottom;">
-                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; width: 100%;">
-                                            <img src="../images/hw/100percent.png?v=3" style="height: 80px; width: auto; max-width: 100%; object-fit: contain;" alt="100% Authentic Human Hair" />
-                                            ${stampInfo}
-                                        </div>
-                                        <div style="font-size: 16px; font-weight: 800; text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                                            ${renderNameWithLogo(r.displayName, '14px')}
-                                            <span style="color: #16a34a;">(${({'USD':'$','EUR':'€','GBP':'£','INR':'₹'})[r.currency] || r.currency})</span>
+                                        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                                            <div style="flex: 1; text-align: left; display: flex; align-items: center;">
+                                                <img src="../images/hw/100percent.png?v=3" style="height: 80px; width: auto; max-width: 100%; object-fit: contain;" alt="100% Authentic Human Hair" />
+                                            </div>
+                                            <div style="flex: 2; font-size: 16px; font-weight: 800; text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                                                ${renderNameWithLogo(r.displayName, '14px')}
+                                                <span style="color: #16a34a;">(${({'USD':'$','EUR':'€','GBP':'£','INR':'₹'})[r.currency] || r.currency})</span>
+                                            </div>
+                                            <div style="flex: 1; text-align: right; display: flex; justify-content: flex-end; align-items: center;">
+                                                ${stampInfo}
+                                            </div>
                                         </div>
                                     </th>`;
                                 }).join('')}
@@ -1780,9 +1853,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const _ratioHairBorder = _ratioHairType === 'Bleachable' ? '#ddd6fe' : '#fde68a';
 
         const isRatioBleachable = _ratioHairType === 'Bleachable';
+        const hasInhusaTag = client.tag && client.tag.toLowerCase().includes('inhusa');
+        const logoSrc = hasInhusaTag ? '../images/hw/inhusa.png' : '../images/hw/hwstraightlogo.png';
+        const logoHeight = hasInhusaTag ? '65px' : '45px';
+
         let imagesHTML = `
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; width: 100%;">
-                <img src="../images/hw/hwstraightlogo.png" style="height: 45px;" />
+                <img src="${logoSrc}" style="height: ${logoHeight};" />
                 <div style="display: flex; gap: 15px; align-items: center;">
                     <img src="../images/hw/100percent.png?v=3" style="height: 100px; border-radius: 8px;" />
                     ${isRatioBleachable ? `<img src="../images/hw/bleachable.png?v=3" style="height: 100px; border-radius: 8px;" />` : ''}
@@ -1842,12 +1919,12 @@ document.addEventListener('DOMContentLoaded', () => {
         // Find the tr of this item and insert preview row
         const tbody = document.getElementById('savedRatiosTableBody');
         const trs = Array.from(tbody.querySelectorAll('tr'));
-        const targetTr = trs.find(tr => tr.innerHTML.includes(`'${clientName}'`));
+        const targetTr = trs.find(tr => tr.dataset.ratioName === clientName);
 
         if (targetTr) {
             const previewRow = document.createElement('tr');
             previewRow.className = 'ratio-preview-row';
-            previewRow.innerHTML = `<td colspan="3" style="padding: 0; background: #f8fafc; border-top: none; box-shadow: inset 0 4px 6px -4px rgba(0,0,0,0.05);">${displayHTML}</td>`;
+            previewRow.innerHTML = `<td colspan="4" style="padding: 0; background: #f8fafc; border-top: none; box-shadow: inset 0 4px 6px -4px rgba(0,0,0,0.05);">${displayHTML}</td>`;
             targetTr.after(previewRow);
 
             document.getElementById('downloadRatioPreviewBtn').addEventListener('click', () => {
@@ -2700,12 +2777,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const rowsHTML = ACTIVE_FINISHED_LENGTHS.map((len) => {
             const idx = len;
             let displayPrice = 0;
-            if (appState.customPricesEnabled && appState.customPrices[idx] > 0) {
+            if (appState.customPricesEnabled && appState.customPrices[idx] !== undefined && appState.customPrices[idx] !== '') {
                 displayPrice = appState.customPrices[idx];
             } else {
                 displayPrice = calculateColumn(idx);
             }
             if (pl && pl.tag === 'Composite' && displayPrice <= 0) return '';
+            
+            if (pl && (pl.outputUnit === 'unit' || pl.outputUnit === 'set') && pl.unitGrams) {
+                displayPrice = displayPrice * (pl.unitGrams / 1000);
+            }
+            if (pl && (pl.outputUnit === 'unit' || pl.outputUnit === 'set') && pl.previewRoundFactor && pl.previewRoundFactor > 0) {
+                displayPrice = Math.round(displayPrice / pl.previewRoundFactor) * pl.previewRoundFactor;
+            }
             
             if (displayPrice > 0 || (displayPrice === 0 && appState.customPricesEnabled && appState.customPrices[idx] !== undefined && appState.customPrices[idx] !== '')) {
                 const bgStr = validItemCount % 2 === 0 ? "background: #ffffff;" : "background: #faf0e6;";
@@ -2715,7 +2799,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <tr style="${bgStr}">
                         <td style="padding: 8px 12px; border-bottom: 1px solid #f1f5f9; font-weight: 700; color: #334155; font-size: 14px; border-right: 1px solid #e2e8f0; text-align: center; white-space: nowrap;">${len}"</td>
                         <td style="padding: 8px 12px; border-bottom: 1px solid #f1f5f9; font-weight: 700; color: #334155; font-size: 14px; border-right: 1px solid #e2e8f0; text-align: center; white-space: nowrap;">${cmLen} cm</td>
-                        <td style="padding: 8px 12px; border-bottom: 1px solid #f1f5f9; text-align: center; font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; color: #0f172a; border-right: 1px solid #e2e8f0;">${formatPriceWithSymbol(displayPrice, appState.currency || 'INR')} <span style="font-size:11px; font-weight:500; color:#64748b;">/${pl.outputUnit === 'pc' ? 'pc' : 'kg'}</span></td>
+                        <td style="padding: 8px 12px; border-bottom: 1px solid #f1f5f9; text-align: center; font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; color: #0f172a; border-right: 1px solid #e2e8f0;">${formatPriceWithSymbol(displayPrice, appState.currency || 'INR')} <span style="font-size:11px; font-weight:500; color:#64748b;">/${pl.outputUnit === 'pc' ? 'pc' : pl.outputUnit === 'unit' ? 'piece' : pl.outputUnit === 'set' ? 'set' : 'kg'}</span></td>
                     </tr>
                 `;
             }
@@ -2739,7 +2823,7 @@ document.addEventListener('DOMContentLoaded', () => {
             stampInfo = `<img src="../images/hw/bleachable27.png?v=3" style="height: 80px; width: auto; max-width: 100%; object-fit: contain;" alt="Bleachable" />`;
         }
 
-        const imgHTML = window.getProductImageHTML(clientName, 'auto');
+        const imgHTML = pl.includeImage !== false ? window.getProductImageHTML(clientName, 'auto') : '';
 
         let footerHTML = `
             <div style="margin-top: 15px; padding: 12px 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 12px; color: #475569; line-height: 1.8; text-align: left;">
@@ -2750,19 +2834,21 @@ document.addEventListener('DOMContentLoaded', () => {
                         <td style="width: 50%; padding: 4px 10px 4px 0; vertical-align: top; text-align: left; white-space: nowrap;"><span style="color:#6366f1; font-weight:900; margin-right:6px;">•</span>Curly/Wavy Styles 10% Extra</td>
                     </tr>
                     <tr>
-                        <td style="width: 50%; padding: 4px 10px 4px 0; vertical-align: top; text-align: left; white-space: nowrap;"><span style="color:#6366f1; font-weight:900; margin-right:6px;">•</span>The prices are per ${pl.outputUnit === 'pc' ? 'piece' : 'kilogram'}</td>
-                        <td style="width: 50%; padding: 4px 10px 4px 0; vertical-align: top; text-align: left; white-space: nowrap;"><span style="color:#6366f1; font-weight:900; margin-right:6px;">•</span>${pl.outputUnit === 'pc' ? '200 to 300 grams depending on length' : '1 Kilogram = 10 packets of 100 grams each'}</td>
+                        <td style="width: 50%; padding: 4px 10px 4px 0; vertical-align: top; text-align: left; white-space: nowrap;"><span style="color:#6366f1; font-weight:900; margin-right:6px;">•</span>The prices are per ${pl.outputUnit === 'pc' ? 'piece' : pl.outputUnit === 'unit' ? `piece (${pl.unitGrams || 1000}g)` : pl.outputUnit === 'set' ? `set (${pl.unitGrams || 1000}g)` : 'kilogram'}</td>
+                        <td style="width: 50%; padding: 4px 10px 4px 0; vertical-align: top; text-align: left; white-space: nowrap;">${pl.outputUnit === 'pc' || pl.outputUnit === 'unit' || pl.outputUnit === 'set' ? '' : '<span style="color:#6366f1; font-weight:900; margin-right:6px;">•</span>1 Kilogram = 10 packets of 100 grams each'}</td>
                     </tr>
                     <tr>
-                        <td style="width: 50%; padding: 4px 10px 4px 0; vertical-align: top; text-align: left; white-space: nowrap;"><span style="color:#6366f1; font-weight:900; margin-right:6px;">•</span>${pl.outputUnit === 'pc' ? 'Minimum Order Quantity 10 pieces' : 'Minimum Order Quantity 1 kg (10 pieces)'}</td>
+                        <td style="width: 50%; padding: 4px 10px 4px 0; vertical-align: top; text-align: left; white-space: nowrap;"><span style="color:#6366f1; font-weight:900; margin-right:6px;">•</span>${pl.outputUnit === 'pc' ? 'Minimum Order Quantity 10 pieces' : (pl.outputUnit === 'unit' || pl.outputUnit === 'set') ? 'Contact for MOQ details' : 'Minimum Order Quantity 1 kg (10 pieces)'}</td>
                         <td style="width: 50%; padding: 4px 10px 4px 0; vertical-align: top; text-align: left; white-space: nowrap;"><span style="color:#6366f1; font-weight:900; margin-right:6px;">•</span>Bleached colors 20% Extra</td>
                     </tr>
                 </table>
             </div>
             
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding: 0 4px; font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
+            <div style="display: flex; justify-content: center; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 15px; padding: 0 4px; font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; text-align: center;">
                 <div><i class="fa-regular fa-calendar" style="margin-right: 4px;"></i> Generated: ${new Date().toLocaleDateString('en-IN', {day:'numeric', month:'short', year:'numeric'})}</div>
-                <div>HAIRWISE</div>
+                <div style="color: #cbd5e1;">|</div>
+                <div>${(appState.currentClientTag || '').toUpperCase().includes('USA') ? '<span style="text-transform: none;">us@indiannaturalhair.com | indiannaturalhair.com | +1 (929) 245-0936</span>' : 'HAIRWISE'}</div>
+                <div style="color: #cbd5e1;">|</div>
                 <div>${(function() {
                     const __d = new Date();
                     const __dd = String(__d.getDate()).padStart(2, '0');
@@ -2786,24 +2872,52 @@ document.addEventListener('DOMContentLoaded', () => {
             <div style="overflow-x: auto; width: 100%; padding: 15px 5px; -webkit-overflow-scrolling: touch;">
                 <div id="export-preview-${clientName.replace(/[^a-zA-Z0-9]/g,'_')}" class="preview-card-inner" style="position: relative; background: ${_bg2}; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; margin: 0 auto; min-width: 700px; width: max-content; color: #334155; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);">
                     
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; width: 100%;">
-                        <img src="../images/hw/hwstraightlogo.png" style="height: 45px;" />
-                        <div style="text-align: right; font-size: 10px; color: #94a3b8; font-weight: 800; letter-spacing: 1px;">
-                            NEW DELHI <span style="margin: 0 6px; color: #cbd5e1;">|</span> NEW JERSEY <span style="margin: 0 6px; color: #cbd5e1;">|</span> FLORIDA
-                        </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; width: 100%; border-bottom: 1px solid rgba(226, 232, 240, 0.6); padding-bottom: 12px;">
+                        ${(function() {
+                            let companyName = '';
+                            let headerLogo = '../images/hw/hwstraightlogo.png';
+                            let logoHeight = '48px';
+                            const tag = (appState.currentClientTag || '').toUpperCase();
+                            let locationTextHtml = '';
+                            const isUSA = tag.includes('INHUSA');
+                            
+                            if (isUSA) {
+                                companyName = 'INDIAN NATURAL HAIR, LLC';
+                                headerLogo = '../images/hw/inhusa.png';
+                                logoHeight = '48px';
+                                locationTextHtml = `NEW DELHI <span style="margin: 0 6px; color: #cbd5e1;">|</span> NEW JERSEY <span style="margin: 0 6px; color: #cbd5e1;">|</span> FLORIDA`;
+                            }
+
+                            return `
+                                <div style="display: flex; align-items: center; justify-content: ${isUSA ? 'flex-start' : 'center'}; width: 100%; gap: 20px;">
+                                    <img src="${headerLogo}" style="height: ${logoHeight}; object-fit: contain;" onerror="this.src='../images/hw/hwstraightlogo.png'" />
+                                    ${companyName ? `
+                                    <div style="display: flex; flex-direction: column; text-align: left;">
+                                        <div style="font-weight: 800; font-size: 20px; color: #1e293b; letter-spacing: 0.5px; text-transform: uppercase; line-height: 1.2;">${companyName}</div>
+                                        <div style="font-size: 10px; color: #475569; font-weight: 800; letter-spacing: 1px; margin-top: 4px;">
+                                            ${locationTextHtml}
+                                        </div>
+                                    </div>` : ''}
+                                </div>
+                            `;
+                        })()}
                     </div>
                     
                     <div style="width: 100%; max-width: 1100px; margin: 0 auto 12px auto; display: flex; justify-content: center; align-items: stretch; gap: 0; box-shadow: 0 15px 25px -5px rgba(0,0,0,0.1); border-radius: 16px; overflow: hidden; border: 2px solid #e2e8f0; background: white;">
                         
                         <div style="flex-grow: 1;">
                             <div style="padding: 16px 10px; background: #faf0e6; border-bottom: 2px solid #e2e8f0; color: #0f172a; font-weight: 800; text-align: center; vertical-align: bottom;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; width: 100%;">
-                                    <img src="../images/hw/100percent.png?v=3" style="height: 80px; width: auto; max-width: 100%; object-fit: contain;" alt="100% Authentic Human Hair" />
-                                    ${stampInfo}
-                                </div>
-                                <div style="font-size: 16px; font-weight: 800; text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                                    ${renderNameWithLogo(clientName, '14px')}
-                                    <span style="color: #16a34a;">(${appState.currency || 'INR'})</span>
+                                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                                    <div style="flex: 1; text-align: left; display: flex; align-items: center;">
+                                        <img src="../images/hw/100percent.png?v=3" style="height: 80px; width: auto; max-width: 100%; object-fit: contain;" alt="100% Authentic Human Hair" />
+                                    </div>
+                                    <div style="flex: 2; font-size: 16px; font-weight: 800; text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                                        ${renderNameWithLogo(clientName, '14px')}
+                                        <span style="color: #16a34a;">(${appState.currency || 'INR'})</span>
+                                    </div>
+                                    <div style="flex: 1; text-align: right; display: flex; justify-content: flex-end; align-items: center;">
+                                        ${stampInfo}
+                                    </div>
                                 </div>
                             </div>
                             
@@ -2812,7 +2926,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                     <tr>
                                         <th style="width: 80px; min-width: 80px; max-width: 80px; padding: 16px 10px 16px 10px; background: #faf0e6; border-bottom: 2px solid #e2e8f0; color: #0f172a; font-weight: 800; border-right: 1px solid #e2e8f0; text-align: center; vertical-align: bottom; white-space: nowrap;">Length<br><span style="font-size: 11px; font-weight: 600; color: #475569; font-variant: normal; text-transform: none;">in inches</span></th>
                                         <th style="width: 80px; min-width: 80px; max-width: 80px; padding: 16px 10px 16px 10px; background: #faf0e6; border-bottom: 2px solid #e2e8f0; color: #0f172a; font-weight: 800; border-right: 1px solid #e2e8f0; text-align: center; vertical-align: bottom; white-space: nowrap;">Length<br><span style="font-size: 11px; font-weight: 600; color: #475569; font-variant: normal; text-transform: none;">in cm</span></th>
-                                        <th style="padding: 16px 10px 16px 10px; background: #faf0e6; border-bottom: 2px solid #e2e8f0; color: #0f172a; font-weight: 800; text-align: center; vertical-align: bottom; white-space: nowrap;">Price<br><span style="font-size: 11px; font-weight: 600; color: #475569; font-variant: normal; text-transform: none;">${appState.currency || 'INR'} /${pl.outputUnit === 'pc' ? 'pc' : 'kg'}</span></th>
+                                        <th style="padding: 16px 10px 16px 10px; background: #faf0e6; border-bottom: 2px solid #e2e8f0; color: #0f172a; font-weight: 800; text-align: center; vertical-align: bottom; white-space: nowrap;">Price<br><span style="font-size: 11px; font-weight: 600; color: #475569; font-variant: normal; text-transform: none;">${appState.currency || 'INR'} /${pl.outputUnit === 'pc' ? 'pc' : pl.outputUnit === 'unit' ? 'piece' : pl.outputUnit === 'set' ? 'set' : 'kg'}</span></th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -2821,14 +2935,60 @@ document.addEventListener('DOMContentLoaded', () => {
                             </table>
                         </div>
                         ${imgHTML ? `<div style="flex: 0 0 250px; display: flex; align-items: stretch; justify-content: center; padding: 0; background: #ffffff; border-left: 2px solid #e2e8f0;">
-                            ${imgHTML.replace(/style="[^"]*"/, 'style="width: 100%; height: 100%; max-height: none; object-fit: contain;"')}
+                            ${imgHTML.replace(/style="[^"]*"/, 'style="width: 100%; height: 100%; max-height: none; object-fit: cover; object-position: top;"')}
                         </div>` : ''}
                     </div>
                     ${footerHTML}
                 </div>
             </div>
-            <div style="text-align: center; margin-bottom: 15px; padding-bottom: 10px;">
-                <button id="downloadPreviewBtn" class="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium transition shadow-md flex items-center justify-center mx-auto gap-2">
+            <div style="text-align: center; margin-bottom: 15px; padding-bottom: 10px; display: flex; flex-direction: column; align-items: center; gap: 12px;">
+                <div style="display: flex; gap: 15px; background: #f8fafc; padding: 10px 20px; border-radius: 8px; border: 1px solid #e2e8f0; align-items: center; justify-content: center; flex-wrap: wrap;">
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <label style="font-size: 13px; font-weight: 600; color: #475569;">Currency:</label>
+                        <select id="preview-curr-${clientName.replace(/[^a-zA-Z0-9]/g,'_')}" style="padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 13px; background: white; outline: none; cursor: pointer;" onchange="handlePreviewCurrencyChange('${clientName.replace(/'/g, "\\'")}')">
+                            <option value="INR" ${appState.currency === 'INR' ? 'selected' : ''}>INR (₹)</option>
+                            <option value="USD" ${appState.currency === 'USD' ? 'selected' : ''}>USD ($)</option>
+                            <option value="EUR" ${appState.currency === 'EUR' ? 'selected' : ''}>EUR (€)</option>
+                            <option value="GBP" ${appState.currency === 'GBP' ? 'selected' : ''}>GBP (£)</option>
+                            <option value="AUD" ${appState.currency === 'AUD' ? 'selected' : ''}>AUD (A$)</option>
+                            <option value="CAD" ${appState.currency === 'CAD' ? 'selected' : ''}>CAD (C$)</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <label style="font-size: 13px; font-weight: 600; color: #475569;">Exchange Rate:</label>
+                        <input type="number" step="0.01" id="preview-rate-${clientName.replace(/[^a-zA-Z0-9]/g,'_')}" style="padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 13px; width: 80px; background: white; outline: none;" value="${appState.exchangeRate || 1}" onchange="updatePreviewSettingsFromTab('${clientName.replace(/'/g, "\\'")}')">
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <label style="font-size: 13px; font-weight: 600; color: #475569;">Weight Unit:</label>
+                        <select id="preview-unit-${clientName.replace(/[^a-zA-Z0-9]/g,'_')}" style="padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 13px; background: white; outline: none; cursor: pointer;" onchange="updatePreviewSettingsFromTab('${clientName.replace(/'/g, "\\'")}')">
+                            <option value="kg" ${pl.outputUnit !== 'pc' && pl.outputUnit !== 'unit' && pl.outputUnit !== 'set' ? 'selected' : ''}>Per KG</option>
+                            <option value="pc" ${pl.outputUnit === 'pc' ? 'selected' : ''}>Per Piece</option>
+                            <option value="unit" ${pl.outputUnit === 'unit' ? 'selected' : ''}>Piece</option>
+                            <option value="set" ${pl.outputUnit === 'set' ? 'selected' : ''}>Per Set</option>
+                        </select>
+                    </div>
+                    ${(pl.outputUnit === 'unit' || pl.outputUnit === 'set') ? `
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <label style="font-size: 13px; font-weight: 600; color: #475569;">Grams:</label>
+                        <input type="number" id="preview-grams-${clientName.replace(/[^a-zA-Z0-9]/g,'_')}" style="padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 13px; width: 70px; background: white; outline: none;" value="${pl.unitGrams || 1000}" onchange="updatePreviewSettingsFromTab('${clientName.replace(/'/g, "\\'")}')">
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <label style="font-size: 13px; font-weight: 600; color: #475569;">Round:</label>
+                        <select id="preview-round-${clientName.replace(/[^a-zA-Z0-9]/g,'_')}" style="padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 13px; background: white; outline: none; cursor: pointer;" onchange="updatePreviewSettingsFromTab('${clientName.replace(/'/g, "\\'")}')">
+                            <option value="0" ${!pl.previewRoundFactor ? 'selected' : ''}>None</option>
+                            <option value="1" ${pl.previewRoundFactor === 1 ? 'selected' : ''}>1</option>
+                            <option value="5" ${pl.previewRoundFactor === 5 ? 'selected' : ''}>5</option>
+                            <option value="10" ${pl.previewRoundFactor === 10 ? 'selected' : ''}>10</option>
+                            <option value="50" ${pl.previewRoundFactor === 50 ? 'selected' : ''}>50</option>
+                            <option value="100" ${pl.previewRoundFactor === 100 ? 'selected' : ''}>100</option>
+                        </select>
+                    </div>` : ''}
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <label style="font-size: 13px; font-weight: 600; color: #475569;">Image:</label>
+                        <input type="checkbox" id="preview-image-${clientName.replace(/[^a-zA-Z0-9]/g,'_')}" style="cursor: pointer;" ${pl.includeImage !== false ? 'checked' : ''} onchange="updatePreviewSettingsFromTab('${clientName.replace(/'/g, "\\'")}')">
+                    </div>
+                </div>
+                <button id="downloadPreviewBtn" class="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium transition shadow-md flex items-center justify-center gap-2">
                     <i class="fa-solid fa-download"></i> Download Image
                 </button>
             </div>
@@ -2837,12 +2997,12 @@ document.addEventListener('DOMContentLoaded', () => {
         // Find the tr of this item
         const tbody = document.getElementById('savedRatiosTableBody');
         const trs = Array.from(tbody.querySelectorAll('tr'));
-        const targetTr = trs.find(tr => tr.innerHTML.includes(`'${clientName}'`));
+        const targetTr = trs.find(tr => tr.dataset.ratioName === clientName);
         
         if (targetTr) {
             const previewRow = document.createElement('tr');
             previewRow.className = 'preview-row';
-            previewRow.innerHTML = `<td colspan="3" style="padding: 0; background: #f8fafc; border-top: none; box-shadow: inset 0 4px 6px -4px rgba(0,0,0,0.05);">${displayHTML}</td>`;
+            previewRow.innerHTML = `<td colspan="4" style="padding: 0; background: #f8fafc; border-top: none; box-shadow: inset 0 4px 6px -4px rgba(0,0,0,0.05);">${displayHTML}</td>`;
             targetTr.after(previewRow);
             
             document.getElementById('downloadPreviewBtn').addEventListener('click', () => {
@@ -2857,6 +3017,67 @@ document.addEventListener('DOMContentLoaded', () => {
                     link.click();
                 });
             });
+        }
+    };
+
+    window.handlePreviewCurrencyChange = async function(clientName) {
+        const safeName = clientName.replace(/[^a-zA-Z0-9]/g,'_');
+        const currEl = document.getElementById(`preview-curr-${safeName}`);
+        const rateEl = document.getElementById(`preview-rate-${safeName}`);
+        
+        if (currEl && rateEl) {
+            const newCurrency = currEl.value;
+            if (newCurrency === 'INR') {
+                rateEl.value = 1;
+            } else {
+                try {
+                    const res = await fetch(`https://api.exchangerate-api.com/v4/latest/INR`);
+                    const data = await res.json();
+                    const rate = data.rates[newCurrency];
+                    if (rate) {
+                        rateEl.value = rate;
+                    } else {
+                        alert(`Could not fetch rate for ${newCurrency}`);
+                    }
+                } catch (e) {
+                    console.error("Rate fetch error:", e);
+                    alert("Failed to fetch exchange rate. Please enter manually.");
+                }
+            }
+        }
+        
+        window.updatePreviewSettingsFromTab(clientName);
+    };
+
+    window.updatePreviewSettingsFromTab = async function(clientName) {
+        const safeName = clientName.replace(/[^a-zA-Z0-9]/g,'_');
+        const currEl = document.getElementById(`preview-curr-${safeName}`);
+        const rateEl = document.getElementById(`preview-rate-${safeName}`);
+        const unitEl = document.getElementById(`preview-unit-${safeName}`);
+        const gramsEl = document.getElementById(`preview-grams-${safeName}`);
+        const roundEl = document.getElementById(`preview-round-${safeName}`);
+        const imageEl = document.getElementById(`preview-image-${safeName}`);
+        
+        if (!currEl || !rateEl || !unitEl) return;
+        
+        const curr = currEl.value;
+        const rate = parseFloat(rateEl.value) || 1;
+        const unit = unitEl.value;
+
+        const client = (db.clients || []).find(c => c.name === clientName);
+        if (client) {
+            client.currency = curr;
+            client.exchangeRate = rate;
+            client.outputUnit = unit;
+            if (gramsEl) client.unitGrams = parseFloat(gramsEl.value) || 1000;
+            if (roundEl) client.previewRoundFactor = parseFloat(roundEl.value) || 0;
+            if (imageEl) client.includeImage = imageEl.checked;
+            
+            // Render it again to reflect changes
+            await sharePriceListFromRatioTab(clientName);
+            
+            // Save in the background
+            saveToCloud().catch(console.error);
         }
     };
 
@@ -2943,7 +3164,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 inp.dataset.customColIdx = cIdx;
                 inp.addEventListener('input', (e) => {
                     const val = e.target.value;
-                    appState.customPrices[cIdx] = val === '' ? '' : parseFloat(val);
+                    const rate = appState.exchangeRate || 1;
+                    appState.customPrices[cIdx] = val === '' ? '' : (parseFloat(val) / rate);
                     saveAppState();
                 });
                 td.appendChild(inp);
@@ -3210,7 +3432,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Return appropriate price for export
         if(appState.customPricesEnabled && appState.customPrices[colIdx] > 0) {
-            return appState.customPrices[colIdx];
+            const rate = appState.exchangeRate || 1;
+            return Math.round(appState.customPrices[colIdx] * rate);
         }
 
         return convertedPrice;
@@ -3303,7 +3526,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const inp = document.querySelector(`.cell-input[data-custom-col-idx="${colIdx}"]`);
                 // CRITICAL FIX: Retain valid '0' values for custom price overrides and correct zero culling behavior tests
                 if(inp && appState.customPrices[colIdx] !== undefined && appState.customPrices[colIdx] !== '' && appState.customPrices[colIdx] !== null) {
-                    inp.value = appState.customPrices[colIdx];
+                    const rate = appState.exchangeRate || 1;
+                    inp.value = Math.round((appState.customPrices[colIdx] * rate) * 100) / 100;
                 }
             });
         }
@@ -3473,9 +3697,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const isBleachable = _currentSupplier && _currentSupplier.hairType === 'Bleachable';
 
         let productImgHTML = window.getProductImageHTML(appState.currentClientName, '120px');
+        const hasInhusaTag = (appState.currentClientTag || '').toLowerCase().includes('inhusa');
+        const logoSrc = hasInhusaTag ? '../images/hw/inhusa.png' : '../images/hw/hwstraightlogo.png';
+        const logoHeight = hasInhusaTag ? '75px' : '55px';
+
         let imagesHTML = `
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; width: 100%;">
-                <img src="../images/hw/hwstraightlogo.png" style="height: 55px;" />
+                <img src="${logoSrc}" style="height: ${logoHeight};" />
                 <div style="display: flex; gap: 15px; align-items: center;">
                     <img src="../images/hw/100percent.png?v=3" style="height: 120px; border-radius: 8px;" />
                     ${isBleachable ? `<img src="../images/hw/bleachable.png?v=3" style="height: 120px; border-radius: 8px;" />` : ''}
@@ -3701,7 +3929,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if(client.customPricesEnabled && client.customPrices) {
             const customVal = client.customPrices[lenIdx] || (legacyIdx !== -1 ? client.customPrices[legacyIdx] : null);
             if (customVal > 0) {
-                return parseFloat(customVal).toFixed(2);
+                const rate = client.exchangeRate || 1;
+                return parseFloat((customVal * rate)).toFixed(2);
             }
         }
 
@@ -3784,9 +4013,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
 
+            const hasInhusaTag = Array.from(_selectedRatioNames).some(name => {
+                const c = (db.clients || []).find(cl => cl.name === name);
+                return c && c.tag && c.tag.toLowerCase().includes('inhusa');
+            });
+            const logoSrc = hasInhusaTag ? '../images/hw/inhusa.png' : '../images/hw/hwstraightlogo.png';
+            const logoHeight = hasInhusaTag ? '65px' : '45px';
+
             let imagesHTML = `
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; width: 100%;">
-                    <img src="../images/hw/hwstraightlogo.png" style="height: 45px;" />
+                    <img src="${logoSrc}" style="height: ${logoHeight};" />
                     <div style="display: flex; gap: 15px; align-items: center;">
                         ${multiProductImgs.join('')}
                         <img src="../images/hw/100percent.png?v=3" style="height: 100px; border-radius: 8px;" />
@@ -4079,7 +4315,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function saveRatioConfig() {
         const name = clientNameInput.value.trim();
-        const tag = clientTagInput ? clientTagInput.value.trim() : '';
+        let tag = clientTagInput ? clientTagInput.value.trim() : '';
+        
+        if (window.location.pathname.includes('hairwise.html')) {
+            if (!tag.toLowerCase().includes('hairwise')) {
+                tag = tag ? tag + ', Hairwise' : 'Hairwise';
+                if (clientTagInput) clientTagInput.value = tag; // Update the UI as well
+            }
+        }
+        
         if (!name) return alert("Please enter a Ratio Name to save configuration.");
 
         // Requirement: "This will only save the ratios matrix to the jason file."
@@ -4208,10 +4452,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data.individualMargins) appState.individualMargins = translateMap(data.individualMargins);
             // Restore supplier if available
             if (data.supplierId && db.suppliers.find(s => s.id === data.supplierId)) {
-                supplierSelect.value = data.supplierId;
+                supplierSelect.value = data.supplierId; if(window.supplierTomSelect) window.supplierTomSelect.sync();
                 loadSupplierPricesIntoMixer(data.supplierId);
             } else {
-                supplierSelect.value = "";
+                supplierSelect.value = ""; if(window.supplierTomSelect) window.supplierTomSelect.sync();
                 appState.currentSupplierId = null;
                 // Use the latest global appState.prices if no supplier is specified
                 applyRawLengthsVisibility();
@@ -4362,7 +4606,20 @@ document.addEventListener('DOMContentLoaded', () => {
             opt.textContent = s.name;
             supplierSelect.appendChild(opt);
         });
-        if (appState.currentSupplierId) supplierSelect.value = appState.currentSupplierId;
+        if (appState.currentSupplierId) supplierSelect.value = appState.currentSupplierId; if(window.supplierTomSelect) window.supplierTomSelect.sync();
+        
+        // Add TomSelect for supplier searchability
+        if (window.supplierTomSelect) {
+            window.supplierTomSelect.sync();
+        } else {
+            if (typeof TomSelect !== 'undefined') {
+                window.supplierTomSelect = new TomSelect('#supplierSelect', {
+                    create: false,
+                    searchField: ['text'],
+                    plugins: ['dropdown_input', 'clear_button']
+                });
+            }
+        }
     }
 
     async function refreshRatioDropdown() {
@@ -4389,7 +4646,45 @@ document.addEventListener('DOMContentLoaded', () => {
             // Sort tags alphabetically
             const sortedTags = Object.keys(groups).sort((a, b) => a.localeCompare(b));
 
+            // Determine top tags for pills (e.g. tags that have at least 1 ratio)
+            // Sort by frequency descending, take top 8
+            const topTags = sortedTags
+                .map(t => ({ name: t, count: groups[t].length }))
+                .sort((a, b) => b.count - a.count)
+                .slice(0, 8);
+
+            // Render pills
+            const pillsContainer = document.getElementById('tagPillsContainer');
+            if (pillsContainer) {
+                pillsContainer.innerHTML = '';
+                
+                // "All" pill
+                const allPill = document.createElement('button');
+                const isAllActive = !window.activeRatioTagFilter;
+                allPill.textContent = 'All Ratios';
+                allPill.style.cssText = `padding: 4px 12px; border-radius: 16px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1px solid ${isAllActive ? '#081249' : '#cbd5e1'}; background: ${isAllActive ? '#081249' : 'white'}; color: ${isAllActive ? 'white' : '#475569'}; transition: all 0.2s;`;
+                allPill.onclick = () => {
+                    window.activeRatioTagFilter = null;
+                    refreshRatioDropdown();
+                };
+                pillsContainer.appendChild(allPill);
+
+                // Top tag pills
+                topTags.forEach(tagObj => {
+                    const pill = document.createElement('button');
+                    const isActive = window.activeRatioTagFilter === tagObj.name;
+                    pill.textContent = `${tagObj.name} (${tagObj.count})`;
+                    pill.style.cssText = `padding: 4px 12px; border-radius: 16px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1px solid ${isActive ? '#10b981' : '#cbd5e1'}; background: ${isActive ? '#ecfdf5' : 'white'}; color: ${isActive ? '#047857' : '#475569'}; transition: all 0.2s;`;
+                    pill.onclick = () => {
+                        window.activeRatioTagFilter = tagObj.name;
+                        refreshRatioDropdown();
+                    };
+                    pillsContainer.appendChild(pill);
+                });
+            }
+
             sortedTags.forEach(tag => {
+                if (window.activeRatioTagFilter && window.activeRatioTagFilter !== tag) return;
                 const optgroup = document.createElement('optgroup');
                 optgroup.label = tag;
                 groups[tag].forEach(client => {
@@ -4402,7 +4697,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             // Add untagged clients at the end
-            if (noTagClients.length > 0) {
+            if (noTagClients.length > 0 && !window.activeRatioTagFilter) {
                 const optgroup = document.createElement('optgroup');
                 optgroup.label = "Untagged";
                 noTagClients.forEach(client => {
@@ -4412,6 +4707,24 @@ document.addEventListener('DOMContentLoaded', () => {
                     optgroup.appendChild(opt);
                 });
                 clientSelect.appendChild(optgroup);
+            }
+            
+            // Sync with Tom Select for searchability
+            if (window.clientTomSelect) {
+                window.clientTomSelect.sync();
+            } else {
+                if (typeof TomSelect !== 'undefined') {
+                    window.clientTomSelect = new TomSelect('#clientSelect', {
+                        create: false,
+                        searchField: ['text'],
+                        plugins: ['dropdown_input', 'clear_button'],
+                        render: {
+                            optgroup_header: function(data, escape) {
+                                return '<div class="optgroup-header" style="font-weight:bold; color:#081249; padding:5px 10px; background:#f1f5f9; cursor:default;">' + escape(data.label) + '</div>';
+                            }
+                        }
+                    });
+                }
             }
         } catch (e) {
             console.error("Failed to list ratios", e);
@@ -4773,7 +5086,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // Restore UI
                 if (appState.currentSupplierId) {
-                    supplierSelect.value = appState.currentSupplierId;
+                    supplierSelect.value = appState.currentSupplierId; if(window.supplierTomSelect) window.supplierTomSelect.sync();
                     loadSupplierPricesIntoMixer(appState.currentSupplierId);
                 } else {
                     applyRawLengthsVisibility();
@@ -4840,7 +5153,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // New instance: load it blank
             appState.matrix = {};
             appState.prices = {};
-            if(supplierSelect) supplierSelect.value = "";
+            if(supplierSelect) supplierSelect.value = ""; if(window.supplierTomSelect) window.supplierTomSelect.sync();
             marginInput.value = 30;
 
             appState.marginPercent = 30;

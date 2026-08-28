@@ -40,7 +40,7 @@ if (typeof window !== 'undefined') {
  * Initialize Firebase App with enhanced configuration
  * @returns {Promise<firebase.app.App>} Firebase app instance
  */
-async function initializeFirebaseApp() {
+async function _internalInitializeFirebaseApp() {
   // Return existing promise if initialization is already in progress
   if (window.firebaseGlobalInitPromise) {
     return window.firebaseGlobalInitPromise;
@@ -52,13 +52,17 @@ async function initializeFirebaseApp() {
   }
 
   // Check if firebase-config.js already initialized Firebase
-  if (window.initializeFirebaseApp && window.initializeFirebaseApp !== initializeFirebaseApp) {
+  console.log("==> window.initializeFirebaseApp: ", !!window.initializeFirebaseApp);
+  console.log("==> local initializeFirebaseApp: ", !!initializeFirebaseApp);
+  console.log("==> are they the same? ", window.initializeFirebaseApp === initializeFirebaseApp);
+  if (window.initializeFirebaseApp && window.initializeFirebaseApp !== _internalInitializeFirebaseApp) {
     try {
       const app = window.initializeFirebaseApp();
       window.firebaseGlobalApp = app;
       window.firebaseGlobalInitialized = true;
       return app;
     } catch (error) {
+      
     }
   }
 
@@ -89,7 +93,16 @@ async function initializeFirebaseApp() {
           try {
             const firestore = firebase.firestore();
             
-            // Enable offline persistence
+            // Configure network settings for better reliability BEFORE persistence
+            try {
+              firestore.settings({
+                experimentalForceLongPolling: true // Force long polling instead of WebSocket
+              });
+            } catch (e) {
+              console.warn("Could not apply settings", e);
+            }
+            
+            // Enable offline persistence AFTER settings
             await firestore.enablePersistence({
               synchronizeTabs: true
             }).catch((err) => {
@@ -98,11 +111,6 @@ async function initializeFirebaseApp() {
               } else if (err.code === 'unimplemented') {
                 console.warn('The current browser does not support all of the features required to enable persistence.');
               }
-            });
-            
-            // Configure network settings for better reliability
-            firestore.settings({
-              experimentalForceLongPolling: true // Force long polling instead of WebSocket
             });
             
           } catch (firestoreError) {
@@ -196,7 +204,7 @@ if (typeof document !== 'undefined') {
     document.addEventListener('DOMContentLoaded', () => {
       // Small delay to ensure all Firebase scripts are loaded
       setTimeout(() => {
-        initializeFirebaseApp().catch(error => {
+        _internalInitializeFirebaseApp().catch(error => {
         });
       }, 100);
     });
@@ -223,7 +231,7 @@ if (typeof module !== 'undefined' && module.exports) {
 if (typeof window !== 'undefined') {
   // Don't override existing config from firebase-config.js
   if (!window.initializeFirebaseApp) {
-    window.initializeFirebaseApp = initializeFirebaseApp;
+    window.initializeFirebaseApp = _internalInitializeFirebaseApp;
   }
   if (!window.isFirebaseInitialized) {
     window.isFirebaseInitialized = isFirebaseInitialized;

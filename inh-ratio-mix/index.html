@@ -25,6 +25,11 @@
     <!-- Firebase configuration and helpers -->
     <script src="../firebase-config.js"></script>
     <script src="../firebase-global-init.js"></script>
+    
+    <!-- Tom Select -->
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+
     <style>
         /* Preserve Ratio Mixer specific styles from Tailwind Preflight reset */
         h1,
@@ -103,6 +108,7 @@
         <!-- MIXER TAB -->
         <div id="mixer-view" class="view-section active">
             <!-- Primary Data Loading Controls -->
+            <div id="tagPillsContainer" style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; padding: 0 5px;"></div>
             <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 15px; display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-end;">
                 <div class="input-group" style="flex: 1 1 200px; margin-bottom: 0;">
                     <label for="supplierSelect">Supplier</label>
@@ -432,10 +438,20 @@
                                     <input type="number" id="exportDiscountPercentInput" placeholder="0" value="0" style="width: 50px; padding: 4px 6px; border: 1px solid #c7d2fe; border-radius: 6px; font-size: 13px; font-weight: 600; color: #334155; outline: none;">
                                     <label style="font-size: 11px; font-weight: 700; color: #4f46e5; text-transform: uppercase;">Discount (Amt):</label>
                                     <input type="number" id="exportDiscountAmountInput" placeholder="0" value="0" style="width: 60px; padding: 4px 6px; border: 1px solid #c7d2fe; border-radius: 6px; font-size: 13px; font-weight: 600; color: #334155; outline: none;">
+                                    <label style="font-size: 11px; font-weight: 700; color: #4f46e5; text-transform: uppercase; margin-left: 5px;" title="Leave empty to use each ratio's original rounding factor">Roundoff:</label>
+                                    <input type="number" id="exportRoundoffInput" placeholder="auto" style="width: 55px; padding: 4px 6px; border: 1px solid #c7d2fe; border-radius: 6px; font-size: 13px; font-weight: 600; color: #334155; outline: none;" title="Leave empty to use each ratio's original rounding factor">
                                 </div>
                                 <div style="display: flex; align-items: center; gap: 6px; margin-left: 10px; border-left: 1px solid #c7d2fe; padding-left: 15px;">
                                     <input type="checkbox" id="exportIncludeImageToggle" checked style="cursor: pointer;">
                                     <label for="exportIncludeImageToggle" style="font-size: 12px; font-weight: 700; color: #334155; cursor: pointer;">Include Product Images</label>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 6px; margin-left: 10px; border-left: 1px solid #c7d2fe; padding-left: 15px;">
+                                    <label style="font-size: 11px; font-weight: 700; color: #4f46e5; text-transform: uppercase;">Sort:</label>
+                                    <select id="exportSortSelect" style="padding: 4px 6px; border: 1px solid #c7d2fe; border-radius: 6px; font-size: 13px; font-weight: 600; color: #334155; outline: none; background: white; cursor: pointer;">
+                                        <option value="drawn">Drawn Type</option>
+                                        <option value="name">Alphabetical</option>
+                                        <option value="selection">Selection Order</option>
+                                    </select>
                                 </div>
                             </div>
                             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
@@ -495,7 +511,7 @@
 
 
 
-    <script src="script.js?v=4.1.36"></script>
+    <script src="script.js?v=4.1.37"></script>
     <script>
         function toggleMobileMenu() {
             const hamburger = document.querySelector('.hamburger-menu');

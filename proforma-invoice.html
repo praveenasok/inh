@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proforma Invoice Generator - INHsuite</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="unified-button-system.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        
+        /* Print Styles */
+        @media print {
+            body { background: white; margin: 0; padding: 0; }
+            .no-print, .universal-nav { display: none !important; }
+            .print-only { display: block !important; }
+            .py-6 { padding-top: 0 !important; padding-bottom: 0 !important; }
+            .px-4 { padding-left: 0 !important; padding-right: 0 !important; }
+            
+            /* Crucial for multi-page printing */
+            .flex.flex-col.lg\:flex-row { display: block !important; }
+            .w-full.lg\:w-2\/3 { width: 100% !important; display: block !important; }
+            
+            #preview-wrapper { 
+                padding: 0 !important; 
+                margin: 0 !important; 
+                background: transparent !important; 
+                display: block !important; 
+                overflow: visible !important; 
+            }
+            #invoice-preview-container { 
+                box-shadow: none !important; 
+                margin: 0 !important; 
+                padding: 0 !important;
+                width: 100% !important; 
+                max-width: 100% !important;
+                min-height: auto !important;
+                height: auto !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            
+            /* Table Pagination Fixes */
+            table { page-break-inside: auto; }
+            tr { page-break-inside: avoid; page-break-after: auto; }
+            thead { display: table-header-group; }
+            tfoot { display: table-footer-group; }
+            
+            /* Table borders and row stripes for print */
+            #items-table th, #items-table td {
+                border-bottom: 1px solid #cbd5e1 !important;
+            }
+            #prev-items-body tr:nth-child(even) {
+                background-color: #f8fafc !important;
+            }
+            
+            @page { margin: 10mm; size: A4 portrait; }
+        }
+
+        /* Invoice Table Styles */
+        .invoice-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: Arial, sans-serif;
+            font-size: 11px;
+            color: #000;
+        }
+        .invoice-table th, .invoice-table td {
+            border: 1px solid #000;
+            padding: 4px 6px;
+            vertical-align: top;
+        }
+        .invoice-table .header-cell {
+            background-color: #000;
+            color: #fff;
+            font-weight: bold;
+        }
+        .invoice-table .sub-header-cell {
+            background-color: #e5e7eb;
+            color: #ef4444; /* Red text for Payment Terms */
+            font-weight: bold;
+            text-align: center;
+        }
+        .invoice-table .center-align { text-align: center; }
+        .invoice-table .right-align { text-align: right; }
+        .invoice-table .no-border-bottom { border-bottom: none; }
+        .invoice-table .no-border-top { border-top: none; }
+        .invoice-table .no-border { border: none; }
+        
+        /* Hide scrollbar for cleaner UI */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        /* Table column resizers */
+        th {
+            position: relative; /* required for absolute handle placement */
+        }
+        .resize-handle {
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: 4px;
+            cursor: col-resize;
+            user-select: none;
+            background-color: transparent;
+            transition: background-color 0.2s ease;
+            z-index: 20;
+        }
+        .resize-handle:hover,
+        .resize-handle.resizing {
+            background-color: #4f46e5; /* Indigo-600 */
+            width: 6px;
+        }
+        
+        @media print {
+            .resize-handle { display: none !important; }
+        }
+    </style>
+    <!-- Firebase Config -->
+    <script src="firebase-config.js"></script>
+    <!-- Shipping Data -->
+    <script src="shipping-calculator/data.js?v=2"></script>
+</head>
+<body>
+    <div class="max-w-screen-2xl mx-auto px-4 py-6">
+        <div class="flex flex-col lg:flex-row gap-6 items-start">
+            
+            <!-- LEFT COLUMN: CONTROLS -->
+            <div class="w-full lg:w-1/3 flex flex-col gap-4 sticky top-6 no-print">
+                
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="bg-indigo-600 p-4 text-white">
+                        <h2 class="font-bold text-lg"><i class="fas fa-file-invoice-dollar mr-2"></i>Quote Generator</h2>
+                        <p class="text-xs text-indigo-200 mt-1">Generate Proforma Invoices from Delegated Orders</p>
+                    </div>
+
+                    <div class="p-5 space-y-5 h-[calc(100vh-200px)] overflow-y-auto">
+                        
+                        <!-- Order Lookup -->
+                        <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Load Order Number (from G-Sheet)</label>
+                            <div class="flex gap-2">
+                                <input type="text" id="inp-order-search" class="flex-1 border border-slate-300 rounded p-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="e.g. 12076">
+                                <button id="btn-fetch-order" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded text-sm transition shadow-sm whitespace-nowrap">
+                                    <i class="fas fa-search mr-1"></i> Fetch
+                                </button>
+                            </div>
+                            <p id="fetch-status" class="text-xs text-slate-500 mt-2 hidden"></p>
+                        </div>
+
+                        <!-- Invoice Meta -->
+                        <div class="mb-3">
+                            <label class="block text-[11px] font-bold text-slate-500 mb-1">Document Type</label>
+                            <select id="inp-doc-type" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none" onchange="document.getElementById('prev-doc-type').textContent = this.value">
+                                <option value="Proforma Invoice" selected>Proforma Invoice</option>
+                                <option value="Invoice">Invoice</option>
+                            </select>
+                        </div>
+                        <div class="grid grid-cols-3 gap-3">
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-500 mb-1">Invoice Number</label>
+                                <input type="text" id="inp-invoice-no" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none" placeholder="INH-...">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-500 mb-1">Date</label>
+                                <input type="date" id="inp-date" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-500 mb-1">Delivery Date</label>
+                                <input type="date" id="inp-delivery-date" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none">
+                            </div>
+                        </div>
+
+                        <hr class="border-slate-100">
+
+                        <!-- Bill To -->
+                        <div>
+                            <div class="flex justify-between items-end mb-1">
+                                <label class="block text-xs font-bold text-slate-500">Bill To</label>
+                                <button class="text-xs text-indigo-600 hover:underline" onclick="loadAddress('bill')"><i class="fas fa-address-book mr-1"></i>Address Book</button>
+                            </div>
+                            <input type="text" id="inp-bill-name" class="w-full border border-slate-300 rounded-t p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none mb-0" placeholder="Company Name / Person">
+                            <textarea id="inp-bill-address" rows="3" class="w-full border border-slate-300 border-t-0 p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none resize-none" placeholder="Address Line 1&#10;City, State Zip"></textarea>
+                            <div class="flex gap-2">
+                                <select id="inp-bill-country" class="w-1/2 border border-slate-300 border-t-0 rounded-bl p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none" onchange="onMainAddressCountryChange('bill')">
+                                    <option value="">Select Country</option>
+                                </select>
+                                <input type="text" id="inp-bill-phone" class="w-1/2 border border-slate-300 border-t-0 border-l-0 rounded-br p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none" placeholder="Phone: +1 ..." onkeyup="updateAddress('bill')">
+                            </div>
+                        </div>
+
+                        <!-- Ship To -->
+                        <div>
+                            <div class="flex justify-between items-end mb-1">
+                                <label class="block text-xs font-bold text-slate-500">Ship To</label>
+                                <button class="text-xs text-indigo-600 hover:underline" onclick="copyBillToShip()"><i class="fas fa-copy mr-1"></i>Copy Bill To</button>
+                            </div>
+                            <input type="text" id="inp-ship-name" class="w-full border border-slate-300 rounded-t p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none mb-0" placeholder="Company Name / Person">
+                            <textarea id="inp-ship-address" rows="3" class="w-full border border-slate-300 border-t-0 p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none resize-none" placeholder="Address Line 1&#10;City, State Zip"></textarea>
+                            <div class="flex gap-2">
+                                <select id="inp-ship-country" class="w-1/2 border border-slate-300 border-t-0 rounded-bl p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none" onchange="onMainAddressCountryChange('ship')">
+                                    <option value="">Select Country</option>
+                                </select>
+                                <input type="text" id="inp-ship-phone" class="w-1/2 border border-slate-300 border-t-0 border-l-0 rounded-br p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none" placeholder="Phone: +1 ..." onkeyup="updateAddress('ship')">
+                            </div>
+                        </div>
+
+                        <button id="btn-save-addresses" class="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium rounded transition">
+                            <i class="fas fa-save mr-1"></i> Save to Address Book
+                        </button>
+
+                        <hr class="border-slate-100">
+
+                        <!-- Financials -->
+                        <div class="grid grid-cols-2 gap-3 mb-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-1">Discount Amount</label>
+                                <input type="number" step="0.01" id="inp-discount" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none" value="0">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-1">Advance Received</label>
+                                <input type="number" step="0.01" id="inp-advance" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none" value="0">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-1">GST / Tax</label>
+                                <input type="number" step="0.01" id="inp-gst" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none" value="0">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-1">Currency</label>
+                                <select id="inp-currency" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none">
+                                    <option value="INR" selected>INR</option>
+                                    <option value="USD">USD</option>
+                                    <option value="EUR">EUR</option>
+                                    <option value="GBP">GBP</option>
+                                    <option value="AUD">AUD</option>
+                                    <option value="AED">AED</option>
+                                    <option value="CAD">CAD</option>
+                                    <option value="NGN">NGN</option>
+                                    <option value="ZAR">ZAR</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-1">Unit Wt. (kg)</label>
+                                <input type="number" step="0.01" id="inp-unit-weight" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none" value="0.1">
+                            </div>
+                            <div class="relative">
+                                <div class="flex justify-between items-center mb-1">
+                                    <label class="block text-xs font-bold text-slate-500">Shipping Amount</label>
+                                    <button onclick="openShippingModal()" class="text-indigo-600 hover:text-indigo-800 text-[10px] font-bold flex items-center gap-1 bg-indigo-50 px-2 py-0.5 rounded" title="Calculate Shipping">
+                                        <i class="fas fa-calculator"></i> Calc
+                                    </button>
+                                </div>
+                                <input type="number" step="0.01" id="inp-shipping" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none" value="0">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-1">Select Bank Account</label>
+                                <select id="inp-bank-select" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none">
+                                    <option value="">Default Bank Account</option>
+                                    <!-- Populated dynamically -->
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-1">Payment Terms & Purpose Code</label>
+                                <input type="text" id="inp-terms" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none" value="100% ADVANCE T/T - PURPOSE CODE P0103. Confirmed Order cannot be changed.">
+                            </div>
+                        </div>
+
+                        <hr class="border-slate-100">
+
+                        <!-- Manual Item Entry -->
+                        <div class="bg-indigo-50/50 p-4 rounded-lg border border-indigo-100">
+                            <h3 class="text-xs font-bold text-indigo-700 uppercase tracking-wide mb-3">Add Manual Item</h3>
+                            
+                            <div class="grid grid-cols-2 gap-3 mb-3">
+                                <div class="col-span-2 md:col-span-1">
+                                    <label class="block text-[10px] font-bold text-slate-500 mb-1">HairWise Price List</label>
+                                    <select id="inp-hairwise-pricelist" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none">
+                                        <option value="">-- No Auto-Pricing --</option>
+                                        <option value="manual_pricing">Manual Pricing</option>
+                                    </select>
+                                </div>
+                                <div class="col-span-2 md:col-span-1" id="container-manual-base-price" style="display: none;">
+                                    <label class="block text-[10px] font-bold text-slate-500 mb-1">Base Price</label>
+                                    <input type="number" step="0.01" id="inp-manual-base-price" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none" placeholder="0.00" oninput="onManualLengthChange()">
+                                </div>
+                                <div class="col-span-2 md:col-span-1">
+                                    <label class="block text-[10px] font-bold text-slate-500 mb-1">Rate Unit</label>
+                                    <select id="inp-manual-unit" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none" onchange="onManualLengthChange()">
+                                        <option value="1">1 Kg (Base)</option>
+                                        <option value="10">100g (Base ÷ 10)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3 mb-3">
+                                <div>
+                                    <label class="block text-[10px] font-bold text-slate-500 mb-1">Length</label>
+                                    <div id="container-manual-length">
+                                        <input type="number" id="inp-manual-length" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none" placeholder="e.g. 18" oninput="onManualLengthChange()">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-bold text-slate-500 mb-1">Qty (pc)</label>
+                                    <input type="number" id="inp-manual-qty" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none" value="1">
+                                </div>
+                                <div class="col-span-2">
+                                    <label class="block text-[10px] font-bold text-slate-500 mb-1">Product</label>
+                                    <input type="text" id="inp-manual-product" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none" placeholder="Product Name">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-bold text-slate-500 mb-1">Type</label>
+                                    <input type="text" id="inp-manual-type" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none" placeholder="e.g. Weft">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-bold text-slate-500 mb-1">Style</label>
+                                    <input type="text" id="inp-manual-style" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none" placeholder="e.g. Straight">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-bold text-slate-500 mb-1">Color</label>
+                                    <input type="text" id="inp-manual-color" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none" placeholder="e.g. Black">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-bold text-slate-500 mb-1">Margin Type</label>
+                                    <select id="inp-manual-margin-type" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none" onchange="onManualLengthChange()">
+                                        <option value="none">None</option>
+                                        <option value="percentage">%</option>
+                                        <option value="amount">Fixed Amount</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-bold text-slate-500 mb-1">Margin Value</label>
+                                    <input type="number" step="0.01" id="inp-manual-margin-value" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none" placeholder="0" oninput="onManualLengthChange()">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-bold text-slate-500 mb-1">Final Rate</label>
+                                    <input type="number" step="0.01" id="inp-manual-rate" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none" placeholder="0.00">
+                                </div>
+                                <div class="col-span-2 hidden">
+                                    <label class="block text-[10px] font-bold text-slate-500 mb-1">Remarks</label>
+                                    <input type="text" id="inp-manual-remarks" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none" placeholder="Optional notes">
+                                </div>
+                            </div>
+                            
+                            <button onclick="addManualItem()" class="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium rounded transition shadow-sm">
+                                <i class="fas fa-plus mr-1"></i> Add to Invoice
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- RIGHT COLUMN: PREVIEW -->
+            <div class="w-full lg:w-2/3 flex flex-col gap-4">
+                <div class="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-slate-200 no-print flex-wrap gap-2">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-800">Document Preview</h2>
+                        <p class="text-xs text-slate-500">Modern Proforma Invoice layout.</p>
+                    </div>
+                    <div class="flex gap-2 flex-wrap items-center">
+                        <label class="flex items-center gap-1 text-xs font-bold text-slate-600 mr-2 cursor-pointer no-print">
+                            Margins:
+                            <select id="sel-print-margins" onchange="togglePrintMargins()" class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 text-xs p-1">
+                                <option value="default">Default</option>
+                                <option value="narrow">Narrow</option>
+                                <option value="wide">Wide</option>
+                                <option value="none">None (Full Page Print)</option>
+                                <option value="full">Spread Full Width (Screen)</option>
+                            </select>
+                        </label>
+                        <button onclick="openCompanyModal()" class="px-3 py-2 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 font-medium rounded text-sm flex items-center transition shadow-sm"><i class="fas fa-cog mr-2"></i> Settings</button>
+                        <button id="btn-load-quotes" class="px-3 py-2 bg-slate-100 border border-slate-300 text-slate-700 hover:bg-slate-200 font-medium rounded text-sm flex items-center transition shadow-sm" onclick="openSavedQuotesModal()"><i class="fas fa-folder-open mr-2"></i> Load Quotes</button>
+                        <button id="btn-save-quote" class="px-3 py-2 bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100 font-medium rounded text-sm flex items-center transition shadow-sm"><i class="fas fa-cloud-upload-alt mr-2"></i> Save Quote</button>
+                        <button id="btn-print" class="px-3 py-2 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 font-medium rounded text-sm flex items-center transition shadow-sm"><i class="fas fa-print mr-2"></i> Print</button>
+                        <button id="btn-export-img" class="px-3 py-2 bg-indigo-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100 font-medium rounded text-sm flex items-center transition shadow-sm"><i class="fas fa-image mr-2"></i> Save Image</button>
+                        <button id="btn-export-pdf" class="px-3 py-2 bg-[#081249] text-white hover:bg-blue-900 font-medium rounded text-sm flex items-center transition shadow-sm"><i class="fas fa-file-pdf mr-2"></i> Export PDF</button>
+                        <button id="btn-share-link" class="px-3 py-2 bg-blue-500 text-white hover:bg-blue-600 font-medium rounded text-sm flex items-center transition shadow-sm"><i class="fas fa-link mr-2"></i> Get Link</button>
+                    </div>
+                </div>
+
+                <div id="preview-wrapper" class="bg-slate-300 p-4 rounded-xl overflow-x-auto flex justify-center w-full">
+                    <!-- The actual A4 Landscape container -->
+                    <div id="invoice-preview-container" class="bg-white shadow-lg mx-auto flex flex-col font-sans" style="width: 100%; max-width: 210mm; min-height: 297mm; padding: 8mm 15mm; box-sizing: border-box; color: #1e293b;">
+                        <!-- Header Section -->
+                        <div class="flex justify-between items-start mb-2 border-b-2 border-indigo-600 pb-2">
+                            <div class="flex gap-4 items-center flex-1 pr-4">
+                                <div class="w-20 h-20 shrink-0 rounded-full border border-slate-200 p-1 bg-white overflow-hidden flex items-center justify-center">
+                                    <img id="prev-company-logo" src="images/logo-optimized.png" alt="Logo" class="max-w-full max-h-full object-contain">
+                                    <i id="prev-logo-icon" class="fas fa-building text-3xl text-slate-300 hidden"></i>
+                                </div>
+                                <div class="min-w-0">
+                                    <h1 id="prev-company-name" class="text-lg font-bold text-slate-900 mb-0.5 break-words leading-tight pt-1">IND Natural Hair Pvt Ltd</h1>
+                                    <div id="prev-company-address" class="text-[11px] text-slate-600 whitespace-pre-line leading-snug">WZ 81/1-A, G/F Shop
+Guru Nanak Nagar
+New Delhi 110018
+India</div>
+                                    <div class="text-[11px] text-slate-600 mt-0.5">
+                                        <span id="prev-company-phone">+91-9871171978</span> | <span id="prev-company-email"></span>
+                                    </div>
+                                    <div id="prev-company-gst" class="text-[11px] font-bold text-slate-800 mt-0.5">GSTIN: 07AADCI5579A1ZN</div>
+                                </div>
+                            </div>
+                            <div class="w-auto shrink-0 flex flex-col items-end ml-4">
+                                <div id="prev-doc-type" class="text-xl font-extrabold text-slate-200 tracking-wide mb-1 uppercase">Proforma Invoice</div>
+                                <div class="grid grid-cols-2 gap-x-4 gap-y-0.5 text-xs text-left w-auto min-w-[240px]">
+                                    <div class="font-bold text-slate-500 uppercase text-[10px]">Invoice Number</div>
+                                    <div id="prev-invoice-no" class="font-semibold text-slate-900 text-right">INH...</div>
+                                    <div class="font-bold text-slate-500 uppercase text-[10px]">Date</div>
+                                    <div id="prev-date" class="font-semibold text-slate-900 text-right">DD-MM-YY</div>
+                                    <div class="font-bold text-slate-500 uppercase text-[10px]">Delivery Date</div>
+                                    <div id="prev-delivery-date" class="font-semibold text-slate-900 text-right"></div>
+                                    <div class="font-bold text-slate-500 uppercase text-[10px]">Order No.</div>
+                                    <div id="prev-order-no" class="font-semibold text-slate-900 text-right"></div>
+                                    <div class="font-bold text-slate-500 uppercase text-[10px]">Order Reference</div>
+                                    <div id="prev-order-ref" class="font-semibold text-slate-900 text-right"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Billing & Shipping Boxes -->
+                        <div class="flex gap-4 mb-2">
+                            <div class="w-1/2 p-2 bg-slate-50 rounded-md border border-slate-200">
+                                <h3 class="text-[10px] font-bold text-indigo-600 uppercase tracking-wide mb-0.5">Bill To</h3>
+                                <div id="prev-bill-name" class="font-bold text-xs text-slate-800 mb-0.5"></div>
+                                <div id="prev-bill-line1" class="text-[11px] text-slate-600 leading-tight"></div>
+                                <div id="prev-bill-line2" class="text-[11px] text-slate-600 leading-tight"></div>
+                                <div id="prev-bill-line3" class="text-[11px] text-slate-600 leading-tight"></div>
+                                <div id="prev-bill-phone" class="text-[11px] text-slate-500 mt-0.5"></div>
+                            </div>
+                            <div class="w-1/2 p-2 bg-slate-50 rounded-md border border-slate-200">
+                                <h3 class="text-[10px] font-bold text-indigo-600 uppercase tracking-wide mb-0.5">Ship To</h3>
+                                <div id="prev-ship-name" class="font-bold text-xs text-slate-800 mb-0.5"></div>
+                                <div id="prev-ship-line1" class="text-[11px] text-slate-600 leading-tight"></div>
+                                <div id="prev-ship-line2" class="text-[11px] text-slate-600 leading-tight"></div>
+                                <div id="prev-ship-line3" class="text-[11px] text-slate-600 leading-tight"></div>
+                                <div id="prev-ship-phone" class="text-[11px] text-slate-500 mt-0.5"></div>
+                            </div>
+                        </div>
+
+                        <!-- Line Items Table -->
+                        <div class="flex-1">
+                            <table class="w-full text-left text-[11px] border-collapse border border-slate-300 table-fixed break-words">
+                                <thead>
+                                    <tr class="bg-slate-800 text-white text-[10px] uppercase tracking-wider whitespace-nowrap">
+                                        <th class="py-2 px-2 font-semibold border border-slate-600 rounded-tl-lg w-[8%]">Length <span class="text-[8px] text-slate-300 font-normal">(in)</span></th>
+                                        <th class="py-2 px-2 font-semibold border border-slate-600 w-[20%]">Product</th>
+                                        <th class="py-2 px-2 font-semibold border border-slate-600 w-[20%]">Type</th>
+                                        <th class="py-2 px-2 font-semibold border border-slate-600 w-[12%]">Style</th>
+                                        <th class="py-2 px-2 font-semibold border border-slate-600 w-[12%]">Color</th>
+                                        <th class="py-2 px-2 font-semibold text-center border border-slate-600 w-[8%]">Qty <span class="text-[8px] text-slate-300 font-normal">(pc)</span></th>
+                                        <th class="py-2 px-2 font-semibold text-right border border-slate-600 w-[10%]">Rate</th>
+                                        <th class="py-2 px-2 font-semibold text-right border border-slate-600 rounded-tr-lg w-[10%]">Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="prev-items-body" class="text-slate-700">
+                                    <!-- Rows injected via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Totals & Payment Details Footer -->
+                        <div class="flex justify-between items-end mt-2 border-t border-slate-200 pt-2">
+                            
+                            <!-- Left: Bank Details & Words -->
+                            <div class="w-1/2">
+                                <div class="mb-1">
+                                    <h4 class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-0.5">Banking Details</h4>
+                                    <div id="prev-company-bank" class="text-[10px] text-slate-700 whitespace-pre-line leading-tight border-l-2 border-slate-200 pl-2"></div>
+                                </div>
+                                <div class="bg-indigo-50 py-1 px-2 rounded-md inline-block border border-indigo-100">
+                                    <span class="text-[9px] font-bold text-indigo-800 uppercase tracking-wider block mb-0.5">Total Payable in Words</span>
+                                    <span id="prev-amount-words" class="text-[10px] font-bold text-indigo-900 leading-none">ZERO ONLY</span>
+                                </div>
+                                <div class="mt-1 text-[10px] font-bold text-red-600 leading-tight" id="prev-terms">
+                                    Payment Terms: 100% ADVANCE T/T - PURPOSE CODE P0103. Confirmed Order cannot be changed.
+                                </div>
+                            </div>
+                            
+                            <!-- Right: Financial Summary -->
+                            <div class="w-[35%] bg-slate-50 p-2 rounded-lg border border-slate-200 shadow-sm">
+                                <div class="flex justify-between items-center text-[10px] border-b border-slate-200 border-dashed pb-0.5 mb-0.5">
+                                    <span class="text-slate-500">Gross Amount</span>
+                                    <span class="font-medium text-slate-800"><span class="prev-currency-label">INR</span> <span id="prev-total-amount">0.00</span></span>
+                                </div>
+                                <div class="flex justify-between items-center text-[10px] border-b border-slate-200 border-dashed pb-0.5 mb-0.5 text-emerald-600">
+                                    <span>Discount</span>
+                                    <span class="font-medium">- <span class="prev-currency-label">INR</span> <span id="prev-discount">0.00</span></span>
+                                </div>
+                                <div class="flex justify-between items-center text-[10px] border-b border-slate-200 border-dashed pb-0.5 mb-0.5 text-amber-600">
+                                    <span>Advance</span>
+                                    <span class="font-medium">- <span class="prev-currency-label">INR</span> <span id="prev-advance">0.00</span></span>
+                                </div>
+                                <div class="flex justify-between items-center text-[10px] border-b border-slate-200 border-dashed pb-0.5 mb-0.5">
+                                    <span class="text-slate-500">Shipping</span>
+                                    <span class="font-medium text-slate-800"><span class="prev-currency-label">INR</span> <span id="prev-shipping">0.00</span></span>
+                                </div>
+                                <div class="flex justify-between items-center text-[10px] border-b border-slate-200 border-dashed pb-0.5 mb-0.5">
+                                    <span class="text-slate-500">GST</span>
+                                    <span class="font-medium text-slate-800"><span class="prev-currency-label">INR</span> <span id="prev-gst">0.00</span></span>
+                                </div>
+                                <div class="flex justify-between items-center pt-1 mt-0.5">
+                                    <span class="text-xs font-bold text-slate-900">Total Payable</span>
+                                    <span class="text-xs font-bold text-indigo-600"><span class="prev-currency-label">INR</span> <span id="prev-payable">0.00</span></span>
+                                </div>
+                                <div class="text-right text-[9px] text-slate-400 mt-0.5">Total Quantity: <span id="prev-total-qty">0 pieces</span></div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    <!-- Company Settings Modal -->
+    <div id="company-modal" class="fixed inset-0 bg-slate-900 bg-opacity-50 hidden z-50 flex items-center justify-center">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl p-6 m-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h3 class="text-lg font-bold text-slate-800">Issuing Company Settings</h3>
+                    <p class="text-xs text-slate-500">These details will appear on the Proforma Invoice</p>
+                </div>
+                <button onclick="closeCompanyModal()" class="text-slate-400 hover:text-slate-600"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            
+            <div class="space-y-4">
+                <div class="flex gap-4 items-end">
+                    <div class="flex-1">
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Company Logo</label>
+                        <input type="file" id="inp-comp-logo" accept="image/*" class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+                    </div>
+                    <div id="comp-logo-preview-wrapper" class="w-16 h-16 border rounded bg-slate-50 flex items-center justify-center overflow-hidden hidden">
+                        <img id="comp-logo-preview" class="max-w-full max-h-full object-contain">
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Company Name</label>
+                    <input type="text" id="inp-comp-name" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none">
+                </div>
+                
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Address</label>
+                    <textarea id="inp-comp-address" rows="3" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none resize-none"></textarea>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Phone Number</label>
+                        <input type="text" id="inp-comp-phone" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Email</label>
+                        <input type="text" id="inp-comp-email" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none">
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Website</label>
+                        <input type="text" id="inp-comp-web" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Tax ID / GSTIN</label>
+                        <input type="text" id="inp-comp-gst" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none">
+                    </div>
+                </div>
+                
+                <div>
+                    <div class="flex justify-between items-end mb-2">
+                        <label class="block text-xs font-bold text-slate-700">Banking Details</label>
+                        <button onclick="addBankAccountRow()" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-xs font-medium transition flex items-center">
+                            <i class="fas fa-plus mr-1"></i> Add Account
+                        </button>
+                    </div>
+                    <div id="bank-accounts-container" class="space-y-3">
+                        <!-- Dynamic Bank Account Rows -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-6 flex justify-end gap-3">
+                <button onclick="closeCompanyModal()" class="px-4 py-2 bg-slate-100 text-slate-700 rounded font-medium hover:bg-slate-200">Cancel</button>
+                <button id="btn-save-company" onclick="saveCompanyDetails()" class="px-6 py-2 bg-indigo-600 text-white rounded font-medium hover:bg-indigo-700"><i class="fas fa-save mr-2"></i>Save Details</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Address Book Modal -->
+    <div id="address-modal" class="fixed inset-0 bg-slate-900 bg-opacity-50 hidden z-50 flex items-center justify-center">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-6 m-4 flex flex-col max-h-[90vh]">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-slate-800">Address Book</h3>
+                <button onclick="closeAddressModal()" class="text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
+            </div>
+            
+            <div class="mb-4 flex gap-2">
+                <button onclick="toggleAddNewAddressForm()" class="px-3 py-2 bg-indigo-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100 font-medium rounded text-sm flex items-center transition shadow-sm whitespace-nowrap"><i class="fas fa-plus mr-2"></i>Add New</button>
+                <input type="text" id="address-search" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none" placeholder="Search saved addresses...">
+            </div>
+
+            <!-- Add new address form (hidden by default) -->
+            <div id="new-address-form" class="hidden mb-4 p-4 bg-slate-50 border border-slate-200 rounded-lg space-y-3">
+                <h4 class="text-xs font-bold text-slate-700 uppercase">Save New Address</h4>
+                <input type="text" id="new-addr-name" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none" placeholder="Company / Person Name">
+                <textarea id="new-addr-address" rows="3" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none resize-none" placeholder="Address Line 1&#10;City, State Zip"></textarea>
+                <div class="flex gap-2">
+                    <select id="new-addr-country" class="w-1/2 border border-slate-300 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none" onchange="onAddressCountryChange()">
+                        <option value="">Select Country</option>
+                    </select>
+                    <input type="text" id="new-addr-phone" class="w-1/2 border border-slate-300 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none" placeholder="Phone: +1 ...">
+                </div>
+                <div class="flex gap-2 justify-end">
+                    <button onclick="toggleAddNewAddressForm()" class="px-3 py-1.5 bg-slate-200 text-slate-700 rounded text-xs font-medium hover:bg-slate-300">Cancel</button>
+                    <button id="btn-save-new-addr" onclick="saveNewAddressFromModal()" class="px-3 py-1.5 bg-indigo-600 text-white rounded text-xs font-medium hover:bg-indigo-700">Save Address</button>
+                </div>
+            </div>
+
+            <div id="modal-address-list" class="flex-1 overflow-y-auto space-y-2 border border-slate-200 rounded-lg p-2 bg-slate-50 min-h-[200px]">
+                <!-- Items injected here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Saved Quotes Modal -->
+    <div id="saved-quotes-modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                <h3 class="font-bold text-lg text-slate-800">Saved Quotes</h3>
+                <button onclick="closeSavedQuotesModal()" class="text-slate-400 hover:text-slate-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto flex-1 bg-slate-50">
+                <div id="saved-quotes-list" class="flex flex-col gap-3">
+                    <div class="text-center text-slate-400 py-10">
+                        <i class="fas fa-spinner fa-spin text-2xl mb-3"></i>
+                        <p>Loading quotes...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Item Rate Modal -->
+    <div id="rate-modal" class="fixed inset-0 bg-slate-900 bg-opacity-50 hidden z-50 flex items-center justify-center">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-sm p-6 m-4">
+            <h3 class="text-lg font-bold text-slate-800 mb-2">Edit Item Rate</h3>
+            <p id="rate-modal-item-desc" class="text-sm text-slate-500 mb-4"></p>
+            <input type="number" step="0.01" id="inp-modal-rate" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none mb-4">
+            <div class="flex gap-2">
+                <button onclick="saveModalRate()" class="flex-1 py-2 bg-indigo-600 text-white rounded font-medium hover:bg-indigo-700">Save Rate</button>
+                <button onclick="closeRateModal()" class="flex-1 py-2 bg-slate-200 text-slate-700 rounded font-medium hover:bg-slate-300">Cancel</button>
+            </div>
+        </div>
+    </div>
+    <!-- Shipping Calculator Modal -->
+    <div id="shipping-modal" class="fixed inset-0 bg-slate-900 bg-opacity-50 hidden z-50 flex items-center justify-center">
+        <div class="bg-white w-[500px] max-w-[95%] rounded-xl shadow-2xl p-6 relative">
+            <button onclick="closeShippingModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+            <h2 class="text-xl font-bold text-slate-800 mb-6"><i class="fas fa-truck text-indigo-600 mr-2"></i>Calculate Shipping</h2>
+            
+            <div class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">Provider</label>
+                        <select id="ship-provider-select" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none">
+                            <!-- Populated dynamically from data.js -->
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">Total Weight (kg)</label>
+                        <input type="number" id="ship-weight-input" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none" min="0.1" step="0.1">
+                    </div>
+                </div>
+
+                <div class="relative">
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Destination Country</label>
+                    <input type="text" id="ship-country-search" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none" placeholder="Search country...">
+                    <input type="hidden" id="ship-country-select">
+                    <ul id="ship-country-suggestions" class="absolute z-10 w-full bg-white border border-slate-200 mt-1 rounded shadow-lg max-h-48 overflow-y-auto hidden"></ul>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">Fuel Surcharge (%)</label>
+                        <input type="number" id="ship-fuel-input" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none" value="25" step="0.1">
+                    </div>
+                    <div class="flex items-center mt-6">
+                        <input type="checkbox" id="ship-commercial-check" class="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500">
+                        <label for="ship-commercial-check" class="ml-2 block text-sm text-slate-700">Commercial Charge</label>
+                    </div>
+                </div>
+
+                <div id="ship-result-container" class="mt-4 p-4 bg-slate-50 border border-slate-200 rounded-lg hidden">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-sm font-semibold text-slate-600">Base Rate + Demand:</span>
+                        <span id="ship-base-display" class="font-bold text-slate-800"></span>
+                    </div>
+                    <div class="flex justify-between items-center mb-2 text-xs text-slate-500">
+                        <span>Fuel Surcharge:</span>
+                        <span id="ship-fuel-display"></span>
+                    </div>
+                    <div id="ship-commercial-row" class="flex justify-between items-center mb-2 text-xs text-slate-500 hidden">
+                        <span>Commercial Charge:</span>
+                        <span id="ship-commercial-display"></span>
+                    </div>
+                    <hr class="my-2 border-slate-200">
+                    <div class="flex justify-between items-center text-lg">
+                        <span class="font-bold text-slate-700">Total Shipping (INR):</span>
+                        <span id="ship-total-display" class="font-extrabold text-indigo-600"></span>
+                    </div>
+                    <div class="text-xs text-slate-500 text-right mt-1" id="ship-currency-note"></div>
+                </div>
+            </div>
+
+            <div class="mt-6 flex justify-end gap-3">
+                <button onclick="closeShippingModal()" class="px-4 py-2 border border-slate-300 rounded text-slate-600 hover:bg-slate-50 font-medium text-sm transition">Cancel</button>
+                <button onclick="applyShippingToInvoice()" id="btn-apply-shipping" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 font-medium text-sm transition disabled:opacity-50" disabled>Apply to Invoice</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/country-isd.js"></script>
+    <script src="js/proforma-invoice.js?v=10"></script>
+    <script>
+        function togglePrintMargins() {
+            const marginMode = document.getElementById('sel-print-margins').value;
+            let styleEl = document.getElementById('dynamic-print-style');
+            if (!styleEl) {
+                styleEl = document.createElement('style');
+                styleEl.id = 'dynamic-print-style';
+                document.head.appendChild(styleEl);
+            }
+            
+            const container = document.getElementById('invoice-preview-container');
+            
+            // Default responsiveness
+            container.style.width = '100%';
+
+            if (marginMode === 'default') {
+                styleEl.innerHTML = '';
+                container.style.padding = '8mm 15mm';
+                container.style.maxWidth = '210mm';
+            } else if (marginMode === 'narrow') {
+                styleEl.innerHTML = '@media print { @page { margin: 10mm 5mm; } #invoice-preview-container { padding: 0 !important; } }';
+                container.style.padding = '8mm 5mm';
+                container.style.maxWidth = '210mm';
+            } else if (marginMode === 'wide') {
+                styleEl.innerHTML = '@media print { @page { margin: 10mm 20mm; } #invoice-preview-container { padding: 0 !important; } }';
+                container.style.padding = '8mm 25mm';
+                container.style.maxWidth = '210mm';
+            } else if (marginMode === 'none') {
+                styleEl.innerHTML = '@media print { @page { margin: 0; } #invoice-preview-container { padding: 10mm 15mm !important; } }';
+                container.style.padding = '10mm 15mm';
+                container.style.maxWidth = '210mm';
+            } else if (marginMode === 'full') {
+                styleEl.innerHTML = '@media print { @page { margin: 0; } #invoice-preview-container { padding: 10mm 15mm !important; } }';
+                container.style.padding = '10mm 20px';
+                container.style.maxWidth = '100%';
+            }
+        }
+    </script>
+</body>
+</html>

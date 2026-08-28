@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Settings — Indian Natural Hair</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+  <!-- Config and global init -->
+  <script src="firebase-config.js"></script>
+  <script src="firebase-global-init.js"></script>
+  <script src="js/access-control.js"></script>
+  
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      font-family: 'Outfit', sans-serif;
+    }
+    .settings-glass-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(12px);
+      border-radius: 1.5rem;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    }
+    .segment-checkbox:checked + div {
+      background-color: #fef3c7; /* amber-100 */
+      border-color: #d97706; /* amber-600 */
+    }
+    .segment-checkbox:checked + div .check-icon {
+      opacity: 1;
+      transform: scale(1);
+    }
+  </style>
+
+  <script>
+    // Enforce Admin Only Access
+    document.addEventListener('DOMContentLoaded', () => {
+      // Small delay to let Firebase Auth confirm
+      setTimeout(() => {
+        if (!isUserAdmin()) {
+          document.body.innerHTML = '<div class="h-screen flex items-center justify-center bg-slate-50"><div class="text-center p-8 bg-white rounded-2xl shadow-lg border border-red-100 max-w-sm"><i class="fas fa-shield-alt text-red-500 text-5xl mb-4"></i><h1 class="text-2xl font-bold text-slate-800 mb-2">Access Denied</h1><p class="text-slate-600 mb-6">You must be an administrator to view this page.</p><button onclick="window.location.href=\'delegated-orders.html\'" class="bg-slate-900 text-white px-6 py-2.5 rounded-xl font-medium hover:bg-slate-800 transition">Go Back</button></div></div>';
+        }
+      }, 1000);
+    });
+  </script>
+</head>
+
+<body class="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50 pb-16">
+  <script src="/js/navigation-loader.js"></script>
+  
+  <header class="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50">
+    <div class="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <button onclick="window.location.href='delegated-orders.html'" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 transition">
+          <i class="fas fa-arrow-left"></i>
+        </button>
+        <h1 class="text-xl font-bold text-slate-800 tracking-tight">System Settings</h1>
+      </div>
+      <div class="text-xs font-semibold text-amber-600 bg-amber-50 px-3 py-1 rounded-full border border-amber-200 flex items-center gap-1.5">
+        <i class="fas fa-crown"></i> Admin Access
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-5xl mx-auto px-6 pt-10 grid grid-cols-1 md:grid-cols-12 gap-8">
+    
+    <!-- Sidebar -->
+    <div class="md:col-span-3">
+      <nav class="space-y-1">
+        <a href="#" class="flex items-center gap-3 px-4 py-3 bg-amber-50 text-amber-700 rounded-xl font-medium border border-amber-100/50 shadow-sm">
+          <i class="fas fa-user-lock text-amber-500"></i> Access Control
+        </a>
+        <a href="#" class="flex items-center gap-3 px-4 py-3 text-slate-600 rounded-xl font-medium hover:bg-slate-100 transition opacity-50 cursor-not-allowed">
+          <i class="fas fa-palette"></i> Theme (Coming Soon)
+        </a>
+      </nav>
+    </div>
+
+    <!-- Content -->
+    <div class="md:col-span-9 space-y-6">
+      
+      <div class="mb-2">
+        <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Role-Based Access Control</h2>
+        <p class="text-sm text-slate-500 mt-1">Configure which sections of the application users are allowed to see.</p>
+      </div>
+
+      <!-- Global Default Rights -->
+      <section class="settings-glass-card p-6 md:p-8">
+        <div class="flex items-start justify-between mb-6">
+          <div>
+            <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+              <i class="fas fa-globe-americas text-blue-500"></i> Default Rights
+            </h3>
+            <p class="text-xs text-slate-500 mt-1 max-w-lg">
+              Any email that logs into the system but is <span class="font-bold text-slate-700">not explicitly defined below</span> will automatically inherit these access rights.
+            </p>
+          </div>
+          <button id="btn-save-defaults" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition shadow-sm flex items-center gap-2">
+            <i class="fas fa-save"></i> Save Defaults
+          </button>
+        </div>
+
+        <div id="default-segments-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+          <!-- Rendered by JS -->
+        </div>
+      </section>
+
+      <!-- Defined Emails -->
+      <section class="settings-glass-card p-6 md:p-8">
+        <div class="flex items-start justify-between mb-6 border-b border-slate-100 pb-4">
+          <div>
+            <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+              <i class="fas fa-users-cog text-emerald-500"></i> Defined Emails
+            </h3>
+            <p class="text-xs text-slate-500 mt-1 max-w-lg">
+              Explicitly configure rights for specific team members.
+            </p>
+          </div>
+        </div>
+
+        <!-- Add New / Edit User Form -->
+        <div class="bg-slate-50 border border-slate-200 rounded-xl p-5 mb-8">
+          <h4 id="user-form-title" class="text-sm font-bold text-slate-700 mb-4">Add New User Override</h4>
+          <form id="user-rights-form" class="space-y-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1.5">Email Address</label>
+              <input type="email" id="input-user-email" required placeholder="employee@example.com" class="w-full max-w-md rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition shadow-sm bg-white" />
+            </div>
+            
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-2">Allowed Segments</label>
+              <div id="user-segments-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                <!-- Rendered by JS -->
+              </div>
+            </div>
+
+            <div class="pt-2 flex items-center gap-3">
+              <button type="submit" class="bg-emerald-600 text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-emerald-700 transition shadow-sm flex items-center gap-2">
+                <i class="fas fa-user-plus" id="user-form-icon"></i> <span id="user-form-btn-text">Add User</span>
+              </button>
+              <button type="button" id="btn-cancel-edit" class="hidden text-slate-500 text-sm font-semibold hover:text-slate-800 hover:bg-slate-200 px-4 py-2 rounded-lg transition">Cancel</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Existing Users List -->
+        <div>
+          <h4 class="text-sm font-bold text-slate-700 mb-3 uppercase tracking-wider">Configured Users</h4>
+          <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                  <th class="px-4 py-3">Email</th>
+                  <th class="px-4 py-3">Access Rights</th>
+                  <th class="px-4 py-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="users-table-body" class="divide-y divide-slate-100">
+                <tr>
+                  <td colspan="3" class="px-4 py-8 text-center text-slate-400 text-sm">Loading users...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </section>
+
+    </div>
+  </main>
+
+  <script>
+    let appSettings = {
+      default_rights: [],
+      user_rights: {}
+    };
+
+    const segmentsList = [
+      { id: 'Production Status', icon: 'fa-list-check', color: 'amber' },
+      { id: 'Order Entry', icon: 'fa-file-signature', color: 'blue' },
+      { id: 'Dispatched Orders', icon: 'fa-truck-fast', color: 'slate' },
+      { id: 'Stock Availability', icon: 'fa-boxes', color: 'slate' },
+      { id: 'Assignment', icon: 'fa-user-tag', color: 'indigo' },
+      { id: 'Done Orders', icon: 'fa-check-circle', color: 'green' },
+      { id: 'Ready To Dispatch Orders', icon: 'fa-box-open', color: 'orange' },
+      { id: 'App: Home', icon: 'fa-home', color: 'blue' },
+      { id: 'App: Jobwork Billing', icon: 'fa-file-invoice-dollar', color: 'blue' },
+      { id: 'App: Price Lookup', icon: 'fa-tags', color: 'emerald' },
+      { id: 'App: Price Calculator', icon: 'fa-calculator', color: 'emerald' },
+      { id: 'App: Shipping', icon: 'fa-truck', color: 'slate' },
+      { id: 'App: Shipping Paperwork', icon: 'fa-file-invoice', color: 'blue' },
+      { id: 'App: Delegated Orders', icon: 'fa-clipboard-list', color: 'amber' },
+      { id: 'App: Ratio Mixer', icon: 'fa-balance-scale', color: 'emerald' },
+      { id: 'App: Manufacturing Order', icon: 'fa-industry', color: 'orange' },
+      { id: 'App: Inventory Hub', icon: 'fa-boxes-stacked', color: 'indigo' },
+      { id: 'App: QR Code Tracker', icon: 'fa-qrcode', color: 'purple' },
+      { id: 'App: SOP', icon: 'fa-book', color: 'teal' }
+    ];
+
+    function createSegmentCheckboxHtml(segment, isChecked, groupPrefix) {
+      const id = `${groupPrefix}-${segment.id.replace(/\s+/g, '-')}`;
+      return `
+        <label for="${id}" class="relative flex items-start gap-3 p-3 rounded-xl border border-slate-200 bg-white cursor-pointer hover:bg-slate-50 transition shadow-sm group">
+          <input type="checkbox" id="${id}" value="${segment.id}" class="segment-checkbox peer sr-only" ${isChecked ? 'checked' : ''} />
+          <div class="w-full h-full absolute inset-0 rounded-xl border-2 border-transparent transition-colors pointer-events-none -z-10"></div>
+          <div class="w-8 h-8 rounded-lg bg-${segment.color}-50 text-${segment.color}-500 flex items-center justify-center flex-shrink-0 peer-checked:bg-${segment.color}-100 peer-checked:text-${segment.color}-600 transition">
+            <i class="fas ${segment.icon}"></i>
+          </div>
+          <div class="flex-1 mt-1">
+            <p class="text-xs font-bold text-slate-700 leading-tight">${segment.id}</p>
+          </div>
+          <div class="w-5 h-5 rounded border border-slate-300 flex items-center justify-center peer-checked:bg-emerald-500 peer-checked:border-emerald-500 transition">
+            <i class="fas fa-check text-white text-[10px] opacity-0 scale-50 transition-all check-icon peer-checked:opacity-100 peer-checked:scale-100"></i>
+          </div>
+        </label>
+      `;
+    }
+
+    function renderSegments(containerId, groupPrefix, selectedRights) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = segmentsList.map(seg => createSegmentCheckboxHtml(seg, selectedRights.includes(seg.id), groupPrefix)).join('');
+    }
+
+    async function loadSettings() {
+      try {
+        const db = firebase.firestore();
+        const docRef = db.collection('app_settings').doc('access_control');
+        const docSnap = await docRef.get();
+        
+        if (docSnap.exists) {
+          appSettings = docSnap.data();
+        }
+        if (!Array.isArray(appSettings.default_rights)) appSettings.default_rights = [];
+        if (!appSettings.user_rights || typeof appSettings.user_rights !== 'object') appSettings.user_rights = {};
+        
+        renderSegments('default-segments-container', 'default', appSettings.default_rights);
+        renderSegments('user-segments-container', 'user', []);
+        renderUsersTable();
+      } catch (err) {
+        console.error('Error loading settings:', err);
+        const tbody = document.getElementById('users-table-body');
+        if (tbody) {
+          tbody.innerHTML = `<tr><td colspan="3" class="px-4 py-8 text-center text-red-500 text-sm">Failed to load settings: ${err.message}</td></tr>`;
+        }
+      }
+    }
+
+    async function saveSettings(silent = false) {
+      try {
+        const db = firebase.firestore();
+        await db.collection('app_settings').doc('access_control').set(appSettings, { merge: true });
+        if (!silent) alert('Settings saved successfully!');
+        loadSettings(); // reload to ensure sync
+      } catch (err) {
+        console.error('Error saving settings:', err);
+        alert('Failed to save settings.');
+      }
+    }
+
+    function renderUsersTable() {
+      const tbody = document.getElementById('users-table-body');
+      const users = Object.keys(appSettings.user_rights);
+      
+      if (users.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" class="px-4 py-8 text-center text-slate-400 text-sm">No specific user rights defined.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = users.map(email => {
+        let rights = appSettings.user_rights[email];
+        if (!Array.isArray(rights)) rights = [];
+        const badges = rights.map(r => `<span class="inline-block bg-slate-100 text-slate-600 border border-slate-200 text-[10px] font-bold px-2 py-0.5 rounded-full mr-1 mb-1 shadow-sm">${r}</span>`).join('');
+        
+        return `
+          <tr class="hover:bg-slate-50 transition">
+            <td class="px-4 py-3 text-sm font-semibold text-slate-800">${email}</td>
+            <td class="px-4 py-3">${badges || '<span class="text-xs italic text-slate-400">No access</span>'}</td>
+            <td class="px-4 py-3 text-right space-x-2">
+              <button onclick="editUser('${email}')" class="text-blue-500 hover:text-blue-700 hover:bg-blue-50 p-1.5 rounded transition" title="Edit"><i class="fas fa-edit"></i></button>
+              <button onclick="removeUser('${email}')" class="text-red-500 hover:text-red-700 hover:bg-red-50 p-1.5 rounded transition" title="Remove"><i class="fas fa-trash"></i></button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // Default Rights Save
+    document.getElementById('btn-save-defaults').addEventListener('click', () => {
+      const checkedBoxes = document.querySelectorAll('#default-segments-container .segment-checkbox:checked');
+      const selectedRights = Array.from(checkedBoxes).map(cb => cb.value);
+      appSettings.default_rights = selectedRights;
+      saveSettings();
+    });
+
+    // Add/Edit User Rights
+    document.getElementById('user-rights-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const email = document.getElementById('input-user-email').value.trim().toLowerCase();
+      if (!email) return;
+
+      const checkedBoxes = document.querySelectorAll('#user-segments-container .segment-checkbox:checked');
+      const selectedRights = Array.from(checkedBoxes).map(cb => cb.value);
+
+      appSettings.user_rights[email] = selectedRights;
+      saveSettings(true).then(() => {
+        resetUserForm();
+      });
+    });
+
+    document.getElementById('btn-cancel-edit').addEventListener('click', resetUserForm);
+
+    window.editUser = function(email) {
+      const rights = appSettings.user_rights[email] || [];
+      document.getElementById('input-user-email').value = email;
+      document.getElementById('input-user-email').readOnly = true;
+      document.getElementById('input-user-email').classList.add('bg-slate-100');
+      
+      renderSegments('user-segments-container', 'user', rights);
+      
+      document.getElementById('user-form-title').textContent = 'Edit User Override';
+      document.getElementById('user-form-btn-text').textContent = 'Update User';
+      document.getElementById('user-form-icon').className = 'fas fa-save';
+      document.getElementById('btn-cancel-edit').classList.remove('hidden');
+      
+      document.getElementById('input-user-email').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    };
+
+    window.removeUser = async function(email) {
+      if (confirm(`Are you sure you want to remove specific access rights for ${email}? They will fallback to Default Rights.`)) {
+        try {
+          const db = firebase.firestore();
+          await db.collection('app_settings').doc('access_control').update(
+            new firebase.firestore.FieldPath('user_rights', email),
+            firebase.firestore.FieldValue.delete()
+          );
+          delete appSettings.user_rights[email];
+          if (document.getElementById('input-user-email').value === email) {
+            resetUserForm();
+          }
+          loadSettings();
+        } catch (err) {
+          console.error("Error removing user:", err);
+          alert("Failed to remove user settings.");
+        }
+      }
+    };
+
+    function resetUserForm() {
+      document.getElementById('user-rights-form').reset();
+      document.getElementById('input-user-email').readOnly = false;
+      document.getElementById('input-user-email').classList.remove('bg-slate-100');
+      renderSegments('user-segments-container', 'user', []);
+      
+      document.getElementById('user-form-title').textContent = 'Add New User Override';
+      document.getElementById('user-form-btn-text').textContent = 'Add User';
+      document.getElementById('user-form-icon').className = 'fas fa-user-plus';
+      document.getElementById('btn-cancel-edit').classList.add('hidden');
+    }
+
+    // Initialize after Firebase Auth
+    const interval = setInterval(() => {
+      if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0 && firebase.auth) {
+        clearInterval(interval);
+        try {
+          firebase.auth().onAuthStateChanged((user) => {
+            if (user) {
+              loadSettings();
+            } else {
+              const tbody = document.getElementById('users-table-body');
+              if (tbody) {
+                tbody.innerHTML = `<tr><td colspan="3" class="px-4 py-8 text-center text-red-500 text-sm font-semibold">Firebase authentication missing. Please <a href="login.html" class="underline text-blue-600">log in again</a>.</td></tr>`;
+              }
+              const defContainer = document.getElementById('default-segments-container');
+              if (defContainer) {
+                defContainer.innerHTML = `<div class="col-span-full p-4 text-center text-red-500 text-sm font-semibold border border-red-100 rounded-xl bg-red-50">Please <a href="login.html" class="underline text-blue-600">log in again</a>.</div>`;
+              }
+            }
+          });
+        } catch (e) {
+          console.error("Auth init error:", e);
+        }
+      }
+    }, 100);
+
+  </script>
+</body>
+</html>

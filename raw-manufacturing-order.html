@@ -55,6 +55,24 @@
                     </div>
                 </div>
                 
+                <!-- Raw Lot Selection -->
+                <div class="bg-indigo-50 p-4 rounded-lg border border-indigo-100 mb-4">
+                    <div class="flex flex-col md:flex-row gap-4 items-start md:items-end">
+                        <div class="w-full md:w-1/3">
+                            <label class="block text-[10px] font-bold text-indigo-700 mb-1 uppercase tracking-wider">Select Source Raw Lot</label>
+                            <select id="rawLotSelect" class="w-full bg-white border border-indigo-200 text-indigo-900 text-sm font-semibold rounded focus:ring-[#081249] focus:border-[#081249] block p-2 outline-none transition-all shadow-sm">
+                                <option value="">-- No Lot Selected (Manual Entry) --</option>
+                            </select>
+                        </div>
+                        <div id="lotDetailsPane" class="w-full md:w-2/3 hidden text-xs bg-white p-3 rounded border border-indigo-100 shadow-sm flex flex-wrap gap-x-6 gap-y-2">
+                            <div><span class="text-slate-400 font-bold uppercase text-[9px]">Supplier</span><div id="lotInfoSupplier" class="font-bold text-slate-800"></div></div>
+                            <div><span class="text-slate-400 font-bold uppercase text-[9px]">Inward Date</span><div id="lotInfoDate" class="font-mono text-slate-800"></div></div>
+                            <div><span class="text-slate-400 font-bold uppercase text-[9px]">Avail. Weight</span><div id="lotInfoWeight" class="font-black text-indigo-600"></div></div>
+                            <div class="w-full mt-1 border-t border-slate-100 pt-2"><span class="text-slate-400 font-bold uppercase text-[9px]">Lot Breakdown</span><div id="lotInfoBreakdown" class="text-slate-600"></div></div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Group 1: Order Details -->
                 <div class="flex flex-wrap gap-4 items-end bg-slate-100 p-4 rounded-lg border border-slate-200 mb-4">
                     <div class="flex-1 min-w-[140px]">
@@ -63,14 +81,14 @@
                     </div>
                     <div class="flex-1 min-w-[140px]">
                         <label class="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wider">Date</label>
-                        <input type="date" id="orderDate" class="w-full bg-white border border-slate-300 text-slate-900 text-sm rounded focus:ring-[#081249] focus:border-[#081249] block p-1.5 outline-none transition-all">
+                        <input type="date" id="orderDate" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded focus:ring-[#081249] focus:border-[#081249] block p-1.5 outline-none transition-all">
                     </div>
                     <div class="flex-1 min-w-[140px]">
                         <label class="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wider">Supplier</label>
-                        <input type="text" id="orderSupplier" class="w-full bg-white border border-slate-300 text-slate-900 text-sm rounded focus:ring-[#081249] focus:border-[#081249] block p-1.5 outline-none transition-all" placeholder="Supplier Name">
+                        <input type="text" id="orderSupplier" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded focus:ring-[#081249] focus:border-[#081249] block p-1.5 outline-none transition-all" placeholder="Supplier Name">
                     </div>
                     <div class="flex-1 min-w-[140px]">
-                        <label class="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wider">Reference</label>
+                        <label class="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wider">Reference / Lot ID</label>
                         <input type="text" id="orderRef" class="w-full bg-white border border-slate-300 text-slate-900 text-sm rounded focus:ring-[#081249] focus:border-[#081249] block p-1.5 outline-none transition-all" placeholder="Client / PO #">
                     </div>
                     <div class="flex-1 min-w-[140px]">

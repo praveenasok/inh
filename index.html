@@ -25,11 +25,11 @@
       <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
         <div>
           <h1 class="text-2xl md:text-3xl font-bold text-slate-900">Welcome to INHsuite</h1>
-          <p class="mt-2 text-slate-600">A unified suite for shipping, delegated orders, ratio calculations, and manufacturing outputs.</p>
+          <p class="mt-2 text-slate-600">A unified suite for shipping, production status, ratio calculations, and manufacturing outputs.</p>
         </div>
         <div class="flex gap-3">
           <a class="nav-btn" href="login.html"><i class="fas fa-user"></i> Login</a>
-          <a class="nav-btn" href="delegated-orders.html"><i class="fas fa-clipboard-list"></i> View Delegated Orders</a>
+          <a class="nav-btn" href="delegated-orders.html"><i class="fas fa-clipboard-list"></i> View Production Status</a>
         </div>
       </div>
     </div>
@@ -54,7 +54,27 @@
               class="fas fa-file-invoice"></i></div>
           <div>
             <div class="font-semibold text-slate-900">Shipping Paperwork</div>
-            <div class="text-sm text-slate-600">Generate Proforma Invoices and shipping documents.</div>
+            <div class="text-sm text-slate-600">Generate Manual Commercial Invoices and shipping documents.</div>
+          </div>
+        </div>
+      </a>
+      <a href="price-lookup.html" class="block bg-white rounded-xl shadow-soft p-5 border-l-4 border-fuchsia-500 hover:shadow-lg transition">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-fuchsia-100 text-fuchsia-700 flex items-center justify-center"><i
+              class="fas fa-tags"></i></div>
+          <div>
+            <div class="font-semibold text-slate-900">Price Lookup</div>
+            <div class="text-sm text-slate-600">Quickly lookup and quote prices instantly.</div>
+          </div>
+        </div>
+      </a>
+      <a href="proforma-invoice.html" class="block bg-white rounded-xl shadow-soft p-5 border-l-4 border-emerald-500 hover:shadow-lg transition">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center"><i
+              class="fas fa-file-invoice-dollar"></i></div>
+          <div>
+            <div class="font-semibold text-slate-900">Quote Generator</div>
+            <div class="text-sm text-slate-600">Generate automated quotes from Google Sheets orders.</div>
           </div>
         </div>
       </a>
@@ -73,8 +93,18 @@
           <div class="w-10 h-10 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center"><i
               class="fas fa-user-gear"></i></div>
           <div>
-            <div class="font-semibold text-slate-900">Delegated Orders</div>
+            <div class="font-semibold text-slate-900">Production Status</div>
             <div class="text-sm text-slate-600">Filter Google Sheets orders by delegation column AB.</div>
+          </div>
+        </div>
+      </a>
+      <a href="inh-jobwork.html" class="block bg-white rounded-xl shadow-soft p-5 border-l-4 border-blue-500 hover:shadow-lg transition">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center"><i
+              class="fas fa-briefcase"></i></div>
+          <div>
+            <div class="font-semibold text-slate-900">INH-JOBWORK</div>
+            <div class="text-sm text-slate-600">Filter Google Sheets orders by assigned salesman.</div>
           </div>
         </div>
       </a>
@@ -108,6 +138,16 @@
           </div>
         </div>
       </a>
+      <a href="stocks/index.html" class="block bg-white rounded-xl shadow-soft p-5 border-l-4 border-amber-500 hover:shadow-lg transition">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center"><i
+              class="fas fa-warehouse"></i></div>
+          <div>
+            <div class="font-semibold text-slate-900">Hair Stock Ledger</div>
+            <div class="text-sm text-slate-600">Track raw hair inventory, supplier catalogs, purchases, and locations.</div>
+          </div>
+        </div>
+      </a>
       <a href="qr-manager.html" class="block bg-white rounded-xl shadow-soft p-5 hover:shadow-lg transition">
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 rounded-lg bg-cyan-100 text-cyan-700 flex items-center justify-center"><i
@@ -115,6 +155,16 @@
           <div>
             <div class="font-semibold text-slate-900">QR Code Tags & Tracker</div>
             <div class="text-sm text-slate-600">Generate printable stock tags and track scanning demographics.</div>
+          </div>
+        </div>
+      </a>
+      <a href="payroll/index.html" class="block bg-white rounded-xl shadow-soft p-5 hover:shadow-lg transition">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-teal-100 text-teal-700 flex items-center justify-center"><i
+              class="fas fa-money-check-dollar"></i></div>
+          <div>
+            <div class="font-semibold text-slate-900">Payroll System</div>
+            <div class="text-sm text-slate-600">Manage employees, attendance, and salary.</div>
           </div>
         </div>
       </a>

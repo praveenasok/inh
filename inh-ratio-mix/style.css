@@ -691,3 +691,8 @@ input[type=number] {
 #ratioTable.raw-price-hidden tbody td.sticky-col-2 {
     left: 0 !important;
 }
+
+/* Fix for TomSelect dropdown overlapping with table headers */
+.ts-dropdown {
+    z-index: 40 !important;
+}

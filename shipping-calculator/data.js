@@ -1,4 +1,17 @@
 const shippingData = {
+    "India Domestic - Free (3-5 Days)": {
+        "zones": [
+            { "2025 Zone Guide": "Countries and Territories", "Unnamed: 1": "Country Code", "Unnamed: 2": "Zone" },
+            { "2025 Zone Guide": "India", "Unnamed: 1": "IN", "Unnamed: 2": 1 }
+        ]
+    },
+    "India Domestic - Express (2-3 Days)": {
+        "zones": [
+            { "2025 Zone Guide": "Countries and Territories", "Unnamed: 1": "Country Code", "Unnamed: 2": "Zone" },
+            { "2025 Zone Guide": "India", "Unnamed: 1": "IN", "Unnamed: 2": 1 }
+        ]
+    },
+
     "DHL copy": {
         "zones": [
             {

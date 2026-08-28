@@ -1171,7 +1171,7 @@
                                 </div>
                             </div><input type="file" id="color-image-input" accept="image/*" class="hidden">
                             <div id="color-image-preview" class="image-preview hidden mt-2">
-                                <img id="color-image-display" class="w-16 h-16 object-contain rounded border"
+                                <img id="color-image-display" class="w-16 h-16 object-cover object-top rounded border"
                                     alt="Color image"><button type="button" id="remove-color-image"
                                     class="ml-2 text-red-500 hover:text-red-700 text-sm"><i
                                         class="fas fa-times mr-1"></i>Remove </button>
@@ -1204,7 +1204,7 @@
                                 </div>
                             </div><input type="file" id="style-image-input" accept="image/*" class="hidden">
                             <div id="style-image-preview" class="image-preview hidden mt-2">
-                                <img id="style-image-display" class="w-16 h-16 object-contain rounded border"
+                                <img id="style-image-display" class="w-16 h-16 object-cover object-top rounded border"
                                     alt="Style image"><button type="button" id="remove-style-image"
                                     class="ml-2 text-red-500 hover:text-red-700 text-sm"><i
                                         class="fas fa-times mr-1"></i>Remove </button>
@@ -5503,13 +5503,13 @@
                 if (item.colorImage || item.styleImage) {
                     customImagesHtml = ` <div class="flex space-x-2 mt-2" > ${item.colorImage ? ` < div class="text-center" > <img src="${item.colorImage}"
                         alt="Color Reference"
-                        class="w-12 h-12 object-contain rounded border border-gray-300"
+                        class="w-12 h-12 object-cover object-top rounded border border-gray-300"
                         onerror="this.style.display='none';" > <p class="text-xs text-gray-500 mt-1" >Color</p> </div> ` : ''
                         }
 
                         ${item.styleImage ? ` < div class="text-center" > <img src="${item.styleImage}"
                         alt="Style Reference"
-                        class="w-12 h-12 object-contain rounded border border-gray-300"
+                        class="w-12 h-12 object-cover object-top rounded border border-gray-300"
                         onerror="this.style.display='none';" > <p class="text-xs text-gray-500 mt-1" >Style</p> </div> ` : ''
                         }
 
@@ -5518,7 +5518,7 @@
 
                 const itemHtml = ` <div class="quote-item" > <div class="flex justify-between items-start" > <div class="flex items-start space-x-3 flex-1" > <div class="flex-shrink-0" > <img src="${imagePath}"
                     alt="${item.product}"
-                    class="w-16 h-16 object-contain rounded-lg border border-gray-200"
+                    class="w-16 h-16 object-cover object-top rounded-lg border border-gray-200"
                     onerror="this.src='images/Products/Genius.png'; this.onerror=null;"
 
                     loading="lazy" > </div> <div class="flex-1 min-w-0" > <h4 class="font-semibold text-gray-800" >${item.product
@@ -6961,7 +6961,8 @@ ${colorDisplay !== 'N/A' ? ' • Color: ' + colorDisplay : ''
         .item-image {
             width: 40px;
             height: 40px;
-            object-fit: contain;
+            object-fit: cover;
+            object-position: top;
             border: 1px solid #000;
             flex-shrink: 0;
         }

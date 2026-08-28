@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Clean Employee Names</title>
+</head>
+<body>
+  <script src="/js/navigation-loader.js"></script>
+    <h1>Cleaning Double Names...</h1>
+    <div id="output"></div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
+    <script src="../firebase-config.js"></script>
+    <script src="../firebase-global-init.js"></script>
+    <script src="../firebase-database.js"></script>
+    
+    <script>
+        window.onload = async () => {
+            const output = document.getElementById('output');
+            output.innerHTML += '<p>Waiting for Firebase...</p>';
+            
+            let checks = 0;
+            const checkDB = setInterval(async () => {
+                if (window.firebaseDB && window.firebaseDB.isAvailable()) {
+                    clearInterval(checkDB);
+                    output.innerHTML += '<p>Firebase connected. Starting cleanup...</p>';
+                    await runCleanup(output);
+                }
+                checks++;
+                if (checks > 20) {
+                    clearInterval(checkDB);
+                    output.innerHTML += '<p style="color:red">Failed to connect to Firebase.</p>';
+                }
+            }, 500);
+        };
+
+        async function runCleanup(output) {
+            try {
+                const employees = await window.firebaseDB.getEmployees();
+                if (!employees || employees.length === 0) {
+                    output.innerHTML += '<p>No employees found.</p>';
+                    output.innerHTML += `<h2>Cleanup complete. Updated 0 employees.</h2>`;
+                    return;
+                }
+
+                let updatedCount = 0;
+                // Regex to find repeated first words (e.g. "Ravi Ravi kumar" -> "Ravi kumar")
+                const doubleWordRegex = /^(\S+)\s+\1\b/i;
+
+                for (const emp of employees) {
+                    let changed = false;
+                    let newFirstName = emp.firstName || '';
+                    let newLastName = emp.lastName || '';
+                    
+                    if (doubleWordRegex.test(newFirstName)) {
+                        newFirstName = newFirstName.replace(doubleWordRegex, '$1');
+                        changed = true;
+                    }
+                    if (doubleWordRegex.test(newLastName)) {
+                        newLastName = newLastName.replace(doubleWordRegex, '$1');
+                        changed = true;
+                    }
+
+                    if (changed) {
+                        await window.firebaseDB.updateEmployee(emp.id, { 
+                            firstName: newFirstName.trim(), 
+                            lastName: newLastName.trim() 
+                        });
+                        output.innerHTML += `<p>Fixed: "${emp.firstName} ${emp.lastName}" -> "${newFirstName} ${newLastName}"</p>`;
+                        updatedCount++;
+                    }
+                }
+
+                output.innerHTML += `<h2>Cleanup complete. Updated ${updatedCount} employees.</h2>`;
+            } catch (e) {
+                console.error(e);
+                output.innerHTML += `<p style="color:red">Error: ${e.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>

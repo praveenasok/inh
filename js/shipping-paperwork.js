@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let customers = JSON.parse(localStorage.getItem('shipping_customers')) || [];
     let exporters = JSON.parse(localStorage.getItem('shipping_exporters')) || [{ id: 'default', name: 'Default Exporter', details: DEFAULT_EXPORTER }];
     let savedInvoices = JSON.parse(localStorage.getItem('shipping_invoices')) || [];
+    let docMargins = JSON.parse(localStorage.getItem('shipping_doc_margins')) || {};
 
     // Element References
     const elements = {
@@ -47,6 +48,51 @@ document.addEventListener('DOMContentLoaded', () => {
         prevItemsBody: document.getElementById('prev-items-body'),
         prevTotalAmount: document.getElementById('prev-total-amount'),
         prevTotalWords: document.getElementById('prev-total-words'),
+        prevTotalNet: document.getElementById('prev-total-net'),
+        prevTotalGross: document.getElementById('prev-total-gross'),
+
+        // Certificate Previews
+        certExporter: document.getElementById('cert-exporter'),
+        certConsignee: document.getElementById('cert-consignee'),
+        certConsigneePhone: document.getElementById('cert-consignee-phone'),
+        certPkgs: document.getElementById('cert-pkgs'),
+        certDestination: document.getElementById('cert-destination'),
+        certGrossWt: document.getElementById('cert-gross-wt'),
+
+        // Label Previews
+        labelExporter: document.getElementById('label-exporter'),
+        labelConsignee: document.getElementById('label-consignee'),
+        labelConsigneePhone: document.getElementById('label-consignee-phone'),
+        labelDestination: document.getElementById('label-destination'),
+
+        // Declaration Previews
+        declExporterName: document.getElementById('decl-exporter-name'),
+        declDate: document.getElementById('decl-date'),
+        
+        // Annexure-A Previews
+        annexInvNoDate: document.getElementById('annex-inv-no-date'),
+        annexDate: document.getElementById('annex-date'),
+        annexExporterName: document.getElementById('annex-exporter-name'),
+
+        // SLI Previews
+        sliShipperName: document.getElementById('sli-shipper-name'),
+        sliInvoiceNo: document.getElementById('sli-invoice-no'),
+        sliConsigneeName: document.getElementById('sli-consignee-name'),
+        sliDate: document.getElementById('sli-date'),
+        sliAwb: document.getElementById('sli-awb'),
+        sliValue: document.getElementById('sli-value'),
+        sliPkgs: document.getElementById('sli-pkgs'),
+        sliNetWt: document.getElementById('sli-net-wt'),
+        sliGrossWt: document.getElementById('sli-gross-wt'),
+
+        // Additional Inputs
+        inpTopMargin: document.getElementById('inp-top-margin'),
+        inpBottomMargin: document.getElementById('inp-bottom-margin'),
+        inpLeftMargin: document.getElementById('inp-left-margin'),
+        inpRightMargin: document.getElementById('inp-right-margin'),
+        inpTotalPkgs: document.getElementById('inp-total-pkgs'),
+        inpAwb: document.getElementById('inp-awb'),
+        previewContainer: document.getElementById('invoice-preview-container'),
 
         // Database / Settings
         dbExpName: document.getElementById('db-exp-name'),
@@ -57,7 +103,6 @@ document.addEventListener('DOMContentLoaded', () => {
         // Actions
         btnSaveInvoice: document.getElementById('btn-save-invoice'),
         btnPrint: document.getElementById('btn-print'),
-        btnExportPdf: document.getElementById('btn-export-pdf'),
     };
 
     // --- Tab Switching ---
@@ -115,6 +160,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const idx = elements.exporterSelect.value;
         if (idx !== "" && exporters[idx]) {
             elements.prevExporter.textContent = exporters[idx].details;
+            elements.certExporter.textContent = exporters[idx].details;
+            elements.labelExporter.textContent = exporters[idx].details;
+            const actualExporterName = exporters[idx].details ? exporters[idx].details.split('\n')[0].trim() : exporters[idx].name;
+            if (elements.sliShipperName) elements.sliShipperName.textContent = actualExporterName;
+            if (elements.declExporterName) elements.declExporterName.textContent = actualExporterName;
+            if (elements.annexExporterName) elements.annexExporterName.textContent = actualExporterName;
         }
     }
 
@@ -135,34 +186,165 @@ document.addEventListener('DOMContentLoaded', () => {
         update(); // Init
     }
 
-    elements.docType.addEventListener('change', () => {
+    elements.docType.addEventListener('change', (e) => {
         elements.prevDocType.textContent = elements.docType.value;
+        
+        if (e && e.isTrusted) {
+            let val = docMargins[elements.docType.value];
+            if (typeof val === 'string' || typeof val === 'number') val = { top: val, bottom: 0, left: 0, right: 0 };
+            val = val || {};
+            elements.inpTopMargin.value = val.top !== undefined ? val.top : 0;
+            elements.inpBottomMargin.value = val.bottom !== undefined ? val.bottom : 0;
+            elements.inpLeftMargin.value = val.left !== undefined ? val.left : 0;
+            elements.inpRightMargin.value = val.right !== undefined ? val.right : 0;
+        }
+        
         updateDocumentTypeView();
         updateItemsPreview();
     });
     
+    const updateMargins = () => {
+        docMargins[elements.docType.value] = {
+            top: elements.inpTopMargin.value,
+            bottom: elements.inpBottomMargin.value,
+            left: elements.inpLeftMargin.value,
+            right: elements.inpRightMargin.value
+        };
+        localStorage.setItem('shipping_doc_margins', JSON.stringify(docMargins));
+        updateDocumentTypeView();
+    };
+
+    elements.inpTopMargin.addEventListener('input', updateMargins);
+    elements.inpBottomMargin.addEventListener('input', updateMargins);
+    elements.inpLeftMargin.addEventListener('input', updateMargins);
+    elements.inpRightMargin.addEventListener('input', updateMargins);
+    
     function updateDocumentTypeView() {
-        const isPackingList = elements.docType.value === 'Packing List';
+        const docType = elements.docType.value;
+        const isPackingList = docType === 'Packing List';
+        const isCert = docType === 'Certificate for Non-Dangerous Goods';
+        const isLabel = docType === 'Shipping Label';
+        const isSli = docType === "Shipper's Letter of Instructions";
+        const isDeclaration = docType === 'Declaration';
+        const isAnnexureA = docType === 'Annexure-A';
+        
+        const isPan = docType === 'PAN';
+        const isIec = docType === 'IEC';
+        const isAdCode = docType === 'AD Code';
+        const isLut = docType === 'LUT';
+        const isStaticDoc = isPan || isIec || isAdCode || isLut;
+
+        document.getElementById('common-table').style.display = (!isCert && !isLabel && !isSli && !isDeclaration && !isAnnexureA && !isStaticDoc) ? 'table' : 'none';
+        document.getElementById('cert-table').style.display = isCert ? 'table' : 'none';
+        document.getElementById('label-container').style.display = isLabel ? 'flex' : 'none';
+        if(document.getElementById('sli-container')) document.getElementById('sli-container').style.display = isSli ? 'block' : 'none';
+        if(document.getElementById('declaration-container')) document.getElementById('declaration-container').style.display = isDeclaration ? 'block' : 'none';
+        if(document.getElementById('annexurea-container')) document.getElementById('annexurea-container').style.display = isAnnexureA ? 'block' : 'none';
+        
+        const staticDocContainer = document.getElementById('static-doc-container');
+        if (staticDocContainer) {
+            staticDocContainer.style.display = isStaticDoc ? 'block' : 'none';
+            if (isStaticDoc) {
+                document.getElementById('static-pan').style.display = isPan ? 'block' : 'none';
+                document.getElementById('static-iec').style.display = isIec ? 'block' : 'none';
+                document.getElementById('static-adcode').style.display = isAdCode ? 'block' : 'none';
+                document.getElementById('static-lut').style.display = isLut ? 'block' : 'none';
+            }
+        }
+
+        const previewContainer = document.getElementById('invoice-preview-container');
+        if (isStaticDoc) {
+            previewContainer.classList.add('is-static');
+        } else {
+            previewContainer.classList.remove('is-static');
+        }
+        const keepTopMargin = ['Proforma Invoice', 'Commercial Invoice', 'Packing List', 'Certificate for Non-Dangerous Goods', 'Declaration', 'Annexure-A'].includes(docType);
+        const topInches = parseFloat(elements.inpTopMargin.value) || 0;
+        const bottomInches = parseFloat(elements.inpBottomMargin.value) || 0;
+        const leftInches = parseFloat(elements.inpLeftMargin.value) || 0;
+        const rightInches = parseFloat(elements.inpRightMargin.value) || 0;
+
+        previewContainer.style.setProperty('--extra-top-margin', topInches + 'in');
+        previewContainer.style.setProperty('--extra-bottom-margin', bottomInches + 'in');
+        previewContainer.style.setProperty('--extra-left-margin', leftInches + 'in');
+        previewContainer.style.setProperty('--extra-right-margin', rightInches + 'in');
+        
+        if (keepTopMargin) {
+            previewContainer.classList.remove('flush-margins');
+            previewContainer.style.padding = '0.5in';
+            previewContainer.style.paddingTop = (0.5 + topInches) + 'in';
+            previewContainer.style.paddingBottom = (0.5 + bottomInches) + 'in';
+            previewContainer.style.paddingLeft = (0.5 + leftInches) + 'in';
+            previewContainer.style.paddingRight = (0.5 + rightInches) + 'in';
+        } else {
+            previewContainer.classList.add('flush-margins');
+            previewContainer.style.padding = '0';
+        }
+
+        if (isSli) {
+            previewContainer.classList.add('is-sli');
+            previewContainer.style.padding = '0.2in'; // override for SLI to fit on A4 screen
+        } else {
+            previewContainer.classList.remove('is-sli');
+        }
+        
         document.querySelectorAll('.inv-only').forEach(el => el.style.display = isPackingList ? 'none' : '');
         document.querySelectorAll('.pack-only').forEach(el => el.style.display = isPackingList ? '' : 'none');
     }
     
     // Init doc type view
     elements.prevDocType.textContent = elements.docType.value;
+    
+    let initMargin = docMargins[elements.docType.value];
+    if (initMargin !== undefined) {
+        if (typeof initMargin === 'string' || typeof initMargin === 'number') initMargin = { top: initMargin, bottom: 0, left: 0, right: 0 };
+        elements.inpTopMargin.value = initMargin.top || 0;
+        elements.inpBottomMargin.value = initMargin.bottom || 0;
+        elements.inpLeftMargin.value = initMargin.left || 0;
+        elements.inpRightMargin.value = initMargin.right || 0;
+    }
+    
     updateDocumentTypeView();
+
 
     bindInputToPreview(elements.invoiceNo, elements.prevInvoiceNo);
     bindInputToPreview(elements.date, elements.prevDate);
+    bindInputToPreview(elements.date, elements.declDate);
+    bindInputToPreview(elements.date, elements.annexDate);
+    
+    const updateAnnexInvDate = () => {
+        if (elements.annexInvNoDate) {
+            elements.annexInvNoDate.textContent = `${elements.invoiceNo.value} / ${elements.date.value}`;
+        }
+    };
+    elements.invoiceNo.addEventListener('input', updateAnnexInvDate);
+    elements.date.addEventListener('input', updateAnnexInvDate);
+    updateAnnexInvDate();
+    
     bindInputToPreview(elements.iec, elements.prevIec);
     bindInputToPreview(elements.consignee, elements.prevConsignee);
+    bindInputToPreview(elements.consignee, elements.certConsignee);
+    bindInputToPreview(elements.consignee, elements.labelConsignee);
     bindInputToPreview(elements.consigneePhone, elements.prevConsigneePhone);
+    bindInputToPreview(elements.consigneePhone, elements.certConsigneePhone);
+    bindInputToPreview(elements.consigneePhone, elements.labelConsigneePhone);
     bindInputToPreview(elements.buyer, elements.prevBuyer);
     bindInputToPreview(elements.pol, elements.prevPol);
     bindInputToPreview(elements.coo, elements.prevCoo);
     bindInputToPreview(elements.pod, elements.prevPod);
     bindInputToPreview(elements.destination, elements.prevDestCountry);
     bindInputToPreview(elements.destination, elements.prevDestination);
+    bindInputToPreview(elements.destination, elements.certDestination);
+    bindInputToPreview(elements.destination, elements.labelDestination);
     bindInputToPreview(elements.terms, elements.prevTerms);
+    bindInputToPreview(elements.inpTotalPkgs, elements.certPkgs);
+    
+    // SLI Bindings
+    if (elements.inpAwb) bindInputToPreview(elements.inpAwb, elements.sliAwb);
+    if (elements.invoiceNo) bindInputToPreview(elements.invoiceNo, elements.sliInvoiceNo);
+    if (elements.date) bindInputToPreview(elements.date, elements.sliDate);
+    if (elements.consignee) bindInputToPreview(elements.consignee, elements.sliConsigneeName, val => val.split('\n')[0]);
+    if (elements.inpTotalPkgs) bindInputToPreview(elements.inpTotalPkgs, elements.sliPkgs);
 
     // Bind Currency to Trigger Calculation update
     elements.currency.addEventListener('change', updateItemsPreview);
@@ -248,22 +430,31 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td class="center-align border-t-0 border-b-0 border-r-0">${pcs} ${unit}</td>
                     <td class="center-align border-t-0 border-b-0 border-l-0">${currSymbol}${price.toFixed(2)}/${unit}</td>
                     <td class="center-align border-t-0 border-b-0">${curr}</td>
-                    <td class="center-align border-t-0 border-b-0">${currSymbol}${amount.toFixed(2)}</td>
+                    <td class="center-align border-t-0 border-b-0">${amount.toFixed(2)}</td>
                 `;
             }
             elements.prevItemsBody.appendChild(tr);
         });
 
+        elements.prevTotalAmount.textContent = `${currSymbol}${totalVal.toFixed(2)}`;
+        
         // Update Totals
         if (isPackingList) {
-            document.getElementById('prev-total-net').textContent = totalNet ? totalNet.toFixed(2) + ' kg' : '-';
-            document.getElementById('prev-total-gross').textContent = totalGross ? totalGross.toFixed(2) + ' kg' : '-';
+            if (elements.prevTotalNet) elements.prevTotalNet.textContent = totalNet > 0 ? totalNet.toFixed(2) + ' kg' : '-';
+            if (elements.prevTotalGross) elements.prevTotalGross.textContent = totalGross > 0 ? totalGross.toFixed(2) + ' kg' : '-';
         } else {
-            elements.prevTotalAmount.textContent = `${currSymbol}${totalVal.toFixed(2)}`;
             const words = numberToWords(Math.floor(totalVal));
             const currencyName = getCurrencyName(curr);
             elements.prevTotalWords.textContent = `Total Payable Amount: ${currencyName} ${words} Only`;
         }
+
+        // Update Certificate
+        elements.certGrossWt.textContent = totalGross > 0 ? totalGross.toFixed(2) + ' kgs' : '';
+        
+        // Update SLI
+        if (elements.sliNetWt) elements.sliNetWt.textContent = totalNet > 0 ? totalNet.toFixed(2) + ' kg' : '';
+        if (elements.sliGrossWt) elements.sliGrossWt.textContent = totalGross > 0 ? totalGross.toFixed(2) + ' kg' : '';
+        if (elements.sliValue) elements.sliValue.textContent = totalVal > 0 ? `${currSymbol}${totalVal.toFixed(2)}` : '';
     }
 
     // --- Exporter Settings ---
@@ -506,6 +697,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const invoiceData = {
             id: Date.now().toString(),
             docType: elements.docType.value,
+            topMargin: elements.inpTopMargin.value,
+            bottomMargin: elements.inpBottomMargin.value,
+            leftMargin: elements.inpLeftMargin.value,
+            rightMargin: elements.inpRightMargin.value,
             invoiceNo: elements.invoiceNo.value,
             date: elements.date.value,
             iec: elements.iec.value,
@@ -565,6 +760,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!inv) return;
 
         elements.docType.value = inv.docType || 'Proforma Invoice';
+        elements.inpTopMargin.value = inv.topMargin || '0';
+        elements.inpBottomMargin.value = inv.bottomMargin || '0';
+        elements.inpLeftMargin.value = inv.leftMargin || '0';
+        elements.inpRightMargin.value = inv.rightMargin || '0';
         elements.invoiceNo.value = inv.invoiceNo;
         elements.date.value = inv.date;
         elements.iec.value = inv.iec;
@@ -580,7 +779,7 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.currency.value = inv.currency || 'USD';
 
         // Trigger updates
-        [elements.docType, elements.invoiceNo, elements.date, elements.iec, elements.exporterSelect, 
+        [elements.docType, elements.inpTopMargin, elements.inpBottomMargin, elements.inpLeftMargin, elements.inpRightMargin, elements.invoiceNo, elements.date, elements.iec, elements.exporterSelect, 
          elements.consignee, elements.consigneePhone, elements.buyer, elements.pol, elements.coo, 
          elements.pod, elements.destination, elements.terms, elements.currency].forEach(el => {
             el.dispatchEvent(new Event('input'));
@@ -635,30 +834,67 @@ document.addEventListener('DOMContentLoaded', () => {
         window.print();
     });
 
-    elements.btnExportPdf.addEventListener('click', async () => {
-        const container = document.getElementById('invoice-preview-container');
-        const originalText = elements.btnExportPdf.innerHTML;
-        elements.btnExportPdf.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Generating...';
+    document.getElementById('btn-export-all').addEventListener('click', async () => {
+        const btn = document.getElementById('btn-export-all');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Preparing Print...';
         
         try {
-            const canvas = await html2canvas(container, {
-                scale: 3, // High Res
-                useCORS: true,
-                backgroundColor: '#ffffff'
-            });
-
-            const imgData = canvas.toDataURL('image/png');
-            const pdf = new jspdf.jsPDF('p', 'mm', 'a4');
-            const pdfWidth = pdf.internal.pageSize.getWidth();
-            const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+            const originalDocType = elements.docType.value;
+            const printContainer = document.getElementById('print-all-container');
+            printContainer.innerHTML = ''; // clear previous
             
-            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-            pdf.save(`Invoice_${elements.invoiceNo.value || 'Draft'}.pdf`);
+            // Add printing class to hide normal preview
+            document.body.classList.add('printing-all');
+
+            // Iterate over selected options
+            const optionsToExport = Array.from(elements.docType.selectedOptions).length > 0 ? Array.from(elements.docType.selectedOptions) : Array.from(elements.docType.options);
+            
+            for (const option of optionsToExport) {
+                elements.docType.value = option.value;
+                elements.docType.dispatchEvent(new Event('change'));
+                
+                // wait for DOM to update and layout to settle
+                await new Promise(r => setTimeout(r, 400));
+                
+                const isStatic = ['PAN', 'IEC', 'AD Code', 'LUT'].includes(option.value);
+                
+                if (isStatic) {
+                    let staticId = '';
+                    if (option.value === 'PAN') staticId = 'static-pan';
+                    if (option.value === 'IEC') staticId = 'static-iec';
+                    if (option.value === 'AD Code') staticId = 'static-adcode';
+                    if (option.value === 'LUT') staticId = 'static-lut';
+                    
+                    const staticNode = document.getElementById(staticId).cloneNode(true);
+                    staticNode.style.display = 'block';
+                    printContainer.appendChild(staticNode);
+                } else {
+                    // Clone the dynamic document container
+                    const containerClone = document.getElementById('invoice-preview-container').cloneNode(true);
+                    containerClone.id = ''; // remove ID to avoid duplicates
+                    
+                    printContainer.appendChild(containerClone);
+                }
+            }
+
+            // Trigger print dialog
+            window.print();
+
+            // Cleanup after print dialog closes (or blocks)
+            document.body.classList.remove('printing-all');
+            printContainer.innerHTML = '';
+
+            // Restore original
+            elements.docType.value = originalDocType;
+            elements.docType.dispatchEvent(new Event('change'));
+            
         } catch (error) {
             console.error(error);
-            alert("Error generating PDF.");
+            alert("Error preparing print.");
         } finally {
-            elements.btnExportPdf.innerHTML = originalText;
+            btn.innerHTML = originalText;
+            document.body.classList.remove('printing-all');
         }
     });
 

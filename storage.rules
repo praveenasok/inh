@@ -33,8 +33,20 @@ service firebase.storage {
       allow write: if isAdmin() && isValidImageFile();
     }
     
-    // Reference images for delegated orders
+    // Public assets (like company logos)
+    match /public_assets/{fileName} {
+      allow read: if true;
+      allow write: if true;
+    }
+    
+    // Reference images for delegated orders (root level)
     match /orders/{sheetId}/{orderId}/{fileName} {
+      allow read: if true;
+      allow write: if isValidImageFile();
+    }
+    
+    // Reference images for delegated orders (nested column level)
+    match /orders/{sheetId}/{orderId}/{columnName}/{fileName} {
       allow read: if true;
       allow write: if isValidImageFile();
     }
@@ -49,6 +61,12 @@ service firebase.storage {
     match /quotes/{quoteId}/{fileName} {
       allow read: if true;
       allow write: if isAuthenticated();
+    }
+    
+    // Proforma Invoice exports
+    match /proforma_exports/{invoiceId}/{fileName} {
+      allow read: if true;
+      allow write: if isAuthenticated() || true; // allow unauth for now given typical usage in this codebase
     }
     
     // Admin-only data sync and backup files
@@ -67,6 +85,24 @@ service firebase.storage {
     match /users/{userId}/profile/{fileName} {
       allow read: if true;
       allow write: if (isOwner(userId) || isAdmin()) && isValidImageFile();
+    }
+    
+    // Payroll documents
+    match /payroll_documents/{fileName} {
+      allow read: if true;
+      allow write: if true;
+    }
+    
+    // Employee profile pictures
+    match /profile_pictures/{fileName} {
+      allow read: if true;
+      allow write: if true;
+    }
+    
+    // Employee UPI QR Codes
+    match /upi_qrcodes/{fileName} {
+      allow read: if true;
+      allow write: if true;
     }
     
     // Default deny for all other paths

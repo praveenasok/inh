@@ -11,29 +11,84 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
         
         /* Print Styles */
         @media print {
-            body { background: white; margin: 0; padding: 0; }
-            .no-print, .universal-nav { display: none !important; }
-            .print-only { display: block !important; }
+            body { background: white; margin: 0; padding: 0; display: block !important; }
+            body.printing-all > *:not(#print-all-container) {
+                display: none !important;
+            }
+            body:not(.printing-all) .no-print {
+                display: none !important;
+            }
             .py-6 { padding-top: 0 !important; padding-bottom: 0 !important; }
             .px-4 { padding-left: 0 !important; padding-right: 0 !important; }
-            #preview-wrapper { padding: 0 !important; margin: 0 !important; background: transparent !important; }
-            #invoice-preview-container { 
-                box-shadow: none !important; 
+            .flex.flex-col.lg\:flex-row { display: block !important; }
+            #preview-wrapper { 
+                padding: 0 !important; 
                 margin: 0 !important; 
-                padding: 5mm 10mm 5mm 10mm !important;
-                width: 210mm !important; 
-                max-width: 210mm !important;
-                min-height: auto !important;
-                height: auto !important;
+                background: transparent !important; 
+                display: block !important; 
+                width: 100% !important;
+                overflow: visible !important; 
             }
-            @page { margin: 0; size: A4; }
+            #print-all-container {
+                display: none;
+                width: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            body.printing-all #print-all-container {
+                display: block !important;
+            }
+            .print-page-wrapper {
+                width: 100% !important;
+                max-width: none !important;
+                min-width: 0 !important;
+                margin: 0 !important;
+                padding: calc(0.5in + var(--extra-top-margin, 0in)) calc(0.5in + var(--extra-right-margin, 0in)) calc(0.5in + var(--extra-bottom-margin, 0in)) calc(0.5in + var(--extra-left-margin, 0in)) !important;
+                box-shadow: none !important;
+                height: auto !important;
+                min-height: auto !important;
+                position: static !important;
+                page-break-after: always;
+            }
+            .print-page-wrapper.flush-margins {
+                padding: 0 !important;
+            }
+            .print-page-wrapper.is-sli {
+                padding: 5mm !important;
+            }
+            .print-page-wrapper > div {
+                width: 100% !important;
+                margin: 0 !important;
+                min-height: auto !important;
+            }
+            /* Override explicitly forced dimensions in inline styles for print */
+            #declaration-container, #annexurea-container {
+                min-height: auto !important;
+            }
+            .static-page {
+                width: 100% !important;
+                height: auto !important;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                page-break-after: always;
+                box-sizing: border-box;
+                background-color: white;
+            }
+            .static-page img {
+                max-width: 100%;
+                max-height: 100%;
+                object-fit: contain;
+            }
+            @page { margin: 10mm; size: A4; }
+        }
+        #print-all-container {
+            display: none;
         }
 
         /* Invoice Table Styles */
@@ -45,9 +100,9 @@
             color: #000;
         }
         .invoice-table th, .invoice-table td {
-            border: 1px solid #000;
+            border: 1px solid #000 !important;
             padding: 4px 6px;
-            vertical-align: top;
+            vertical-align: middle !important;
         }
         .invoice-table .header-cell {
             background-color: #fff;
@@ -67,8 +122,6 @@
     </style>
 </head>
 <body>
-    <script src="js/navigation-loader.js"></script>
-
     <div class="max-w-screen-2xl mx-auto px-4 py-6">
         <div class="flex flex-col lg:flex-row gap-6 items-start">
             
@@ -87,13 +140,41 @@
                     <div id="panel-invoice" class="p-5 space-y-5 h-[calc(100vh-200px)] overflow-y-auto">
                         
                         <!-- Top Meta -->
-                        <div>
+                        <div class="mb-3">
                             <label class="block text-xs font-bold text-slate-500 mb-1">Document Type</label>
-                            <select id="inp-doc-type" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none mb-3">
+                            <select id="inp-doc-type" multiple size="8" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none" style="min-height: 150px;">
                                 <option value="Proforma Invoice">Proforma Invoice</option>
                                 <option value="Commercial Invoice">Commercial Invoice</option>
                                 <option value="Packing List">Packing List</option>
+                                <option value="Certificate for Non-Dangerous Goods">Certificate for Non-Dangerous Goods</option>
+                                <option value="Shipping Label">Shipping Label</option>
+                                <option value="Declaration">Declaration</option>
+                                <option value="Annexure-A">Annexure-A</option>
+                                <option value="PAN">PAN</option>
+                                <option value="IEC">IEC</option>
+                                <option value="AD Code">AD Code</option>
+                                <option value="LUT">LUT</option>
+                                <option value="Shipper's Letter of Instructions">Shipper's Letter of Instructions</option>
                             </select>
+                        </div>
+
+                        <div class="grid grid-cols-4 gap-3 mb-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-1">Top (in)</label>
+                                <input type="number" id="inp-top-margin" step="0.1" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none" value="0">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-1">Bottom (in)</label>
+                                <input type="number" id="inp-bottom-margin" step="0.1" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none" value="0">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-1">Left (in)</label>
+                                <input type="number" id="inp-left-margin" step="0.1" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none" value="0">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-1">Right (in)</label>
+                                <input type="number" id="inp-right-margin" step="0.1" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none" value="0">
+                            </div>
                         </div>
 
                         <div class="grid grid-cols-2 gap-3">
@@ -104,6 +185,13 @@
                             <div>
                                 <label class="block text-xs font-bold text-slate-500 mb-1">Date</label>
                                 <input type="text" id="inp-date" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none" placeholder="DD/MM/YY">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 gap-3 mt-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-1">AWB Number (For SLI)</label>
+                                <input type="text" id="inp-awb" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none" placeholder="3788813265">
                             </div>
                         </div>
 
@@ -163,17 +251,23 @@
                             <label class="block text-xs font-bold text-slate-500 mb-1">Terms of Delivery & Payment</label>
                             <input type="text" id="inp-terms" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none" value="SAMPLES">
                         </div>
-                        
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 mb-1">Currency</label>
-                            <select id="inp-currency" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none">
-                                <option value="USD">USD</option>
-                                <option value="EUR">EUR</option>
-                                <option value="GBP">GBP</option>
-                                <option value="INR">INR</option>
-                                <option value="AUD">AUD</option>
-                                <option value="CAD">CAD</option>
-                            </select>
+
+                        <div class="grid grid-cols-2 gap-3 mt-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-1">Currency</label>
+                                <select id="inp-currency" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none">
+                                    <option value="USD">USD</option>
+                                    <option value="EUR">EUR</option>
+                                    <option value="GBP">GBP</option>
+                                    <option value="INR">INR</option>
+                                    <option value="AUD">AUD</option>
+                                    <option value="CAD">CAD</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-1">Total Packages</label>
+                                <input type="text" id="inp-total-pkgs" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none" value="1">
+                            </div>
                         </div>
 
                         <hr class="border-slate-100">
@@ -276,26 +370,26 @@
                     </div>
                     <div class="flex gap-2">
                         <button id="btn-save-invoice" class="px-4 py-2 bg-indigo-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100 font-medium rounded-lg text-sm flex items-center transition shadow-sm"><i class="fas fa-save mr-2"></i> Save</button>
-                        <button id="btn-print" class="px-4 py-2 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 font-medium rounded-lg text-sm flex items-center transition shadow-sm"><i class="fas fa-print mr-2"></i> Print</button>
-                        <button id="btn-export-pdf" class="px-4 py-2 bg-[#081249] text-white hover:bg-blue-900 font-medium rounded-lg text-sm flex items-center transition shadow-sm"><i class="fas fa-file-pdf mr-2"></i> Export PDF</button>
+                        <button id="btn-print" class="px-4 py-2 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 font-medium rounded-lg text-sm flex items-center transition shadow-sm"><i class="fas fa-print mr-2"></i> Print Single Document</button>
+                        <button id="btn-export-all" class="px-4 py-2 bg-[#081249] text-white hover:bg-blue-900 font-medium rounded-lg text-sm flex items-center transition shadow-sm"><i class="fas fa-file-pdf mr-2"></i> Print Selected (PDF)</button>
                     </div>
                 </div>
 
-                <div id="preview-wrapper" class="bg-slate-300 p-4 sm:p-8 rounded-xl overflow-x-auto flex justify-center">
-                    <!-- The actual A4 container -->
-                    <div id="invoice-preview-container" class="bg-white shadow-lg mx-auto" style="width: 210mm; min-height: 297mm; padding: 15mm; box-sizing: border-box;">
+                <div id="preview-wrapper" class="bg-slate-300 p-4 sm:p-8 rounded-xl overflow-x-auto flex justify-center w-full lg:flex-1">
+                    <!-- This container mimics a standard A4 page (210mm x 297mm) -->
+                    <div id="invoice-preview-container" class="print-page-wrapper bg-white shadow-lg mx-auto" style="width: 100%; min-width: 210mm; min-height: 297mm; padding: 0.5in; box-sizing: border-box; position: relative;">
                         
                         <!-- Table Wrapper -->
-                        <table class="invoice-table">
+                        <table id="common-table" class="invoice-table">
                             <thead>
                                 <tr>
-                                    <th colspan="7" class="invoice-title" id="prev-doc-type">Proforma Invoice</th>
+                                    <th colspan="7" class="invoice-title center-align" style="font-size: 16px; text-decoration: underline;" id="prev-doc-type">Proforma Invoice</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <!-- Row 1 -->
                                 <tr>
-                                    <td colspan="3" class="header-cell w-[50%]">Exporter</td>
+                                    <td colspan="3" class="header-cell w-[50%]">MANUFACTURER AND MERCHANT EXPORTER</td>
                                     <td colspan="1" class="header-cell center-align w-[15%]">Invoice No.</td>
                                     <td colspan="1" class="header-cell center-align w-[15%]">Date</td>
                                     <td colspan="2" class="header-cell center-align w-[20%]">IEC</td>
@@ -354,7 +448,6 @@
                                     <td colspan="2" class="center-align font-medium" id="prev-terms"></td>
                                 </tr>
 
-                                <!-- Items Header -->
                                 <!-- Items Header - INVOICE -->
                                 <tr class="inv-only">
                                     <td rowspan="2" class="header-cell center-align w-[8%]">No &<br>Kind of<br>Pkgs</td>
@@ -420,8 +513,11 @@
                                     <td colspan="4" class="h-24 no-border-bottom relative">
                                         <div class="absolute top-1 left-2 font-bold text-[11px]" id="prev-total-words"></div>
                                     </td>
-                                    <td colspan="3" rowspan="2">
-                                        <div class="font-medium text-[10px]">Signature & Date</div>
+                                    <td colspan="3" rowspan="2" class="relative">
+                                        <div class="absolute top-1 left-2 font-medium text-[10px]">Signature & Date</div>
+                                        <div class="flex justify-center items-end h-full pb-2 pt-6">
+                                            <img src="images/signature.png" alt="Signature" class="max-h-16 object-contain mix-blend-multiply">
+                                        </div>
                                     </td>
                                 </tr>
                                 <tr class="inv-only">
@@ -432,8 +528,11 @@
                                 </tr>
                                 <tr class="pack-only" style="display:none;">
                                     <td colspan="3" class="h-24 no-border-bottom relative"></td>
-                                    <td colspan="3" rowspan="2">
-                                        <div class="font-medium text-[10px]">Signature & Date</div>
+                                    <td colspan="3" rowspan="2" class="relative">
+                                        <div class="absolute top-1 left-2 font-medium text-[10px]">Signature & Date</div>
+                                        <div class="flex justify-center items-end h-full pb-2 pt-6">
+                                            <img src="images/signature.png" alt="Signature" class="max-h-16 object-contain mix-blend-multiply">
+                                        </div>
                                     </td>
                                 </tr>
                                 <tr class="pack-only" style="display:none;">
@@ -444,8 +543,342 @@
                                 </tr>
                             </tbody>
                         </table>
+
+                        <!-- Certificate Table -->
+                        <table id="cert-table" class="invoice-table" style="display:none; margin-top: 2in;">
+                            <thead>
+                                <tr>
+                                    <th colspan="2" class="invoice-title center-align" style="font-size: 16px; text-decoration: underline;">CERTIFICATE FOR NON-DANGEROUS GOODS</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td colspan="2" class="p-4 leading-relaxed font-medium">
+                                        We hereby certify that the contents of the consignments are fully and accurately described by proper shipping name and not dangerous for carrying by air according to the current edition for IATA Dangerous Goods Regulations and all applicable carrier and Government Regulation. We acknowledge that we may be liable for dangerous resulting from any miss statement for omission and we have further agreed that any air carrier involved in the shipment of this consignment may rely upon this certificate. I take the complete responsibility that shipment does not contain any defective
+                                    </td>
+                                </tr>
+                                <tr><td colspan="2" class="h-6 no-border-bottom no-border-top border-x-0"></td></tr>
+                                <tr>
+                                    <td class="font-bold w-[25%] p-2">SHIPPERS:</td>
+                                    <td class="whitespace-pre-wrap p-2 font-medium" id="cert-exporter"></td>
+                                </tr>
+                                <tr><td colspan="2" class="h-4 no-border-bottom no-border-top border-x-0"></td></tr>
+                                <tr>
+                                    <td class="font-bold w-[25%] p-2">CONSIGNEE :</td>
+                                    <td class="p-2">
+                                        <div class="whitespace-pre-wrap font-medium" id="cert-consignee"></div>
+                                        <div class="text-blue-700 mt-1" id="cert-consignee-phone"></div>
+                                    </td>
+                                </tr>
+                                <tr><td colspan="2" class="h-4 no-border-bottom no-border-top border-x-0"></td></tr>
+                                <tr>
+                                    <td class="font-bold w-[25%] p-2">MAWB NO</td>
+                                    <td class="p-2"></td>
+                                </tr>
+                                <tr>
+                                    <td class="font-bold w-[25%] p-2">HAWB</td>
+                                    <td class="p-2"></td>
+                                </tr>
+                                <tr>
+                                    <td class="font-bold w-[25%] p-2">PKGS</td>
+                                    <td class="p-2 font-medium" id="cert-pkgs"></td>
+                                </tr>
+                                <tr>
+                                    <td class="font-bold w-[25%] p-2">DESTINATION</td>
+                                    <td class="p-2 font-medium uppercase" id="cert-destination"></td>
+                                </tr>
+                                <tr>
+                                    <td class="font-bold w-[25%] p-2">GROS WT</td>
+                                    <td class="p-2 font-medium" id="cert-gross-wt"></td>
+                                </tr>
+                                <tr>
+                                    <td class="font-bold w-[25%] p-2">COMMODITY</td>
+                                    <td class="p-2 font-medium">100% NATURAL HUMAN HAIR</td>
+                                </tr>
+                            </tbody>
+                        </table>
                         
+                        <!-- Shipping Label -->
+                        <div id="label-container" class="w-full flex flex-col justify-between" style="display:none; height: 260mm; padding-left: 0.5in; padding-top: 0.5in; box-sizing: border-box;">
+                            <div class="mb-6">
+                                <h2 class="text-3xl font-bold mb-2">FROM:</h2>
+                                <div id="label-exporter" class="whitespace-pre-wrap text-2xl leading-relaxed font-semibold"></div>
+                            </div>
+                            
+                            <div class="flex-grow flex flex-col justify-center border-t-8 border-black pt-8 mt-4">
+                                <h1 class="text-5xl font-black mb-6 uppercase tracking-wide">TO:</h1>
+                                <div id="label-consignee" class="whitespace-pre-wrap text-5xl leading-tight font-bold"></div>
+                                <div id="label-consignee-phone" class="text-4xl font-bold mt-6"></div>
+                                <div id="label-destination" class="text-6xl font-black mt-8 uppercase tracking-widest text-center border-4 border-black p-4 inline-block self-start"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- SLI Container -->
+                        <div id="sli-container" style="display:none; width: 100%; font-family: Arial, sans-serif; font-size: 6.5px; line-height: 1.1;">
+                            <style>
+                                #sli-container table td { padding: 2px !important; border: 1px solid #000 !important; }
+                                #sli-container table { border: 1px solid #000 !important; border-collapse: collapse; }
+                                #sli-container .text-sm { font-size: 5.5px !important; }
+                            </style>
+                            <div style="text-align: center; font-weight: bold; font-size: 8.5px; background-color: #fbbf24; padding: 2px; border: 1px solid #000; border-bottom: none; -webkit-print-color-adjust: exact; print-color-adjust: exact;">SHIPPER'S LETTER OF INSTRUCTIONS</div>
+                            <table class="invoice-table" style="width: 100%; border: 1px solid #000; border-collapse: collapse; margin-bottom: 0;">
+                                <tr>
+                                    <td colspan="2" style="width: 50%;"><b>Shipper Name:</b> <span id="sli-shipper-name"></span></td>
+                                    <td style="width: 25%;"><b>Invoice No.:</b></td>
+                                    <td style="width: 25%;"><span id="sli-invoice-no"></span></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2"><b>Consignee Name:</b> <span id="sli-consignee-name"></span></td>
+                                    <td><b>Invoice Date:</b></td>
+                                    <td><span id="sli-date"></span></td>
+                                </tr>
+                                <tr><td colspan="3"><b>DHL AIR WAYBILL NUMBER (AWB) :</b></td><td id="sli-awb" contenteditable="true" class="outline-none hover:bg-slate-50 transition-colors"></td></tr>
+                                <tr><td colspan="3"><b>IE CODE NO (10 DIGIT) :</b></td><td contenteditable="true" class="outline-none hover:bg-slate-50 transition-colors">516971735</td></tr>
+                                <tr><td colspan="3"><b>IEC BRANCH CODE :</b></td><td contenteditable="true" class="outline-none hover:bg-slate-50 transition-colors"></td></tr>
+                                <tr><td colspan="3"><b>PAN NUMBER :</b></td><td contenteditable="true" class="outline-none hover:bg-slate-50 transition-colors">AADCI5579A</td></tr>
+                                <tr><td colspan="3"><b>GSTIN NUMBER :</b></td><td contenteditable="true" class="outline-none hover:bg-slate-50 transition-colors">07AADCI5579A1ZN</td></tr>
+                                <tr>
+                                    <td colspan="4" style="background-color: #f3f4f6; font-weight: bold; -webkit-print-color-adjust: exact; print-color-adjust: exact;">IGST Payment Status (Mandatory to TICK MARK from below option (A, B or C) in front of column provided :</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="3"><b>A ) NOT APPLICABLE (Valid Reason to be provided)</b></td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="3"><b>B ) LUT- Export Under Bond (Copy of valid LUT Required)</b></td>
+                                    <td class="center-align">Y</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2"><b>C ) Export Against Payment (in INR on export invoice)</b></td>
+                                    <td colspan="2" style="color: #ef4444; -webkit-print-color-adjust: exact; print-color-adjust: exact;">TAXABLE AMOUNT -<br>IGST RATE -<br>IGST AMOUNT -<br>GST Compensation Cess -</td>
+                                </tr>
+                                <tr><td colspan="4"><b>End use code (EU Code)</b></td></tr>
+                                <tr>
+                                    <td colspan="2" style="color: #ef4444; -webkit-print-color-adjust: exact; print-color-adjust: exact;"><b>RoDTEP Benefit to be claimed (Please tick Y / N)</b></td>
+                                    <td style="color: #ef4444; -webkit-print-color-adjust: exact; print-color-adjust: exact;">N<br>(Invoice should mention intent to claim RoDTEP benefit and UQC at line item level)</td>
+                                    <td style="color: #ef4444; -webkit-print-color-adjust: exact; print-color-adjust: exact;">N<br>Total No. of line items in invoice ?<br>RoDTEP will be claimed for which line item numbers?</td>
+                                </tr>
+                                <tr><td colspan="3"><b>BANK AD CODE # (PART I & II) :</b></td><td contenteditable="true" class="outline-none hover:bg-slate-50 transition-colors">6390306-2900009</td></tr>
+                                <tr><td colspan="3"><b>INCOTERMS : F O B / C & F / C & I / C I F :</b></td><td>FOB</td></tr>
+                                <tr><td colspan="3"><b>NATURE OF PAYMENT : D P / D A / A P</b></td><td>AP</td></tr>
+                                <tr><td colspan="3">FOB VALUE</td><td id="sli-value"></td></tr>
+                                <tr><td colspan="3">FREIGHT (IF ANY)</td><td></td></tr>
+                                <tr><td colspan="3">INSURANCE (IF ANY)</td><td></td></tr>
+                                <tr><td colspan="3">COMMISSION (IF ANY)</td><td></td></tr>
+                                <tr><td colspan="3">DISCOUNT (IF ANY)</td><td></td></tr>
+                                <tr><td colspan="3" style="color: #ef4444; -webkit-print-color-adjust: exact; print-color-adjust: exact;">PACKING CHARGES (IF ANY)</td><td></td></tr>
+                                <tr><td colspan="3">NO. OF PKGS.</td><td id="sli-pkgs"></td></tr>
+                                <tr><td colspan="3">NET WT.</td><td id="sli-net-wt"></td></tr>
+                                <tr><td colspan="3">GROSS WT.</td><td id="sli-gross-wt"></td></tr>
+                                <tr><td colspan="3" style="color: #ef4444; -webkit-print-color-adjust: exact; print-color-adjust: exact;">STATE OF ORIGIN</td><td>New Delhi</td></tr>
+                                <tr><td colspan="3" style="color: #ef4444; -webkit-print-color-adjust: exact; print-color-adjust: exact;">DISTRICT OF ORIGIN</td><td>Delhi</td></tr>
+                                <tr><td colspan="3" style="color: #ef4444; -webkit-print-color-adjust: exact; print-color-adjust: exact;">EXPORT UNDER PTA/FTA</td><td></td></tr>
+                                <tr>
+                                    <td style="color: #ef4444; -webkit-print-color-adjust: exact; print-color-adjust: exact;">CATEGORY OF SHIPPER (Please tick)</td>
+                                    <td colspan="3" style="color: #ef4444; -webkit-print-color-adjust: exact; print-color-adjust: exact;">Merchant (Y) &nbsp;&nbsp;&nbsp; Manufacturer (Y)</td>
+                                </tr>
+                                <tr>
+                                    <td style="color: #ef4444; -webkit-print-color-adjust: exact; print-color-adjust: exact;">If Merchant, manufacturer details to be updated in SB (Please Tick)</td>
+                                    <td style="color: #ef4444; -webkit-print-color-adjust: exact; print-color-adjust: exact;">Y</td>
+                                    <td style="color: #ef4444; -webkit-print-color-adjust: exact; print-color-adjust: exact;">If Y, Please provide Manufacturer name:</td>
+                                    <td>IND NATURAL HAIR PVT LTD</td>
+                                </tr>
+                                <tr><td colspan="4" style="background-color: #fbbf24; font-weight: bold; -webkit-print-color-adjust: exact; print-color-adjust: exact;">Special instructons, if any</td></tr>
+                                <tr><td colspan="4" style="color: #2563eb; font-weight: bold; height: 30px; -webkit-print-color-adjust: exact; print-color-adjust: exact;">Please share checklist before shipping.</td></tr>
+                                <tr>
+                                    <td colspan="2" style="background-color: #fbbf24; font-weight: bold; -webkit-print-color-adjust: exact; print-color-adjust: exact;">TYPE OF SHIPPING BILL (TICK MARK)</td>
+                                    <td colspan="2" style="background-color: #fbbf24; font-weight: bold; -webkit-print-color-adjust: exact; print-color-adjust: exact;">BELOW DOCUMENTS REQUIRED WITH THE SHIPMENT</td>
+                                </tr>
+                                <tr><td colspan="2">A) NFEI (No Foreign Exchange Involved)</td><td colspan="2">Letter stating Reason for Export</td></tr>
+                                <tr><td colspan="2">B) FREE SHIPPING BILL INVOLVING REMITTANCE</td><td colspan="2"></td></tr>
+                                <tr><td colspan="2">C) EOU SHIPPING BILL</td><td colspan="2">ANNEXURE C1</td></tr>
+                                <tr><td colspan="2">D) DUTY DRAWBACK</td><td colspan="2">DBK SL NO</td></tr>
+                                <tr><td colspan="2">E) EPCG SHIPPING BILL</td><td colspan="2">REGN NO. & DT OF EPCG LIC, COPY OF EPCG LIC / REGN COPY</td></tr>
+                                <tr><td colspan="2">F) ADVANCE LICENCE SHIPPING BILL</td><td colspan="2">REGN NO. & DT OF ADV LIC, COPY OF LIC / REGN COPY,CONSUMPTION SHEET</td></tr>
+                                <tr><td colspan="2">G) ROSL (Rebate of State Levies)</td><td colspan="2">NO ADDITIONAL DOCUMENTS REQUIRED.</td></tr>
+                                <tr><td colspan="2">H) REPAIR & RETURN</td><td colspan="2">B/E COPY, IMP INV/PKG LIST/GR WAIVER ON GR FORM,CHARTERED ENGG CERTIFICATE, EXPORT INV/PKG LIST, LETTER REQUESTING CUSTOMS FOR 100% EXAMINATION</td></tr>
+                                <tr><td colspan="4" style="background-color: #fbbf24; font-weight: bold; -webkit-print-color-adjust: exact; print-color-adjust: exact;">Please TICK & LIST the documents provided to DHL with the shipment :</td></tr>
+                                <tr>
+                                    <td colspan="4">
+                                        <div style="display: flex; justify-content: space-between; flex-wrap: wrap;">
+                                            <div style="width: 33%;">1. INVOICE (4 COPIES)</div>
+                                            <div style="width: 33%;">5. MSDS</div>
+                                            <div style="width: 33%;">9. SCOMET DECLARATION</div>
+                                            <div style="width: 33%;">2. PACKING LIST (4 COPIES)</div>
+                                            <div style="width: 33%;">6. PHYTOSANITARY CERT</div>
+                                            <div style="width: 33%;">10. RoDTEP DECLARATION</div>
+                                            <div style="width: 33%;">3. NON-DG DECLARATION</div>
+                                            <div style="width: 33%;">7. VISA/AEPC ENDORSEMENT</div>
+                                            <div style="width: 33%;">4. LAB ANALYSIS REPORT</div>
+                                            <div style="width: 33%;">8. LETTER TO DC</div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td colspan="4" style="font-size: 9px;">
+                                        <b>In forwarding this document, I/We authorize DHL Express (India) Pvt. Ltd. (‘DHL’), its group companies and their agents, to act as our agent to clear this Shipment from Customs and also give our consent to sign, submit and file in physical or digitally, the e-way bill / shipping bill and other forms, as and when required, under various statutes to authorities for undertaking the Shipment on our behalf.</b><br>
+                                        Please indicate API (As per Invoice) if any detail is mentioned in the Invoice.<br>
+                                        We hereby confirm that the above details declared are true and correct.<br>
+                                        We confirm that our company's IEC & Bank AD Code are registered with EDI System of Air Cargo at the port of clearance<br>
+                                        SCOMET Declaration is applicable for chapters 28,29,34,38,70,72-85,87-90<br>
+                                        LC (Letter of Credit) Shipments are not handled by DHL &nbsp;&nbsp;&nbsp;&nbsp; SIGNATURE OF EXPORTER/ STAMP
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+
+                    <!-- Declaration -->
+                    <div id="declaration-container" style="display: none; width: 100%; font-family: 'Arial', sans-serif; font-size: 14px; line-height: 1.5; background: white; margin-top: 2in; box-sizing: border-box; position: relative; text-align: left;">
+                        <h2 style="text-align: center; font-size: 16px; font-weight: bold; margin-bottom: 30px;">DECLARATION</h2>
+                        
+                        <p style="margin-bottom: 15px;">I/We declare that the particulars given herein above are true, correct and complete.</p>
+                        <p style="margin-bottom: 15px;">I/We enclose herewith copies of the following documents*:</p>
+                        
+                        <div style="margin-left: 0; margin-bottom: 25px;">
+                            <p>2. Invoice/Invoice cum packing list</p>
+                            <p>3.</p>
+                            <p>4. Others (Specify)</p>
+                        </div>
+                        
+                        <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px;">
+                            <tr>
+                                <td style="border: 1px solid black; padding: 10px; width: 25%; vertical-align: top;">NAME OF EXPORTER</td>
+                                <td style="border: 1px solid black; padding: 10px; width: 25%; vertical-align: top;" id="decl-exporter-name"></td>
+                                <td style="border: 1px solid black; padding: 10px; width: 25%; vertical-align: top;">NAME OF CUSTOMS<br>BROKER</td>
+                                <td style="border: 1px solid black; padding: 10px; width: 25%; vertical-align: top;" contenteditable="true"></td>
+                            </tr>
+                            <tr>
+                                <td style="border: 1px solid black; padding: 10px; vertical-align: top;">Designation</td>
+                                <td style="border: 1px solid black; padding: 10px; vertical-align: top;" contenteditable="true">Director</td>
+                                <td style="border: 1px solid black; padding: 10px; vertical-align: top;">Designation</td>
+                                <td style="border: 1px solid black; padding: 10px; vertical-align: top;" contenteditable="true"></td>
+                            </tr>
+                            <tr>
+                                <td style="border: 1px solid black; padding: 10px; vertical-align: top;" colspan="2"></td>
+                                <td style="border: 1px solid black; padding: 10px; vertical-align: top;">Identity Card Number</td>
+                                <td style="border: 1px solid black; padding: 10px; vertical-align: top;" contenteditable="true"></td>
+                            </tr>
+                        </table>
+                        
+                        <p style="margin-bottom: 25px; text-align: justify;">
+                            I/We undertake to abide by the provisions of Foreign Exchange Management Act, 1999, as amended from time to time, including realisation or repatriation of foreign exchange to or from India.
+                        </p>
+                        
+                        <p style="margin-bottom: 40px;">* To be submitted with the exports goods in the warehouse.</p>
+                        
+                        <div>
+                            <p style="margin-bottom: 5px;">Date: <span id="decl-date"></span></p>
+                            <p>Signature: <span style="display:inline-block; border-bottom: 1px solid black; width: 250px;"></span></p>
+                        </div>
                     </div>
+
+                    <!-- Annexure-A -->
+                    <!-- Annexure-A -->
+                    <div id="annexurea-container" style="display: none; width: 100%; font-family: 'Arial', sans-serif; font-size: 14px; line-height: 1.5; background: white; margin-top: 2in; box-sizing: border-box; position: relative; text-align: left;">
+                        <div style="text-align: center; margin-bottom: 25px;">
+                            <p>Circular No. 37/2007-Customs</p>
+                            <p style="margin-top: 10px; text-decoration: underline;">Annexure-A</p>
+                            <p style="margin-top: 10px;">EXPORT VALUE DECLARATION</p>
+                            <p>(See Rule 7 of Customs Valuation (Determination of Value of Export Goods) Rules, 2007)</p>
+                        </div>
+
+                        <div style="margin-bottom: 15px;">
+                            <p>1. Shipping Bill No. & Date: <span contenteditable="true" style="min-width: 150px; display: inline-block;"></span></p>
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <p>2. Invoice No. & Date: <span id="annex-inv-no-date"></span></p>
+                        </div>
+                        
+                        <div style="margin-bottom: 15px;">
+                            <p>3. Nature of Transaction</p>
+                            <div style="padding-left: 20px;">
+                                <p>[ ] Sale</p>
+                                <p>[ ] Sale on consignment Basis</p>
+                                <p>[ ] Gift</p>
+                                <p>[ ] Sample</p>
+                                <p>[ ] Other</p>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 15px;">
+                            <p>4. Method of Valuation:</p>
+                            <div style="padding-left: 20px;">
+                                <p>[ ] Rule 3</p>
+                                <p>[ ] Rule 4</p>
+                                <p>[ ] Rule 5</p>
+                                <p>[ ] Rule 6</p>
+                                <p>(See Export Valuation Rules)</p>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 15px;">
+                            <p>5. Whether seller and buyer are related:</p>
+                            <div style="padding-left: 20px;">
+                                <p>[ ] Yes</p>
+                                <p>[ ] No</p>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 15px;">
+                            <p>6. If yes, whether relationship has influenced the price:</p>
+                            <div style="padding-left: 20px;">
+                                <p>[ ] Yes</p>
+                                <p>[ ] No</p>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 15px;">
+                            <p>7. Terms of Payment: <span contenteditable="true" id="annex-terms"></span></p>
+                        </div>
+
+                        <div style="margin-bottom: 15px;">
+                            <p>8. Terms of Delivery: <span contenteditable="true" id="annex-delivery"></span></p>
+                        </div>
+
+                        <div style="margin-bottom: 15px;">
+                            <p>9. Previous exports of identical/ similar goods, if any</p>
+                            <div style="padding-left: 20px;">
+                                <p>Shipping Bill No. and date: <span contenteditable="true" style="min-width: 150px; display: inline-block;"></span></p>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 25px;">
+                            <p>10. Any other relevant information (Attach separate sheet, if necessary)</p>
+                        </div>
+
+                        <div style="margin-bottom: 25px;">
+                            <p style="text-decoration: underline;">DECLARATION</p>
+                            <p>1. I/We hereby declare that the information furnished above is true, complete and correct in every respect.</p>
+                            <p>2. I/We also undertake to bring to the notice of proper officer any particulars which subsequently come to my/our knowledge which will have bearing on a valuation.</p>
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 40px;">
+                            <div>
+                                <p>Place: New Delhi</p>
+                                <p>Date: <span id="annex-date"></span></p>
+                            </div>
+                            <div style="text-align: right;">
+                                <p style="margin-bottom: 40px;" id="annex-exporter-name"></p>
+                                <p>SIGNATURE OF THE EXPORTER</p>
+                                <p>NAME OF THE SIGNATORY</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    </div> <!-- End of invoice-preview-container -->
+                    
+                    <!-- Static Documents -->
+                    <div id="static-doc-container" style="display: none; width: 100%;">
+                        <div id="static-pan" class="static-page" style="display: none;"><img src="images/pan.jpg" alt="PAN Card"></div>
+                        <div id="static-iec" class="static-page" style="display: none;"><img src="images/iec.jpg" alt="IEC Certificate"></div>
+                        <div id="static-adcode" class="static-page" style="display: none;"><img src="images/adcode.jpg" alt="AD Code"></div>
+                        <div id="static-lut" style="display: none; width: 100%;">
+                            <div class="static-page"><img src="images/lut_page1.jpg" alt="LUT Page 1"></div>
+                            <div class="static-page"><img src="images/lut_page2.jpg" alt="LUT Page 2"></div>
+                            <div class="static-page" style="page-break-after: auto;"><img src="images/lut_page3.jpg" alt="LUT Page 3"></div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
             
@@ -468,6 +901,16 @@
         </div>
     </div>
 
-    <script src="js/shipping-paperwork.js"></script>
+    <!-- Footer -->
+    <footer class="bg-slate-100 border-t border-slate-200 py-6 mt-12 no-print">
+        <div class="max-w-screen-xl mx-auto px-4 text-center text-slate-500 text-sm">
+            &copy; 2026 INH Suite. All rights reserved.
+        </div>
+    </footer>
+
+    <!-- Print All Container -->
+    <div id="print-all-container" class="print-only"></div>
+
+    <script type="module" src="js/shipping-paperwork.js"></script>
 </body>
 </html>

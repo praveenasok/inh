@@ -9,6 +9,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
+    <!-- Pickr for Color Selection -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/themes/classic.min.css"/>
+    <script src="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/pickr.min.js"></script>
+    
     <!-- Firebase SDK Compat -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -23,7 +27,28 @@
             color: #1e293b;
             box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
         }
+        .rainbow-btn {
+            background: conic-gradient(red, yellow, lime, aqua, blue, fuchsia, red);
+        }
+        /* Hide dashboard if scanning */
+        body.is-scanning > div.container,
+        body.is-scanning > header,
+        body.is-scanning > nav {
+            display: none !important;
+        }
     </style>
+    <script>
+        if (window.location.search.includes('scan=')) {
+            window.addEventListener('DOMContentLoaded', () => {
+                document.body.classList.add('is-scanning');
+                const overlay = document.createElement('div');
+                overlay.id = 'scan-routing-overlay';
+                overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:#f8fafc;z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;font-family:"Inter",sans-serif;';
+                overlay.innerHTML = '<div style="border: 4px solid #e2e8f0; border-top: 4px solid #4f46e5; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 16px;"></div><h2 style="color:#1e293b;font-size:16px;font-weight:600;margin:0;">Routing to destination...</h2><style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>';
+                document.body.appendChild(overlay);
+            });
+        }
+    </script>
 </head>
 <body class="bg-[#f8fafc] min-h-screen text-slate-900">
     <script>window.navConfig = { siteTitle: 'INHsuite' };</script>
@@ -65,8 +90,57 @@
 
                     <form id="qrForm" onsubmit="handleGenerateQR(event)" class="space-y-4">
                         <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Label Name</label>
-                            <input type="text" id="qrName" placeholder="e.g. Raw Lot Tag Lot-02" class="w-full p-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent font-semibold text-slate-700 bg-white" required>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Tag Name / Label</label>
+                            <input type="text" id="qrName" placeholder="e.g. Front Door Promo" class="w-full p-2.5 border border-slate-200 rounded-xl text-sm font-bold shadow-sm focus:outline-none focus:ring-2 focus:ring-slate-900 bg-white" required>
+                        </div>
+
+                        <!-- Design Options Row -->
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-6 pt-2 pb-2">
+                            <div>
+                                <label class="block text-[12px] font-bold text-slate-800 mb-3 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-fill-drip text-slate-500"></i> Foreground
+                                </label>
+                                <div class="flex items-center gap-3">
+                                    <button type="button" id="fg-pickr-trigger" class="w-9 h-9 rounded-full rainbow-btn flex items-center justify-center shadow-sm hover:scale-105 transition-transform shrink-0 border border-slate-200">
+                                        <div class="bg-white rounded-full w-5 h-5 flex items-center justify-center"><i class="fa-solid fa-plus text-[10px] text-slate-800"></i></div>
+                                    </button>
+                                    <button type="button" onclick="openEyedropper('fg')" class="w-9 h-9 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-700 shadow-sm hover:bg-slate-50 transition-colors shrink-0">
+                                        <i class="fa-solid fa-eye-dropper text-xs"></i>
+                                    </button>
+                                    <div class="w-9 h-9 rounded-full border-[2.5px] border-[#8b5cf6] p-[2px] shrink-0">
+                                        <div id="fg-swatch" class="w-full h-full rounded-full shadow-inner" style="background-color: #000000;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-[12px] font-bold text-slate-800 mb-3 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-image text-slate-500"></i> Background
+                                </label>
+                                <div class="flex items-center gap-3">
+                                    <button type="button" id="bg-pickr-trigger" class="w-9 h-9 rounded-full rainbow-btn flex items-center justify-center shadow-sm hover:scale-105 transition-transform shrink-0 border border-slate-200">
+                                        <div class="bg-white rounded-full w-5 h-5 flex items-center justify-center"><i class="fa-solid fa-plus text-[10px] text-slate-800"></i></div>
+                                    </button>
+                                    <button type="button" onclick="openEyedropper('bg')" class="w-9 h-9 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-700 shadow-sm hover:bg-slate-50 transition-colors shrink-0">
+                                        <i class="fa-solid fa-eye-dropper text-xs"></i>
+                                    </button>
+                                    <div class="w-9 h-9 rounded-full border-[2.5px] border-[#8b5cf6] p-[2px] shrink-0">
+                                        <div id="bg-swatch" class="w-full h-full rounded-full shadow-inner border border-slate-100" style="background-color: #FFFFFF;"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-span-2 md:col-span-1">
+                                <label class="block text-[12px] font-bold text-slate-800 mb-3 flex items-center gap-1.5">
+                                    <i class="fa-regular fa-square text-slate-500"></i> Margin
+                                </label>
+                                <select id="qrMargin" class="w-full p-2.5 border border-slate-200 rounded-lg text-sm font-bold shadow-sm focus:outline-none focus:ring-2 focus:ring-slate-900 bg-white">
+                                    <option value="0">None (0px)</option>
+                                    <option value="10">Small (10px)</option>
+                                    <option value="20">Medium (20px)</option>
+                                    <option value="30">Large (30px)</option>
+                                </select>
+                            </div>
                         </div>
 
                         <div>
@@ -126,6 +200,11 @@
 
         <!-- ==================== TAB 2: TRACKING ANALYTICS ==================== -->
         <div id="panel-analytics" class="tab-panel hidden space-y-6">
+            <div class="flex justify-end mb-2">
+                <select id="analyticsFilter" onchange="handleFilterChange()" class="w-full md:w-72 p-2.5 border border-slate-200 rounded-xl text-sm font-bold shadow-sm focus:outline-none focus:ring-2 focus:ring-slate-900 bg-white">
+                    <option value="ALL">Viewing All QR Tags</option>
+                </select>
+            </div>
             <!-- Summary stats row -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
@@ -152,7 +231,7 @@
 
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
                     <div>
-                        <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">Top Scanning City</p>
+                        <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">Top Scanning State / Region</p>
                         <h3 id="statTopCity" class="text-xl font-extrabold text-slate-800 mt-2 truncate w-36">N/A</h3>
                         <span id="statTopCityScans" class="text-[10px] text-slate-400 font-semibold block mt-1.5">0 scans logged</span>
                     </div>
@@ -236,7 +315,7 @@
                                 <tr>
                                     <th class="px-4 py-2.5">Time</th>
                                     <th class="px-4 py-2.5">Tag Name</th>
-                                    <th class="px-4 py-2.5">Location</th>
+                                    <th class="px-4 py-2.5">Location & Zip</th>
                                     <th class="px-4 py-2.5">Platform</th>
                                     <th class="px-4 py-2.5">Browser</th>
                                 </tr>
@@ -245,6 +324,33 @@
                                 <!-- Logs injected by JS -->
                             </tbody>
                         </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- New Metrics Row -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- Time of Day -->
+                <div class="lg:col-span-6 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
+                    <h3 class="font-bold text-slate-800 text-base mb-6 flex items-center gap-1.5">
+                        <i class="fa-regular fa-sun text-amber-500"></i>
+                        <span>Time of Day Scanning Habits</span>
+                    </h3>
+                    <div class="h-64 relative flex-1 flex items-center justify-center">
+                        <div id="todChartFallback" class="text-xs text-slate-400 italic hidden">No scans recorded.</div>
+                        <canvas id="todChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Timezone -->
+                <div class="lg:col-span-6 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
+                    <h3 class="font-bold text-slate-800 text-base mb-6 flex items-center gap-1.5">
+                        <i class="fa-solid fa-clock text-blue-500"></i>
+                        <span>Timezone Distribution</span>
+                    </h3>
+                    <div class="h-64 relative flex-1 flex items-center justify-center">
+                        <div id="tzChartFallback" class="text-xs text-slate-400 italic hidden">No scans recorded.</div>
+                        <canvas id="tzChart"></canvas>
                     </div>
                 </div>
             </div>
@@ -307,14 +413,14 @@
     <!-- Page Logic Script -->
     <script>
         const CITIES = [
-            { city: 'Chennai', country: 'India' },
-            { city: 'Delhi', country: 'India' },
-            { city: 'Nellore', country: 'India' },
-            { city: 'Eluru', country: 'India' },
-            { city: 'Madhavaram', country: 'India' },
-            { city: 'New York', country: 'USA' },
-            { city: 'London', country: 'UK' },
-            { city: 'Paris', country: 'France' }
+            { city: 'Chennai', region: 'Tamil Nadu', country: 'India', postal: '600001', timezone: 'Asia/Kolkata' },
+            { city: 'Delhi', region: 'Delhi', country: 'India', postal: '110001', timezone: 'Asia/Kolkata' },
+            { city: 'Nellore', region: 'Andhra Pradesh', country: 'India', postal: '524001', timezone: 'Asia/Kolkata' },
+            { city: 'Eluru', region: 'Andhra Pradesh', country: 'India', postal: '534001', timezone: 'Asia/Kolkata' },
+            { city: 'Madhavaram', region: 'Tamil Nadu', country: 'India', postal: '600060', timezone: 'Asia/Kolkata' },
+            { city: 'New York', region: 'New York', country: 'USA', postal: '10001', timezone: 'America/New_York' },
+            { city: 'London', region: 'England', country: 'UK', postal: 'WC2N', timezone: 'Europe/London' },
+            { city: 'Paris', region: 'Île-de-France', country: 'France', postal: '75001', timezone: 'Europe/Paris' }
         ];
 
         const PLATFORMS = ['iOS', 'Android', 'Windows', 'macOS'];
@@ -323,10 +429,6 @@
 
         let qrList = [];
         let scanEvents = [];
-        
-        let timelineChartInstance = null;
-        let osChartInstance = null;
-        let cityChartInstance = null;
 
         // Custom function to delay execution
         function delay(ms) {
@@ -342,6 +444,79 @@
                 await delay(100);
             }
             return false;
+        }
+
+        // Global color state for Pickr
+        let qrFgColorHex = '#000000';
+        let qrBgColorHex = '#FFFFFF';
+
+        let pickrFg;
+        let pickrBg;
+
+        // Initialize Pickr color selectors
+        document.addEventListener('DOMContentLoaded', () => {
+            const commonPickrConfig = {
+                theme: 'classic',
+                useAsButton: true,
+                autoReposition: true,
+                components: {
+                    preview: true,
+                    opacity: false,
+                    hue: true,
+                    interaction: {
+                        hex: true,
+                        input: true,
+                        clear: false,
+                        save: false
+                    }
+                }
+            };
+
+            pickrFg = Pickr.create({
+                el: '#fg-pickr-trigger',
+                default: qrFgColorHex,
+                ...commonPickrConfig
+            });
+            pickrFg.on('change', (color) => {
+                qrFgColorHex = color.toHEXA().toString();
+                document.getElementById('fg-swatch').style.backgroundColor = qrFgColorHex;
+            });
+
+            pickrBg = Pickr.create({
+                el: '#bg-pickr-trigger',
+                default: qrBgColorHex,
+                ...commonPickrConfig
+            });
+            pickrBg.on('change', (color) => {
+                qrBgColorHex = color.toHEXA().toString();
+                document.getElementById('bg-swatch').style.backgroundColor = qrBgColorHex;
+            });
+
+            // Ensure Pickr opens even if clicking inner child elements (like the plus icon)
+            document.getElementById('fg-pickr-trigger').addEventListener('click', () => pickrFg.show());
+            document.getElementById('bg-pickr-trigger').addEventListener('click', () => pickrBg.show());
+        });
+
+        async function openEyedropper(target) {
+            if (!window.EyeDropper) {
+                alert("Your browser does not support the EyeDropper API. Please manually type the hex code.");
+                return;
+            }
+            const eyeDropper = new EyeDropper();
+            try {
+                const result = await eyeDropper.open();
+                if (target === 'fg') {
+                    qrFgColorHex = result.sRGBHex;
+                    document.getElementById('fg-swatch').style.backgroundColor = qrFgColorHex;
+                    pickrFg.setColor(qrFgColorHex);
+                } else {
+                    qrBgColorHex = result.sRGBHex;
+                    document.getElementById('bg-swatch').style.backgroundColor = qrBgColorHex;
+                    pickrBg.setColor(qrBgColorHex);
+                }
+            } catch (e) {
+                // User canceled
+            }
         }
 
         // On DOM Load
@@ -370,11 +545,7 @@
                 const baseUrl = window.location.origin + window.location.pathname;
 
                 const qrSaved = localStorage.getItem('inv_qr_codes');
-                qrList = qrSaved ? JSON.parse(qrSaved) : [
-                    { id: 'qr-1', name: 'Raw Non-Remy 1x1 Tag', type: 'PRODUCT', targetId: 'prod-1', payload: `${baseUrl}?scan=qr-1&name=${encodeURIComponent('Raw Non-Remy 1x1 Tag')}`, createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString() },
-                    { id: 'qr-2', name: 'Raw Lot Lot-RIH-002', type: 'LOT', targetId: 'RAW-20260601-RIH-002', payload: `${baseUrl}?scan=qr-2&name=${encodeURIComponent('Raw Lot Lot-RIH-002')}`, createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString() },
-                    { id: 'qr-3', name: 'Raw Hair Room Rack A', type: 'LOCATION', targetId: 'loc-1', payload: `${baseUrl}?scan=qr-3&name=${encodeURIComponent('Raw Hair Room Rack A')}`, createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString() }
-                ];
+                qrList = qrSaved ? JSON.parse(qrSaved) : [];
                 localStorage.setItem('inv_qr_codes', JSON.stringify(qrList));
 
                 const scansSaved = localStorage.getItem('inv_qr_scans');
@@ -389,103 +560,166 @@
             const urlParams = new URLSearchParams(window.location.search);
             const scanQrId = urlParams.get('scan');
             if (scanQrId) {
-                const qrName = urlParams.get('name') || 'Unnamed Tag';
-                
-                // Estimate platform OS and browser
-                const userAgent = navigator.userAgent;
-                let os = 'Windows';
-                if (userAgent.indexOf('iPhone') !== -1 || userAgent.indexOf('iPad') !== -1) os = 'iOS';
-                else if (userAgent.indexOf('Android') !== -1) os = 'Android';
-                else if (userAgent.indexOf('Macintosh') !== -1) os = 'macOS';
-
-                let browser = 'Chrome';
-                if (userAgent.indexOf('Safari') !== -1 && userAgent.indexOf('Chrome') === -1) browser = 'Safari';
-                else if (userAgent.indexOf('Firefox') !== -1) browser = 'Firefox';
-                else if (userAgent.indexOf('Edge') !== -1) browser = 'Edge';
-
-                const newScan = {
-                    id: `scan-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-                    qrId: scanQrId,
-                    qrName: qrName,
-                    timestamp: new Date().toISOString(),
-                    city: 'Detecting...',
-                    country: 'Detecting...',
-                    os: os,
-                    browser: browser
-                };
-
-                // Add to local storage scans list (client fallback)
-                scanEvents.unshift(newScan);
-                saveScansList();
-                updateAnalyticsDashboard();
-
-                // Save to Firestore if available
-                let firestoreSaved = false;
+                // Fetch tag definition from Firestore directly to find redirectUrl (Dynamic Cloud Routing)
+                let targetTag = null;
                 if (window.isFirebaseInitialized && window.isFirebaseInitialized()) {
                     try {
                         const db = firebase.firestore();
-                        await db.collection('inv_qr_scans').doc(newScan.id).set(newScan);
-                        firestoreSaved = true;
-                        console.log("Initial scan logged to Firestore!");
-                    } catch (err) {
-                        console.error("Failed to log initial scan to Firestore:", err);
+                        const tagDoc = await db.collection('inv_qr_tags').doc(scanQrId).get();
+                        if (tagDoc.exists) {
+                            targetTag = tagDoc.data();
+                        }
+                    } catch (e) {
+                        console.error("Failed to fetch tag config from Firestore", e);
                     }
                 }
+                
+                // Fallback to local storage if Firestore fails or tag not found in cloud
+                if (!targetTag) {
+                    targetTag = qrList.find(q => q.id === scanQrId);
+                }
 
-                // Clean the URL query string to prevent duplicate registration on refresh
+                // Support legacy tags that had baked-in parameters
+                const qrName = targetTag ? targetTag.name : (urlParams.get('name') || 'Unnamed Tag');
+                const redirectUrl = (targetTag && targetTag.redirectUrl) ? targetTag.redirectUrl : urlParams.get('redirect');
+                
+                // Show UI INSTANTLY for blazing fast experience
+                let finalUrl = 'https://indiannaturalhair.com';
+                if (redirectUrl) {
+                    finalUrl = redirectUrl;
+                    if (!finalUrl.startsWith('http://') && !finalUrl.startsWith('https://')) {
+                        finalUrl = 'https://' + finalUrl;
+                    }
+                }
+                
+                const overlay = document.getElementById('scan-routing-overlay');
+                if (overlay) {
+                    overlay.innerHTML = `
+                        <div style="background: white; padding: 2.5rem; border-radius: 1.5rem; box-shadow: 0 20px 40px rgba(0,0,0,0.15); text-align: center; max-width: 90%; width: 420px;">
+                            <img src="/images/logo.png" alt="INH Logo" style="height: 100px; width: auto; margin: 0 auto 20px auto; display: block; object-fit: contain;" />
+                            <h2 style="color:#1e293b;font-size:26px;font-weight:800;margin-bottom:8px;">Scan Successful</h2>
+                            <p style="color:#64748b;font-size:15px;margin-bottom:28px;">Please choose an action below:</p>
+                            
+                            <div style="display: flex; flex-direction: column; gap: 16px;">
+                                <a href="${finalUrl}" style="display: flex; align-items: center; justify-content: center; gap: 10px; background: #0f172a; color: white; padding: 16px 20px; border-radius: 12px; text-decoration: none; font-size: 17px; font-weight: 700; transition: transform 0.1s; box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.3);">
+                                    <i class="fa-solid fa-globe text-xl"></i> Go to Website
+                                </a>
+                                <a href="/CATALOG.pdf" download style="display: flex; align-items: center; justify-content: center; gap: 10px; background: #3b82f6; color: white; padding: 16px 20px; border-radius: 12px; text-decoration: none; font-size: 17px; font-weight: 700; transition: transform 0.1s; box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);">
+                                    <i class="fa-solid fa-file-pdf text-xl"></i> Product Catalog
+                                </a>
+                                <a href="https://wa.me/?text=Hello%20Indian%20Natural%20Hair!" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 10px; background: #22c55e; color: white; padding: 16px 20px; border-radius: 12px; text-decoration: none; font-size: 17px; font-weight: 700; transition: transform 0.1s; box-shadow: 0 4px 6px -1px rgba(34, 197, 94, 0.3);">
+                                    <i class="fa-brands fa-whatsapp text-2xl"></i> WhatsApp Chat
+                                </a>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                // Clean URL
                 const newUrl = window.location.origin + window.location.pathname;
                 window.history.replaceState({}, document.title, newUrl);
 
-                // Asynchronously fetch geodemographics (city/country) in background
-                fetch('https://ipapi.co/json/')
-                    .then(response => {
-                        if (response.ok) return response.json();
-                        throw new Error('Geolocation request failed');
-                    })
+                // Run tracking tasks asynchronously so they don't block the UI
+                setTimeout(async () => {
+                    const userAgent = navigator.userAgent;
+                    let os = 'Windows';
+                    if (userAgent.indexOf('iPhone') !== -1 || userAgent.indexOf('iPad') !== -1) os = 'iOS';
+                    else if (userAgent.indexOf('Android') !== -1) os = 'Android';
+                    else if (userAgent.indexOf('Macintosh') !== -1) os = 'macOS';
+
+                    let browser = 'Chrome';
+                    if (userAgent.indexOf('Safari') !== -1 && userAgent.indexOf('Chrome') === -1) browser = 'Safari';
+                    else if (userAgent.indexOf('Firefox') !== -1) browser = 'Firefox';
+                    else if (userAgent.indexOf('Edge') !== -1) browser = 'Edge';
+
+                    const newScan = {
+                        id: `scan-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+                        qrId: scanQrId,
+                        qrName: qrName,
+                        timestamp: new Date().toISOString(),
+                        city: 'Detecting...',
+                        region: 'Detecting...',
+                        country: 'Detecting...',
+                        postal: 'Detecting...',
+                        timezone: 'Detecting...',
+                        os: os,
+                        browser: browser
+                    };
+
+                    scanEvents.unshift(newScan);
+                    saveScansList();
+                    updateAnalyticsDashboard();
+
+                    let firestoreSaved = false;
+                    if (window.isFirebaseInitialized && window.isFirebaseInitialized()) {
+                        try {
+                            const db = firebase.firestore();
+                            await db.collection('inv_qr_scans').doc(newScan.id).set(newScan);
+                            firestoreSaved = true;
+                        } catch (err) {}
+                    }
+
+                    Promise.race([
+                        fetch('https://ipapi.co/json/').then(r => {
+                            if (r.ok) return r.json();
+                            return { error: true };
+                        }).catch(() => ({ error: true })),
+                        new Promise(resolve => setTimeout(() => resolve({ error: true, timeout: true }), 1500))
+                    ])
                     .then(async data => {
-                        const city = data.city || 'Chennai';
-                        const country = data.country_name || 'India';
+                        if (data.error) throw new Error('Geolocation request failed or timed out');
                         
-                        // Update local scan memory
+                        const city = data.city || 'Chennai';
+                        const region = data.region || 'Tamil Nadu';
+                        const country = data.country_name || 'India';
+                        const postal = data.postal || 'Unknown';
+                        const timezone = data.timezone || 'Unknown';
+                        
                         const scanIdx = scanEvents.findIndex(s => s.id === newScan.id);
                         if (scanIdx !== -1) {
                             scanEvents[scanIdx].city = city;
+                            scanEvents[scanIdx].region = region;
                             scanEvents[scanIdx].country = country;
+                            scanEvents[scanIdx].postal = postal;
+                            scanEvents[scanIdx].timezone = timezone;
                             saveScansList();
                             updateAnalyticsDashboard();
                         }
 
-                        // Update Firestore if we initially saved it there
                         if (firestoreSaved && window.isFirebaseInitialized && window.isFirebaseInitialized()) {
                             const db = firebase.firestore();
                             await db.collection('inv_qr_scans').doc(newScan.id).update({
                                 city: city,
-                                country: country
+                                region: region,
+                                country: country,
+                                postal: postal,
+                                timezone: timezone
                             });
-                            console.log("Geodemographics updated in Firestore successfully!");
                         }
                     })
                     .catch(e => {
-                        console.warn("Asynchronous IP Geolocation failed, keeping fallbacks:", e);
-                        // Fallback update to Chennai, India
                         const scanIdx = scanEvents.findIndex(s => s.id === newScan.id);
                         if (scanIdx !== -1) {
                             scanEvents[scanIdx].city = 'Chennai';
+                            scanEvents[scanIdx].region = 'Tamil Nadu';
                             scanEvents[scanIdx].country = 'India';
+                            scanEvents[scanIdx].postal = '600001';
+                            scanEvents[scanIdx].timezone = 'Asia/Kolkata';
                             saveScansList();
                             updateAnalyticsDashboard();
                         }
                     });
-
-                alert(`Scan logged successfully for tag "${qrName}"!`);
+                }, 0);
             }
         }
 
-        // Setup Real-time Firestore Sync for scans
+        // Setup Real-time Firestore Sync for scans and tags
         function setupFirestoreSync() {
             if (window.isFirebaseInitialized && window.isFirebaseInitialized()) {
                 try {
                     const db = firebase.firestore();
+                    
+                    // Sync Scans
                     db.collection('inv_qr_scans').orderBy('timestamp', 'desc').onSnapshot(snapshot => {
                         let firebaseScans = [];
                         snapshot.forEach(doc => {
@@ -512,6 +746,32 @@
                         }
                     }, err => {
                         console.warn("Firestore listener failed, using local fallback only:", err);
+                    });
+
+                    // Sync Tags
+                    db.collection('inv_qr_tags').orderBy('createdAt', 'desc').onSnapshot(snapshot => {
+                        let firebaseTags = [];
+                        snapshot.forEach(doc => {
+                            firebaseTags.push(doc.data());
+                        });
+
+                        if (firebaseTags.length > 0) {
+                            // Merge local tags and firebase tags, keeping unique by id
+                            const allTags = [...qrList, ...firebaseTags];
+                            const uniqueTagsMap = {};
+                            allTags.forEach(t => {
+                                uniqueTagsMap[t.id] = t;
+                            });
+
+                            // Sort by timestamp descending
+                            qrList = Object.values(uniqueTagsMap).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                            saveQRList();
+                            
+                            renderQRCodesList();
+                            populateSimulatorOptions();
+                        }
+                    }, err => {
+                        console.warn("Firestore tags listener failed:", err);
                     });
                 } catch (e) {
                     console.error("Firestore setup error:", e);
@@ -632,26 +892,34 @@
             const baseUrl = window.location.origin + window.location.pathname;
             const newId = `qr-${Date.now()}`;
 
+            let redirectUrl = '';
+
             if (qrType === 'PRODUCT') {
                 const select = document.getElementById('productSelect');
                 if (!select.value) return alert('Please configure products first.');
                 targetId = select.value;
-                payload = `${baseUrl}?scan=${newId}&name=${encodeURIComponent(qrName)}`;
             } else if (qrType === 'LOT') {
                 const select = document.getElementById('lotSelect');
                 if (!select.value) return alert('Please create raw lots first.');
                 targetId = select.value;
-                payload = `${baseUrl}?scan=${newId}&name=${encodeURIComponent(qrName)}`;
             } else if (qrType === 'LOCATION') {
                 const select = document.getElementById('locationSelect');
                 if (!select.value) return alert('Please create locations first.');
                 targetId = select.value;
-                payload = `${baseUrl}?scan=${newId}&name=${encodeURIComponent(qrName)}`;
             } else {
-                const customVal = document.getElementById('customText').value.trim();
-                payload = customVal || 'CUSTOM:TEXT';
+                redirectUrl = document.getElementById('customText').value.trim();
+                if (redirectUrl && !redirectUrl.startsWith('http://') && !redirectUrl.startsWith('https://')) {
+                    redirectUrl = 'https://' + redirectUrl;
+                }
                 targetId = 'custom';
             }
+
+            // DYNAMIC CLOUD URL (No redirect or name baked in)
+            payload = `${baseUrl}?scan=${newId}`;
+
+            let fgColor = qrFgColorHex;
+            let bgColor = qrBgColorHex;
+            const margin = document.getElementById('qrMargin').value || '0';
 
             const newQR = {
                 id: newId,
@@ -659,11 +927,25 @@
                 type: qrType,
                 targetId: targetId,
                 payload: payload,
+                redirectUrl: redirectUrl,
+                fgColor: fgColor,
+                bgColor: bgColor,
+                margin: margin,
                 createdAt: new Date().toISOString()
             };
 
             qrList.unshift(newQR);
             saveQRList();
+
+            // Save tag globally to Firestore for cloud routing
+            if (window.isFirebaseInitialized && window.isFirebaseInitialized()) {
+                try {
+                    const db = firebase.firestore();
+                    db.collection('inv_qr_tags').doc(newQR.id).set(newQR);
+                } catch (e) {
+                    console.error("Failed to save to Firestore", e);
+                }
+            }
 
             // Reset form fields
             document.getElementById('qrName').value = '';
@@ -692,23 +974,66 @@
             }
 
             qrList.forEach(qr => {
-                const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(qr.payload)}`;
+                const fg = qr.fgColor ? qr.fgColor.replace('#', '') : '000000';
+                const bg = qr.bgColor ? qr.bgColor.replace('#', '') : 'ffffff';
+                const margin = qr.margin || '0';
+                const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(qr.payload)}&color=${fg}&bgcolor=${bg}&margin=${margin}`;
                 
                 const card = document.createElement('div');
                 card.className = "p-4 border border-slate-200 rounded-2xl flex gap-4 hover:shadow-md transition-all group bg-slate-50/20 relative";
                 
+                let thumbnailHtml = '';
+                if (qr.type === 'CUSTOM' && qr.redirectUrl) {
+                    try {
+                        const urlObj = new URL(qr.redirectUrl);
+                        const domain = urlObj.hostname;
+                        const faviconUrl = `https://s2.googleusercontent.com/s2/favicons?domain=${domain}&sz=64`;
+                        thumbnailHtml = `
+                            <div class="absolute -bottom-2 -right-2 w-8 h-8 bg-white border border-slate-200 shadow-sm rounded-full flex items-center justify-center overflow-hidden z-10" title="Destination: ${domain}">
+                                <img src="${faviconUrl}" class="w-5 h-5 object-contain" alt="Target Icon" onerror="this.style.display='none'">
+                            </div>
+                        `;
+                    } catch(e) {}
+                } else if (qr.type === 'PRODUCT') {
+                    thumbnailHtml = `
+                        <div class="absolute -bottom-2 -right-2 w-8 h-8 bg-white border border-slate-200 shadow-sm rounded-full flex items-center justify-center overflow-hidden z-10" title="Product Tag">
+                            <i class="fa-solid fa-box text-blue-500 text-xs"></i>
+                        </div>
+                    `;
+                } else if (qr.type === 'LOT') {
+                    thumbnailHtml = `
+                        <div class="absolute -bottom-2 -right-2 w-8 h-8 bg-white border border-slate-200 shadow-sm rounded-full flex items-center justify-center overflow-hidden z-10" title="Lot Tag">
+                            <i class="fa-solid fa-layer-group text-purple-500 text-xs"></i>
+                        </div>
+                    `;
+                } else if (qr.type === 'LOCATION') {
+                    thumbnailHtml = `
+                        <div class="absolute -bottom-2 -right-2 w-8 h-8 bg-white border border-slate-200 shadow-sm rounded-full flex items-center justify-center overflow-hidden z-10" title="Location Tag">
+                            <i class="fa-solid fa-location-dot text-red-500 text-xs"></i>
+                        </div>
+                    `;
+                }
+
                 card.innerHTML = `
-                    <div class="w-24 h-24 bg-white border border-slate-100 rounded-xl flex-shrink-0 flex items-center justify-center p-1 shadow-inner relative">
-                        <img src="${qrUrl}" alt="QR Code" class="w-full h-full object-contain">
+                    <div class="w-24 h-24 bg-white border border-slate-100 rounded-xl flex-shrink-0 flex items-center justify-center p-1 shadow-inner relative group/qr cursor-pointer hover:border-blue-300 transition-colors" onclick="showExpandedQR('${qrUrl}', '${qr.name.replace(/'/g, "\\'")}')" title="Click to enlarge">
+                        <img src="${qrUrl}" alt="QR Code" class="w-full h-full object-contain relative z-0">
+                        ${thumbnailHtml}
                     </div>
 
                     <div class="flex-1 min-w-0 flex flex-col justify-between">
                         <div>
                             <div class="flex justify-between items-start gap-2">
                                 <h4 class="font-extrabold text-slate-800 text-sm truncate leading-tight">${qr.name}</h4>
-                                <button onclick="handleDeleteQR('${qr.id}')" class="text-slate-400 hover:text-red-500 p-1 rounded hover:bg-slate-100 flex-shrink-0 transition-colors opacity-0 group-hover:opacity-100" title="Delete Label">
-                                    <i class="fa-regular fa-trash-can text-xs"></i>
-                                </button>
+                                <div class="flex items-center">
+                                    ${qr.type === 'CUSTOM' ? `
+                                        <button onclick="handleEditLink('${qr.id}')" class="text-slate-400 hover:text-blue-500 p-1 rounded hover:bg-slate-100 flex-shrink-0 transition-colors opacity-0 group-hover:opacity-100 mr-1" title="Edit Destination Link">
+                                            <i class="fa-solid fa-pen text-xs"></i>
+                                        </button>
+                                    ` : ''}
+                                    <button onclick="handleDeleteQR('${qr.id}')" class="text-slate-400 hover:text-red-500 p-1 rounded hover:bg-slate-100 flex-shrink-0 transition-colors opacity-0 group-hover:opacity-100" title="Delete Label">
+                                        <i class="fa-regular fa-trash-can text-xs"></i>
+                                    </button>
+                                </div>
                             </div>
                             <span class="mt-1.5 inline-block px-2 py-0.5 bg-blue-50 border border-blue-100 text-blue-700 font-mono font-bold text-[9px] rounded uppercase tracking-wider">
                                 ${qr.type}
@@ -750,11 +1075,101 @@
 
         // Delete tag
         function handleDeleteQR(id) {
-            if (confirm('Are you sure you want to delete this QR configuration? Historical scan tracking logs will still remain.')) {
+            if (confirm('Are you sure you want to permanently delete this tag?')) {
                 qrList = qrList.filter(q => q.id !== id);
                 saveQRList();
+
+                // Delete from global Firestore
+                if (window.isFirebaseInitialized && window.isFirebaseInitialized()) {
+                    try {
+                        const db = firebase.firestore();
+                        db.collection('inv_qr_tags').doc(id).delete();
+                    } catch (e) {
+                        console.error("Failed to delete from Firestore", e);
+                    }
+                }
+
                 renderQRCodesList();
                 populateSimulatorOptions();
+            }
+        }
+
+        // Show expanded QR popup
+        function showExpandedQR(url, name) {
+            let overlay = document.getElementById('qrExpandedOverlay');
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.id = 'qrExpandedOverlay';
+                overlay.className = 'fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 opacity-0 transition-opacity duration-300';
+                overlay.onclick = (e) => {
+                    if (e.target === overlay) closeExpandedQR();
+                };
+                
+                overlay.innerHTML = `
+                    <div class="bg-white rounded-3xl shadow-2xl p-8 max-w-sm w-full transform scale-95 transition-transform duration-300 relative flex flex-col items-center">
+                        <button onclick="closeExpandedQR()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-700 transition-colors">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                        <h3 id="qrExpandedTitle" class="text-lg font-bold text-slate-800 mb-6 text-center w-full px-6 truncate"></h3>
+                        <div class="w-64 h-64 bg-white border-2 border-slate-100 rounded-2xl p-2 shadow-inner">
+                            <img id="qrExpandedImg" src="" class="w-full h-full object-contain" alt="Expanded QR">
+                        </div>
+                        <p class="text-sm text-slate-400 mt-6 text-center">Scan directly from screen</p>
+                    </div>
+                `;
+                document.body.appendChild(overlay);
+            }
+            
+            document.getElementById('qrExpandedImg').src = url;
+            document.getElementById('qrExpandedTitle').textContent = name;
+            
+            // Trigger animation
+            overlay.classList.remove('hidden');
+            // Force reflow
+            void overlay.offsetWidth;
+            overlay.classList.remove('opacity-0');
+            overlay.querySelector('div').classList.remove('scale-95');
+        }
+        
+        function closeExpandedQR() {
+            const overlay = document.getElementById('qrExpandedOverlay');
+            if (overlay) {
+                overlay.classList.add('opacity-0');
+                overlay.querySelector('div').classList.add('scale-95');
+                setTimeout(() => {
+                    overlay.classList.add('hidden');
+                }, 300);
+            }
+        }
+
+        async function handleEditLink(id) {
+            const targetTag = qrList.find(q => q.id === id);
+            if (!targetTag || targetTag.type !== 'CUSTOM') return;
+
+            let newUrl = prompt('Enter the new destination URL for this tag:', targetTag.redirectUrl || '');
+            if (newUrl !== null && newUrl.trim() !== '') {
+                newUrl = newUrl.trim();
+                if (!newUrl.startsWith('http://') && !newUrl.startsWith('https://')) {
+                    newUrl = 'https://' + newUrl;
+                }
+                targetTag.redirectUrl = newUrl;
+                saveQRList();
+
+                // Update in global Firestore instantly
+                if (window.isFirebaseInitialized && window.isFirebaseInitialized()) {
+                    try {
+                        const db = firebase.firestore();
+                        await db.collection('inv_qr_tags').doc(id).set(targetTag);
+                        alert('Link updated globally! The physical QR code will now redirect to the new URL.');
+                    } catch (e) {
+                        console.error("Failed to update in Firestore", e);
+                        alert('Link updated locally, but failed to sync to cloud.');
+                    }
+                } else {
+                    alert('Link updated locally, but cloud sync is offline.');
+                }
+                
+                renderQRCodesList();
             }
         }
 
@@ -786,9 +1201,40 @@
             CITIES.forEach((c, idx) => {
                 const opt = document.createElement('option');
                 opt.value = idx;
-                opt.textContent = `${c.city}, ${c.country}`;
+                opt.textContent = `${c.city}, ${c.region}, ${c.country}`;
                 selectCity.appendChild(opt);
             });
+
+            updateAnalyticsFilterDropdown();
+        }
+
+        function updateAnalyticsFilterDropdown() {
+            const filterSelect = document.getElementById('analyticsFilter');
+            if (!filterSelect) return;
+            const currentVal = filterSelect.value;
+            filterSelect.innerHTML = '<option value="ALL">Viewing All QR Tags</option>';
+            qrList.forEach(qr => {
+                const opt = document.createElement('option');
+                opt.value = qr.id;
+                opt.textContent = `Filter: ${qr.name} (${qr.type})`;
+                filterSelect.appendChild(opt);
+            });
+            if (qrList.some(q => q.id === currentVal)) {
+                filterSelect.value = currentVal;
+            } else {
+                filterSelect.value = 'ALL';
+            }
+        }
+
+        function handleFilterChange() {
+            updateAnalyticsDashboard();
+            initAnalyticsCharts();
+        }
+
+        function getFilteredScans() {
+            const filterVal = document.getElementById('analyticsFilter').value;
+            if (!filterVal || filterVal === 'ALL') return scanEvents;
+            return scanEvents.filter(s => s.qrId === filterVal);
         }
 
         // Simulate scan submission handler
@@ -810,7 +1256,10 @@
                 qrName: qr.name,
                 timestamp: new Date().toISOString(),
                 city: loc.city,
+                region: loc.region,
                 country: loc.country,
+                postal: loc.postal,
+                timezone: loc.timezone,
                 os: simPlatform,
                 browser: simBrowser
             };
@@ -883,7 +1332,10 @@
                     qrName: randomQR.name,
                     timestamp: new Date(now - randomTimeOffset).toISOString(),
                     city: randomLoc.city,
+                    region: randomLoc.region,
                     country: randomLoc.country,
+                    postal: randomLoc.postal,
+                    timezone: randomLoc.timezone,
                     os: randomOS,
                     browser: randomBrowser
                 });
@@ -915,35 +1367,44 @@
 
         // Update statistics and tables
         function updateAnalyticsDashboard() {
-            document.getElementById('statTotalScans').textContent = scanEvents.length;
+            const filteredScans = getFilteredScans();
             
-            const uniqueQrScanned = new Set(scanEvents.map(s => s.qrId)).size;
+            document.getElementById('statTotalScans').textContent = filteredScans.length;
+            
+            const uniqueQrScanned = new Set(filteredScans.map(s => s.qrId)).size;
             document.getElementById('statUniqueCodes').textContent = uniqueQrScanned;
-            document.getElementById('statActiveTagsSpan').textContent = `Out of ${qrList.length} total active tags`;
+            
+            const filterVal = document.getElementById('analyticsFilter').value;
+            if (filterVal === 'ALL') {
+                document.getElementById('statActiveTagsSpan').textContent = `Out of ${qrList.length} total active tags`;
+            } else {
+                document.getElementById('statActiveTagsSpan').textContent = `Filtered to single tag`;
+            }
 
-            // Top City calculation
-            const cityMap = {};
-            scanEvents.forEach(s => {
-                cityMap[s.city] = (cityMap[s.city] || 0) + 1;
+            // Top Region calculation
+            const regionMap = {};
+            filteredScans.forEach(s => {
+                const reg = s.region || s.city || 'Unknown';
+                regionMap[reg] = (regionMap[reg] || 0) + 1;
             });
 
-            let topCity = 'N/A';
-            let topCityScans = 0;
-            Object.entries(cityMap).forEach(([city, count]) => {
-                if (count > topCityScans) {
-                    topCity = city;
-                    topCityScans = count;
+            let topRegion = 'N/A';
+            let topRegionScans = 0;
+            Object.entries(regionMap).forEach(([reg, count]) => {
+                if (count > topRegionScans) {
+                    topRegion = reg;
+                    topRegionScans = count;
                 }
             });
 
-            document.getElementById('statTopCity').textContent = topCity;
-            document.getElementById('statTopCityScans').textContent = `${topCityScans} scans logged`;
+            document.getElementById('statTopCity').textContent = topRegion;
+            document.getElementById('statTopCityScans').textContent = `${topRegionScans} scans logged`;
 
             // Render log table (limit to recent 5)
             const tbody = document.getElementById('scanLogTableBody');
             tbody.innerHTML = '';
 
-            if (scanEvents.length === 0) {
+            if (filteredScans.length === 0) {
                 tbody.innerHTML = `
                     <tr>
                         <td colSpan="5" class="py-12 text-center text-slate-400 italic font-medium">No scanning activities recorded.</td>
@@ -952,7 +1413,7 @@
                 return;
             }
 
-            scanEvents.slice(0, 5).forEach(s => {
+            filteredScans.slice(0, 5).forEach(s => {
                 const date = new Date(s.timestamp);
                 const timeString = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
                 
@@ -963,7 +1424,7 @@
                     <td class="px-4 py-3 text-slate-800 font-extrabold">${s.qrName}</td>
                     <td class="px-4 py-3 flex items-center gap-1.5 py-3.5">
                         <i class="fa-solid fa-map-pin text-slate-400"></i>
-                        <span>${s.city}, ${s.country}</span>
+                        <span>${s.region || s.city}, ${s.country} <span class="text-slate-400 ml-1 font-mono text-[9px]">${s.postal || ''}</span></span>
                     </td>
                     <td class="px-4 py-3 font-mono text-slate-600">${s.os}</td>
                     <td class="px-4 py-3 font-mono text-slate-400">${s.browser}</td>
@@ -973,11 +1434,19 @@
         }
 
         // ChartJS Initializers
+        let timelineChartInstance = null;
+        let osChartInstance = null;
+        let cityChartInstance = null;
+        let todChartInstance = null;
+        let tzChartInstance = null;
+
         function initAnalyticsCharts() {
             // Destruct old charts
             if (timelineChartInstance) timelineChartInstance.destroy();
             if (osChartInstance) osChartInstance.destroy();
             if (cityChartInstance) cityChartInstance.destroy();
+            if (todChartInstance) todChartInstance.destroy();
+            if (tzChartInstance) tzChartInstance.destroy();
 
             // 1. Timeline Data (Last 7 Days)
             const timelineData = getTimelineAggregates();
@@ -1087,12 +1556,84 @@
                         maintainAspectRatio: false,
                         plugins: { legend: { display: false } },
                         scales: {
-                            x: { 
-                                grid: { display: false },
-                                ticks: { precision: 0 }
-                            },
+                            x: { grid: { display: false }, ticks: { precision: 0 } },
                             y: { grid: { display: false } }
                         }
+                    }
+                });
+            }
+
+            // 4. Time of Day Chart
+            const todAggs = getTODAggregates();
+            const canvasTOD = document.getElementById('todChart');
+            const fallbackTOD = document.getElementById('todChartFallback');
+
+            if (todAggs.values.every(v => v === 0)) {
+                canvasTOD.classList.add('hidden');
+                fallbackTOD.classList.remove('hidden');
+            } else {
+                canvasTOD.classList.remove('hidden');
+                fallbackTOD.classList.add('hidden');
+
+                const ctxTOD = canvasTOD.getContext('2d');
+                todChartInstance = new Chart(ctxTOD, {
+                    type: 'bar',
+                    data: {
+                        labels: todAggs.labels,
+                        datasets: [{
+                            label: 'Scans by Time',
+                            data: todAggs.values,
+                            backgroundColor: '#f59e0b',
+                            borderRadius: 6,
+                            barThickness: 14
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            y: { grid: { display: false }, ticks: { precision: 0 } },
+                            x: { grid: { display: false } }
+                        }
+                    }
+                });
+            }
+
+            // 5. Timezone Chart
+            const tzAggs = getTZAggregates();
+            const canvasTZ = document.getElementById('tzChart');
+            const fallbackTZ = document.getElementById('tzChartFallback');
+
+            if (tzAggs.values.length === 0) {
+                canvasTZ.classList.add('hidden');
+                fallbackTZ.classList.remove('hidden');
+            } else {
+                canvasTZ.classList.remove('hidden');
+                fallbackTZ.classList.add('hidden');
+
+                const ctxTZ = canvasTZ.getContext('2d');
+                tzChartInstance = new Chart(ctxTZ, {
+                    type: 'doughnut',
+                    data: {
+                        labels: tzAggs.labels,
+                        datasets: [{
+                            data: tzAggs.values,
+                            backgroundColor: COLORS.slice(0, tzAggs.labels.length).reverse(),
+                            borderWidth: 2,
+                            borderColor: '#ffffff'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'right',
+                                labels: { boxWidth: 10, font: { size: 10, weight: 'bold' } }
+                            }
+                        },
+                        cutout: '60%'
                     }
                 });
             }
@@ -1110,7 +1651,8 @@
                 datesMap[label] = 0;
             }
 
-            scanEvents.forEach(s => {
+            const filteredScans = getFilteredScans();
+            filteredScans.forEach(s => {
                 try {
                     const d = new Date(s.timestamp);
                     const label = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -1128,7 +1670,8 @@
 
         function getOSAggregates() {
             const osMap = {};
-            scanEvents.forEach(s => {
+            const filteredScans = getFilteredScans();
+            filteredScans.forEach(s => {
                 osMap[s.os] = (osMap[s.os] || 0) + 1;
             });
 
@@ -1139,12 +1682,52 @@
         }
 
         function getCityAggregates() {
-            const cityMap = {};
-            scanEvents.forEach(s => {
-                cityMap[s.city] = (cityMap[s.city] || 0) + 1;
+            const regionMap = {};
+            const filteredScans = getFilteredScans();
+            filteredScans.forEach(s => {
+                const reg = s.region || s.city || 'Unknown';
+                regionMap[reg] = (regionMap[reg] || 0) + 1;
             });
 
-            const sorted = Object.entries(cityMap)
+            const sorted = Object.entries(regionMap)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5);
+
+            return {
+                labels: sorted.map(x => x[0]),
+                values: sorted.map(x => x[1])
+            };
+        }
+
+        function getTODAggregates() {
+            const todMap = { 'Morning (5am-12pm)': 0, 'Afternoon (12pm-5pm)': 0, 'Evening (5pm-9pm)': 0, 'Night (9pm-5am)': 0 };
+            const filteredScans = getFilteredScans();
+            filteredScans.forEach(s => {
+                try {
+                    const d = new Date(s.timestamp);
+                    const h = d.getHours();
+                    if (h >= 5 && h < 12) todMap['Morning (5am-12pm)']++;
+                    else if (h >= 12 && h < 17) todMap['Afternoon (12pm-5pm)']++;
+                    else if (h >= 17 && h < 21) todMap['Evening (5pm-9pm)']++;
+                    else todMap['Night (9pm-5am)']++;
+                } catch(_) {}
+            });
+
+            return {
+                labels: Object.keys(todMap),
+                values: Object.values(todMap)
+            };
+        }
+
+        function getTZAggregates() {
+            const tzMap = {};
+            const filteredScans = getFilteredScans();
+            filteredScans.forEach(s => {
+                const tz = s.timezone || 'Unknown';
+                tzMap[tz] = (tzMap[tz] || 0) + 1;
+            });
+
+            const sorted = Object.entries(tzMap)
                 .sort((a, b) => b[1] - a[1])
                 .slice(0, 5);
 

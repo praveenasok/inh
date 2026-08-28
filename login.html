@@ -14,6 +14,7 @@
   <!-- Config and global init -->
   <script src="firebase-config.js"></script>
   <script src="firebase-global-init.js"></script>
+  <script src="js/access-control.js"></script>
   <style>
     html.pre-init body {
       visibility: hidden;
@@ -181,6 +182,7 @@
                 localStorage.setItem('SESSION_UID', json.uid || '');
                 localStorage.setItem('SESSION_EMAIL', json.email || '');
               } catch (_) { }
+              try { await loadUserAccessRights(json.email || ''); } catch(e) {}
               redirectToQuote();
               return true;
             }
@@ -212,6 +214,7 @@
               localStorage.setItem('SESSION_UID', user.uid || '');
             } catch (_) {}
             
+            try { await loadUserAccessRights(user.email || ''); } catch(e) {}
             redirectToQuote();
           } else {
             console.log('[login] Firebase AuthStateChanged: no user session');
@@ -264,6 +267,7 @@
             } catch (_) { }
           }
           try { localStorage.setItem('SESSION_AUTH', '1'); localStorage.setItem('SESSION_EMAIL', user && user.email ? user.email : ''); localStorage.setItem('SESSION_UID', user && user.uid ? user.uid : ''); } catch (_) { }
+          try { await loadUserAccessRights(user && user.email ? user.email : ''); } catch(e) {}
           statusEl.textContent = 'Signed in';
           redirectToQuote();
         } catch (err) {
@@ -311,6 +315,7 @@
             }
             if (!success) { try { const fiveDays = 5 * 24 * 60 * 60; document.cookie = `session=dev; Path=/; Max-Age=${fiveDays}; SameSite=Lax`; } catch (_) { } }
             try { localStorage.setItem('SESSION_AUTH', '1'); localStorage.setItem('SESSION_EMAIL', user && user.email ? user.email : ''); localStorage.setItem('SESSION_UID', user && user.uid ? user.uid : ''); } catch (_) { }
+            try { await loadUserAccessRights(user && user.email ? user.email : ''); } catch(e) {}
             statusEl.textContent = 'Signed in';
             redirectToQuote();
           } catch (e) {

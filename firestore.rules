@@ -17,6 +17,7 @@ service cloud.firestore {
     function isAdmin() {
       return isAuthenticated() && 
              (request.auth.token.email == 'info@indiannaturalhair.com' ||
+              request.auth.token.email == 'info@praveenasok.com' ||
               request.auth.token.admin == true);
     }
     
@@ -62,6 +63,14 @@ service cloud.firestore {
 
     match /orders/{orderId} {
       allow read, write: if true; // Allow public access for orders functionality
+    }
+
+    match /proforma_invoices/{invoiceId} {
+      allow read, write: if true; 
+    }
+
+    match /address_book/{addressId} {
+      allow read, write: if true; 
     }
 
     // Salespeople data - allow public access for admin interface
@@ -151,9 +160,68 @@ service cloud.firestore {
       allow read, write: if true;
     }
     
+    // QR Code tags data
+    match /inv_qr_codes/{qrId} {
+      allow read, write: if true;
+    }
+
+    match /inv_qr_tags/{tagId} {
+      allow read, write: if true;
+    }
+    
     // User profiles
     match /users/{userId} {
       allow read, write: if isOwner(userId) || isAdmin();
+    }
+    
+    // Application settings (Access Control)
+    match /app_settings/{settingId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
+    // Payroll System collections
+    match /employees/{employeeId} {
+      allow read, write: if true;
+    }
+    match /salary_records/{recordId} {
+      allow read, write: if true;
+    }
+    match /attendance/{attendanceId} {
+      allow read, write: if true;
+    }
+    match /official_holidays/{holidayId} {
+      allow read, write: if true;
+    }
+    match /leave_plans/{planId} {
+      allow read, write: if true;
+    }
+    
+    // Hair Stock and Suppliers
+    match /suppliers/{supplierId} {
+      allow read, write: if true;
+    }
+    match /hairStockEntries/{entryId} {
+      allow read, write: if true;
+    }
+    match /warehouseStockEntries/{entryId} {
+      allow read, write: if true;
+    }
+    match /warehouses/{warehouseId} {
+      allow read, write: if true;
+    }
+    
+    // Quick Price List
+    match /quick_price_list/{itemId} {
+      allow read, write: if true;
+    }
+    
+    // Application Data sync
+    match /workspace_data/{document=**} {
+      allow read, write: if true;
+    }
+    match /jobwork_data/{document=**} {
+      allow read, write: if true;
     }
     
     // Default deny for all other documents
