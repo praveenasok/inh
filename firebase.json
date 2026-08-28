@@ -8,6 +8,13 @@
       "target": "inhpricelistgenerator",
       "maxReleases": 2,
       "public": ".",
+      "redirects": [
+        {
+          "source": "/pricelists.html",
+          "destination": "/index.html",
+          "type": 301
+        }
+      ],
       "ignore": [
         "firebase.json",
         "**/.*",

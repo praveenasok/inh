@@ -10,15 +10,14 @@ const ALL_SEGMENTS = [
   'Done Orders',
   'Ready To Dispatch Orders',
   'App: Home',
+  'App: Inventory',
   'App: Jobwork Billing',
   'App: Price Lookup',
-  'App: Price Calculator',
   'App: Shipping',
   'App: Shipping Paperwork',
   'App: Delegated Orders',
   'App: Ratio Mixer',
   'App: Manufacturing Order',
-  'App: Inventory Hub',
   'App: QR Code Tracker',
   'App: SOP'
 ];

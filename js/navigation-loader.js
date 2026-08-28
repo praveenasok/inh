@@ -15,18 +15,15 @@
         siteTitle: (window.navConfig && window.navConfig.siteTitle) || 'INHsuite',
         menuItems: [
             { name: 'Home', icon: 'fa-home', href: '/index.html' },
+            { name: 'Production Status', icon: 'fa-clipboard-list', href: '/delegated-orders.html' },
+            { name: 'Inventory', icon: 'fa-boxes-stacked', href: 'https://inhinventory.web.app/inventory' },
             { name: 'Jobwork Billing', icon: 'fa-file-invoice-dollar', href: '/inh-jobwork.html' },
             { name: 'Price Lookup', icon: 'fa-tags', href: '/price-lookup.html' },
-            { name: 'Price Calculator', icon: 'fa-calculator', href: '/pricelists.html' },
             { name: 'Shipping', icon: 'fa-truck', href: '/shipping-calculator/index.html' },
             { name: 'Shipping Paperwork', icon: 'fa-file-invoice', href: '/shipping-paperwork.html' },
             { name: 'Proforma Invoice', icon: 'fa-file-signature', href: '/proforma-invoice.html' },
-            { name: 'Production Status', icon: 'fa-clipboard-list', href: '/delegated-orders.html' },
             { name: 'Ratio Mixer', icon: 'fa-balance-scale', href: '/inh-ratio-mix/index.html' },
             { name: 'Manufacturing Order', icon: 'fa-industry', href: '/raw-manufacturing-order.html' },
-            { name: 'Inventory Hub', icon: 'fa-boxes-stacked', href: '/inventory-system/dist/index.html' },
-            { name: 'New Inventory', icon: 'fa-box-open', href: '/new-inventory-system/index.html' },
-            { name: 'Hair Stock Ledger', icon: 'fa-warehouse', href: '/stocks/index.html' },
             { name: 'QR Code Tracker', icon: 'fa-qrcode', href: '/qr-manager.html' },
             {
                 name: 'SOP',
@@ -58,9 +55,12 @@
     const styles = `
         /* Navigation Styles */
         .universal-nav {
-            background: linear-gradient(to right, #1e3a8a, #1e40af, #b45309);
+            background: rgba(15, 23, 42, 0.85); /* Dark slate glass */
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             color: white;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             position: sticky;
             top: 0;
             z-index: 50;
@@ -78,7 +78,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            height: 4rem;
+            height: 4.5rem; /* Slightly taller for breathing room */
         }
 
         .universal-nav-logo-area {
@@ -88,31 +88,45 @@
         }
 
         .universal-nav-logo {
-            height: 2rem;
+            height: 2.2rem;
             width: auto;
-            opacity: 0.9;
+            opacity: 1;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
         }
 
         .universal-nav-title {
-            font-size: 1.125rem;
+            font-size: 1.25rem;
             font-weight: 700;
+            letter-spacing: 0.5px;
+            background: linear-gradient(to right, #ffffff, #e2e8f0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
-        /* Desktop Menu Styles */
-        .universal-desktop-menu {
-            display: none; /* hidden by default on mobile */
+        /* Pill Menu Styles */
+        .universal-pill-menu {
+            display: none;
             align-items: center;
             justify-content: center;
             flex-wrap: wrap;
-            gap: 0.35rem; /* Reduced gap */
-            padding: 0.35rem 0.5rem; /* Reduced padding */
+            gap: 0.5rem;
+            padding: 1rem 0.5rem;
             width: 100%;
+            background: rgba(15, 23, 42, 0.98);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            animation: slideDown 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+            z-index: 40;
         }
 
-        @media (min-width: 1024px) {
-            .universal-desktop-menu {
-                display: flex; /* show on desktop */
-            }
+        .universal-pill-menu.active {
+            display: flex;
         }
 
         /* Hamburger Menu Icon */
@@ -121,37 +135,32 @@
             flex-direction: column;
             cursor: pointer;
             padding: 8px;
-            border-radius: 4px;
-            transition: background-color 0.3s ease;
-        }
-
-        @media (min-width: 1024px) {
-            .universal-hamburger-menu {
-                display: none !important; /* hide on desktop */
-            }
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .universal-hamburger-menu:hover {
-            background-color: rgba(255, 255, 255, 0.1);
+            background-color: rgba(255, 255, 255, 0.15);
         }
 
         .universal-hamburger-line {
-            width: 25px;
-            height: 3px;
+            width: 22px;
+            height: 2px;
             background-color: white;
-            margin: 3px 0;
-            transition: 0.3s;
+            margin: 2.5px 0;
+            transition: 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
             border-radius: 2px;
         }
 
         .universal-hamburger-menu.active .universal-hamburger-line:nth-child(1) {
-            transform: rotate(-45deg) translate(-5px, 6px);
+            transform: rotate(-45deg) translate(-4px, 5px);
         }
-
         .universal-hamburger-menu.active .universal-hamburger-line:nth-child(2) {
             opacity: 0;
+            transform: scale(0);
         }
-
         .universal-hamburger-menu.active .universal-hamburger-line:nth-child(3) {
             transform: rotate(45deg) translate(-5px, -6px);
         }
@@ -164,28 +173,35 @@
         .universal-menu-item {
             display: flex;
             align-items: center;
-            padding: 0.35rem 0.65rem; /* Reduced padding */
-            border-radius: 9999px; /* Pill shape */
-            font-size: 0.75rem; /* Reduced font size */
+            gap: 0.4rem;
+            padding: 0.4rem 0.85rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
             font-weight: 600;
-            color: white;
+            color: #e2e8f0;
             text-decoration: none;
-            transition: all 0.2s ease;
-            background-color: rgba(255, 255, 255, 0.15);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            background-color: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             white-space: nowrap;
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
         }
 
         .universal-menu-item:hover {
-            background-color: rgba(255, 255, 255, 0.25);
-            transform: translateY(-1px);
+            background-color: rgba(255, 255, 255, 0.18);
+            border-color: rgba(255, 255, 255, 0.3);
+            color: #ffffff;
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
 
         .universal-menu-item.active-page {
-             background-color: #f59e0b; /* Amber 500 */
+             background: linear-gradient(135deg, #f59e0b, #ea580c);
              color: white;
-             box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
-             border-color: #f59e0b;
+             box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
+             border-color: rgba(255, 255, 255, 0.3);
+             text-shadow: 0 1px 2px rgba(0,0,0,0.2);
         }
 
         /* Dropdown Styles */
@@ -194,13 +210,17 @@
             position: absolute;
             top: 100%;
             left: 0;
-            background: #1e3a8a; 
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             min-width: 220px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            border-radius: 0.5rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0.75rem;
             z-index: 60;
             padding: 0.5rem 0;
-            margin-top: 0.25rem;
+            margin-top: 0.5rem;
+            animation: dropdownFade 0.2s ease-out;
         }
 
         .universal-nav-item-wrapper:hover .universal-dropdown-menu {
@@ -209,28 +229,35 @@
 
         .universal-dropdown-item {
             display: block;
-            padding: 0.75rem 1rem;
-            color: white;
+            padding: 0.75rem 1.25rem;
+            color: #cbd5e1;
             text-decoration: none;
             font-size: 0.85rem;
             font-weight: 500;
-            transition: background-color 0.2s;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
         }
 
         .universal-dropdown-item:hover {
-            background-color: rgba(255, 255, 255, 0.1);
+            background-color: rgba(255, 255, 255, 0.08);
+            color: #ffffff;
+            border-left-color: #f59e0b;
         }
 
         /* Mobile Menu */
         .universal-mobile-menu {
             display: none;
-            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #d97706 100%);
-            padding: 0.5rem 0;
-            animation: slideDown 0.3s ease-out;
+            background: rgba(15, 23, 42, 0.98);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            padding: 1rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            animation: slideDown 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: absolute;
             top: 100%;
             left: 0;
             right: 0;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
         }
 
         .universal-mobile-menu.active {
@@ -251,6 +278,11 @@
 
         @keyframes slideDown {
             from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes dropdownFade {
+            from { opacity: 0; transform: translateY(-5px); }
             to { opacity: 1; transform: translateY(0); }
         }
     `;
@@ -285,8 +317,8 @@
         // Filter items based on access control
         const accessibleMenuItems = navConfig.menuItems.filter(item => canAccessNav(item.name));
 
-        // Desktop Menu Items
-        const desktopMenuItemsHTML = accessibleMenuItems.map(item => {
+        // Pill Menu Items
+        const pillMenuItemsHTML = accessibleMenuItems.map(item => {
             if (item.subItems) {
                 const subItemsHTML = item.subItems.map(sub => `
                     <a href="${sub.href}" class="universal-dropdown-item">
@@ -316,33 +348,11 @@
             }
         }).join('');
 
-        // Mobile Menu Items
-        const mobileMenuItemsHTML = accessibleMenuItems.map(item => {
-            const isActive = normalizedPath.endsWith(item.href) || (item.href !== '/index.html' && normalizedPath.includes(item.href));
-
-            let html = `
-                <a href="${item.href}" class="universal-menu-item ${isActive ? 'active-page' : ''}">
-                    <i class="fas ${item.icon} mr-2"></i> ${item.name}
-                </a>
-            `;
-
-            if (item.subItems) {
-                const subItemsHTML = item.subItems.map(sub => `
-                    <a href="${sub.href}" class="universal-menu-item universal-mobile-sub-item">
-                        ${sub.name}
-                    </a>
-                `).join('');
-                html += subItemsHTML;
-            }
-
-            return html;
-        }).join('');
-
         return `
             <div class="universal-nav">
                 <div class="universal-nav-container">
                     <div class="universal-nav-content" style="flex-direction: column; height: auto; align-items: stretch; padding: 0.5rem 0;">
-                        <div class="universal-nav-logo-area" style="display: flex; justify-content: space-between; align-items: center; padding: 0 1rem; margin-bottom: 0.5rem;">
+                        <div class="universal-nav-logo-area" style="display: flex; justify-content: space-between; align-items: center; padding: 0 1rem; margin-bottom: 0;">
                             <div style="display: flex; align-items: center; gap: 0.75rem;">
                                 <img src="${navConfig.logoSrc}" alt="Logo" class="universal-nav-logo">
                                 <span class="universal-nav-title">${navConfig.siteTitle}</span>
@@ -357,15 +367,10 @@
                         </div>
                         
                         <!-- Pill Menu -->
-                        <div class="universal-desktop-menu">
-                            ${desktopMenuItemsHTML}
+                        <div class="universal-pill-menu" id="universalPillMenu">
+                            ${pillMenuItemsHTML}
                         </div>
                     </div>
-                </div>
-
-                <!-- Mobile Menu -->
-                <div class="universal-mobile-menu" id="universalMobileMenu">
-                    ${mobileMenuItemsHTML}
                 </div>
             </div>
         `;
@@ -388,20 +393,20 @@
 
         // Bind events
         const hamburger = document.getElementById('universalHamburger');
-        const mobileMenu = document.getElementById('universalMobileMenu');
+        const pillMenu = document.getElementById('universalPillMenu');
 
-        if (hamburger && mobileMenu) {
+        if (hamburger && pillMenu) {
             hamburger.addEventListener('click', function (e) {
                 e.stopPropagation();
                 hamburger.classList.toggle('active');
-                mobileMenu.classList.toggle('active');
+                pillMenu.classList.toggle('active');
             });
 
             // Close when clicking outside
             document.addEventListener('click', function (event) {
-                if (!hamburger.contains(event.target) && !mobileMenu.contains(event.target)) {
+                if (!hamburger.contains(event.target) && !pillMenu.contains(event.target)) {
                     hamburger.classList.remove('active');
-                    mobileMenu.classList.remove('active');
+                    pillMenu.classList.remove('active');
                 }
             });
         }

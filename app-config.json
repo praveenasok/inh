@@ -26,13 +26,6 @@
         "priority": 3
       },
       {
-        "file": "price-calculator.html",
-        "name": "Price Calculator",
-        "description": "Price calculation and list generation",
-        "status": "active",
-        "priority": 4
-      },
-      {
         "file": "share-files.html",
         "name": "Share Files",
         "description": "Browse and share files from Google Drive folder",
