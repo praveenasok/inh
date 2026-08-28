@@ -1,0 +1,598 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      rel="preload"
+      href="/_next/static/media/e4af272ccee01ff0-s.p.woff2"
+      as="font"
+      crossorigin=""
+      type="font/woff2"
+    />
+    <link
+      rel="stylesheet"
+      href="/_next/static/css/c9598c9cd067f868.css"
+      data-precedence="next"
+    />
+    <link
+      rel="preload"
+      as="script"
+      fetchpriority="low"
+      href="/_next/static/chunks/webpack-cadef5c035ac3dc9.js"
+    />
+    <script
+      src="/_next/static/chunks/fd9d1056-22085f2df76d85eb.js"
+      async=""
+    ></script>
+    <script
+      src="/_next/static/chunks/117-c762f313c2626695.js"
+      async=""
+    ></script>
+    <script
+      src="/_next/static/chunks/main-app-7c5377bcb2ab39b1.js"
+      async=""
+    ></script>
+    <script
+      src="/_next/static/chunks/644-a7137bcf6defcd3e.js"
+      async=""
+    ></script>
+    <script
+      src="/_next/static/chunks/app/dashboard/page-b9416f7084911649.js"
+      async=""
+    ></script>
+    <title>tap log</title>
+    <meta name="description" content="simple fast back tap log tracker" />
+    <link rel="icon" href="/favicon.ico" type="image/x-icon" sizes="16x16" />
+    <meta name="next-size-adjust" />
+    <script
+      src="/_next/static/chunks/polyfills-42372ed130431b0a.js"
+      nomodule=""
+    ></script>
+  </head>
+  <body
+    class="__className_f367f3 bg-neutral-50 text-neutral-900 dark:bg-black dark:text-neutral-100 antialiased"
+  >
+    <div
+      class="jsx-a93e14c0edb337c7 min-h-screen bg-[#fcfcfc] dark:bg-[#050505] text-neutral-900 dark:text-neutral-100 selection:bg-blue-100 dark:selection:bg-blue-900/30 font-sans"
+    >
+      <aside
+        class="jsx-a93e14c0edb337c7 fixed top-0 left-0 bottom-0 w-[280px] bg-white dark:bg-neutral-900 border-r border-neutral-100 dark:border-neutral-800 z-50 transition-transform duration-500 transform -translate-x-full shadow-none"
+      >
+        <div class="jsx-a93e14c0edb337c7 p-8 flex flex-col h-full">
+          <div
+            class="jsx-a93e14c0edb337c7 flex items-center justify-between mb-12"
+          >
+            <span
+              class="jsx-a93e14c0edb337c7 text-xl font-black tracking-tighter lowercase"
+              >padashboard</span
+            ><button
+              class="jsx-a93e14c0edb337c7 p-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-xl"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="lucide lucide-x"
+                aria-hidden="true"
+              >
+                <path d="M18 6 6 18"></path>
+                <path d="m6 6 12 12"></path>
+              </svg>
+            </button>
+          </div>
+          <nav class="jsx-a93e14c0edb337c7 space-y-2 flex-1">
+            <button
+              class="w-full flex items-center justify-between p-4 rounded-2xl transition-all duration-300 group bg-blue-600 text-white shadow-xl shadow-blue-500/20"
+            >
+              <div class="flex items-center gap-3">
+                <span class="text-white"
+                  ><svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="lucide lucide-layout-grid"
+                    aria-hidden="true"
+                  >
+                    <rect width="7" height="7" x="3" y="3" rx="1"></rect>
+                    <rect width="7" height="7" x="14" y="3" rx="1"></rect>
+                    <rect width="7" height="7" x="14" y="14" rx="1"></rect>
+                    <rect
+                      width="7"
+                      height="7"
+                      x="3"
+                      y="14"
+                      rx="1"
+                    ></rect></svg></span
+                ><span class="text-sm font-bold lowercase tracking-tight"
+                  >overview</span
+                >
+              </div>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="lucide lucide-chevron-right opacity-50"
+                aria-hidden="true"
+              >
+                <path d="m9 18 6-6-6-6"></path>
+              </svg></button
+            ><button
+              class="w-full flex items-center justify-between p-4 rounded-2xl transition-all duration-300 group text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800"
+            >
+              <div class="flex items-center gap-3">
+                <span
+                  class="text-neutral-400 group-hover:text-neutral-900 dark:group-hover:text-white"
+                  ><svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="lucide lucide-activity"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"
+                    ></path></svg></span
+                ><span class="text-sm font-bold lowercase tracking-tight"
+                  >tap monitor</span
+                >
+              </div></button
+            ><button
+              class="w-full flex items-center justify-between p-4 rounded-2xl transition-all duration-300 group text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800"
+            >
+              <div class="flex items-center gap-3">
+                <span
+                  class="text-neutral-400 group-hover:text-neutral-900 dark:group-hover:text-white"
+                  ><svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="lucide lucide-wallet"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"
+                    ></path>
+                    <path
+                      d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"
+                    ></path></svg></span
+                ><span class="text-sm font-bold lowercase tracking-tight"
+                  >fund flow</span
+                >
+              </div></button
+            ><button
+              class="w-full flex items-center justify-between p-4 rounded-2xl transition-all duration-300 group text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800"
+            >
+              <div class="flex items-center gap-3">
+                <span
+                  class="text-neutral-400 group-hover:text-neutral-900 dark:group-hover:text-white"
+                  ><svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="lucide lucide-chart-column"
+                    aria-hidden="true"
+                  >
+                    <path d="M3 3v16a2 2 0 0 0 2 2h16"></path>
+                    <path d="M18 17V9"></path>
+                    <path d="M13 17V5"></path>
+                    <path d="M8 17v-3"></path></svg></span
+                ><span class="text-sm font-bold lowercase tracking-tight"
+                  >insights</span
+                >
+              </div></button
+            ><button
+              class="w-full flex items-center justify-between p-4 rounded-2xl transition-all duration-300 group text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800"
+            >
+              <div class="flex items-center gap-3">
+                <span
+                  class="text-neutral-400 group-hover:text-neutral-900 dark:group-hover:text-white"
+                  ><svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="lucide lucide-square-check-big"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M21 10.656V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h12.344"
+                    ></path>
+                    <path d="m9 11 3 3L22 4"></path></svg></span
+                ><span class="text-sm font-bold lowercase tracking-tight"
+                  >tasks</span
+                >
+              </div></button
+            ><button
+              class="w-full flex items-center justify-between p-4 rounded-2xl transition-all duration-300 group text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800"
+            >
+              <div class="flex items-center gap-3">
+                <span
+                  class="text-neutral-400 group-hover:text-neutral-900 dark:group-hover:text-white"
+                  ><svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="lucide lucide-utensils"
+                    aria-hidden="true"
+                  >
+                    <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"></path>
+                    <path d="M7 2v20"></path>
+                    <path
+                      d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"
+                    ></path></svg></span
+                ><span class="text-sm font-bold lowercase tracking-tight"
+                  >meal plan</span
+                >
+              </div>
+            </button>
+          </nav>
+          <div
+            class="jsx-a93e14c0edb337c7 mt-auto pt-8 border-t border-neutral-100 dark:border-neutral-800"
+          >
+            <p
+              class="jsx-a93e14c0edb337c7 text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-4"
+            >
+              status
+            </p>
+            <div class="jsx-a93e14c0edb337c7 flex items-center gap-2">
+              <div
+                class="jsx-a93e14c0edb337c7 w-2 h-2 rounded-full bg-emerald-500 animate-pulse"
+              ></div>
+              <span
+                class="jsx-a93e14c0edb337c7 text-xs font-medium text-neutral-500 lowercase italic"
+                >system online</span
+              >
+            </div>
+          </div>
+        </div>
+      </aside>
+      <div
+        class="jsx-a93e14c0edb337c7 max-w-[1200px] mx-auto p-4 md:p-12 transition-all duration-500"
+      >
+        <header
+          class="jsx-a93e14c0edb337c7 flex items-center justify-between mb-12"
+        >
+          <div class="jsx-a93e14c0edb337c7 flex items-center gap-4">
+            <button
+              class="jsx-a93e14c0edb337c7 p-3 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl shadow-sm hover:scale-105 transition-all text-neutral-600 dark:text-neutral-400"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="lucide lucide-menu"
+                aria-hidden="true"
+              >
+                <path d="M4 5h16"></path>
+                <path d="M4 12h16"></path>
+                <path d="M4 19h16"></path>
+              </svg>
+            </button>
+            <div class="jsx-a93e14c0edb337c7">
+              <h1
+                class="jsx-a93e14c0edb337c7 text-2xl font-black tracking-tighter lowercase"
+              >
+                overview
+              </h1>
+              <p
+                class="jsx-a93e14c0edb337c7 text-neutral-400 text-[10px] font-black uppercase tracking-widest"
+              >
+                Thursday, Jun 4th
+              </p>
+            </div>
+          </div>
+          <div class="jsx-a93e14c0edb337c7 flex items-center gap-3">
+            <button
+              class="jsx-a93e14c0edb337c7 p-3 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl shadow-sm hover:scale-105 active:scale-95 transition-all group"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="lucide lucide-refresh-cw w-4 h-4 text-neutral-600 dark:text-neutral-400 group-hover:rotate-180 transition-transform duration-500 animate-spin"
+                aria-hidden="true"
+              >
+                <path
+                  d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"
+                ></path>
+                <path d="M21 3v5h-5"></path>
+                <path
+                  d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"
+                ></path>
+                <path d="M8 16H3v5"></path>
+              </svg>
+            </button>
+          </div>
+        </header>
+        <main
+          class="jsx-a93e14c0edb337c7 animate-in fade-in slide-in-from-bottom-4 duration-700"
+        >
+          <div class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div
+                class="group cursor-pointer bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 rounded-[2rem] p-8 shadow-sm hover:shadow-xl hover:scale-[1.02] transition-all duration-300"
+              >
+                <div class="flex items-center justify-between mb-8">
+                  <div
+                    class="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-900/20 text-blue-500 flex items-center justify-center"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="lucide lucide-activity"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"
+                      ></path>
+                    </svg>
+                  </div>
+                  <div
+                    class="w-8 h-8 rounded-full border border-neutral-100 dark:border-neutral-800 flex items-center justify-center text-neutral-400 group-hover:bg-blue-50 group-hover:text-blue-500 group-hover:border-blue-100 transition-colors"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="lucide lucide-chevron-right"
+                      aria-hidden="true"
+                    >
+                      <path d="m9 18 6-6-6-6"></path>
+                    </svg>
+                  </div>
+                </div>
+                <div class="space-y-1">
+                  <p
+                    class="text-[10px] font-black uppercase tracking-widest text-neutral-400"
+                  >
+                    activity today
+                  </p>
+                  <h3 class="text-4xl font-black tracking-tighter">
+                    0<!-- -->
+                    <span class="text-xl text-neutral-300">taps</span>
+                  </h3>
+                </div>
+              </div>
+              <div
+                class="group cursor-pointer bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 rounded-[2rem] p-8 shadow-sm hover:shadow-xl hover:scale-[1.02] transition-all duration-300 relative overflow-hidden"
+              >
+                <div
+                  class="absolute -bottom-8 -right-8 opacity-5 dark:opacity-10 text-orange-500"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="160"
+                    height="160"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="lucide lucide-trending-up"
+                    aria-hidden="true"
+                  >
+                    <path d="M16 7h6v6"></path>
+                    <path d="m22 7-8.5 8.5-5-5L2 17"></path>
+                  </svg>
+                </div>
+                <div class="flex items-center justify-between mb-8 relative">
+                  <div
+                    class="w-12 h-12 rounded-2xl bg-orange-50 dark:bg-orange-900/20 text-orange-500 flex items-center justify-center"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="lucide lucide-clock"
+                      aria-hidden="true"
+                    >
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <path d="M12 6v6l4 2"></path>
+                    </svg>
+                  </div>
+                  <div
+                    class="w-8 h-8 rounded-full border border-neutral-100 dark:border-neutral-800 flex items-center justify-center text-neutral-400 group-hover:bg-orange-50 group-hover:text-orange-500 group-hover:border-orange-100 transition-colors"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="lucide lucide-chevron-right"
+                      aria-hidden="true"
+                    >
+                      <path d="m9 18 6-6-6-6"></path>
+                    </svg>
+                  </div>
+                </div>
+                <div class="space-y-1 relative">
+                  <p
+                    class="text-[10px] font-black uppercase tracking-widest text-neutral-400"
+                  >
+                    plank duration
+                  </p>
+                  <h3 class="text-4xl font-black tracking-tighter">0m 0s</h3>
+                </div>
+              </div>
+              <div
+                class="group cursor-pointer bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 rounded-[2rem] p-8 shadow-sm hover:shadow-xl hover:scale-[1.02] transition-all duration-300 md:col-span-2 lg:col-span-1"
+              >
+                <div class="flex items-center justify-between mb-8">
+                  <div
+                    class="w-12 h-12 rounded-2xl bg-teal-50 dark:bg-teal-900/20 text-teal-500 flex items-center justify-center"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="lucide lucide-utensils"
+                      aria-hidden="true"
+                    >
+                      <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"></path>
+                      <path d="M7 2v20"></path>
+                      <path
+                        d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"
+                      ></path>
+                    </svg>
+                  </div>
+                  <div
+                    class="w-8 h-8 rounded-full border border-neutral-100 dark:border-neutral-800 flex items-center justify-center text-neutral-400 group-hover:bg-teal-50 group-hover:text-teal-500 group-hover:border-teal-100 transition-colors"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="lucide lucide-chevron-right"
+                      aria-hidden="true"
+                    >
+                      <path d="m9 18 6-6-6-6"></path>
+                    </svg>
+                  </div>
+                </div>
+                <div class="space-y-3">
+                  <p
+                    class="text-[10px] font-black uppercase tracking-widest text-neutral-400"
+                  >
+                    today&#x27;s meals
+                  </p>
+                  <div class="text-sm font-medium text-neutral-400 italic py-4">
+                    No active meal plan found for today.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+    <script
+      src="/_next/static/chunks/webpack-cadef5c035ac3dc9.js"
+      async=""
+    ></script>
+    <script>
+      (self.__next_f = self.__next_f || []).push([0]);
+      self.__next_f.push([2, null]);
+    </script>
+    <script>
+      self.__next_f.push([
+        1,
+        '1:HL["/_next/static/media/e4af272ccee01ff0-s.p.woff2","font",{"crossOrigin":"","type":"font/woff2"}]\n2:HL["/_next/static/css/c9598c9cd067f868.css","style"]\n',
+      ]);
+    </script>
+    <script>
+      self.__next_f.push([
+        1,
+        '3:I[12846,[],""]\n5:I[19107,[],"ClientPageRoot"]\n6:I[98517,["644","static/chunks/644-a7137bcf6defcd3e.js","702","static/chunks/app/dashboard/page-b9416f7084911649.js"],"default",1]\n7:I[4707,[],""]\n8:I[36423,[],""]\na:I[61060,[],""]\nb:[]\n',
+      ]);
+    </script>
+    <script>
+      self.__next_f.push([
+        1,
+        '0:["$","$L3",null,{"buildId":"MUhGsnWeJBHPEEHDMd7bs","assetPrefix":"","urlParts":["","dashboard"],"initialTree":["",{"children":["dashboard",{"children":["__PAGE__",{}]}]},"$undefined","$undefined",true],"initialSeedData":["",{"children":["dashboard",{"children":["__PAGE__",{},[["$L4",["$","$L5",null,{"props":{"params":{},"searchParams":{}},"Component":"$6"}],null],null],null]},[null,["$","$L7",null,{"parallelRouterKey":"children","segmentPath":["children","dashboard","children"],"error":"$undefined","errorStyles":"$undefined","errorScripts":"$undefined","template":["$","$L8",null,{}],"templateStyles":"$undefined","templateScripts":"$undefined","notFound":"$undefined","notFoundStyles":"$undefined"}]],null]},[[[["$","link","0",{"rel":"stylesheet","href":"/_next/static/css/c9598c9cd067f868.css","precedence":"next","crossOrigin":"$undefined"}]],["$","html",null,{"lang":"en","children":["$","body",null,{"className":"__className_f367f3 bg-neutral-50 text-neutral-900 dark:bg-black dark:text-neutral-100 antialiased","children":["$","$L7",null,{"parallelRouterKey":"children","segmentPath":["children"],"error":"$undefined","errorStyles":"$undefined","errorScripts":"$undefined","template":["$","$L8",null,{}],"templateStyles":"$undefined","templateScripts":"$undefined","notFound":[["$","title",null,{"children":"404: This page could not be found."}],["$","div",null,{"style":{"fontFamily":"system-ui,\\"Segoe UI\\",Roboto,Helvetica,Arial,sans-serif,\\"Apple Color Emoji\\",\\"Segoe UI Emoji\\"","height":"100vh","textAlign":"center","display":"flex","flexDirection":"column","alignItems":"center","justifyContent":"center"},"children":["$","div",null,{"children":[["$","style",null,{"dangerouslySetInnerHTML":{"__html":"body{color:#000;background:#fff;margin:0}.next-error-h1{border-right:1px solid rgba(0,0,0,.3)}@media (prefers-color-scheme:dark){body{color:#fff;background:#000}.next-error-h1{border-right:1px solid rgba(255,255,255,.3)}}"}}],["$","h1",null,{"className":"next-error-h1","style":{"display":"inline-block","margin":"0 20px 0 0","padding":"0 23px 0 0","fontSize":24,"fontWeight":500,"verticalAlign":"top","lineHeight":"49px"},"children":"404"}],["$","div",null,{"style":{"display":"inline-block"},"children":["$","h2",null,{"style":{"fontSize":14,"fontWeight":400,"lineHeight":"49px","margin":0},"children":"This page could not be found."}]}]]}]}]],"notFoundStyles":[]}]}]}]],null],null],"couldBeIntercepted":false,"initialHead":[null,"$L9"],"globalErrorComponent":"$a","missingSlots":"$Wb"}]\n',
+      ]);
+    </script>
+    <script>
+      self.__next_f.push([
+        1,
+        '9:[["$","meta","0",{"name":"viewport","content":"width=device-width, initial-scale=1"}],["$","meta","1",{"charSet":"utf-8"}],["$","title","2",{"children":"tap log"}],["$","meta","3",{"name":"description","content":"simple fast back tap log tracker"}],["$","link","4",{"rel":"icon","href":"/favicon.ico","type":"image/x-icon","sizes":"16x16"}],["$","meta","5",{"name":"next-size-adjust"}]]\n4:null\n',
+      ]);
+    </script>
+  </body>
+</html>
