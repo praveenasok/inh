@@ -255,6 +255,7 @@ window.payrollApp = (function() {
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${emp.joiningDate}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${emp.baseSalary}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <button onclick="window.payrollApp.openFaceEnrollModal('${emp.id}')" class="text-blue-600 hover:text-blue-900 mr-3" title="Enroll Face"><i class="fas fa-camera"></i></button>
                     <button onclick="window.payrollApp.editEmployee('${emp.id}')" class="text-indigo-600 hover:text-indigo-900 mr-3" title="Edit"><i class="fas fa-edit"></i></button>
                     ${emp.status !== 'Inactive' ? 
                         `<button onclick="window.payrollApp.toggleEmployeeStatus('${emp.id}', 'Inactive')" class="text-red-600 hover:text-red-900 mr-3" title="Deactivate"><i class="fas fa-user-times"></i></button>` : 
@@ -297,6 +298,9 @@ window.payrollApp = (function() {
                                 </div>
                             ` : ''}
                         </div>
+                        <button onclick="window.payrollApp.openFaceEnrollModal('${emp.id}')" class="text-blue-600 hover:text-blue-900 p-2.5 rounded-lg bg-blue-50 hover:bg-blue-100 transition-colors flex items-center justify-center" title="Enroll Face">
+                            <i class="fas fa-camera"></i>
+                        </button>
                         <button onclick="window.payrollApp.editEmployee('${emp.id}')" class="text-indigo-600 hover:text-indigo-900 p-2.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 transition-colors flex items-center justify-center" title="Edit">
                             <i class="fas fa-edit"></i>
                         </button>
@@ -943,7 +947,7 @@ window.payrollApp = (function() {
             const attendanceMap = {};
             attendanceRecords.forEach(r => {
                 if (!attendanceMap[r.employeeId]) attendanceMap[r.employeeId] = [];
-                attendanceMap[r.employeeId].push(r.status);
+                attendanceMap[r.employeeId].push(r);
             });
             
             const [year, month] = monthStr.split('-');
@@ -966,21 +970,42 @@ window.payrollApp = (function() {
                 const empName = emp.shortName ? emp.shortName : `${emp.firstName} ${emp.lastName}`;
                 const baseSal = emp.baseSalary ? parseFloat(emp.baseSalary) : 0;
                 
-                // Calculate Unpaid Leaves
-                let countA = 0, countL = 0, countHD = 0;
+                // Calculate Unpaid Leaves and Overtime
+                let countA = 0, countL = 0, countHD = 0, countQD = 0;
+                let totalOvertimeMins = 0;
                 const empAttendance = attendanceMap[emp.id] || [];
-                empAttendance.forEach(status => {
+                empAttendance.forEach(r => {
+                    const status = typeof r === 'string' ? r : r.status;
                     if (status === 'A') countA++;
                     else if (status === 'L') countL++;
                     else if (status === 'HD') countHD++;
+                    else if (status === 'QD') countQD++;
+                    
+                    if (typeof r === 'object' && r.overtimeMinutes) {
+                        totalOvertimeMins += r.overtimeMinutes;
+                    }
                 });
                 
-                const totalAbsences = countA + countL + (0.5 * countHD);
+                const totalAbsences = countA + countL + (0.5 * countHD) + (0.75 * countQD);
                 const unpaidLeaves = Math.max(0, totalAbsences - 1.5);
                 
                 // Calculate Auto-Deductions based on Unpaid Leaves
                 let autoDeduction = (baseSal / daysInMonth) * unpaidLeaves;
                 autoDeduction = Math.round(autoDeduction * 100) / 100;
+                
+                // Calculate Overtime Amount
+                let overtimeAmount = 0;
+                if (totalOvertimeMins > 0) {
+                    const hourlyRate = baseSal / daysInMonth / 9; // assuming 9 hours workday
+                    const overtimeHours = totalOvertimeMins / 60;
+                    overtimeAmount = hourlyRate * 2 * overtimeHours;
+                    overtimeAmount = Math.round(overtimeAmount * 100) / 100;
+                }
+                
+                // Existing manual overtime overrides autoOvertime (if we want to support manual edit)
+                if (rec.overtime !== undefined && rec.overtime !== null && rec.overtime !== "") {
+                    overtimeAmount = parseFloat(rec.overtime);
+                }
                 
                 // Existing manual deduction overrides autoDeduction
                 let deductions = autoDeduction;
@@ -993,8 +1018,11 @@ window.payrollApp = (function() {
                 
                 let advance = rec.advance !== undefined && rec.advance !== null && rec.advance !== "" ? parseFloat(rec.advance) : 0;
                 
-                // Attendance Bonus (500 if zero leaves/A/L/HD/CO, only when attendance is marked)
-                const hasDisqualifyingLeave = empAttendance.some(status => ['A', 'L', 'HD', 'CO'].includes(status));
+                // Attendance Bonus (500 if zero leaves/A/L/HD/QD/CO, only when attendance is marked)
+                const hasDisqualifyingLeave = empAttendance.some(r => {
+                    const status = typeof r === 'string' ? r : r.status;
+                    return ['A', 'L', 'HD', 'QD', 'CO'].includes(status);
+                });
                 const attBonus = (empAttendance.length > 0 && !hasDisqualifyingLeave) ? 500 : 0;
                 
                 // Other (manual) Bonus
@@ -1007,8 +1035,8 @@ window.payrollApp = (function() {
                 let amountPaid = rec.amountPaid !== undefined && rec.amountPaid !== null && rec.amountPaid !== "" ? parseFloat(rec.amountPaid) : 0;
                 let amountPaidVal = rec.amountPaid !== undefined && rec.amountPaid !== null ? rec.amountPaid : '';
 
-                // Auto Amount To Be Paid (Balance) = Base Salary + Attendance Bonus + Other Bonus - Advance - Deductions - Amount Paid
-                let amountToBePaid = (baseSal + attBonus + otherBonus - advance - deductions - amountPaid);
+                // Auto Amount To Be Paid (Balance) = Base Salary + Attendance Bonus + Other Bonus + Overtime - Advance - Deductions - Amount Paid
+                let amountToBePaid = (baseSal + attBonus + otherBonus + overtimeAmount - advance - deductions - amountPaid);
                 amountToBePaid = Math.round(amountToBePaid * 100) / 100;
                 
                 rowsHTML.push(`
@@ -1032,6 +1060,9 @@ window.payrollApp = (function() {
                         <input type="number" step="0.01" class="w-full rounded border-gray-300 px-2 py-1 text-sm text-red-600 focus:ring-blue-500 focus:border-blue-500" value="${deductions !== 0 ? deductions : ''}" oninput="window.payrollApp.recalcRow('${emp.id}')" onchange="window.payrollApp.updateMonthlySalary('${emp.id}')" data-field="deductions">
                     </td>
                     <td class="px-2 py-2 whitespace-nowrap border-b border-r">
+                        <input type="number" step="0.01" class="w-full rounded border-gray-300 px-2 py-1 text-sm text-blue-600 focus:ring-blue-500 focus:border-blue-500 font-semibold" value="${overtimeAmount !== 0 ? overtimeAmount : ''}" oninput="window.payrollApp.recalcRow('${emp.id}')" onchange="window.payrollApp.updateMonthlySalary('${emp.id}')" data-field="overtime" placeholder="0.00">
+                    </td>
+                    <td class="px-2 py-2 whitespace-nowrap border-b border-r">
                         <input type="number" class="w-full rounded border-gray-300 bg-gray-50 px-2 py-1 text-sm text-green-600 font-semibold" value="${attBonus !== 0 ? attBonus : ''}" readonly data-field="attBonus" placeholder="">
                     </td>
                     <td class="px-2 py-2 whitespace-nowrap border-b border-r">
@@ -1039,8 +1070,9 @@ window.payrollApp = (function() {
                     </td>
                     <td class="px-2 py-2 whitespace-nowrap border-b">
                         <input type="text" class="w-full rounded border-gray-300 px-2 py-1 text-sm focus:ring-blue-500 focus:border-blue-500" value="${rec.notes || ''}" onchange="window.payrollApp.updateMonthlySalary('${emp.id}')" data-field="notes" placeholder="Notes...">
-                        ${unpaidLeaves > 0 ? `<div class="text-xs text-orange-600 mt-1" title="A: ${countA}, L: ${countL}, HD: ${countHD}">${unpaidLeaves} Unpaid Leave(s) = ${autoDeduction}</div>` : ''}
+                        ${unpaidLeaves > 0 ? `<div class="text-xs text-orange-600 mt-1" title="A: ${countA}, L: ${countL}, HD: ${countHD}, QD: ${countQD}">${unpaidLeaves} Unpaid Leave(s) = ${autoDeduction}</div>` : ''}
                         ${attBonus > 0 ? `<div class="text-xs text-green-600 mt-1">Attendance Bonus: 500</div>` : ''}
+                        ${totalOvertimeMins > 0 ? `<div class="text-xs text-blue-600 mt-1">OT: ${(totalOvertimeMins / 60).toFixed(1)} hrs</div>` : ''}
                     </td>
                 </tr>
                 `);
@@ -1082,6 +1114,10 @@ window.payrollApp = (function() {
                         <div>
                             <span class="text-gray-400 block font-semibold text-[10px] uppercase">Deductions</span>
                             <input type="number" step="0.01" class="w-full rounded border-gray-300 px-2 py-1.5 text-red-600 text-xs mt-1 border" value="${deductions !== 0 ? deductions : ''}" oninput="window.payrollApp.recalcRow('${emp.id}')" onchange="window.payrollApp.updateMonthlySalary('${emp.id}')" data-field="deductions">
+                        </div>
+                        <div>
+                            <span class="text-gray-400 block font-semibold text-[10px] uppercase">Overtime</span>
+                            <input type="number" step="0.01" class="w-full rounded border-gray-300 px-2 py-1.5 text-blue-600 text-xs mt-1 border" value="${overtimeAmount !== 0 ? overtimeAmount : ''}" oninput="window.payrollApp.recalcRow('${emp.id}')" onchange="window.payrollApp.updateMonthlySalary('${emp.id}')" data-field="overtime">
                         </div>
                         ${attBonus > 0 ? `
                         <div>
@@ -1219,12 +1255,16 @@ Stack: ${stackTrace}
             
             let advance = parseFloat(advanceInput.value) || 0;
             let deductions = parseFloat(dedInput.value) || 0;
+            
+            const overtimeInput = container.querySelector('[data-field="overtime"]');
+            let overtime = overtimeInput ? (parseFloat(overtimeInput.value) || 0) : 0;
+            
             const attBonusEl = container.querySelector('[data-field="attBonus"]');
             let attBonus = attBonusEl ? (parseFloat(attBonusEl.value) || 0) : 0;
             let otherBonus = parseFloat(bonusInput.value) || 0;
             let amountPaid = parseFloat(amountPaidInput.value) || 0;
             
-            let amountToBePaid = baseSal + attBonus + otherBonus - advance - deductions - amountPaid;
+            let amountToBePaid = baseSal + attBonus + otherBonus + overtime - advance - deductions - amountPaid;
             amountToBePaid = Math.round(amountToBePaid * 100) / 100;
             
             if (amountToBePaidInput) {
@@ -1239,7 +1279,7 @@ Stack: ${stackTrace}
             const source = isCardActive ? card : row;
             const target = isCardActive ? row : card;
             
-            const syncFields = ['advance', 'deductions', 'bonus', 'amountToBePaid', 'amountPaid', 'notes'];
+            const syncFields = ['advance', 'deductions', 'overtime', 'bonus', 'amountToBePaid', 'amountPaid', 'notes'];
             syncFields.forEach(field => {
                 const srcEl = source.querySelector(`[data-field="${field}"]`);
                 const tgtEl = target.querySelector(`[data-field="${field}"]`);
@@ -1267,7 +1307,7 @@ Stack: ${stackTrace}
         if (!source) return;
         
         if (source && target) {
-            const syncFields = ['advance', 'deductions', 'bonus', 'amountToBePaid', 'amountPaid', 'notes'];
+            const syncFields = ['advance', 'deductions', 'overtime', 'bonus', 'amountToBePaid', 'amountPaid', 'notes'];
             syncFields.forEach(field => {
                 const srcEl = source.querySelector(`[data-field="${field}"]`);
                 const tgtEl = target.querySelector(`[data-field="${field}"]`);
@@ -1281,6 +1321,7 @@ Stack: ${stackTrace}
         const amountToBePaidInput = source.querySelector('[data-field="amountToBePaid"]');
         const advanceInput = source.querySelector('[data-field="advance"]');
         const dedInput = source.querySelector('[data-field="deductions"]');
+        const overtimeInput = source.querySelector('[data-field="overtime"]');
         const bonusInput = source.querySelector('[data-field="bonus"]');
         const notesInput = source.querySelector('[data-field="notes"]');
         
@@ -1288,6 +1329,7 @@ Stack: ${stackTrace}
         let amountToBePaid = amountToBePaidInput ? parseFloat(amountToBePaidInput.value) : null;
         let advance = parseFloat(advanceInput.value);
         let deductions = parseFloat(dedInput.value);
+        let overtime = overtimeInput ? parseFloat(overtimeInput.value) : null;
         let bonus = parseFloat(bonusInput.value);
         
         const salaryData = {
@@ -1297,6 +1339,7 @@ Stack: ${stackTrace}
             amountToBePaid: isNaN(amountToBePaid) ? null : amountToBePaid,
             advance: isNaN(advance) ? null : advance,
             deductions: isNaN(deductions) ? null : deductions,
+            overtime: isNaN(overtime) ? null : overtime,
             bonus: isNaN(bonus) ? null : bonus,
             notes: notesInput.value || '',
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -1475,7 +1518,7 @@ Stack: ${stackTrace}
             const recordMap = {};
             records.forEach(r => {
                 if (!recordMap[r.employeeId]) recordMap[r.employeeId] = {};
-                recordMap[r.employeeId][r.date] = r.status;
+                recordMap[r.employeeId][r.date] = r;
             });
             
             // Filter out inactive employees
@@ -1520,7 +1563,8 @@ Stack: ${stackTrace}
                     const dateObj = new Date(year, parseInt(month) - 1, d);
                     const isSunday = dateObj.getDay() === 0;
                     
-                    let status = recordMap[emp.id] && recordMap[emp.id][dateStr];
+                    let rec = recordMap[emp.id] && recordMap[emp.id][dateStr];
+                    let status = rec ? rec.status : undefined;
                     
                     if (status === undefined || status === null) {
                         status = isSunday ? 'WO' : '';
@@ -1530,9 +1574,20 @@ Stack: ${stackTrace}
                     else if (status === 'A') countA++;
                     else if (status === 'L') countL++;
                     else if (status === 'HD') countHD++;
+                    else if (status === 'QD') countA += 0.75; // QD adds 0.75 absences
+                    
+                    let punchHTML = '';
+                    if (rec && (rec.punchInTime || rec.punchOutTime)) {
+                        punchHTML = `
+                            <div class="text-[9px] mt-1 text-center w-full">
+                                ${rec.punchInTime ? `<span class="text-green-600 font-bold block leading-tight tracking-tighter">I: ${rec.punchInTime.slice(0,5)}</span>` : ''}
+                                ${rec.punchOutTime ? `<span class="text-red-600 font-bold block leading-tight tracking-tighter">O: ${rec.punchOutTime.slice(0,5)}</span>` : ''}
+                            </div>
+                        `;
+                    }
                     
                     rowHTML += `
-                        <td class="day-col ${isSunday ? 'sunday-col' : ''} border">
+                        <td class="day-col ${isSunday ? 'sunday-col' : ''} border align-top">
                             <select 
                                 onchange="window.payrollApp && window.payrollApp.updateAttendanceStatus('${emp.id}', '${dateStr}', this); if(window.collapseStatusOptions) window.collapseStatusOptions(this); if(window.updateRowSummary) window.updateRowSummary('${emp.id}'); if(window.payrollApp.syncAttendanceSelects) window.payrollApp.syncAttendanceSelects('${emp.id}', '${dateStr}', this.value);"
                                 onfocus="if(window.expandStatusOptions) window.expandStatusOptions(this)"
@@ -1543,10 +1598,12 @@ Stack: ${stackTrace}
                                 <option value="A" title="Absent" ${status === 'A' ? 'selected' : ''}>A</option>
                                 <option value="WO" title="Week Off" ${status === 'WO' ? 'selected' : ''}>WO</option>
                                 <option value="HD" title="Half Day" ${status === 'HD' ? 'selected' : ''}>HD</option>
+                                <option value="QD" title="Quarter Day" ${status === 'QD' ? 'selected' : ''}>QD</option>
                                 <option value="L" title="Leave" ${status === 'L' ? 'selected' : ''}>L</option>
                                 <option value="H" title="Holiday" ${status === 'H' ? 'selected' : ''}>H</option>
                                 <option value="CO" title="Compensatory Off" ${status === 'CO' ? 'selected' : ''}>CO</option>
                             </select>
+                            ${punchHTML}
                         </td>
                     `;
                 }
@@ -1571,7 +1628,8 @@ Stack: ${stackTrace}
             const mCards = document.getElementById('attendanceMobileCards');
             if (mCards) {
                 mCards.innerHTML = activeEmployees.map((emp, index) => {
-                    let status = recordMap[emp.id] && recordMap[emp.id][selectedMobileDateStr];
+                    let mRec = recordMap[emp.id] && recordMap[emp.id][selectedMobileDateStr];
+                    let status = mRec ? mRec.status : undefined;
                     if (status === undefined || status === null) {
                         const [mYear, mMonth, mDay] = selectedMobileDateStr.split('-').map(Number);
                         const mDateObj = new Date(mYear, mMonth - 1, mDay);
@@ -1579,20 +1637,32 @@ Stack: ${stackTrace}
                     }
                     
                     // Count summary
-                    let countP = 0, countA = 0, countL = 0, countHD = 0;
+                    let countP = 0, countA = 0, countL = 0, countHD = 0, countQD = 0;
                     for (let d = 1; d <= daysInMonth; d++) {
                         const dateStr = `${monthYearStr}-${String(d).padStart(2, '0')}`;
-                        const stat = recordMap[emp.id] && recordMap[emp.id][dateStr];
+                        const sRec = recordMap[emp.id] && recordMap[emp.id][dateStr];
+                        const stat = sRec ? sRec.status : null;
                         if (stat === 'P') countP++;
                         else if (stat === 'A') countA++;
                         else if (stat === 'L') countL++;
                         else if (stat === 'HD') countHD++;
+                        else if (stat === 'QD') countQD++;
                     }
                     
-                    const totalAbsences = countA + countL + (0.5 * countHD);
-                    const presentDays = countP + (0.5 * countHD);
+                    const totalAbsences = countA + countL + (0.5 * countHD) + (0.75 * countQD);
+                    const presentDays = countP + (0.5 * countHD) + (0.25 * countQD);
                     const paidLeaves = Math.min(totalAbsences, 1.5);
                     const unpaidLeaves = Math.max(0, totalAbsences - 1.5);
+                    
+                    let mobilePunchHTML = '';
+                    if (mRec && (mRec.punchInTime || mRec.punchOutTime)) {
+                        mobilePunchHTML = `
+                            <div class="text-[9px] mt-1 text-center w-full">
+                                ${mRec.punchInTime ? `<span class="text-green-600 font-bold block leading-tight tracking-tighter">I: ${mRec.punchInTime.slice(0,5)}</span>` : ''}
+                                ${mRec.punchOutTime ? `<span class="text-red-600 font-bold block leading-tight tracking-tighter">O: ${mRec.punchOutTime.slice(0,5)}</span>` : ''}
+                            </div>
+                        `;
+                    }
                     
                     return `
                     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex flex-col gap-3">
@@ -1606,20 +1676,24 @@ Stack: ${stackTrace}
                             </div>
                         </div>
                         
-                        <div class="flex items-center justify-between border-t border-b border-gray-50 py-2.5">
-                            <span class="text-xs font-semibold text-gray-500">Status for ${selectedMobileDateStr.split('-')[2]}/${month}/${year}</span>
-                            <select 
-                                onchange="window.payrollApp && window.payrollApp.updateAttendanceStatus('${emp.id}', '${selectedMobileDateStr}', this); if(window.updateRowSummary) window.updateRowSummary('${emp.id}'); if(window.payrollApp.syncAttendanceSelects) window.payrollApp.syncAttendanceSelects('${emp.id}', '${selectedMobileDateStr}', this.value);"
-                                class="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm font-semibold p-1 border status-badge status-badge-${status} bg-white">
-                                <option value="" ${status === '' ? 'selected' : ''}></option>
-                                <option value="P" ${status === 'P' ? 'selected' : ''}>P</option>
-                                <option value="A" ${status === 'A' ? 'selected' : ''}>A</option>
-                                <option value="WO" ${status === 'WO' ? 'selected' : ''}>WO</option>
-                                <option value="HD" ${status === 'HD' ? 'selected' : ''}>HD</option>
-                                <option value="L" ${status === 'L' ? 'selected' : ''}>L</option>
-                                <option value="H" ${status === 'H' ? 'selected' : ''}>H</option>
-                                <option value="CO" ${status === 'CO' ? 'selected' : ''}>CO</option>
-                            </select>
+                        <div class="flex flex-col gap-2 border-t border-b border-gray-50 py-2.5">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-semibold text-gray-500">Status for ${selectedMobileDateStr.split('-')[2]}/${month}/${year}</span>
+                                <select 
+                                    onchange="window.payrollApp && window.payrollApp.updateAttendanceStatus('${emp.id}', '${selectedMobileDateStr}', this); if(window.updateRowSummary) window.updateRowSummary('${emp.id}'); if(window.payrollApp.syncAttendanceSelects) window.payrollApp.syncAttendanceSelects('${emp.id}', '${selectedMobileDateStr}', this.value);"
+                                    class="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm font-semibold p-1 border status-badge status-badge-${status} bg-white">
+                                    <option value="" ${status === '' ? 'selected' : ''}></option>
+                                    <option value="P" ${status === 'P' ? 'selected' : ''}>P</option>
+                                    <option value="A" ${status === 'A' ? 'selected' : ''}>A</option>
+                                    <option value="WO" ${status === 'WO' ? 'selected' : ''}>WO</option>
+                                    <option value="HD" ${status === 'HD' ? 'selected' : ''}>HD</option>
+                                    <option value="QD" ${status === 'QD' ? 'selected' : ''}>QD</option>
+                                    <option value="L" ${status === 'L' ? 'selected' : ''}>L</option>
+                                    <option value="H" ${status === 'H' ? 'selected' : ''}>H</option>
+                                    <option value="CO" ${status === 'CO' ? 'selected' : ''}>CO</option>
+                                </select>
+                            </div>
+                            ${mobilePunchHTML}
                         </div>
                         
                         <div class="grid grid-cols-4 gap-2 text-center text-[10px] bg-gray-50 p-2 rounded-lg font-bold">
@@ -1662,7 +1736,8 @@ Stack: ${stackTrace}
                 date: dateStr,
                 month: monthStr,
                 status: newStatus,
-                remarks: ""
+                remarks: "Admin Manual Override",
+                isManualOverride: true
             });
             statusMsg.innerText = "Saved successfully.";
         } catch (e) {
@@ -2553,6 +2628,379 @@ Stack: ${stackTrace}
         }
     }
 
+    // --- Face Recognition Functions ---
+    let faceApiLoaded = false;
+    let faceModelsLoading = false;
+    let faceCheckInInterval = null;
+    const lastPunchTimes = {};
+    const COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes cooldown
+
+    async function loadFaceModels() {
+        if (faceApiLoaded) return true;
+        if (faceModelsLoading) {
+            while(faceModelsLoading) { await new Promise(r => setTimeout(r, 100)); }
+            return faceApiLoaded;
+        }
+        faceModelsLoading = true;
+        try {
+            await faceapi.nets.ssdMobilenetv1.loadFromUri('/models');
+            await faceapi.nets.faceLandmark68Net.loadFromUri('/models');
+            await faceapi.nets.faceRecognitionNet.loadFromUri('/models');
+            faceApiLoaded = true;
+            console.log("Face API models loaded successfully");
+            return true;
+        } catch (e) {
+            console.error("Failed to load Face API models:", e);
+            alert("Error loading face recognition models. Please check console.");
+            return false;
+        } finally {
+            faceModelsLoading = false;
+        }
+    }
+
+    async function openFaceEnrollModal(employeeId) {
+        document.getElementById('faceEnrollEmpId').value = employeeId;
+        document.getElementById('faceEnrollModal').classList.remove('hidden');
+        document.getElementById('faceEnrollStatus').innerText = "Initializing models...";
+        
+        const modelsLoaded = await loadFaceModels();
+        if (!modelsLoaded) {
+            document.getElementById('faceEnrollStatus').innerText = "Model load failed.";
+            return;
+        }
+        
+        document.getElementById('faceEnrollStatus').innerText = "Starting camera...";
+        const video = document.getElementById('faceEnrollVideo');
+        
+        try {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                throw new Error("Browser API not supported. Please use HTTPS or localhost.");
+            }
+            const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
+            video.srcObject = stream;
+            video.play().catch(e => console.warn("Auto-play prevented", e));
+            
+            video.onplaying = async () => {
+                document.getElementById('faceEnrollOverlay').classList.add('hidden');
+                document.getElementById('btnCaptureFace').disabled = false;
+                
+                const canvas = document.getElementById('faceEnrollCanvas');
+                const displaySize = { width: video.videoWidth, height: video.videoHeight };
+                faceapi.matchDimensions(canvas, displaySize);
+                
+                faceCheckInInterval = setInterval(async () => {
+                    if(video.paused || video.ended) return;
+                    const detections = await faceapi.detectSingleFace(video).withFaceLandmarks();
+                    const ctx = canvas.getContext('2d');
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    if (detections) {
+                        const resizedDetections = faceapi.resizeResults(detections, displaySize);
+                        faceapi.draw.drawDetections(canvas, resizedDetections);
+                        faceapi.draw.drawFaceLandmarks(canvas, resizedDetections);
+                    }
+                }, 100);
+            };
+        } catch (e) {
+            console.error("Camera access failed", e);
+            let errMsg = "Camera access denied.";
+            if (e.name === 'NotAllowedError') errMsg = "Camera permission denied by user.";
+            else if (e.name === 'NotFoundError') errMsg = "No camera found on this device.";
+            else errMsg = e.message || "Camera error.";
+            document.getElementById('faceEnrollStatus').innerHTML = `<span class="text-red-400 font-bold">${errMsg}</span><br><span class="text-xs text-gray-300 mt-2 block">Please check your browser/system permissions.</span>`;
+            document.getElementById('faceEnrollOverlay').querySelector('.fa-spinner').className = "fas fa-video-slash text-3xl mb-2 text-red-500";
+        }
+    }
+
+    async function captureFaceDescriptor() {
+        const video = document.getElementById('faceEnrollVideo');
+        const employeeId = document.getElementById('faceEnrollEmpId').value;
+        const btn = document.getElementById('btnCaptureFace');
+        
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Capturing...';
+        
+        try {
+            const detections = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceDescriptor();
+            if (!detections) {
+                alert("No face detected! Please ensure your face is clearly visible.");
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-camera mr-2"></i>Capture & Save';
+                return;
+            }
+            
+            const descriptor = Array.from(detections.descriptor);
+            
+            const db = window.firebaseDB.db || firebase.firestore();
+            await db.collection('employees').doc(employeeId).update({
+                faceDescriptor: descriptor,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            
+            const emp = currentEmployees.find(e => e.id === employeeId);
+            if (emp) emp.faceDescriptor = descriptor;
+            
+            alert("Face enrolled successfully!");
+            closeFaceEnrollModal();
+        } catch (e) {
+            console.error("Error capturing face:", e);
+            alert("Error: " + e.message);
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-camera mr-2"></i>Capture & Save';
+        }
+    }
+
+    function closeFaceEnrollModal() {
+        document.getElementById('faceEnrollModal').classList.add('hidden');
+        document.getElementById('faceEnrollOverlay').classList.remove('hidden');
+        document.getElementById('btnCaptureFace').disabled = true;
+        
+        const video = document.getElementById('faceEnrollVideo');
+        if (video && video.srcObject) {
+            video.srcObject.getTracks().forEach(track => track.stop());
+            video.srcObject = null;
+        }
+        if (faceCheckInInterval) {
+            clearInterval(faceCheckInInterval);
+            faceCheckInInterval = null;
+        }
+        const canvas = document.getElementById('faceEnrollCanvas');
+        if (canvas) {
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+    }
+
+    async function openFaceCheckInModal() {
+        document.getElementById('faceCheckInModal').classList.remove('hidden');
+        const overlay = document.getElementById('faceCheckInOverlay');
+        const statusText = document.getElementById('faceCheckInStatus');
+        
+        overlay.classList.remove('hidden');
+        statusText.innerText = "Loading models...";
+        
+        const modelsLoaded = await loadFaceModels();
+        if (!modelsLoaded) {
+            statusText.innerText = "Model load failed.";
+            return;
+        }
+        
+        const labeledDescriptors = currentEmployees
+            .filter(emp => emp.status === 'Active' && emp.faceDescriptor)
+            .map(emp => {
+                return new faceapi.LabeledFaceDescriptors(
+                    emp.id,
+                    [new Float32Array(emp.faceDescriptor)]
+                );
+            });
+            
+        if (labeledDescriptors.length === 0) {
+            statusText.innerText = "No active employees with enrolled faces.";
+            return;
+        }
+        
+        const faceMatcher = new faceapi.FaceMatcher(labeledDescriptors, 0.45);
+        
+        statusText.innerText = "Starting camera...";
+        const video = document.getElementById('faceCheckInVideo');
+        
+        try {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                throw new Error("Browser API not supported. Please use HTTPS or localhost.");
+            }
+            const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
+            video.srcObject = stream;
+            video.play().catch(e => console.warn("Auto-play prevented", e));
+            
+            video.onplaying = async () => {
+                overlay.classList.add('hidden');
+                
+                const canvas = document.getElementById('faceCheckInCanvas');
+                const displaySize = { width: video.videoWidth, height: video.videoHeight };
+                faceapi.matchDimensions(canvas, displaySize);
+                
+                checkInProcessing = false;
+                
+                faceCheckInInterval = setInterval(async () => {
+                    if (video.paused || video.ended) return;
+                    
+                    const detections = await faceapi.detectAllFaces(video).withFaceLandmarks().withFaceDescriptors();
+                    const ctx = canvas.getContext('2d');
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    
+                    if (detections && detections.length > 0) {
+                        const resizedDetections = faceapi.resizeResults(detections, displaySize);
+                        
+                        const results = resizedDetections.map(d => faceMatcher.findBestMatch(d.descriptor));
+                        results.forEach((result, i) => {
+                            const box = resizedDetections[i].detection.box;
+                            
+                            if (result.label !== 'unknown') {
+                                const empId = result.label;
+                                const emp = currentEmployees.find(e => e.id === empId);
+                                const empName = emp ? (emp.shortName || (emp.firstName + ' ' + emp.lastName)) : "Unknown";
+                                
+                                // Check cooldown
+                                const now = Date.now();
+                                const lastPunch = lastPunchTimes[empId] || 0;
+                                const isCooldownOver = (now - lastPunch) > COOLDOWN_MS;
+                                
+                                let boxText = empName;
+                                if (!isCooldownOver) {
+                                    boxText += ' (Cooldown)';
+                                }
+                                
+                                const drawBox = new faceapi.draw.DrawBox(box, { label: boxText, boxColor: isCooldownOver ? '#10B981' : '#F59E0B' });
+                                drawBox.draw(canvas);
+                                
+                                if (isCooldownOver) {
+                                    lastPunchTimes[empId] = now;
+                                    handleAutoCheckIn(empId, empName);
+                                }
+                            } else {
+                                const drawBox = new faceapi.draw.DrawBox(box, { label: 'Unknown', boxColor: '#EF4444' });
+                                drawBox.draw(canvas);
+                            }
+                        });
+                    }
+                }, 150);
+            };
+        } catch (e) {
+            console.error("Camera access failed", e);
+            let errMsg = "Camera access denied.";
+            if (e.name === 'NotAllowedError') errMsg = "Camera permission denied by user.";
+            else if (e.name === 'NotFoundError') errMsg = "No camera found on this device.";
+            else errMsg = e.message || "Camera error.";
+            statusText.innerHTML = `<span class="text-red-400 font-bold">${errMsg}</span><br><span class="text-xs text-gray-300 mt-2 block">Please check your browser/system permissions.</span>`;
+            overlay.querySelector('.fa-circle-notch').className = "fas fa-video-slash text-4xl mb-3 text-red-500";
+        }
+    }
+
+    async function handleAutoCheckIn(empId, empName) {
+        const dateObj = new Date();
+        const year = dateObj.getFullYear();
+        const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const day = String(dateObj.getDate()).padStart(2, '0');
+        const dateStr = `${year}-${month}-${day}`;
+        const monthStr = `${year}-${month}`;
+        
+        // Format punch time
+        const hours = dateObj.getHours();
+        const minutes = dateObj.getMinutes();
+        const seconds = dateObj.getSeconds();
+        const punchTimeStr = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        
+        try {
+            // Check existing attendance for today
+            const existingRecords = await window.firebaseDB.getAttendance(empId, { date: dateStr });
+            const existingRecord = existingRecords && existingRecords.length > 0 ? existingRecords[0] : null;
+            
+            // If manual override is true, don't overwrite the status, but we can still record punch times
+            const isManualOverride = existingRecord && existingRecord.isManualOverride;
+            
+            let statusToSet = 'P';
+            let overtimeMins = 0;
+            let punchData = {};
+            let isCheckOut = false;
+            
+            if (!existingRecord || !existingRecord.punchInTime) {
+                // Check IN
+                statusToSet = 'P'; // Initially assume present
+                punchData = { punchInTime: punchTimeStr };
+            } else {
+                // Check OUT
+                isCheckOut = true;
+                punchData = { punchOutTime: punchTimeStr };
+                
+                // Calculate Status based on checkout time
+                if (hours < 13) {
+                    statusToSet = 'QD'; // Quarter Day
+                } else if (hours >= 13 && hours < 17) {
+                    statusToSet = 'HD'; // Half Day
+                } else {
+                    statusToSet = 'P'; // Present
+                }
+                
+                // Calculate Overtime if checking out after 18:00 (6 PM)
+                if (hours >= 18) {
+                    const extraHours = hours - 18;
+                    overtimeMins = (extraHours * 60) + minutes;
+                }
+            }
+            
+            // Do not override status if admin has manually set it
+            if (isManualOverride) {
+                statusToSet = existingRecord.status;
+            }
+            
+            await window.firebaseDB.saveAttendance({
+                employeeId: empId,
+                date: dateStr,
+                month: monthStr,
+                status: statusToSet,
+                remarks: isCheckOut ? "Face Check-out" : "Face Check-in",
+                ...punchData,
+                ...(overtimeMins > 0 && { overtimeMinutes: overtimeMins })
+            });
+            
+            // Show toast notification
+            const toastContainer = document.getElementById('faceCheckInToastContainer');
+            if (toastContainer) {
+                const toast = document.createElement('div');
+                toast.className = `bg-white shadow-lg rounded-lg border-l-4 ${isCheckOut ? 'border-orange-500' : 'border-green-500'} p-3 transform transition-all duration-300 translate-x-full`;
+                toast.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <div class="flex-shrink-0">
+                            <i class="fas ${isCheckOut ? 'fa-sign-out-alt text-orange-500' : 'fa-check-circle text-green-500'}"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-bold text-gray-900">${empName}</p>
+                            <p class="text-xs text-gray-500">${isCheckOut ? 'Checked Out' : 'Checked In'} at ${punchTimeStr}</p>
+                        </div>
+                    </div>
+                `;
+                toastContainer.appendChild(toast);
+                
+                // Animate in
+                setTimeout(() => {
+                    toast.classList.remove('translate-x-full');
+                }, 10);
+                
+                // Remove after 5 seconds
+                setTimeout(() => {
+                    toast.classList.add('translate-x-full');
+                    toast.classList.add('opacity-0');
+                    setTimeout(() => toast.remove(), 300);
+                }, 5000);
+            }
+            
+            // Update the select element in the grid
+            syncAttendanceSelects(empId, dateStr, statusToSet);
+            
+        } catch (e) {
+            console.error("Error auto-checking in:", e);
+        }
+    }
+    
+    function closeFaceCheckInModal() {
+        document.getElementById('faceCheckInModal').classList.add('hidden');
+        const video = document.getElementById('faceCheckInVideo');
+        if (video && video.srcObject) {
+            video.srcObject.getTracks().forEach(track => track.stop());
+            video.srcObject = null;
+        }
+        if (faceCheckInInterval) {
+            clearInterval(faceCheckInInterval);
+            faceCheckInInterval = null;
+        }
+        const canvas = document.getElementById('faceCheckInCanvas');
+        if (canvas) {
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+        checkInProcessing = false;
+        document.getElementById('faceCheckInSuccessOverlay').classList.add('hidden');
+    }
+
     // Expose global functions for HTML onclick
     window.closeEmployeeModal = closeEmployeeModal;
     window.handleEmployeeSubmit = handleEmployeeSubmit;
@@ -2592,6 +3040,11 @@ Stack: ${stackTrace}
         openLeavePlanModal,
         closeLeavePlanModal,
         handleLeavePlanSubmit,
-        deleteLeavePlan
+        deleteLeavePlan,
+        openFaceEnrollModal,
+        closeFaceEnrollModal,
+        captureFaceDescriptor,
+        openFaceCheckInModal,
+        closeFaceCheckInModal
     };
 })();
