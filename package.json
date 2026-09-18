@@ -9,6 +9,7 @@
     "python-server": "python3 -m http.server 8000",
     "node-server": "node server.js",
     "sheets:import": "node sheets-to-firestore.js",
+    "build": "node build_suppliers.js && node build_clients.js",
     "deploy": "node build_suppliers.js && node build_clients.js && firebase deploy",
     "validate-data": "echo 'Data validation skipped - deploy.js not found'",
     "sync-sheets": "echo 'Sheets sync skipped - deploy.js not found'",
