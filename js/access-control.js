@@ -11,7 +11,7 @@ const ALL_SEGMENTS = [
   'Ready To Dispatch Orders',
   'App: Home',
   'App: Inventory',
-  'App: Jobwork Billing',
+  'App: JOB-Billing',
   'App: Price Lookup',
   'App: Shipping',
   'App: Shipping Paperwork',

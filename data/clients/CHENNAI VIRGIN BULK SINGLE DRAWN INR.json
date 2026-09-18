@@ -1,0 +1,83 @@
+{
+  "machineChargeName": "MR/Wash Charge",
+  "roundingFactor": 50,
+  "marginType": "percent",
+  "individualMargins": {
+    "8": 40,
+    "10": 30
+  },
+  "matrix": {
+    "4": {},
+    "6": {},
+    "8": {},
+    "10": {
+      "4": 30,
+      "6": 40,
+      "8": 10,
+      "10": 20
+    },
+    "12": {
+      "6": 40,
+      "8": 30,
+      "10": 20,
+      "12": 10
+    },
+    "14": {
+      "6": 20,
+      "8": 30,
+      "10": 20,
+      "12": 20,
+      "14": 10
+    },
+    "16": {
+      "6": 10,
+      "8": 20,
+      "10": 20,
+      "12": 20,
+      "14": 20,
+      "16": 10
+    },
+    "18": {
+      "8": 20,
+      "10": 25,
+      "12": 20,
+      "14": 15,
+      "16": 10,
+      "18": 10
+    },
+    "20": {
+      "8": 10,
+      "10": 25,
+      "12": 20,
+      "14": 15,
+      "16": 10,
+      "18": 10,
+      "20": 10
+    },
+    "22": {},
+    "24": {},
+    "26": {},
+    "28": {},
+    "30": {},
+    "32": {},
+    "34": {}
+  },
+  "name": "CHENNAI VIRGIN BULK SINGLE DRAWN INR",
+  "tag": "CHENNAI",
+  "customPricesEnabled": true,
+  "exchangeRate": 1,
+  "exportUnit": "kg",
+  "marginPercent": 35,
+  "customPrices": {},
+  "currency": "INR",
+  "supplierId": "sup_1781520225006",
+  "marginAmount": 0,
+  "wastagePercent": 20,
+  "machineCharge": 2500,
+  "exportGrams": [
+    100
+  ],
+  "created": "2026-08-31T08:21:36.220Z",
+  "weftingCharge": 0,
+  "weftingWastagePercent": 0
+}

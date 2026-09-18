@@ -44,6 +44,15 @@
             to { opacity: 1; }
         }
 
+        /* Compact Time Inputs */
+        input[type="time"].time-input-compact::-webkit-calendar-picker-indicator {
+            display: none;
+            -webkit-appearance: none;
+        }
+        input[type="time"].time-input-compact {
+            -moz-appearance: textfield;
+        }
+
         /* Sticky Columns & Header Positions */
         .col-sl-no { left: 0; min-width: 50px; max-width: 50px; text-align: center; }
         .col-emp-id { left: 50px; min-width: 120px; max-width: 120px; }
@@ -99,7 +108,7 @@
         .status-badge-H { background-color: #f0fdf4; color: #16a34a; } /* Light Green */
         .status-badge-CO { background-color: #fdf2f8; color: #db2777; } /* Pink */
         
-        .day-col { min-width: 40px; max-width: 40px; text-align: center; padding: 0 !important; height: 32px; }
+        .day-col { min-width: 45px; text-align: center; padding: 2px !important; }
         .sunday-col { background-color: #e5e7eb !important; }
     </style>
 </head>
@@ -116,14 +125,14 @@
         <!-- Tabs Navigation -->
         <div class="border-b border-gray-200 mb-6">
             <nav class="-mb-px flex space-x-8" aria-label="Tabs">
-                <button onclick="switchTab('employees')" id="tab-btn-employees" class="tab-btn active whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200">
+                <button onclick="switchTab('attendance')" id="tab-btn-attendance" class="tab-btn active whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200">
+                    <i class="fas fa-calendar-check mr-2"></i>Attendance
+                </button>
+                <button onclick="switchTab('employees')" id="tab-btn-employees" class="tab-btn whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200">
                     <i class="fas fa-users mr-2"></i>Employee Details
                 </button>
                 <button onclick="switchTab('salary')" id="tab-btn-salary" class="tab-btn whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200">
                     <i class="fas fa-money-bill-wave mr-2"></i>Salary Details
-                </button>
-                <button onclick="switchTab('attendance')" id="tab-btn-attendance" class="tab-btn whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200">
-                    <i class="fas fa-calendar-check mr-2"></i>Attendance
                 </button>
                 <button onclick="switchTab('holidays')" id="tab-btn-holidays" class="tab-btn whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200">
                     <i class="fas fa-umbrella-beach mr-2"></i>Holidays
@@ -135,7 +144,7 @@
         </div>
 
         <!-- ==================== EMPLOYEES TAB ==================== -->
-        <div id="tab-content-employees" class="tab-content active">
+        <div id="tab-content-employees" class="tab-content">
             <div class="mb-6 flex justify-between items-center">
                 <div class="flex items-center gap-4">
                     <h2 class="text-xl font-semibold text-gray-800">Manage Employees</h2>
@@ -243,6 +252,7 @@
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount Paid</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Advance</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Deductions</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Overtime</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Att. Bonus</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Other Bonus</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</th>
@@ -262,7 +272,7 @@
         </div>
 
         <!-- ==================== ATTENDANCE TAB ==================== -->
-        <div id="tab-content-attendance" class="tab-content">
+        <div id="tab-content-attendance" class="tab-content active">
             <div class="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <h2 class="text-xl font-semibold text-gray-800">Monthly Attendance</h2>
                 <div class="flex items-center gap-3 bg-white p-2 rounded-lg shadow-sm border border-gray-200 w-full sm:w-auto justify-between sm:justify-start">
@@ -287,6 +297,37 @@
                 </div>
             </div>
             
+            <div class="mb-4 flex flex-col sm:flex-row gap-3">
+                <div class="relative flex-grow max-w-sm">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-search text-gray-400 text-sm"></i>
+                    </div>
+                    <input type="text" id="attendanceSearchInput" placeholder="Search by name or ID..." oninput="window.payrollApp && window.payrollApp.loadAttendanceForMonth()" class="pl-10 pr-4 py-2 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border text-sm bg-white">
+                </div>
+                <select id="attendanceDeptFilter" onchange="window.payrollApp && window.payrollApp.loadAttendanceForMonth()" class="rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border text-sm bg-white w-full sm:w-auto">
+                    <option value="">All Departments</option>
+                    <!-- Dynamically populated -->
+                </select>
+                <select id="attendanceSortBy" onchange="window.payrollApp && window.payrollApp.loadAttendanceForMonth()" class="rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border text-sm bg-white w-full sm:w-auto">
+                    <option value="name_asc">Sort: Name (A-Z)</option>
+                    <option value="name_desc">Sort: Name (Z-A)</option>
+                    <option value="id_asc">Sort: Emp ID (Asc)</option>
+                    <option value="id_desc">Sort: Emp ID (Desc)</option>
+                </select>
+            </div>
+            
+            <!-- Persistent Face Recognition Camera Feed -->
+            <div id="persistentFaceCheckInContainer" class="hidden mb-6 bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+                <div class="relative w-full max-w-md mx-auto aspect-video bg-black rounded-lg overflow-hidden shadow-inner">
+                    <video id="faceCheckInVideo" class="absolute inset-0 w-full h-full object-cover" autoplay muted playsinline></video>
+                    <canvas id="faceCheckInCanvas" class="absolute inset-0 w-full h-full object-cover pointer-events-none"></canvas>
+                    <div id="faceCheckInStatusOverlay" class="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-50 text-white p-4 text-center hidden">
+                        <i class="fas fa-spinner fa-spin text-3xl mb-2"></i>
+                        <p id="faceCheckInStatus" class="font-medium text-sm">Initializing camera...</p>
+                    </div>
+                </div>
+                <p class="text-sm text-center text-gray-500 mt-2"><i class="fas fa-video text-gray-400 mr-1"></i> Auto Check-in Active. Look at the camera to log attendance.</p>
+            </div>
             <div id="attendanceStatusMsg" class="mb-4 text-sm text-blue-600 transition-opacity duration-300"></div>
 
             <!-- Attendance Grid - Desktop View -->
@@ -698,7 +739,10 @@
                 </div>
                 
                 <div class="mt-6 flex justify-between gap-3 border-t pt-4">
-                    <button type="button" id="deleteEmployeeBtn" onclick="window.payrollApp.deleteEmployeeFromModal()" class="text-red-600 hover:text-red-800 font-medium hidden"><i class="fas fa-trash mr-1"></i> Delete Employee</button>
+                    <div class="flex items-center">
+                        <button type="button" id="deleteEmployeeBtn" onclick="window.payrollApp.deleteEmployeeFromModal()" class="text-red-600 hover:text-red-800 font-medium hidden"><i class="fas fa-trash mr-1"></i> Delete Employee</button>
+                        <button type="button" id="deactivateEmployeeBtn" class="text-orange-600 hover:text-orange-800 font-medium hidden ml-4"><i class="fas fa-user-times mr-1"></i> Deactivate</button>
+                    </div>
                     <div class="flex gap-3">
                         <button type="button" onclick="closeEmployeeModal()" class="btn-secondary">Cancel</button>
                         <button type="submit" id="saveEmployeeBtn" class="btn-primary">Save Employee</button>
@@ -814,9 +858,13 @@
         </div>
     </div>
 
+    <script src="../js/navigation-loader.js"></script>
 
-    <!-- Link the logic script -->
-    <script src="../js/payroll.js?v=7"></script>
+    <!-- Face API for Recognition -->
+    <script src="../js/face-api.min.js"></script>
+
+    <!-- Application Script -->
+    <script src="../js/payroll.js?v=8"></script>
     <script>
         function switchTab(tabName) {
             // Update buttons
@@ -833,6 +881,10 @@
 
             // Trigger initialization if window.payrollApp exists
             if (window.payrollApp) {
+                if (tabName !== 'attendance') {
+                    window.payrollApp.stopPersistentFaceCheckIn && window.payrollApp.stopPersistentFaceCheckIn();
+                }
+                
                 if (tabName === 'employees') window.payrollApp.initEmployeePage();
                 if (tabName === 'salary') window.payrollApp.initSalaryPage();
                 if (tabName === 'attendance') window.payrollApp.initAttendancePage();
@@ -843,7 +895,7 @@
 
         // Initialize the first tab on load
         document.addEventListener('DOMContentLoaded', () => {
-            switchTab('employees'); // This will trigger initEmployeePage()
+            switchTab('attendance'); // This will trigger initAttendancePage()
         });
     </script>
     <!-- Image View Modal -->
@@ -981,5 +1033,50 @@
             }
         };
     </script>
+
+    <!-- Face Enrollment Modal -->
+    <div id="faceEnrollModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden z-[60] flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="p-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-gray-800" id="faceEnrollTitle"><i class="fas fa-camera text-indigo-600 mr-2"></i>Enroll Face</h3>
+                <button onclick="window.payrollApp && window.payrollApp.closeFaceEnrollModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-4 overflow-y-auto flex-1 flex flex-col items-center justify-center">
+                <div class="relative w-full max-w-sm aspect-video bg-black rounded-lg overflow-hidden mb-4 shadow-inner">
+                    <video id="faceEnrollVideo" class="absolute inset-0 w-full h-full object-cover" autoplay muted playsinline></video>
+                    <canvas id="faceEnrollCanvas" class="absolute inset-0 w-full h-full object-cover pointer-events-none"></canvas>
+                    <div id="faceEnrollOverlay" class="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-50 text-white p-4 text-center">
+                        <i class="fas fa-spinner fa-spin text-3xl mb-2"></i>
+                        <p id="faceEnrollStatus" class="font-medium text-sm">Initializing camera...</p>
+                    </div>
+                </div>
+                <input type="hidden" id="faceEnrollEmpId">
+                <p class="text-sm text-gray-600 mb-2 text-center">Please look directly at the camera. Ensure good lighting.</p>
+                <div class="mb-4 text-center">
+                    <span id="faceEnrollLooksCount" class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                        0 looks captured
+                    </span>
+                    <p class="text-xs text-gray-500 mt-1">Capture multiple looks (straight, left, right, with glasses) for better recognition.</p>
+                </div>
+                
+                <div id="faceEnrollGallery" class="mb-4 flex gap-2 overflow-x-auto pb-2 justify-center hidden">
+                    <!-- Images will be injected here -->
+                </div>
+                
+                <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto justify-center">
+                    <button id="btnCaptureFace" onclick="window.payrollApp && window.payrollApp.captureFaceDescriptor()" class="flex-1 sm:flex-none bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-6 rounded-lg transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                        <i class="fas fa-camera mr-2"></i>Capture Look
+                    </button>
+                    <button id="btnClearFaceLooks" onclick="window.payrollApp && window.payrollApp.clearFaceDescriptors()" class="flex-1 sm:flex-none bg-red-50 hover:bg-red-100 text-red-600 font-bold py-2.5 px-6 rounded-lg transition-colors shadow-sm border border-red-200">
+                        <i class="fas fa-trash-alt mr-2"></i>Clear Looks
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
 </body>
 </html>

@@ -705,6 +705,107 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  if (pathname === '/api/sync/orderlist' && req.method === 'POST') {
+    try {
+      if (!syncService || !syncService.db || !googleSheetsService) {
+        res.writeHead(503, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: false, error: 'Services not initialized' }));
+        return;
+      }
+
+      const db = syncService.db;
+      const spreadsheetId = '199EnMjmbc6idiOLnaEs8diG8h9vNHhkSH3xK4cyPrsU';
+      const tabName = 'OrderList';
+      const range = `${tabName}!A2:AC`; 
+
+      const response = await googleSheetsService.sheets.spreadsheets.values.get({
+        spreadsheetId,
+        range
+      });
+
+      const rows = response.data.values || [];
+      const collectionName = 'orderlist';
+      
+      const existingDocs = await db.collection(collectionName).get();
+      const chunks = [];
+      for (let i = 0; i < existingDocs.docs.length; i += 500) {
+          chunks.push(existingDocs.docs.slice(i, i + 500));
+      }
+      
+      for (const chunk of chunks) {
+          const deleteBatch = db.batch();
+          chunk.forEach((doc) => {
+              deleteBatch.delete(doc.ref);
+          });
+          await deleteBatch.commit();
+      }
+
+      function parseDate(dateStr) {
+          if (!dateStr) return '';
+          const parts = dateStr.split(/[\/\-]/);
+          if (parts.length === 3) {
+              const d = parts[0].padStart(2, '0');
+              const m = parts[1].padStart(2, '0');
+              let y = parts[2];
+              if (y.length === 2) y = '20' + y;
+              return `${y}-${m}-${d}`;
+          }
+          return dateStr;
+      }
+
+      const data = rows.map((row, index) => {
+        return {
+          orderDate: parseDate(row[1]),
+          orderStatus: row[2] || '',
+          deliveredDate: parseDate(row[3]),
+          orderNumber: row[4] || '',
+          customerName: row[5] || '',
+          contactDetails: row[6] || '',
+          country: row[7] || '',
+          priceList: row[8] || '',
+          length: row[9] || '',
+          productName: row[10] || '',
+          productType: row[11] || '',
+          style: row[12] || '',
+          color: row[13] || '',
+          quantity: row[15] || '',
+          currency: row[16] || '',
+          discountPercentage: row[18] || '',
+          rate: row[19] || '',
+          amount: row[20] || '',
+          currencyRate: row[21] || '',
+          amountInInr: row[22] || '',
+          advance: row[23] || '',
+          salesPerson: row[24] || '',
+          productionAssignedTo: row[27] || '',
+          _originalRowIndex: index + 2
+        };
+      }).filter(doc => doc.orderNumber || doc.customerName || doc.productName);
+
+      const batchSize = 400;
+      let imported = 0;
+      for (let i = 0; i < data.length; i += batchSize) {
+        const batch = db.batch();
+        const slice = data.slice(i, i + batchSize);
+        slice.forEach(docObj => {
+          const docRef = db.collection(collectionName).doc();
+          batch.set(docRef, docObj);
+        });
+        await batch.commit();
+        imported += slice.length;
+      }
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, count: imported }));
+    } catch (error) {
+      console.error(error);
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: false, error: error.message }));
+    }
+    return;
+  }
+
+
   // Sync Pricelists tab from Google Sheets into Firestore collection `inh_pricelists`
   if (pathname === '/api/sync/inh_pricelists' && req.method === 'POST') {
     try {

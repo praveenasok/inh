@@ -1,0 +1,70 @@
+{
+  "customPrices": {},
+  "marginAmount": 0,
+  "marginPercent": 0,
+  "tag": "inhusa",
+  "marginType": "percent",
+  "roundingFactor": 50,
+  "individualMargins": {},
+  "exportUnit": "kg",
+  "currency": "INR",
+  "created": "2026-08-08T06:00:51.013Z",
+  "exportGrams": [
+    100
+  ],
+  "machineChargeName": "MR/Wash-lintpick Charge/SHIPPING",
+  "machineCharge": 2650,
+  "wastagePercent": 12,
+  "supplierId": "sup_1786168779899",
+  "customPricesEnabled": false,
+  "weftingWastagePercent": 0,
+  "weftingCharge": 0,
+  "name": "GradeA-Black",
+  "exchangeRate": 1,
+  "matrix": {
+    "18": {
+      "10": 5,
+      "12": 15,
+      "14": 25,
+      "16": 25,
+      "18": 30
+    },
+    "20": {
+      "12": 5,
+      "14": 15,
+      "16": 25,
+      "18": 25,
+      "20": 30
+    },
+    "22": {
+      "14": 5,
+      "16": 15,
+      "18": 25,
+      "20": 25,
+      "22": 30
+    },
+    "24": {
+      "16": 5,
+      "18": 15,
+      "20": 25,
+      "22": 25,
+      "24": 30
+    },
+    "26": {
+      "16": 10,
+      "18": 20,
+      "20": 10,
+      "22": 10,
+      "24": 20,
+      "26": 30
+    },
+    "28": {
+      "18": 10,
+      "20": 20,
+      "22": 10,
+      "24": 10,
+      "26": 20,
+      "28": 30
+    }
+  }
+}

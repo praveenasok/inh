@@ -1,0 +1,64 @@
+{
+  "supplierId": "sup_1778332363820",
+  "exchangeRate": 0.0104,
+  "marginPercent": 40,
+  "exportGrams": [
+    100
+  ],
+  "matrix": {
+    "6": {
+      "10": 100
+    },
+    "8": {
+      "12": 100
+    },
+    "10": {
+      "14": 100
+    },
+    "12": {
+      "16": 100
+    },
+    "14": {
+      "18": 100
+    },
+    "16": {
+      "20": 100
+    },
+    "18": {
+      "22": 100
+    },
+    "20": {
+      "24": 100
+    },
+    "22": {
+      "26": 100
+    },
+    "24": {
+      "28": 100
+    },
+    "26": {
+      "30": 100
+    },
+    "28": {
+      "32": 100
+    },
+    "30": {
+      "34": 100
+    }
+  },
+  "wastagePercent": 15,
+  "currency": "USD",
+  "customPricesEnabled": false,
+  "tag": "INHINDIA",
+  "weftingCharge": 0,
+  "marginType": "percent",
+  "machineCharge": 2000,
+  "name": "NONREMY-1x1",
+  "individualMargins": {},
+  "exportUnit": "kg",
+  "created": "2026-05-27T07:48:07.700Z",
+  "marginAmount": 0,
+  "customPrices": {},
+  "weftingWastagePercent": 0,
+  "machineChargeName": "MR/Wash Charge"
+}

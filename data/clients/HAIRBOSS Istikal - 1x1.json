@@ -1,0 +1,60 @@
+{
+  "supplierId": "sup_1775729513126",
+  "currency": "USD",
+  "tag": "Turkiye",
+  "customPricesEnabled": false,
+  "marginPercent": 30,
+  "customPrices": {},
+  "name": "HAIRBOSS Istikal - 1x1",
+  "individualMargins": {},
+  "exchangeRate": 0.0107,
+  "matrix": {
+    "2": {
+      "8": 100
+    },
+    "3": {
+      "10": 100
+    },
+    "4": {
+      "12": 100
+    },
+    "5": {
+      "14": 100
+    },
+    "6": {
+      "16": 100
+    },
+    "7": {
+      "18": 100
+    },
+    "8": {
+      "20": 100
+    },
+    "9": {
+      "22": 100
+    },
+    "10": {
+      "24": 100
+    },
+    "11": {
+      "26": 100
+    },
+    "12": {
+      "28": 100
+    },
+    "13": {
+      "30": 100
+    },
+    "14": {
+      "32": 100
+    },
+    "15": {
+      "34": 100
+    }
+  },
+  "created": "2026-04-17T04:50:19.111Z",
+  "weftingCharge": 0,
+  "machineCharge": 2500,
+  "wastagePercent": 15,
+  "weftingWastagePercent": 0
+}

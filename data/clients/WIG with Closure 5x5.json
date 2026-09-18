@@ -1,0 +1,208 @@
+{
+  "outputUnit": "pc",
+  "composeMatrix": {
+    "8": {
+      "CLOSURE5x5": {
+        "len": 10,
+        "weight": 40
+      },
+      "HAIRWISE REMY BULK  DOUBLE DRAWN INR": {
+        "len": 8,
+        "weight": 160
+      }
+    },
+    "10": {
+      "CLOSURE5x5": {
+        "weight": 40,
+        "len": 12
+      },
+      "HAIRWISE REMY BULK  DOUBLE DRAWN INR": {
+        "weight": 160,
+        "len": 8
+      }
+    },
+    "12": {
+      "HAIRWISE REMY BULK  DOUBLE DRAWN INR": {
+        "len": 10,
+        "weight": 175
+      },
+      "CLOSURE5x5": {
+        "len": 12,
+        "weight": 40
+      }
+    },
+    "14": {
+      "CLOSURE5x5": {
+        "len": 14,
+        "weight": 40
+      },
+      "HAIRWISE REMY BULK  DOUBLE DRAWN INR": {
+        "weight": 180,
+        "len": 12
+      }
+    },
+    "16": {
+      "HAIRWISE REMY BULK  DOUBLE DRAWN INR": {
+        "len": 16,
+        "weight": 190
+      },
+      "CLOSURE5x5": {
+        "weight": 40,
+        "len": 16
+      }
+    },
+    "18": {
+      "CLOSURE5x5": {
+        "len": 18,
+        "weight": 40
+      },
+      "HAIRWISE REMY BULK  DOUBLE DRAWN INR": {
+        "weight": 200,
+        "len": 18
+      }
+    },
+    "20": {
+      "CLOSURE5x5": {
+        "weight": 40,
+        "len": 20
+      },
+      "HAIRWISE REMY BULK  DOUBLE DRAWN INR": {
+        "len": 20,
+        "weight": 250
+      }
+    },
+    "22": {
+      "HAIRWISE REMY BULK  DOUBLE DRAWN INR": {
+        "len": 22,
+        "weight": 250
+      },
+      "CLOSURE5x5": {
+        "len": 22,
+        "weight": 40
+      }
+    },
+    "24": {
+      "CLOSURE5x5": {
+        "len": 24,
+        "weight": 40
+      },
+      "HAIRWISE REMY BULK  DOUBLE DRAWN INR": {
+        "len": 24,
+        "weight": 250
+      }
+    },
+    "26": {
+      "CLOSURE5x5": {
+        "weight": 40,
+        "len": 26
+      },
+      "HAIRWISE REMY BULK  DOUBLE DRAWN INR": {
+        "len": 26,
+        "weight": 275
+      }
+    },
+    "28": {
+      "CLOSURE5x5": {
+        "weight": 40,
+        "len": 28
+      },
+      "HAIRWISE REMY BULK  DOUBLE DRAWN INR": {
+        "weight": 300,
+        "len": 28
+      }
+    },
+    "30": {
+      "HAIRWISE REMY BULK  DOUBLE DRAWN INR": {
+        "weight": 300,
+        "len": 30
+      },
+      "CLOSURE5x5": {
+        "len": 30,
+        "weight": 40
+      }
+    },
+    "32": {
+      "HAIRWISE REMY BULK  DOUBLE DRAWN INR": {
+        "weight": 300,
+        "len": 32
+      },
+      "CLOSURE5x5": {
+        "weight": 40,
+        "len": 32
+      }
+    },
+    "34": {
+      "HAIRWISE REMY BULK  DOUBLE DRAWN INR": {
+        "weight": 300,
+        "len": 34
+      },
+      "CLOSURE5x5": {
+        "weight": 40,
+        "len": 34
+      }
+    }
+  },
+  "marginPercent": 0,
+  "supplierId": "",
+  "currency": "INR",
+  "customPrices": {
+    "4": 0,
+    "5": 0,
+    "6": 0,
+    "7": 0,
+    "8": 5771,
+    "9": 0,
+    "10": 6161,
+    "11": 0,
+    "12": 6886,
+    "13": 0,
+    "14": 8016,
+    "15": 0,
+    "16": 9842,
+    "17": 0,
+    "18": 11913,
+    "19": 0,
+    "20": 16421,
+    "21": 0,
+    "22": 19174,
+    "23": 0,
+    "24": 22309,
+    "25": 0,
+    "26": 28568,
+    "27": 0,
+    "28": 32605,
+    "29": 0,
+    "30": 38198,
+    "31": 0,
+    "32": 44443,
+    "33": 0,
+    "34": 0,
+    "35": 0,
+    "36": 0,
+    "37": 0,
+    "38": 0,
+    "39": 0,
+    "40": 0
+  },
+  "isBundle": true,
+  "bundleComponents": [
+    {
+      "name": "CLOSURE5x5",
+      "weightGrams": 0,
+      "offset": 0
+    },
+    {
+      "weightGrams": 0,
+      "offset": 0,
+      "name": "HAIRWISE REMY BULK  DOUBLE DRAWN INR"
+    }
+  ],
+  "name": "WIG with Closure 5x5",
+  "customPricesEnabled": true,
+  "matrix": {},
+  "materialCost": 350,
+  "machineCharge": 1750,
+  "tag": "Composite",
+  "exchangeRate": 1,
+  "wastagePercent": 5
+}

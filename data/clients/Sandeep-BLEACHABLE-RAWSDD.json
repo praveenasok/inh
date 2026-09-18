@@ -1,0 +1,67 @@
+{
+  "marginType": "percent",
+  "marginAmount": 0,
+  "tag": "Sandeep",
+  "customPricesEnabled": true,
+  "customPrices": {},
+  "name": "Sandeep-BLEACHABLE-RAWSDD",
+  "currency": "INR",
+  "matrix": {
+    "8": {
+      "8": 100
+    },
+    "10": {
+      "10": 100
+    },
+    "12": {
+      "12": 100
+    },
+    "14": {
+      "14": 100
+    },
+    "16": {
+      "16": 100
+    },
+    "18": {
+      "18": 100
+    },
+    "20": {
+      "20": 100
+    },
+    "22": {
+      "22": 100
+    },
+    "24": {
+      "24": 100
+    },
+    "26": {
+      "26": 100
+    },
+    "28": {
+      "28": 100
+    },
+    "30": {
+      "30": 100
+    },
+    "32": {
+      "32": 100
+    }
+  },
+  "exportUnit": "kg",
+  "machineCharge": 4250,
+  "weftingCharge": 0,
+  "roundingFactor": 50,
+  "individualMargins": {
+    "2": -9.5
+  },
+  "supplierId": "sup_1781520225006",
+  "wastagePercent": 15,
+  "created": "2026-08-06T04:51:10.012Z",
+  "exportGrams": [
+    100
+  ],
+  "machineChargeName": "MR/Wash Charge",
+  "exchangeRate": 1,
+  "marginPercent": 30,
+  "weftingWastagePercent": 0
+}

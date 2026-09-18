@@ -1,0 +1,29 @@
+{
+  "tag": "Keshav",
+  "name": "Keshav - US RATIO-2",
+  "marginPercent": 30,
+  "exchangeRate": 1,
+  "wastagePercent": 10,
+  "machineCharge": 2500,
+  "weftingWastagePercent": 0,
+  "customPrices": {},
+  "weftingCharge": 0,
+  "customPricesEnabled": false,
+  "currency": "INR",
+  "individualMargins": {},
+  "matrix": {
+    "13": {
+      "16": 11,
+      "18": 11,
+      "20": 11,
+      "22": 11,
+      "24": 11,
+      "26": 11,
+      "28": 11,
+      "30": 11,
+      "32": 12
+    }
+  },
+  "created": "2026-04-16T10:34:49.354Z",
+  "supplierId": "sup_1773631688090"
+}

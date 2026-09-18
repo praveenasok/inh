@@ -1,0 +1,40 @@
+{
+  "supplierId": "sup_1784292332110",
+  "name": "Weft Natural Curly Bundles",
+  "roundingFactor": 50,
+  "matrix": {
+    "18": {
+      "18": 100
+    },
+    "20": {
+      "20": 100
+    },
+    "22": {
+      "22": 100
+    },
+    "24": {}
+  },
+  "exportGrams": [
+    100
+  ],
+  "exchangeRate": 0.0106,
+  "marginPercent": 30,
+  "weftingWastagePercent": 0,
+  "customPrices": {
+    "18": 950,
+    "20": 1150,
+    "22": 1250
+  },
+  "customPricesEnabled": true,
+  "marginType": "percent",
+  "created": "2026-07-17T12:53:31.153Z",
+  "tag": "inhusa-lasvegas",
+  "marginAmount": 0,
+  "exportUnit": "grams",
+  "wastagePercent": 10,
+  "individualMargins": {},
+  "machineCharge": 4750,
+  "currency": "USD",
+  "machineChargeName": "MR/Wash Charge",
+  "weftingCharge": 0
+}

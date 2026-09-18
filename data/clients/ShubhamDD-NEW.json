@@ -1,0 +1,69 @@
+{
+  "wastagePercent": 15,
+  "currency": "INR",
+  "matrix": {
+    "14": {
+      "10": 30,
+      "12": 30,
+      "14": 40
+    },
+    "16": {
+      "12": 30,
+      "14": 30,
+      "16": 40
+    },
+    "18": {
+      "14": 30,
+      "16": 30,
+      "18": 40
+    },
+    "20": {
+      "16": 30,
+      "18": 30,
+      "20": 40
+    },
+    "22": {
+      "18": 30,
+      "20": 30,
+      "22": 40
+    },
+    "24": {
+      "20": 30,
+      "22": 30,
+      "24": 40
+    },
+    "26": {
+      "22": 30,
+      "24": 30,
+      "26": 40
+    },
+    "28": {
+      "24": 30,
+      "26": 30,
+      "28": 40
+    },
+    "30": {
+      "26": 30,
+      "28": 30,
+      "30": 40
+    },
+    "32": {
+      "28": 30,
+      "30": 30,
+      "32": 40
+    }
+  },
+  "customPrices": {},
+  "customPricesEnabled": true,
+  "marginPercent": 30,
+  "name": "ShubhamDD-NEW",
+  "weftingWastagePercent": 0,
+  "created": "2026-05-05T03:57:28.308Z",
+  "machineChargeName": "MR/Wash Charge",
+  "individualMargins": {},
+  "exchangeRate": 1,
+  "tag": "shubham",
+  "supplierId": "sup_1776935516881",
+  "weftingCharge": 0,
+  "machineCharge": 2500
+}

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Attendance Kiosk - INH Suite</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    
+    <!-- App scripts -->
+    <script src="/firebase-config.js"></script>
+    <script src="/js/centralized-firebase-manager.js"></script>
+    <script src="/firebase-database.js"></script>
+    <script src="/js/face-api.min.js"></script>
+    
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #000;
+            font-family: 'Inter', sans-serif;
+        }
+        #video-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        #kioskVideo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1); /* Mirror effect */
+        }
+        #kioskCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+        }
+        #ui-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 2rem;
+        }
+        .glass-panel {
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        #status-toast {
+            transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+            transform: translateY(-20px);
+            opacity: 0;
+        }
+        #status-toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="video-container">
+        <video id="kioskVideo" autoplay muted playsinline></video>
+        <canvas id="kioskCanvas"></canvas>
+    </div>
+
+    <div id="ui-overlay">
+        <!-- Top Bar: Logo & Clock -->
+        <div class="flex justify-between items-start">
+            <div class="glass-panel px-6 py-4 flex items-center shadow-lg">
+                <i class="fas fa-building text-blue-400 text-3xl mr-4"></i>
+                <div>
+                    <h1 class="text-white font-bold text-xl tracking-wider">INH SUITE</h1>
+                    <p class="text-blue-200 text-xs font-semibold uppercase tracking-widest">Auto Attendance Kiosk</p>
+                </div>
+            </div>
+            
+            <div class="glass-panel px-6 py-4 text-center shadow-lg min-w-[200px]">
+                <div id="clock-time" class="text-white font-bold text-4xl tabular-nums">00:00:00</div>
+                <div id="clock-date" class="text-gray-300 text-sm font-medium mt-1">Loading...</div>
+            </div>
+        </div>
+
+        <!-- Middle: Status Alerts -->
+        <div class="flex justify-center flex-grow items-center">
+            <div id="status-toast" class="glass-panel px-8 py-6 flex flex-col items-center max-w-md text-center shadow-2xl">
+                <div id="toast-icon" class="text-green-400 text-5xl mb-4"><i class="fas fa-check-circle"></i></div>
+                <h2 id="toast-title" class="text-white text-2xl font-bold mb-2">Punch Recorded</h2>
+                <p id="toast-msg" class="text-gray-200 text-lg">Thank you</p>
+            </div>
+        </div>
+
+        <!-- Bottom: Loading / System Status -->
+        <div class="flex justify-between items-end">
+            <div id="system-status" class="glass-panel px-4 py-2 flex items-center">
+                <i class="fas fa-spinner fa-spin text-blue-400 mr-2"></i>
+                <span id="system-status-text" class="text-white font-medium text-sm">Initializing AI Models...</span>
+            </div>
+            <div class="text-white opacity-50 text-xs font-medium">
+                Please look directly at the camera
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/kiosk.js"></script>
+</body>
+</html>

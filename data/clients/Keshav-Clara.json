@@ -1,0 +1,64 @@
+{
+  "marginType": "percent",
+  "exportGrams": [
+    100
+  ],
+  "tag": "keshav",
+  "machineChargeName": "MR/Wash Charge",
+  "created": "2026-06-30T06:44:50.137Z",
+  "marginAmount": 0,
+  "matrix": {
+    "24": {
+      "12": 12.5,
+      "14": 12.5,
+      "16": 12.5,
+      "18": 12.5,
+      "20": 12.5,
+      "22": 12.5,
+      "24": 12.5,
+      "26": 12.5
+    },
+    "26": {
+      "12": 12,
+      "14": 11,
+      "16": 11,
+      "18": 11,
+      "20": 11,
+      "22": 11,
+      "24": 11,
+      "26": 11,
+      "28": 11
+    },
+    "28": {
+      "12": 10,
+      "14": 10,
+      "16": 10,
+      "18": 10,
+      "20": 10,
+      "22": 10,
+      "24": 10,
+      "26": 10,
+      "28": 10,
+      "30": 10
+    }
+  },
+  "customPrices": {},
+  "wastagePercent": 15,
+  "individualMargins": {
+    "8": -4.7,
+    "9": -4.76,
+    "10": -4.95,
+    "11": 0
+  },
+  "currency": "INR",
+  "machineCharge": 3750,
+  "exportUnit": "kg",
+  "weftingCharge": 0,
+  "supplierId": "sup_1781520225006",
+  "weftingWastagePercent": 0,
+  "exchangeRate": 1,
+  "roundingFactor": 50,
+  "customPricesEnabled": true,
+  "marginPercent": 30,
+  "name": "Keshav-Clara"
+}

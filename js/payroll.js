@@ -153,14 +153,23 @@ window.payrollApp = (function() {
 
     function populateEmployeeDeptFilter() {
         const select = document.getElementById('employeeDeptFilter');
-        if (!select) return;
+        const attSelect = document.getElementById('attendanceDeptFilter');
         
-        const currentVal = select.value;
-        select.innerHTML = '<option value="">All Departments</option>';
+        let optionsHTML = '<option value="">All Departments</option>';
         currentDepartments.forEach(dept => {
-            select.innerHTML += `<option value="${escapeHTML(dept)}">${escapeHTML(dept)}</option>`;
+            optionsHTML += `<option value="${escapeHTML(dept)}">${escapeHTML(dept)}</option>`;
         });
-        select.value = currentVal;
+        
+        if (select) {
+            const currentVal = select.value;
+            select.innerHTML = optionsHTML;
+            select.value = currentVal;
+        }
+        if (attSelect) {
+            const currentAttVal = attSelect.value;
+            attSelect.innerHTML = optionsHTML;
+            attSelect.value = currentAttVal;
+        }
     }
 
     function filterEmployees() {
@@ -242,6 +251,18 @@ window.payrollApp = (function() {
                                     ${emp.holidayChoice2Date ? `<span class="inline-flex items-center px-1.5 py-0.5 rounded bg-green-50 text-green-700 border border-green-200" title="${escapeHTML(emp.holidayChoice2Occasion || 'Holiday 2')}"><i class="fas fa-star mr-1 text-[9px]"></i>${escapeHTML(emp.holidayChoice2Date)}${emp.holidayChoice2Occasion ? ` (${escapeHTML(emp.holidayChoice2Occasion)})` : ''}</span>` : ''}
                                 </div>
                             ` : ''}
+                            ${(() => {
+                                let faceLooksCount = 0;
+                                if (emp.faceDescriptors && Array.isArray(emp.faceDescriptors)) {
+                                    faceLooksCount = emp.faceDescriptors.length;
+                                } else if (emp.faceDescriptor) {
+                                    faceLooksCount = 1;
+                                }
+                                if (faceLooksCount > 0) {
+                                    return `<div class="mt-1"><span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-indigo-50 text-indigo-700 border border-indigo-200"><i class="fas fa-camera mr-1"></i>Face Enrolled (${faceLooksCount} look${faceLooksCount > 1 ? 's' : ''})</span></div>`;
+                                }
+                                return '';
+                            })()}
                         </div>
                     </div>
                 </td>
@@ -653,6 +674,21 @@ window.payrollApp = (function() {
         document.getElementById('modalTitle').innerText = 'Edit Employee';
         const deleteBtn = document.getElementById('deleteEmployeeBtn');
         if (deleteBtn) deleteBtn.classList.remove('hidden');
+        
+        const deactivateBtn = document.getElementById('deactivateEmployeeBtn');
+        if (deactivateBtn) {
+            deactivateBtn.classList.remove('hidden');
+            if (emp.status === 'Inactive') {
+                deactivateBtn.innerHTML = '<i class="fas fa-user-check mr-1"></i> Activate';
+                deactivateBtn.onclick = () => { window.payrollApp.toggleEmployeeStatus(emp.id, 'Active'); closeEmployeeModal(); };
+                deactivateBtn.className = "text-green-600 hover:text-green-800 font-medium hidden ml-4";
+            } else {
+                deactivateBtn.innerHTML = '<i class="fas fa-user-times mr-1"></i> Deactivate';
+                deactivateBtn.onclick = () => { window.payrollApp.toggleEmployeeStatus(emp.id, 'Inactive'); closeEmployeeModal(); };
+                deactivateBtn.className = "text-orange-600 hover:text-orange-800 font-medium hidden ml-4";
+            }
+            deactivateBtn.classList.remove('hidden');
+        }
         loadEmployeeModalHolidays();
         document.getElementById('employeeModal').classList.remove('hidden');
     }
@@ -1454,6 +1490,9 @@ Stack: ${stackTrace}
                 
                 loadAttendanceForMonth();
             }
+            
+            // Start persistent camera feed automatically
+            startPersistentFaceCheckIn();
         });
     }
 
@@ -1522,7 +1561,35 @@ Stack: ${stackTrace}
             });
             
             // Filter out inactive employees
-            const activeEmployees = currentEmployees.filter(e => e.status !== 'Inactive');
+            let activeEmployees = currentEmployees.filter(e => e.status !== 'Inactive');
+            
+            // Apply search and filter
+            const searchInput = document.getElementById('attendanceSearchInput')?.value.toLowerCase() || "";
+            const deptFilter = document.getElementById('attendanceDeptFilter')?.value || "";
+            const sortBy = document.getElementById('attendanceSortBy')?.value || "name_asc";
+            
+            if (searchInput) {
+                activeEmployees = activeEmployees.filter(e => 
+                    (e.firstName + ' ' + e.lastName).toLowerCase().includes(searchInput) ||
+                    (e.empId || e.id).toLowerCase().includes(searchInput)
+                );
+            }
+            if (deptFilter) {
+                activeEmployees = activeEmployees.filter(e => e.department === deptFilter);
+            }
+            
+            activeEmployees.sort((a, b) => {
+                const nameA = (a.firstName + ' ' + a.lastName).toLowerCase();
+                const nameB = (b.firstName + ' ' + b.lastName).toLowerCase();
+                const idA = (a.empId || a.id).toLowerCase();
+                const idB = (b.empId || b.id).toLowerCase();
+                
+                if (sortBy === 'name_asc') return nameA.localeCompare(nameB);
+                if (sortBy === 'name_desc') return nameB.localeCompare(nameA);
+                if (sortBy === 'id_asc') return idA.localeCompare(idB);
+                if (sortBy === 'id_desc') return idB.localeCompare(idA);
+                return 0;
+            });
             
             if (activeEmployees.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="${daysInMonth + 3}" class="px-6 py-4 text-center text-sm text-gray-500">No active employees found.</td></tr>`;
@@ -1576,15 +1643,22 @@ Stack: ${stackTrace}
                     else if (status === 'HD') countHD++;
                     else if (status === 'QD') countA += 0.75; // QD adds 0.75 absences
                     
-                    let punchHTML = '';
-                    if (rec && (rec.punchInTime || rec.punchOutTime)) {
-                        punchHTML = `
-                            <div class="text-[9px] mt-1 text-center w-full">
-                                ${rec.punchInTime ? `<span class="text-green-600 font-bold block leading-tight tracking-tighter">I: ${rec.punchInTime.slice(0,5)}</span>` : ''}
-                                ${rec.punchOutTime ? `<span class="text-red-600 font-bold block leading-tight tracking-tighter">O: ${rec.punchOutTime.slice(0,5)}</span>` : ''}
+                    let punchHTML = `
+                        <div class="mt-0 flex flex-col w-full px-0 leading-none">
+                            <div class="flex items-center justify-center text-[9px] text-green-700 font-bold">
+                                <span>I:</span>
+                                <input type="time" class="time-input-compact bg-transparent border-none p-0 m-0 focus:ring-0 text-[9px] font-bold text-left tracking-tighter" style="width: 32px; height: 12px; min-height: 0;" 
+                                    value="${rec && rec.punchInTime ? rec.punchInTime.slice(0,5) : ''}"
+                                    onchange="window.payrollApp && window.payrollApp.updatePunchTime('${emp.id}', '${dateStr}', 'in', this.value)">
                             </div>
-                        `;
-                    }
+                            <div class="flex items-center justify-center text-[9px] text-red-700 font-bold mt-0.5">
+                                <span>O:</span>
+                                <input type="time" class="time-input-compact bg-transparent border-none p-0 m-0 focus:ring-0 text-[9px] font-bold text-left tracking-tighter" style="width: 32px; height: 12px; min-height: 0;" 
+                                    value="${rec && rec.punchOutTime ? rec.punchOutTime.slice(0,5) : ''}"
+                                    onchange="window.payrollApp && window.payrollApp.updatePunchTime('${emp.id}', '${dateStr}', 'out', this.value)">
+                            </div>
+                        </div>
+                    `;
                     
                     rowHTML += `
                         <td class="day-col ${isSunday ? 'sunday-col' : ''} border align-top">
@@ -1654,15 +1728,22 @@ Stack: ${stackTrace}
                     const paidLeaves = Math.min(totalAbsences, 1.5);
                     const unpaidLeaves = Math.max(0, totalAbsences - 1.5);
                     
-                    let mobilePunchHTML = '';
-                    if (mRec && (mRec.punchInTime || mRec.punchOutTime)) {
-                        mobilePunchHTML = `
-                            <div class="text-[9px] mt-1 text-center w-full">
-                                ${mRec.punchInTime ? `<span class="text-green-600 font-bold block leading-tight tracking-tighter">I: ${mRec.punchInTime.slice(0,5)}</span>` : ''}
-                                ${mRec.punchOutTime ? `<span class="text-red-600 font-bold block leading-tight tracking-tighter">O: ${mRec.punchOutTime.slice(0,5)}</span>` : ''}
+                    let mobilePunchHTML = `
+                        <div class="flex flex-col gap-1 mt-1">
+                            <div class="flex items-center text-xs text-green-700 font-bold bg-green-50 rounded px-1 border border-green-100">
+                                <span class="mr-1">In:</span>
+                                <input type="time" class="bg-transparent border-none p-0 focus:ring-0 w-[70px] text-xs font-bold" 
+                                    value="${mRec && mRec.punchInTime ? mRec.punchInTime.slice(0,5) : ''}"
+                                    onchange="window.payrollApp && window.payrollApp.updatePunchTime('${emp.id}', '${selectedMobileDateStr}', 'in', this.value)">
                             </div>
-                        `;
-                    }
+                            <div class="flex items-center text-xs text-red-700 font-bold bg-red-50 rounded px-1 border border-red-100">
+                                <span class="mr-1">Out:</span>
+                                <input type="time" class="bg-transparent border-none p-0 focus:ring-0 w-[70px] text-xs font-bold" 
+                                    value="${mRec && mRec.punchOutTime ? mRec.punchOutTime.slice(0,5) : ''}"
+                                    onchange="window.payrollApp && window.payrollApp.updatePunchTime('${emp.id}', '${selectedMobileDateStr}', 'out', this.value)">
+                            </div>
+                        </div>
+                    `;
                     
                     return `
                     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex flex-col gap-3">
@@ -1748,6 +1829,48 @@ Stack: ${stackTrace}
             selectElement.disabled = false;
             setTimeout(() => { 
                 if(statusMsg.innerText === "Saved successfully.") {
+                    statusMsg.style.opacity = "0"; 
+                }
+            }, 2000);
+        }
+    }
+
+    async function updatePunchTime(employeeId, dateStr, type, value) {
+        const statusMsg = document.getElementById('attendanceStatusMsg');
+        const monthStr = dateStr.substring(0, 7);
+        
+        statusMsg.innerText = "Saving time...";
+        statusMsg.style.opacity = "1";
+        
+        try {
+            // First get the existing record to avoid overwriting status
+            const existingRecords = await window.firebaseDB.getAttendance(employeeId, { date: dateStr });
+            let existingRecord = existingRecords.length > 0 ? existingRecords[0] : null;
+            
+            let payload = {
+                employeeId: employeeId,
+                date: dateStr,
+                month: monthStr,
+                status: existingRecord ? existingRecord.status : '',
+                isManualOverride: true,
+                remarks: "Admin Time Override"
+            };
+            
+            if (type === 'in') {
+                payload.punchInTime = value;
+            } else if (type === 'out') {
+                payload.punchOutTime = value;
+            }
+            
+            await window.firebaseDB.saveAttendance(payload);
+            statusMsg.innerText = "Time saved successfully.";
+        } catch (e) {
+            console.error(e);
+            alert("Error saving time: " + e.message);
+            statusMsg.innerText = "Error saving.";
+        } finally {
+            setTimeout(() => { 
+                if(statusMsg.innerText === "Time saved successfully.") {
                     statusMsg.style.opacity = "0"; 
                 }
             }, 2000);
@@ -2209,6 +2332,9 @@ Stack: ${stackTrace}
         document.getElementById('modalTitle').innerText = 'Add New Employee';
         const deleteBtn = document.getElementById('deleteEmployeeBtn');
         if (deleteBtn) deleteBtn.classList.add('hidden');
+        
+        const deactivateBtn = document.getElementById('deactivateEmployeeBtn');
+        if (deactivateBtn) deactivateBtn.classList.add('hidden');
         loadEmployeeModalHolidays();
         document.getElementById('employeeModal').classList.remove('hidden');
     }
@@ -2660,6 +2786,38 @@ Stack: ${stackTrace}
 
     async function openFaceEnrollModal(employeeId) {
         document.getElementById('faceEnrollEmpId').value = employeeId;
+        
+        const emp = currentEmployees.find(e => e.id === employeeId);
+        let faceLooksCount = 0;
+        if (emp) {
+            if (emp.faceDescriptors && Array.isArray(emp.faceDescriptors)) {
+                faceLooksCount = emp.faceDescriptors.length;
+            } else if (emp.faceDescriptor) {
+                faceLooksCount = 1;
+            }
+        }
+        const looksCountEl = document.getElementById('faceEnrollLooksCount');
+        if (looksCountEl) {
+            looksCountEl.innerText = `${faceLooksCount} look${faceLooksCount !== 1 ? 's' : ''} captured`;
+            looksCountEl.className = faceLooksCount > 0 ? 'inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800' : 'inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800';
+        }
+        
+        const gallery = document.getElementById('faceEnrollGallery');
+        if (gallery) {
+            if (emp && emp.faceLookImages && emp.faceLookImages.length > 0) {
+                gallery.innerHTML = emp.faceLookImages.map((imgUrl, idx) => `
+                    <div class="relative w-12 h-12 rounded overflow-hidden shadow">
+                        <img src="${imgUrl}" class="w-full h-full object-cover">
+                        <div class="absolute bottom-0 right-0 bg-black bg-opacity-60 text-white text-[8px] px-1">${idx + 1}</div>
+                    </div>
+                `).join('');
+                gallery.classList.remove('hidden');
+            } else {
+                gallery.innerHTML = '';
+                gallery.classList.add('hidden');
+            }
+        }
+        
         document.getElementById('faceEnrollModal').classList.remove('hidden');
         document.getElementById('faceEnrollStatus').innerText = "Initializing models...";
         
@@ -2730,22 +2888,122 @@ Stack: ${stackTrace}
             
             const descriptor = Array.from(detections.descriptor);
             
+            // Extract face thumbnail
+            const box = detections.detection.box;
+            const cropCanvas = document.createElement('canvas');
+            const cropSize = 100;
+            cropCanvas.width = cropSize;
+            cropCanvas.height = cropSize;
+            const ctx = cropCanvas.getContext('2d');
+            // Draw cropped area from video
+            ctx.drawImage(video, box.x, box.y, box.width, box.height, 0, 0, cropSize, cropSize);
+            const dataUrl = cropCanvas.toDataURL('image/jpeg', 0.8);
+            
+            const emp = currentEmployees.find(e => e.id === employeeId);
+            let updatedDescriptors = [];
+            let updatedImages = [];
+            
+            if (emp) {
+                if (emp.faceDescriptors && Array.isArray(emp.faceDescriptors)) {
+                    updatedDescriptors = [...emp.faceDescriptors];
+                } else if (emp.faceDescriptor) {
+                    updatedDescriptors.push(JSON.stringify(emp.faceDescriptor)); // Migrate legacy single descriptor
+                }
+                
+                if (emp.faceLookImages && Array.isArray(emp.faceLookImages)) {
+                    updatedImages = [...emp.faceLookImages];
+                } else if (emp.faceDescriptor) {
+                    // Backwards compat for old single look without image
+                    updatedImages.push(null);
+                }
+            }
+            
+            updatedDescriptors.push(JSON.stringify(descriptor));
+            updatedImages.push(dataUrl);
+            
             const db = window.firebaseDB.db || firebase.firestore();
             await db.collection('employees').doc(employeeId).update({
-                faceDescriptor: descriptor,
+                faceDescriptors: updatedDescriptors,
+                faceLookImages: updatedImages,
+                faceDescriptor: firebase.firestore.FieldValue.delete(), // Remove legacy field to clean up
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             });
             
-            const emp = currentEmployees.find(e => e.id === employeeId);
-            if (emp) emp.faceDescriptor = descriptor;
+            if (emp) {
+                emp.faceDescriptors = updatedDescriptors;
+                emp.faceLookImages = updatedImages;
+                delete emp.faceDescriptor;
+            }
             
-            alert("Face enrolled successfully!");
+            // Update looks count in UI
+            const looksCountEl = document.getElementById('faceEnrollLooksCount');
+            if (looksCountEl) {
+                looksCountEl.innerText = `${updatedDescriptors.length} look${updatedDescriptors.length !== 1 ? 's' : ''} captured`;
+                looksCountEl.className = 'inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800';
+            }
+            
+            const gallery = document.getElementById('faceEnrollGallery');
+            if (gallery) {
+                gallery.innerHTML = updatedImages.map((imgUrl, idx) => `
+                    <div class="relative w-12 h-12 rounded overflow-hidden shadow">
+                        ${imgUrl ? `<img src="${imgUrl}" class="w-full h-full object-cover">` : `<div class="w-full h-full bg-gray-200 flex items-center justify-center text-gray-400"><i class="fas fa-user text-xs"></i></div>`}
+                        <div class="absolute bottom-0 right-0 bg-black bg-opacity-60 text-white text-[8px] px-1">${idx + 1}</div>
+                    </div>
+                `).join('');
+                gallery.classList.remove('hidden');
+            }
+            
+            alert("Face look enrolled successfully!");
+            // Refresh employee grid to update badge
+            renderFilteredEmployees();
             closeFaceEnrollModal();
         } catch (e) {
             console.error("Error capturing face:", e);
             alert("Error: " + e.message);
             btn.disabled = false;
             btn.innerHTML = '<i class="fas fa-camera mr-2"></i>Capture & Save';
+        }
+    }
+
+    async function clearFaceDescriptors() {
+        const employeeId = document.getElementById('faceEnrollEmpId').value;
+        if (!employeeId) return;
+        
+        if (!confirm("Are you sure you want to clear all enrolled face looks for this employee?")) return;
+        
+        try {
+            const db = window.firebaseDB.db || firebase.firestore();
+            await db.collection('employees').doc(employeeId).update({
+                faceDescriptors: firebase.firestore.FieldValue.delete(),
+                faceLookImages: firebase.firestore.FieldValue.delete(),
+                faceDescriptor: firebase.firestore.FieldValue.delete(),
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            
+            const emp = currentEmployees.find(e => e.id === employeeId);
+            if (emp) {
+                delete emp.faceDescriptors;
+                delete emp.faceLookImages;
+                delete emp.faceDescriptor;
+            }
+            
+            const looksCountEl = document.getElementById('faceEnrollLooksCount');
+            if (looksCountEl) {
+                looksCountEl.innerText = '0 looks captured';
+                looksCountEl.className = 'inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800';
+            }
+            
+            const gallery = document.getElementById('faceEnrollGallery');
+            if (gallery) {
+                gallery.innerHTML = '';
+                gallery.classList.add('hidden');
+            }
+            
+            renderFilteredEmployees();
+            alert("All face looks cleared successfully.");
+        } catch (e) {
+            console.error("Error clearing faces:", e);
+            alert("Error: " + e.message);
         }
     }
 
@@ -2770,13 +3028,15 @@ Stack: ${stackTrace}
         }
     }
 
-    async function openFaceCheckInModal() {
-        document.getElementById('faceCheckInModal').classList.remove('hidden');
-        const overlay = document.getElementById('faceCheckInOverlay');
+    async function startPersistentFaceCheckIn() {
+        const container = document.getElementById('persistentFaceCheckInContainer');
+        if (container) container.classList.remove('hidden');
+        
+        const overlay = document.getElementById('faceCheckInStatusOverlay');
         const statusText = document.getElementById('faceCheckInStatus');
         
-        overlay.classList.remove('hidden');
-        statusText.innerText = "Loading models...";
+        if (overlay) overlay.classList.remove('hidden');
+        if (statusText) statusText.innerText = "Loading models...";
         
         const modelsLoaded = await loadFaceModels();
         if (!modelsLoaded) {
@@ -2785,13 +3045,20 @@ Stack: ${stackTrace}
         }
         
         const labeledDescriptors = currentEmployees
-            .filter(emp => emp.status === 'Active' && emp.faceDescriptor)
+            .filter(emp => emp.status === 'Active' && (emp.faceDescriptors || emp.faceDescriptor))
             .map(emp => {
-                return new faceapi.LabeledFaceDescriptors(
-                    emp.id,
-                    [new Float32Array(emp.faceDescriptor)]
-                );
-            });
+                let descriptorsList = [];
+                if (emp.faceDescriptors && Array.isArray(emp.faceDescriptors)) {
+                    descriptorsList = emp.faceDescriptors.map(d => {
+                        let parsed = typeof d === 'string' ? JSON.parse(d) : d;
+                        return new Float32Array(parsed);
+                    });
+                } else if (emp.faceDescriptor) {
+                    descriptorsList = [new Float32Array(emp.faceDescriptor)];
+                }
+                return new faceapi.LabeledFaceDescriptors(emp.id, descriptorsList);
+            })
+            .filter(ld => ld.descriptors.length > 0);
             
         if (labeledDescriptors.length === 0) {
             statusText.innerText = "No active employees with enrolled faces.";
@@ -2942,6 +3209,12 @@ Stack: ${stackTrace}
                 ...(overtimeMins > 0 && { overtimeMinutes: overtimeMins })
             });
             
+            // Invalidate cache and refresh grid if currently viewing this month
+            if (currentAttendanceMonthYear === monthStr) {
+                currentAttendanceRecords = [];
+                loadAttendanceForMonth();
+            }
+            
             // Show toast notification
             const toastContainer = document.getElementById('faceCheckInToastContainer');
             if (toastContainer) {
@@ -2981,8 +3254,10 @@ Stack: ${stackTrace}
         }
     }
     
-    function closeFaceCheckInModal() {
-        document.getElementById('faceCheckInModal').classList.add('hidden');
+    function stopPersistentFaceCheckIn() {
+        const container = document.getElementById('persistentFaceCheckInContainer');
+        if (container) container.classList.add('hidden');
+        
         const video = document.getElementById('faceCheckInVideo');
         if (video && video.srcObject) {
             video.srcObject.getTracks().forEach(track => track.stop());
@@ -2998,7 +3273,14 @@ Stack: ${stackTrace}
             ctx.clearRect(0, 0, canvas.width, canvas.height);
         }
         checkInProcessing = false;
-        document.getElementById('faceCheckInSuccessOverlay').classList.add('hidden');
+    }
+    
+    function exportMonthlySalary() {
+        alert("Export functionality coming soon!");
+    }
+
+    function exportMonthlySalaryPDF() {
+        alert("PDF Export functionality coming soon!");
     }
 
     // Expose global functions for HTML onclick
@@ -3044,7 +3326,11 @@ Stack: ${stackTrace}
         openFaceEnrollModal,
         closeFaceEnrollModal,
         captureFaceDescriptor,
-        openFaceCheckInModal,
-        closeFaceCheckInModal
+        startPersistentFaceCheckIn,
+        stopPersistentFaceCheckIn,
+        exportMonthlySalary,
+        exportMonthlySalaryPDF,
+        updatePunchTime,
+        clearFaceDescriptors
     };
 })();

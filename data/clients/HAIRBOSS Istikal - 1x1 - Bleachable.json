@@ -1,0 +1,61 @@
+{
+  "weftingWastagePercent": 0,
+  "individualMargins": {
+    "2": 10,
+    "4": 10,
+    "5": 10,
+    "6": 20
+  },
+  "customPricesEnabled": false,
+  "marginPercent": 30,
+  "customPrices": {},
+  "supplierId": "sup_1776399542816",
+  "tag": "Turkiye",
+  "created": "2026-04-17T06:28:34.458Z",
+  "currency": "USD",
+  "machineCharge": 2500,
+  "weftingCharge": 0,
+  "matrix": {
+    "2": {
+      "8": 100
+    },
+    "3": {
+      "10": 100
+    },
+    "4": {
+      "12": 100
+    },
+    "5": {
+      "14": 100
+    },
+    "6": {
+      "16": 100
+    },
+    "7": {
+      "18": 100
+    },
+    "8": {
+      "20": 100
+    },
+    "9": {
+      "22": 100
+    },
+    "10": {
+      "24": 100
+    },
+    "11": {
+      "26": 100
+    },
+    "12": {
+      "28": 100
+    },
+    "13": {
+      "30": 100
+    },
+    "14": {},
+    "15": {}
+  },
+  "name": "HAIRBOSS Istikal - 1x1 - Bleachable",
+  "exchangeRate": 0.0107,
+  "wastagePercent": 15
+}

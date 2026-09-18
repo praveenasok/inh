@@ -17,7 +17,7 @@
             { name: 'Home', icon: 'fa-home', href: '/index.html' },
             { name: 'Production Status', icon: 'fa-clipboard-list', href: '/delegated-orders.html' },
             { name: 'Inventory', icon: 'fa-boxes-stacked', href: 'https://inhinventory.web.app/inventory' },
-            { name: 'Jobwork Billing', icon: 'fa-file-invoice-dollar', href: '/inh-jobwork.html' },
+            { name: 'JOB-Billing', icon: 'fa-briefcase', href: '/job-billing.html' },
             { name: 'Price Lookup', icon: 'fa-tags', href: '/price-lookup.html' },
             { name: 'Shipping', icon: 'fa-truck', href: '/shipping-calculator/index.html' },
             { name: 'Shipping Paperwork', icon: 'fa-file-invoice', href: '/shipping-paperwork.html' },
@@ -298,12 +298,12 @@
         if (typeof hasAccessTo === 'function') {
             return hasAccessTo('App: ' + itemName);
         }
-        
+
         // Otherwise, fallback to checking localStorage
         const email = (localStorage.getItem('SESSION_EMAIL') || '').trim().toLowerCase();
         const INH_ADMINS = ['info@indiannaturalhair.com', 'info@praveenasok.com'];
         if (INH_ADMINS.includes(email)) return true;
-        
+
         try {
             const segments = JSON.parse(localStorage.getItem('USER_SEGMENTS') || '[]');
             return segments.includes('App: ' + itemName);
@@ -378,6 +378,11 @@
 
     // Function to initialize navigation
     function initNav() {
+        // Prevent duplicate navigation bars
+        if (document.querySelector('.universal-nav')) {
+            return;
+        }
+
         // Check if font-awesome is loaded
         if (!document.querySelector('link[href*="font-awesome"]')) {
             const faLink = document.createElement('link');

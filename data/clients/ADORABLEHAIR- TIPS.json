@@ -1,0 +1,51 @@
+{
+  "marginPercent": 30,
+  "tag": "Adorable",
+  "marginAmount": 0,
+  "marginType": "percent",
+  "customPrices": {},
+  "name": "ADORABLEHAIR- TIPS",
+  "created": "2026-06-18T03:57:14.527Z",
+  "individualMargins": {},
+  "weftingWastagePercent": 0,
+  "machineChargeName": "MR/Wash Charge",
+  "wastagePercent": 20,
+  "exportUnit": "kg",
+  "matrix": {
+    "12": {},
+    "14": {},
+    "16": {},
+    "18": {},
+    "20": {
+      "10": 17.5,
+      "12": 17.5,
+      "14": 17.5,
+      "16": 17.5,
+      "18": 15,
+      "20": 15
+    },
+    "22": {},
+    "24": {
+      "12": 15,
+      "14": 15,
+      "16": 15,
+      "18": 15,
+      "20": 15,
+      "22": 15,
+      "24": 10
+    },
+    "26": {},
+    "28": {},
+    "30": {}
+  },
+  "weftingCharge": 0,
+  "roundingFactor": 50,
+  "customPricesEnabled": true,
+  "supplierId": "sup_1776399542816",
+  "currency": "INR",
+  "machineCharge": 9000,
+  "exchangeRate": 1,
+  "exportGrams": [
+    100
+  ]
+}

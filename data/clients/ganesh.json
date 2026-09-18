@@ -1,0 +1,27 @@
+{
+  "tag": "misc",
+  "weftingWastagePercent": 0,
+  "marginPercent": 20,
+  "exchangeRate": 1,
+  "name": "ganesh",
+  "machineCharge": 2500,
+  "currency": "INR",
+  "weftingCharge": 0,
+  "supplierId": "sup_1773631688090",
+  "customPricesEnabled": false,
+  "customPrices": {},
+  "wastagePercent": 10,
+  "created": "2026-03-23T09:19:01.775Z",
+  "matrix": {
+    "6": {
+      "12": 20,
+      "14": 30,
+      "16": 50
+    },
+    "7": {
+      "14": 20,
+      "16": 30,
+      "18": 50
+    }
+  }
+}

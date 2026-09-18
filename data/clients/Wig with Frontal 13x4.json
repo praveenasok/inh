@@ -1,0 +1,208 @@
+{
+  "exchangeRate": 1,
+  "tag": "Composite",
+  "bundleComponents": [
+    {
+      "name": "FRONTAL13x4",
+      "offset": 0,
+      "weightGrams": 0
+    },
+    {
+      "offset": 0,
+      "weightGrams": 0,
+      "name": "HAIRWISE REMY WEFT DOUBLE DRAWN INR"
+    }
+  ],
+  "matrix": {},
+  "marginPercent": 0,
+  "composeMatrix": {
+    "8": {
+      "FRONTAL13x4": {
+        "weight": 80,
+        "len": 8
+      },
+      "HAIRWISE REMY WEFT DOUBLE DRAWN INR": {
+        "weight": 120,
+        "len": 8
+      }
+    },
+    "10": {
+      "FRONTAL13x4": {
+        "len": 10,
+        "weight": 80
+      },
+      "HAIRWISE REMY WEFT DOUBLE DRAWN INR": {
+        "weight": 120,
+        "len": 10
+      }
+    },
+    "12": {
+      "FRONTAL13x4": {
+        "len": 12,
+        "weight": 80
+      },
+      "HAIRWISE REMY WEFT DOUBLE DRAWN INR": {
+        "weight": 130,
+        "len": 12
+      }
+    },
+    "14": {
+      "HAIRWISE REMY WEFT DOUBLE DRAWN INR": {
+        "len": 14,
+        "weight": 150
+      },
+      "FRONTAL13x4": {
+        "weight": 80,
+        "len": 14
+      }
+    },
+    "16": {
+      "HAIRWISE REMY WEFT DOUBLE DRAWN INR": {
+        "weight": 150,
+        "len": 16
+      },
+      "FRONTAL13x4": {
+        "weight": 80,
+        "len": 16
+      }
+    },
+    "18": {
+      "HAIRWISE REMY WEFT DOUBLE DRAWN INR": {
+        "len": 18,
+        "weight": 160
+      },
+      "FRONTAL13x4": {
+        "len": 18,
+        "weight": 80
+      }
+    },
+    "20": {
+      "HAIRWISE REMY WEFT DOUBLE DRAWN INR": {
+        "len": 20,
+        "weight": 170
+      },
+      "FRONTAL13x4": {
+        "weight": 80,
+        "len": 20
+      }
+    },
+    "22": {
+      "FRONTAL13x4": {
+        "weight": 80,
+        "len": 22
+      },
+      "HAIRWISE REMY WEFT DOUBLE DRAWN INR": {
+        "weight": 175,
+        "len": 22
+      }
+    },
+    "24": {
+      "HAIRWISE REMY WEFT DOUBLE DRAWN INR": {
+        "weight": 180,
+        "len": 24
+      },
+      "FRONTAL13x4": {
+        "weight": 80,
+        "len": 24
+      }
+    },
+    "26": {
+      "FRONTAL13x4": {
+        "weight": 80,
+        "len": 26
+      },
+      "HAIRWISE REMY WEFT DOUBLE DRAWN INR": {
+        "len": 26,
+        "weight": 190
+      }
+    },
+    "28": {
+      "FRONTAL13x4": {
+        "len": 28,
+        "weight": 80
+      },
+      "HAIRWISE REMY WEFT DOUBLE DRAWN INR": {
+        "weight": 220,
+        "len": 28
+      }
+    },
+    "30": {
+      "HAIRWISE REMY WEFT DOUBLE DRAWN INR": {
+        "len": 30,
+        "weight": 220
+      },
+      "FRONTAL13x4": {
+        "weight": 80,
+        "len": 30
+      }
+    },
+    "32": {
+      "HAIRWISE REMY WEFT DOUBLE DRAWN INR": {
+        "len": 32,
+        "weight": 220
+      },
+      "FRONTAL13x4": {
+        "len": 32,
+        "weight": 80
+      }
+    },
+    "34": {
+      "FRONTAL13x4": {
+        "len": 34,
+        "weight": 80
+      },
+      "HAIRWISE REMY WEFT DOUBLE DRAWN INR": {
+        "len": 34,
+        "weight": 230
+      }
+    }
+  },
+  "outputUnit": "pc",
+  "materialCost": 350,
+  "name": "Wig with Frontal 13x4",
+  "wastagePercent": 5,
+  "supplierId": "",
+  "isBundle": true,
+  "customPricesEnabled": true,
+  "currency": "INR",
+  "customPrices": {
+    "4": 0,
+    "5": 0,
+    "6": 0,
+    "7": 0,
+    "8": 6787,
+    "9": 0,
+    "10": 7646,
+    "11": 0,
+    "12": 9194,
+    "13": 0,
+    "14": 10559,
+    "15": 0,
+    "16": 11830,
+    "17": 0,
+    "18": 14314,
+    "19": 0,
+    "20": 17648,
+    "21": 0,
+    "22": 20881,
+    "23": 0,
+    "24": 24826,
+    "25": 0,
+    "26": 30389,
+    "27": 0,
+    "28": 36082,
+    "29": 0,
+    "30": 43268,
+    "31": 0,
+    "32": 48756,
+    "33": 0,
+    "34": 0,
+    "35": 0,
+    "36": 0,
+    "37": 0,
+    "38": 0,
+    "39": 0,
+    "40": 0
+  },
+  "machineCharge": 1750
+}

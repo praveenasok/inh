@@ -1,0 +1,79 @@
+{
+  "marginType": "percent",
+  "name": "Heban",
+  "tag": "Heban",
+  "matrix": {
+    "24": {
+      "10": 15,
+      "12": 15,
+      "14": 15,
+      "16": 15,
+      "18": 8,
+      "20": 8,
+      "22": 8,
+      "24": 8,
+      "26": 8
+    },
+    "28": {
+      "10": 17,
+      "12": 17,
+      "14": 17,
+      "16": 12,
+      "18": 5,
+      "20": 5,
+      "22": 5,
+      "24": 5,
+      "26": 5,
+      "28": 6,
+      "30": 6
+    },
+    "30": {
+      "12": 17,
+      "14": 17,
+      "16": 17,
+      "18": 12,
+      "20": 5,
+      "22": 5,
+      "24": 5,
+      "26": 5,
+      "28": 5,
+      "30": 6,
+      "32": 6
+    },
+    "32": {
+      "14": 17,
+      "16": 17,
+      "18": 17,
+      "20": 12,
+      "22": 5,
+      "24": 5,
+      "26": 5,
+      "28": 5,
+      "30": 5,
+      "32": 6,
+      "34": 6
+    }
+  },
+  "machineCharge": 3750,
+  "machineChargeName": "MR/Wash Charge",
+  "exportUnit": "kg",
+  "customPrices": {},
+  "currency": "INR",
+  "roundingFactor": 50,
+  "exportGrams": [
+    100
+  ],
+  "marginAmount": 0,
+  "weftingCharge": 0,
+  "individualMargins": {
+    "30": 10,
+    "32": 10
+  },
+  "supplierId": "sup_1778332363820",
+  "customPricesEnabled": true,
+  "wastagePercent": 15,
+  "created": "2026-05-29T12:12:24.657Z",
+  "exchangeRate": 1,
+  "weftingWastagePercent": 0,
+  "marginPercent": 30
+}

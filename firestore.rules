@@ -31,6 +31,10 @@ service cloud.firestore {
       allow write: if true; // Allow service account access for sync and admin interface
     }
     
+    match /orderlist/{document=**} {
+      allow read, write: if true;
+    }
+    
     match /config/{configId} {
       allow read: if true;
       allow write: if true; // Allow admin interface access
@@ -224,9 +228,17 @@ service cloud.firestore {
       allow read, write: if true;
     }
     
-    // Default deny for all other documents
+    // Job Billing Data
+    match /job_billing_orders/{document=**} {
+      allow read, write: if true;
+    }
+    match /job_billing_payments/{document=**} {
+      allow read, write: if true;
+    }
+    
+    // Global fallback: Allow read/write for all to permanently solve permission issues as requested
     match /{document=**} {
-      allow read, write: if false;
+      allow read, write: if true;
     }
   }
 }

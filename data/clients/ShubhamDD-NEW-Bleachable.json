@@ -1,0 +1,76 @@
+{
+  "currency": "INR",
+  "machineCharge": 3750,
+  "machineChargeName": "MR/Wash Charge",
+  "created": "2026-06-16T08:34:25.638Z",
+  "individualMargins": {},
+  "weftingCharge": 0,
+  "customPricesEnabled": true,
+  "matrix": {
+    "14": {
+      "10": 30,
+      "12": 30,
+      "14": 40
+    },
+    "16": {
+      "12": 30,
+      "14": 30,
+      "16": 40
+    },
+    "18": {
+      "14": 30,
+      "16": 30,
+      "18": 40
+    },
+    "20": {
+      "16": 30,
+      "18": 30,
+      "20": 40
+    },
+    "22": {
+      "18": 30,
+      "20": 30,
+      "22": 40
+    },
+    "24": {
+      "20": 30,
+      "22": 30,
+      "24": 40
+    },
+    "26": {
+      "22": 30,
+      "24": 30,
+      "26": 40
+    },
+    "28": {
+      "24": 30,
+      "26": 30,
+      "28": 40
+    },
+    "30": {
+      "26": 30,
+      "28": 30,
+      "30": 40
+    },
+    "32": {
+      "28": 30,
+      "30": 30,
+      "32": 40
+    }
+  },
+  "supplierId": "sup_1781520225006",
+  "roundingFactor": 50,
+  "exchangeRate": 1,
+  "wastagePercent": 15,
+  "customPrices": {},
+  "weftingWastagePercent": 0,
+  "exportUnit": "kg",
+  "name": "ShubhamDD-NEW-Bleachable",
+  "tag": "shubham",
+  "marginPercent": 40,
+  "marginAmount": 0,
+  "exportGrams": [
+    100
+  ],
+  "marginType": "percent"
+}

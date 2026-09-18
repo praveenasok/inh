@@ -1,0 +1,289 @@
+{
+  "customPricesEnabled": true,
+  "wastagePercent": 5,
+  "currency": "INR",
+  "materialCost": 350,
+  "matrix": {},
+  "exchangeRate": 1,
+  "isBundle": true,
+  "machineCharge": 1750,
+  "bundleComponents": [
+    {
+      "weightGrams": 0,
+      "name": "HAIRWISE REMY WEFT DOUBLE DRAWN INR",
+      "offset": 0,
+      "id": "HAIRWISE REMY WEFT DOUBLE DRAWN INR"
+    },
+    {
+      "name": "HAIRWISE REMY WEFT DOUBLE DRAWN INR",
+      "id": "HAIRWISE REMY WEFT DOUBLE DRAWN INR_1779520042898_170",
+      "weightGrams": 0,
+      "offset": 0
+    },
+    {
+      "id": "CLOSURE6x2_1779522087850_404",
+      "name": "CLOSURE6x2",
+      "weightGrams": 0,
+      "offset": 0
+    }
+  ],
+  "marginType": "percent",
+  "marginAmount": 0,
+  "name": "WIG with Closure 6x2",
+  "customPrices": {
+    "4": 0,
+    "5": 0,
+    "6": 0,
+    "7": 0,
+    "8": 6750,
+    "9": 0,
+    "10": 7250,
+    "11": 0,
+    "12": 7900,
+    "13": 0,
+    "14": 9250,
+    "15": 0,
+    "16": 9500,
+    "17": 0,
+    "18": 11500,
+    "19": 0,
+    "20": 14000,
+    "21": 0,
+    "22": 16250,
+    "23": 0,
+    "24": 19250,
+    "25": 0,
+    "26": 21750,
+    "27": 0,
+    "28": 25500,
+    "29": 0,
+    "30": 29500,
+    "31": 0,
+    "32": 34250,
+    "33": 0,
+    "34": 0,
+    "35": 0,
+    "36": 0,
+    "37": 0,
+    "38": 0,
+    "39": 0,
+    "40": 0
+  },
+  "outputUnit": "pc",
+  "tag": "Composite",
+  "composeOverrides": {
+    "8": 6750,
+    "10": 7250,
+    "12": 7900,
+    "14": 9250,
+    "16": 9500,
+    "18": 11500,
+    "20": 14000,
+    "22": 16250,
+    "24": 19250,
+    "26": 21750,
+    "28": 25500,
+    "30": 29500,
+    "32": 34250
+  },
+  "supplierId": "",
+  "composeMatrix": {
+    "8": {
+      "HAIRWISE REMY WEFT DOUBLE DRAWN INR": {
+        "weight": 80,
+        "len": 8
+      },
+      "CLOSURE6x2_1779522087850_404": {
+        "len": 10,
+        "weight": 35
+      },
+      "HAIRWISE REMY WEFT DOUBLE DRAWN INR_1779520042898_170": {
+        "len": 8,
+        "weight": 80
+      }
+    },
+    "10": {
+      "HAIRWISE REMY WEFT DOUBLE DRAWN INR": {
+        "weight": 80,
+        "len": 8
+      },
+      "HAIRWISE REMY WEFT DOUBLE DRAWN INR_1779520042898_170": {
+        "weight": 80,
+        "len": 8
+      },
+      "CLOSURE6x2_1779522087850_404": {
+        "weight": 35,
+        "len": 10
+      }
+    },
+    "12": {
+      "HAIRWISE REMY WEFT DOUBLE DRAWN INR_1779520042898_170": {
+        "weight": 90,
+        "len": 8
+      },
+      "CLOSURE6x2_1779522087850_404": {
+        "len": 12,
+        "weight": 35
+      },
+      "HAIRWISE REMY WEFT DOUBLE DRAWN INR": {
+        "len": 10,
+        "weight": 90
+      }
+    },
+    "14": {
+      "HAIRWISE REMY WEFT DOUBLE DRAWN INR": {
+        "weight": 95,
+        "len": 12
+      },
+      "HAIRWISE REMY WEFT DOUBLE DRAWN INR_1779520042898_170": {
+        "weight": 95,
+        "len": 10
+      },
+      "CLOSURE6x2_1779522087850_404": {
+        "weight": 35,
+        "len": 12
+      }
+    },
+    "16": {
+      "HAIRWISE REMY WEFT DOUBLE DRAWN INR": {
+        "len": 12,
+        "weight": 95
+      },
+      "HAIRWISE REMY WEFT DOUBLE DRAWN INR_1779520042898_170": {
+        "len": 10,
+        "weight": 95
+      },
+      "CLOSURE6x2_1779522087850_404": {
+        "weight": 35,
+        "len": 14
+      }
+    },
+    "18": {
+      "CLOSURE6x2_1779522087850_404": {
+        "len": 16,
+        "weight": 35
+      },
+      "HAIRWISE REMY WEFT DOUBLE DRAWN INR_1779520042898_170": {
+        "weight": 100,
+        "len": 12
+      },
+      "HAIRWISE REMY WEFT DOUBLE DRAWN INR": {
+        "weight": 110,
+        "len": 14
+      }
+    },
+    "20": {
+      "CLOSURE6x2_1779522087850_404": {
+        "weight": 35,
+        "len": 18
+      },
+      "HAIRWISE REMY WEFT DOUBLE DRAWN INR_1779520042898_170": {
+        "len": 14,
+        "weight": 120
+      },
+      "HAIRWISE REMY WEFT DOUBLE DRAWN INR": {
+        "len": 16,
+        "weight": 120
+      }
+    },
+    "22": {
+      "HAIRWISE REMY WEFT DOUBLE DRAWN INR": {
+        "weight": 120,
+        "len": 18
+      },
+      "HAIRWISE REMY WEFT DOUBLE DRAWN INR_1779520042898_170": {
+        "len": 16,
+        "weight": 120
+      },
+      "CLOSURE6x2_1779522087850_404": {
+        "weight": 35,
+        "len": 18
+      }
+    },
+    "24": {
+      "CLOSURE6x2_1779522087850_404": {
+        "len": 18,
+        "weight": 35
+      },
+      "HAIRWISE REMY WEFT DOUBLE DRAWN INR_1779520042898_170": {
+        "len": 18,
+        "weight": 120
+      },
+      "HAIRWISE REMY WEFT DOUBLE DRAWN INR": {
+        "len": 20,
+        "weight": 120
+      }
+    },
+    "26": {
+      "HAIRWISE REMY WEFT DOUBLE DRAWN INR": {
+        "weight": 130,
+        "len": 20
+      },
+      "HAIRWISE REMY WEFT DOUBLE DRAWN INR_1779520042898_170": {
+        "len": 18,
+        "weight": 130
+      },
+      "CLOSURE6x2_1779522087850_404": {
+        "len": 20,
+        "weight": 35
+      }
+    },
+    "28": {
+      "HAIRWISE REMY WEFT DOUBLE DRAWN INR_1779520042898_170": {
+        "weight": 130,
+        "len": 20
+      },
+      "HAIRWISE REMY WEFT DOUBLE DRAWN INR": {
+        "weight": 130,
+        "len": 22
+      },
+      "CLOSURE6x2_1779522087850_404": {
+        "weight": 35,
+        "len": 22
+      }
+    },
+    "30": {
+      "HAIRWISE REMY WEFT DOUBLE DRAWN INR": {
+        "weight": 130,
+        "len": 24
+      },
+      "HAIRWISE REMY WEFT DOUBLE DRAWN INR_1779520042898_170": {
+        "weight": 130,
+        "len": 22
+      },
+      "CLOSURE6x2_1779522087850_404": {
+        "len": 24,
+        "weight": 35
+      }
+    },
+    "32": {
+      "HAIRWISE REMY WEFT DOUBLE DRAWN INR_1779520042898_170": {
+        "weight": 130,
+        "len": 24
+      },
+      "CLOSURE6x2_1779522087850_404": {
+        "weight": 35,
+        "len": 26
+      },
+      "HAIRWISE REMY WEFT DOUBLE DRAWN INR": {
+        "len": 26,
+        "weight": 130
+      }
+    },
+    "34": {
+      "HAIRWISE REMY WEFT DOUBLE DRAWN INR_1779520042898_170": {
+        "len": 34,
+        "weight": 100
+      },
+      "HAIRWISE REMY WEFT DOUBLE DRAWN INR": {
+        "weight": 300,
+        "len": 34
+      },
+      "CLOSURE6x2_1779522087850_404": {
+        "len": 34,
+        "weight": 35
+      }
+    }
+  },
+  "marginPercent": 10
+}

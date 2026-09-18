@@ -1,0 +1,79 @@
+{
+  "machineChargeName": "MR/Wash LINTPICK/SHIPPING",
+  "matrix": {
+    "18": {
+      "8": 10,
+      "10": 15,
+      "12": 15,
+      "14": 15,
+      "16": 20,
+      "18": 25
+    },
+    "20": {
+      "8": 5,
+      "10": 5,
+      "12": 15,
+      "14": 15,
+      "16": 15,
+      "18": 20,
+      "20": 25
+    },
+    "22": {
+      "10": 5,
+      "12": 10,
+      "14": 15,
+      "16": 15,
+      "18": 15,
+      "20": 20,
+      "22": 20
+    },
+    "24": {
+      "12": 5,
+      "14": 5,
+      "16": 15,
+      "18": 15,
+      "20": 20,
+      "22": 20,
+      "24": 20
+    },
+    "26": {
+      "14": 5,
+      "16": 5,
+      "18": 15,
+      "20": 15,
+      "22": 20,
+      "24": 20,
+      "26": 20
+    },
+    "28": {
+      "16": 5,
+      "18": 5,
+      "20": 15,
+      "22": 15,
+      "24": 20,
+      "26": 20,
+      "28": 20
+    }
+  },
+  "roundingFactor": 50,
+  "individualMargins": {},
+  "marginType": "percent",
+  "weftingWastagePercent": 0,
+  "customPrices": {},
+  "tag": "inhusa",
+  "marginPercent": 0,
+  "exportGrams": [
+    100
+  ],
+  "exportUnit": "kg",
+  "marginAmount": 0,
+  "customPricesEnabled": false,
+  "supplierId": "sup_1786168779899",
+  "exchangeRate": 1,
+  "currency": "INR",
+  "created": "2026-08-08T06:01:13.313Z",
+  "weftingCharge": 0,
+  "name": "GradeA-Grey",
+  "machineCharge": 2650,
+  "wastagePercent": 12
+}

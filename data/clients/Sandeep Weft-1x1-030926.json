@@ -1,0 +1,73 @@
+{
+  "marginType": "percent",
+  "exportGrams": [
+    100
+  ],
+  "weftingCharge": 0,
+  "individualMargins": {
+    "2": -9.5
+  },
+  "created": "2026-09-03T13:17:15.391Z",
+  "roundingFactor": 50,
+  "machineChargeName": "MR/Wash Charge",
+  "machineCharge": 3000,
+  "exchangeRate": 1,
+  "customPricesEnabled": true,
+  "exportUnit": "kg",
+  "name": "Sandeep Weft-1x1-030926",
+  "marginPercent": 20,
+  "weftingWastagePercent": 0,
+  "marginAmount": 0,
+  "supplierId": "sup_1778332363820",
+  "currency": "INR",
+  "matrix": {
+    "6": {
+      "6": 100
+    },
+    "8": {
+      "8": 100
+    },
+    "10": {
+      "10": 100
+    },
+    "12": {
+      "12": 100
+    },
+    "14": {
+      "14": 100
+    },
+    "16": {
+      "16": 100
+    },
+    "18": {
+      "18": 100
+    },
+    "20": {
+      "20": 100
+    },
+    "22": {
+      "22": 100
+    },
+    "24": {
+      "24": 100
+    },
+    "26": {
+      "26": 100
+    },
+    "28": {
+      "28": 100
+    },
+    "30": {
+      "30": 100
+    },
+    "32": {
+      "32": 100
+    },
+    "34": {
+      "34": 100
+    }
+  },
+  "customPrices": {},
+  "tag": "Sandeep",
+  "wastagePercent": 15
+}

@@ -1,0 +1,38 @@
+{
+  "exportUnit": "kg",
+  "weftingCharge": 0,
+  "matrix": {
+    "24": {},
+    "26": {
+      "10": 12,
+      "12": 12,
+      "14": 12,
+      "16": 12,
+      "18": 10,
+      "20": 10,
+      "22": 10,
+      "24": 10,
+      "26": 12
+    }
+  },
+  "machineCharge": 3500,
+  "exchangeRate": 1,
+  "currency": "INR",
+  "marginType": "percent",
+  "created": "2026-06-27T03:24:21.449Z",
+  "roundingFactor": 50,
+  "customPricesEnabled": true,
+  "name": "HAIRORIGINALS2",
+  "wastagePercent": 20,
+  "individualMargins": {},
+  "marginPercent": 50,
+  "machineChargeName": "MR/Wash Charge",
+  "supplierId": "sup_1781520225006",
+  "customPrices": {},
+  "weftingWastagePercent": 0,
+  "marginAmount": 0,
+  "exportGrams": [
+    100
+  ],
+  "tag": "HairOriginals"
+}

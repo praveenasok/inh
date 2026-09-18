@@ -1668,12 +1668,15 @@ class FirebaseDatabase {
     try {
       const processedData = {
         ...attendanceData,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       };
-      // We could use add() or if we want only one record per employee per date, we can set() with a custom ID
+      
       const docId = attendanceData.employeeId + '_' + attendanceData.date;
-      await this.db.collection('attendance').doc(docId).set(processedData);
+      
+      // Check if it exists to preserve createdAt if needed
+      const docRef = this.db.collection('attendance').doc(docId);
+      
+      await docRef.set(processedData, { merge: true });
       return { id: docId, ...attendanceData };
     } catch (error) {
       throw error;

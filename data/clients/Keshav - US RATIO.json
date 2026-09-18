@@ -1,0 +1,40 @@
+{
+  "marginAmount": 0,
+  "weftingWastagePercent": 0,
+  "matrix": {
+    "30": {
+      "14": 10,
+      "16": 10,
+      "18": 10,
+      "20": 10,
+      "22": 10,
+      "24": 10,
+      "26": 10,
+      "28": 10,
+      "30": 10,
+      "32": 10
+    }
+  },
+  "supplierId": "sup_1781520225006",
+  "customPrices": {
+    "30": 82000
+  },
+  "individualMargins": {},
+  "created": "2026-06-16T04:43:47.606Z",
+  "customPricesEnabled": true,
+  "marginPercent": 25,
+  "roundingFactor": 50,
+  "tag": "Keshav",
+  "currency": "INR",
+  "machineChargeName": "MR/Wash Charge",
+  "marginType": "percent",
+  "wastagePercent": 15,
+  "exportGrams": [
+    100
+  ],
+  "name": "Keshav - US RATIO",
+  "machineCharge": 3000,
+  "exportUnit": "kg",
+  "exchangeRate": 1,
+  "weftingCharge": 0
+}

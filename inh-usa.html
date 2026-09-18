@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>INH-USA Operations - Indian Natural Hair</title>
+  <!-- Stylesheets -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="unified-button-system.css">
+  <link rel="stylesheet" href="styles.css">
+  <script src="js/google-sheets-auto-config.js"></script>
+  <!-- Firebase SDKs for Cross-Device Session & Firestore Synchronization -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <script src="firebase-global-init.js"></script>
+  <script src="firebase-database.js"></script>
+  <script src="js/session.js"></script>
+  <script src="js/inh-usa.js"></script>
+
+  <style>
+    /* Glassmorphism Styles */
+    .auth-glass-card {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.45);
+      transition: all 0.3s ease;
+    }
+
+    .glass-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
+    }
+
+    .glass-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
+    }
+
+    .glass-card-no-hover {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+    }
+
+    /* Table custom stylings & Bold Boundaries */
+    .table-container {
+      overflow-x: auto;
+    }
+
+    table {
+      border: 3px solid #0f172a !important; /* Extremely bold slate outer boundary */
+      border-collapse: collapse !important;
+    }
+    th {
+      border: 2px solid #334155 !important; /* Bold header borders */
+      border-bottom: 3px solid #0f172a !important; /* Double-bold header underline */
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: #f8fafc;
+    }
+    td {
+      border: 2px solid #cbd5e1 !important; /* Bold and clean cell borders */
+    }
+
+    .row-clickable {
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+
+    .row-clickable:hover {
+      background-color: #eff6ff !important;
+    }
+
+    .row-urgent {
+      background-color: #ef4444 !important;
+      color: #ffffff !important;
+    }
+    .row-urgent td {
+      color: #ffffff !important;
+      border-color: #f87171 !important;
+    }
+    .row-urgent span {
+      color: #ffffff !important;
+    }
+    .row-urgent input, .row-urgent select {
+      background-color: rgba(255, 255, 255, 0.2) !important;
+      color: #ffffff !important;
+      border-color: rgba(255, 255, 255, 0.4) !important;
+    }
+    .row-urgent input::placeholder {
+      color: rgba(255, 255, 255, 0.7) !important;
+    }
+    .row-urgent select option {
+      background-color: #ef4444 !important;
+      color: #ffffff !important;
+    }
+    .row-urgent:hover {
+      background-color: #dc2626 !important; /* Rich deep red on hover/select */
+    }
+    .row-urgent:hover td, .row-urgent:hover span {
+      color: #ffffff !important;
+    }
+
+    /* Completed Done State Styles to Ensure Text Reverts to Black/Dark Slate */
+    .row-done {
+      background-color: rgba(148, 163, 184, 0.2) !important;
+      color: #0f172a !important;
+    }
+    .row-done td {
+      color: #0f172a !important;
+      border-color: #cbd5e1 !important;
+    }
+    .row-done span {
+      color: #334155 !important;
+    }
+    .row-done input, .row-done select {
+      background-color: #ffffff !important;
+      color: #0f172a !important;
+      border-color: #cbd5e1 !important;
+    }
+    .row-done input::placeholder {
+      color: #94a3b8 !important;
+    }
+    .row-done select option {
+      background-color: #ffffff !important;
+      color: #0f172a !important;
+    }
+
+    /* Animation Utilities */
+    .micro-bounce {
+      transition: transform 0.2s ease;
+    }
+
+    .micro-bounce:active {
+      transform: scale(0.96);
+    }
+
+    .glow-pulse {
+      box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4);
+      animation: pulse-glow 2s infinite;
+    }
+
+    @keyframes pulse-glow {
+      0% {
+        box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4);
+      }
+      70% {
+        box-shadow: 0 0 0 10px rgba(245, 158, 11, 0);
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
+      }
+    }
+
+    /* Table column resizers */
+    th {
+      position: relative; /* required for absolute handle placement */
+    }
+    .resize-handle {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 4px;
+      cursor: col-resize;
+      user-select: none;
+      background-color: transparent;
+      transition: background-color 0.2s ease;
+      z-index: 20;
+    }
+    .resize-handle:hover,
+    .resize-handle.resizing {
+      background-color: #3b82f6; /* Premium blue */
+      width: 6px;
+    }
+
+    @keyframes ticker {
+      0% { transform: translateX(100vw); }
+      100% { transform: translateX(-100%); }
+    }
+    .animate-ticker {
+      display: inline-block;
+      white-space: nowrap;
+      animation: ticker 25s linear infinite;
+      will-change: transform;
+    }
+
+    .no-backdrop {
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      transform: none !important;
+    }
+  </style>
+  <script src="js/access-control.js"></script>
+</head>
+
+<body class="min-h-screen bg-gradient-to-br from-amber-50 via-rose-50 to-orange-100 pb-12">
+  <script src="/js/navigation-loader.js"></script>
+
+  <!-- Auth Overlay (reused if they need login) -->
+  <div id="auth-overlay" class="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-slate-900/90 via-amber-950/85 to-slate-950/95 backdrop-blur-xl hidden">
+    <div class="w-full max-w-md p-8 mx-4 rounded-3xl auth-glass-card flex flex-col items-center text-center text-white">
+      <h2 class="text-2xl font-extrabold tracking-tight text-white">Access INH-USA Operations</h2>
+      <p class="text-sm text-slate-200 mt-2 mb-8 leading-relaxed">Please sign in with your authorized Google account.</p>
+      <button id="btn-google-login-direct" class="w-full flex items-center justify-center gap-3 bg-white text-slate-800 hover:bg-slate-50 font-bold py-3.5 px-6 rounded-2xl transition duration-300 shadow-xl micro-bounce">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/action/google.svg" class="w-5 h-5" alt="Google">
+        Sign In with Google
+      </button>
+    </div>
+  </div>
+
+  <!-- Top Nav Bar -->
+  <section id="login-status-card" class="max-w-[98%] mx-auto px-4 sm:px-6 lg:px-8 mt-2 no-print">
+      <div class="bg-white/80 backdrop-blur rounded-xl shadow-soft p-3">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div class="flex items-center gap-3">
+                  <span id="login-dot" class="inline-block w-2 h-2 rounded-full bg-gray-400"></span>
+                  <span id="login-text" class="text-sm text-gray-700 font-medium">Checking login status…</span>
+              </div>
+              <div class="flex flex-wrap items-center gap-2 sm:ml-auto">
+                  <button id="configToggleBtn" class="nav-btn py-1.5 px-3 rounded-lg text-xs font-semibold micro-bounce shadow-soft flex items-center gap-1.5">
+                      <i class="fas fa-sliders"></i> Config
+                  </button>
+                  <button id="refreshBtn" class="btn-primary py-1.5 px-3 rounded-lg text-xs font-semibold micro-bounce shadow-soft flex items-center gap-1.5 bg-blue-900 text-white">
+                      <i class="fas fa-rotate"></i> Sync Sheet
+                  </button>
+                  <span class="text-slate-300 mx-1 hidden sm:inline">|</span>
+                  <button id="btn-logout" class="text-xs text-gray-600 underline hover:text-gray-800 font-bold">Sign out</button>
+              </div>
+          </div>
+      </div>
+  </section>
+
+  <!-- Header -->
+  <header class="max-w-[98%] mx-auto px-4 sm:px-6 lg:px-8 pt-3 pb-2">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div>
+        <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2 flex-wrap">
+          <span class="p-1.5 bg-blue-600 text-white rounded-lg shadow-md"><i class="fas fa-file-invoice-dollar text-sm"></i></span>
+          INH-USA Operations
+        </h1>
+        <p class="text-sm text-slate-600 font-medium mt-1">Manage and track INH-USA specific orders</p>
+      </div>
+      
+      <!-- Top Actions -->
+      <div class="flex items-center gap-3">
+         <div class="flex items-center gap-2 bg-white border border-slate-300 rounded-lg p-1.5 shadow-sm">
+             <i class="fas fa-filter text-slate-400 ml-2"></i>
+             <select id="salesmanFilter" class="bg-transparent border-none outline-none text-sm font-semibold text-slate-700 cursor-pointer min-w-[150px]">
+                 <option value="">Loading Filters...</option>
+             </select>
+         </div>
+      </div>
+    </div>
+    
+    <!-- Config Panel Drawer -->
+    <div id="configPanel" class="hidden mt-4 glass-card-no-hover p-5 rounded-2xl animate-fade-in">
+      <h3 class="font-bold text-slate-900 mb-3 flex items-center gap-2">
+        <i class="fas fa-cog text-amber-500"></i> Google Sheets Source Configuration
+      </h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div>
+          <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Spreadsheet ID</label>
+          <input type="text" id="sheetIdInput" class="w-full text-xs p-2 rounded-lg border border-slate-300" placeholder="Default Google Sheet">
+        </div>
+        <div>
+          <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Sheet Tab (GID)</label>
+          <input type="text" id="gidInput" class="w-full text-xs p-2 rounded-lg border border-slate-300" placeholder="0">
+        </div>
+        <div>
+          <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Name Column</label>
+          <select id="salesmanColumnSelect" class="w-full text-xs p-2 rounded-lg border border-slate-300"></select>
+        </div>
+        <div>
+          <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Date Column</label>
+          <select id="dateColumnSelect" class="w-full text-xs p-2 rounded-lg border border-slate-300"></select>
+        </div>
+        <div>
+          <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Billing Amount Column</label>
+          <select id="amountColumnSelect" class="w-full text-xs p-2 rounded-lg border border-slate-300"></select>
+        </div>
+      </div>
+      <div class="mt-4 flex justify-end gap-2">
+        <button id="saveConfigBtn" class="btn-primary py-1.5 px-4 rounded-lg text-xs font-semibold micro-bounce bg-blue-900 text-white">Apply Configuration</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-[98%] mx-auto px-4 sm:px-6 lg:px-8 mt-2">
+    
+    
+    <!-- Tab Navigation -->
+    <div class="flex border-b border-slate-200 mb-4 bg-white/60 p-1 rounded-t-lg shadow-sm w-fit">
+        <button id="tabOrdersBtn" class="px-4 py-2 text-sm font-bold text-blue-600 border-b-2 border-blue-600 focus:outline-none transition-colors">
+            <i class="fas fa-list mr-1"></i> Order List
+        </button>
+        <button id="tabRatesBtn" class="px-4 py-2 text-sm font-bold text-slate-500 border-b-2 border-transparent hover:text-slate-700 focus:outline-none transition-colors">
+            <i class="fas fa-tags mr-1"></i> Product Rates & Aliases
+        </button>
+    </div>
+
+    <div id="ordersTabContent">
+    <!-- Filter Bar (Dates & Status) -->
+    <div class="flex flex-wrap items-center gap-3 mb-4 bg-white/60 p-2 rounded-lg border border-slate-200 shadow-sm w-fit">
+        <div class="flex items-center gap-2">
+            <span class="text-xs font-bold text-slate-500 uppercase ml-1">Status:</span>
+            <select id="statusFilter" class="p-1.5 border border-slate-300 rounded text-xs outline-none font-semibold text-slate-700 bg-white">
+                <option value="delpend">Delpend (Payment Pending)</option>
+                <option value="cpend">Cpend (Delivery Pending)</option>
+                <option value="both">Both</option>
+                <option value="all">All Statuses</option>
+            </select>
+        </div>
+        <div class="w-px h-6 bg-slate-300 hidden sm:block"></div>
+        <div class="flex items-center gap-2">
+            <span class="text-xs font-bold text-slate-500 uppercase">Date Range:</span>
+            <input type="date" id="dateFrom" value="2026-01-01" class="p-1.5 border border-slate-300 rounded text-xs outline-none">
+            <span class="text-slate-400">to</span>
+            <input type="date" id="dateTo" class="p-1.5 border border-slate-300 rounded text-xs outline-none">
+        </div>
+        <button id="calculateBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-xs font-bold shadow micro-bounce transition">
+            <i class="fas fa-filter mr-1"></i> Filter
+        </button>
+        <button id="addPaymentBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded text-xs font-bold shadow micro-bounce transition">
+            <i class="fas fa-money-bill-wave mr-1"></i> Add Payment
+        </button>
+    </div>
+
+    <!-- Dashboard Top Section: Stats -->
+    <div id="dashboardTopSection" class="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-4">
+        
+        <!-- Stat 1: Total Orders -->
+        <div class="glass-card p-4 rounded-xl flex items-center justify-between border-l-4 border-l-blue-500">
+            <div>
+                <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Matching Orders</p>
+                <div class="flex items-baseline gap-2">
+                    <span id="statOrderCount" class="text-2xl font-black text-slate-800">0</span>
+                    <span class="text-xs text-slate-400 font-medium">orders</span>
+                </div>
+            </div>
+            <div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center shadow-inner">
+                <i class="fas fa-clipboard-list text-blue-500 text-lg"></i>
+            </div>
+        </div>
+
+        <!-- Stat 1.5: Total Pieces -->
+        <div class="glass-card p-4 rounded-xl flex items-center justify-between border-l-4 border-l-cyan-500">
+            <div>
+                <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Total Pieces</p>
+                <div class="flex items-baseline gap-2">
+                    <span id="statPiecesCount" class="text-2xl font-black text-slate-800">0</span>
+                    <span class="text-xs text-slate-400 font-medium">pcs</span>
+                </div>
+            </div>
+            <div class="w-10 h-10 rounded-full bg-cyan-50 flex items-center justify-center shadow-inner">
+                <i class="fas fa-box-open text-cyan-500 text-lg"></i>
+            </div>
+        </div>
+
+        <!-- Stat 2: Total Billing -->
+        <div class="glass-card p-4 rounded-xl flex items-center justify-between border-l-4 border-l-emerald-500 bg-emerald-50/30">
+            <div>
+                <p class="text-[10px] font-bold text-emerald-700 uppercase tracking-wider mb-1">Total Billing Value</p>
+                <div class="flex items-baseline gap-1">
+                    <span id="statTotalAmount" class="text-2xl font-black text-emerald-700">₹0.00</span>
+                </div>
+            </div>
+            <div class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center shadow-inner">
+                <i class="fas fa-file-invoice-dollar text-emerald-600 text-lg"></i>
+            </div>
+        </div>
+        
+        <!-- Stat 3: Unique Salesmen Found -->
+        <div class="glass-card p-4 rounded-xl flex items-center justify-between border-l-4 border-l-amber-500">
+            <div>
+                <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Active Names</p>
+                <div class="flex items-baseline gap-2">
+                    <span id="statSalesmenCount" class="text-2xl font-black text-slate-800">0</span>
+                    <span class="text-xs text-slate-400 font-medium">names</span>
+                </div>
+            </div>
+            <div class="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center shadow-inner">
+                <i class="fas fa-users text-amber-500 text-lg"></i>
+            </div>
+        </div>
+        
+        <!-- Stat 4: Date Info -->
+        <div class="glass-card p-4 rounded-xl flex items-center justify-between border-l-4 border-l-purple-500">
+            <div>
+                <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Date Range Filter</p>
+                <div class="flex items-baseline gap-2 mt-1">
+                    <span id="statDateRange" class="text-sm font-bold text-slate-700">All Time</span>
+                </div>
+            </div>
+            <div class="w-10 h-10 rounded-full bg-purple-50 flex items-center justify-center shadow-inner">
+                <i class="fas fa-calendar-alt text-purple-500 text-lg"></i>
+            </div>
+        </div>
+        
+    </div>
+
+    <!-- Salesman Pills Section -->
+    <div id="salesmanPillsSection" class="flex flex-wrap gap-2 mb-4 empty:hidden"></div>
+
+    <!-- Main Table Container (Matching Delegated Orders) -->
+    <div class="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden flex flex-col" style="height: calc(100vh - 280px); min-height: 500px;">
+        <div class="bg-slate-50 border-b border-slate-200 p-2 flex justify-between items-center z-20 shadow-sm relative">
+          <div class="flex items-center gap-3">
+            <span class="text-sm font-bold text-slate-700 px-2 flex items-center gap-2">
+              <i class="fas fa-table text-slate-400"></i> Order List
+            </span>
+          </div>
+          <div class="flex items-center gap-2">
+             <div class="relative">
+                 <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
+                     <i class="fas fa-search text-slate-400 text-xs"></i>
+                 </div>
+                 <input type="text" id="tableSearchFilter" placeholder="Search orders..." class="pl-8 pr-3 py-1.5 border border-slate-300 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500 w-48 transition-all focus:w-64 bg-white shadow-sm">
+             </div>
+          </div>
+        </div>
+        
+        <div class="flex-1 overflow-auto table-container bg-slate-100/50 relative">
+            <table id="nativeTable" class="min-w-full divide-y divide-slate-200 text-left text-sm">
+                <thead class="bg-slate-50">
+                    <tr id="tableHeaders">
+                        <!-- Dynamically populated -->
+                    </tr>
+                </thead>
+                <tbody id="tableBody" class="divide-y divide-slate-100 bg-white">
+                    <!-- Dynamically populated -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+  
+    </div> <!-- End ordersTabContent -->
+    
+    <!-- Product Rates Tab -->
+    <div id="ratesTabContent" class="hidden">
+        <div class="bg-white rounded-xl shadow-lg border border-slate-200 p-6">
+            <h2 class="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
+                <i class="fas fa-tags text-amber-500"></i> Manage Product Rates & Aliases
+            </h2>
+            <p class="text-sm text-slate-600 mb-6">Set the canonical billing rate for each product. Use the checkboxes to merge variations (e.g. "Shampoo 500" and "Shampoo 500ml") into a single Primary product.</p>
+            
+            <div id="ratesContainer" class="space-y-6">
+                <!-- Dynamically populated by JS -->
+                <div class="text-center text-slate-500 py-8"><i class="fas fa-spinner fa-spin mr-2"></i> Loading data...</div>
+            </div>
+        </div>
+    </div>
+    
+  </main>
+
+  <!-- Payment Modal -->
+  <div id="paymentModal" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm hidden">
+    <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm micro-bounce">
+      <h3 class="text-lg font-bold text-slate-800 mb-4">Add Payment Received</h3>
+      <p class="text-sm text-slate-500 mb-4" id="paymentSalesmanName"></p>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Date</label>
+          <input type="date" id="paymentDate" class="w-full p-2 border border-slate-300 rounded outline-none focus:ring-2 focus:ring-emerald-500">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Amount (₹)</label>
+          <input type="number" id="paymentAmount" class="w-full p-2 border border-slate-300 rounded outline-none focus:ring-2 focus:ring-emerald-500" placeholder="e.g. 5000">
+        </div>
+      </div>
+      <div class="mt-6 flex justify-end gap-3">
+        <button id="cancelPaymentBtn" class="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-lg">Cancel</button>
+        <button id="savePaymentBtn" class="px-4 py-2 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow">Save Payment</button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,38 @@
+{
+  "marginAmount": 0,
+  "tag": "inhusa",
+  "roundingFactor": 50,
+  "marginType": "percent",
+  "customPrices": {},
+  "name": "GradeA-Black-1",
+  "currency": "USD",
+  "marginPercent": 0,
+  "exportUnit": "kg",
+  "exportGrams": [
+    100
+  ],
+  "supplierId": "sup_1778332363820",
+  "matrix": {
+    "18": {
+      "12": 15,
+      "14": 25,
+      "16": 30,
+      "18": 30
+    },
+    "20": {
+      "14": 15,
+      "16": 25,
+      "18": 30,
+      "20": 30
+    }
+  },
+  "machineCharge": 2200,
+  "exchangeRate": 0.0106,
+  "individualMargins": {},
+  "weftingWastagePercent": 0,
+  "created": "2026-06-10T09:28:23.391Z",
+  "machineChargeName": "MR/Wash Charge",
+  "customPricesEnabled": false,
+  "weftingCharge": 0,
+  "wastagePercent": 10
+}

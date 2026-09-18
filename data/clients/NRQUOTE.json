@@ -1,0 +1,52 @@
+{
+  "weftingCharge": 0,
+  "wastagePercent": 0,
+  "machineCharge": 0,
+  "currency": "INR",
+  "tag": "",
+  "exchangeRate": 1,
+  "marginPercent": 0,
+  "name": "NRQUOTE",
+  "customPricesEnabled": false,
+  "created": "2026-05-05T06:44:04.791Z",
+  "customPrices": {},
+  "supplierId": "sup_1776935516881",
+  "weftingWastagePercent": 0,
+  "individualMargins": {},
+  "machineChargeName": "MR/Wash Charge",
+  "matrix": {
+    "12": {
+      "12": 100
+    },
+    "14": {
+      "14": 100
+    },
+    "16": {
+      "16": 100
+    },
+    "18": {
+      "18": 100
+    },
+    "20": {
+      "20": 100
+    },
+    "22": {
+      "22": 100
+    },
+    "24": {
+      "24": 100
+    },
+    "26": {
+      "26": 100
+    },
+    "28": {
+      "28": 100
+    },
+    "30": {
+      "30": 100
+    },
+    "32": {
+      "32": 100
+    }
+  }
+}

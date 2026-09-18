@@ -1,0 +1,31 @@
+{
+  "customPrices": {
+    "13": 60000
+  },
+  "machineCharge": 2500,
+  "matrix": {
+    "13": {
+      "16": 13,
+      "18": 13,
+      "20": 13,
+      "22": 11,
+      "24": 10,
+      "26": 10,
+      "28": 10,
+      "30": 10,
+      "32": 10
+    }
+  },
+  "weftingCharge": 0,
+  "customPricesEnabled": true,
+  "supplierId": "sup_1773631688090",
+  "currency": "INR",
+  "wastagePercent": 10,
+  "weftingWastagePercent": 0,
+  "name": "Keshav - NORMAL RATIO",
+  "tag": "keshav",
+  "individualMargins": {},
+  "marginPercent": 20,
+  "exchangeRate": 1,
+  "created": "2026-04-16T11:30:40.137Z"
+}

@@ -1,0 +1,77 @@
+{
+  "wastagePercent": 15,
+  "customPricesEnabled": false,
+  "currency": "INR",
+  "weftingWastagePercent": 0,
+  "supplierId": "sup_1778332363820",
+  "tag": "murali",
+  "name": "Murali-NormalHair",
+  "exchangeRate": 1,
+  "marginPercent": 30,
+  "exportGrams": [
+    100
+  ],
+  "customPrices": {},
+  "created": "2026-06-01T07:10:28.940Z",
+  "marginAmount": 0,
+  "matrix": {
+    "18": {
+      "10": 22,
+      "12": 20,
+      "14": 20,
+      "16": 20,
+      "18": 20
+    },
+    "20": {
+      "10": 10,
+      "12": 10,
+      "14": 20,
+      "16": 20,
+      "18": 20,
+      "20": 20
+    },
+    "22": {
+      "12": 20,
+      "14": 20,
+      "16": 15,
+      "18": 15,
+      "20": 15,
+      "22": 15
+    },
+    "24": {
+      "12": 20,
+      "14": 15,
+      "16": 15,
+      "18": 15,
+      "20": 10,
+      "22": 10,
+      "24": 15
+    },
+    "26": {
+      "14": 20,
+      "16": 15,
+      "18": 15,
+      "20": 15,
+      "22": 10,
+      "24": 10,
+      "26": 15
+    },
+    "28": {
+      "14": 15,
+      "16": 15,
+      "18": 15,
+      "20": 10,
+      "22": 10,
+      "24": 10,
+      "26": 10,
+      "28": 15
+    }
+  },
+  "marginType": "percent",
+  "machineCharge": 3750,
+  "machineChargeName": "MR/Wash Charge",
+  "exportUnit": "kg",
+  "roundingFactor": 50,
+  "individualMargins": {},
+  "weftingCharge": 0
+}

@@ -1,0 +1,76 @@
+{
+  "marginAmount": 0,
+  "machineChargeName": "MR/Wash Charge",
+  "name": "Sandeep Weft-BULK-RAW-DD",
+  "currency": "INR",
+  "exportUnit": "kg",
+  "marginPercent": 20,
+  "individualMargins": {
+    "2": -9.5
+  },
+  "created": "2026-07-30T12:05:57.412Z",
+  "customPrices": {
+    "6": 9800,
+    "8": 13250,
+    "10": 18100,
+    "12": 22900,
+    "14": 26350,
+    "16": 29800,
+    "18": 39500,
+    "20": 51900,
+    "22": 62950,
+    "24": 75350,
+    "26": 89150
+  },
+  "wastagePercent": 15,
+  "marginType": "percent",
+  "machineCharge": 3250,
+  "exportGrams": [
+    100
+  ],
+  "weftingCharge": 0,
+  "customPricesEnabled": true,
+  "roundingFactor": 50,
+  "exchangeRate": 1,
+  "matrix": {
+    "6": {
+      "6": 100
+    },
+    "8": {
+      "8": 100
+    },
+    "10": {
+      "10": 100
+    },
+    "12": {
+      "12": 100
+    },
+    "14": {
+      "14": 100
+    },
+    "16": {
+      "16": 100
+    },
+    "18": {
+      "18": 100
+    },
+    "20": {
+      "20": 100
+    },
+    "22": {
+      "22": 100
+    },
+    "24": {
+      "24": 100
+    },
+    "26": {
+      "26": 100
+    },
+    "28": {},
+    "30": {},
+    "32": {}
+  },
+  "tag": "Sandeep",
+  "supplierId": "sup_1778332363820",
+  "weftingWastagePercent": 0
+}

@@ -1,0 +1,48 @@
+{
+  "customPricesEnabled": true,
+  "name": "Keshav-Vietnam",
+  "wastagePercent": 15,
+  "weftingCharge": 0,
+  "currency": "USD",
+  "machineCharge": 3000,
+  "exchangeRate": 0.0107,
+  "machineChargeName": "MR/Wash Charge",
+  "customPrices": {
+    "16": 310,
+    "18": 495,
+    "20": 640,
+    "22": 745
+  },
+  "tag": "keshav",
+  "individualMargins": {
+    "18": 0,
+    "20": 0,
+    "22": 0
+  },
+  "marginPercent": 30,
+  "supplierId": "sup_1776399542816",
+  "weftingWastagePercent": 0,
+  "matrix": {
+    "8": {},
+    "10": {},
+    "12": {},
+    "14": {},
+    "16": {
+      "14": 50,
+      "16": 50
+    },
+    "18": {
+      "16": 50,
+      "18": 50
+    },
+    "20": {
+      "18": 50,
+      "20": 50
+    },
+    "22": {
+      "20": 50,
+      "22": 50
+    }
+  },
+  "created": "2026-05-04T07:33:35.524Z"
+}
